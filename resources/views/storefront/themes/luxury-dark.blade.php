@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="{{ $lang }}" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="{{ $vendor->primary_color ?? '#f59e0b' }}">
+    <link rel="manifest" href="{{ route('client.manifest', ['vendor_slug' => $vendor->slug]) }}">
+    <title>{{ $vendor->name }} - Digital Menu</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Alpine.js & FontAwesome -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: {{ $vendor->primary_color ?? '#f59e0b' }};
+            --bg-main: #09090b;
+            --bg-card: #18181b;
+            --bg-glass: rgba(24, 24, 27, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 100px; }
+
+        /* Cover Header */
+        .cover-header {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(9,9,11,0.3), var(--bg-main));
+        }
+
+        /* Vendor Info Box */
+        .vendor-hero {
+            margin-top: -60px;
+            padding: 0 1.25rem;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: flex-end;
+            gap: 1.25rem;
+        }
+        .vendor-logo {
+            width: 90px;
+            height: 90px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .vendor-meta h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        /* Category Nav */
+        .category-nav-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .category-nav-wrapper::-webkit-scrollbar { display: none; }
+        .cat-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .cat-chip.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+
+        /* Dish Cards */
+        .dish-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            gap: 1rem;
+            padding: 0.85rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .dish-card:active { transform: scale(0.98); }
+        .dish-img {
+            width: 105px;
+            height: 105px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+        .dish-content { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .dish-title { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; }
+        .dish-desc { font-size: 0.8rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 0.25rem; }
+        .dish-price { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--primary); }
+
+        /* Floating Cart Bar */
+        .floating-cart-bar {
+            position: fixed;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            right: 1.25rem;
+            z-index: 50;
+            background: var(--primary);
+            color: #000;
+            padding: 0.85rem 1.25rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+            font-weight: 800;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body x-data="storefrontApp()">
+
+    <!-- PWA Install Banner -->
+    <div x-show="showPWA" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #000; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+        <span><i class="fa-solid fa-mobile-screen"></i> Add menu to Home Screen for instant access!</span>
+        <button @click="showPWA = false" style="background: none; border: none; font-weight: 800; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- Header Cover -->
+    <div class="cover-header" style="background-image: url('{{ $vendor->cover_image ?? 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80' }}');">
+        <div class="cover-overlay"></div>
+    </div>
+
+    <!-- Vendor Hero -->
+    <div class="vendor-hero">
+        <img src="{{ $vendor->logo ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=300&q=80' }}" class="vendor-logo">
+        <div class="vendor-meta">
+            <h1>{{ $vendor->name }}</h1>
+            <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                <span><i class="fa-solid fa-location-dot text-amber-500"></i> {{ $location?->name ?? 'Main Branch' }}</span>
+                @if($table)
+                    <span style="background: rgba(245, 158, 11, 0.2); color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700;">Table {{ $table }}</span>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Language & Search Bar -->
+    <div style="padding: 1.25rem 1.25rem 0.5rem; display: flex; gap: 0.75rem;">
+        <div style="flex: 1; position: relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+            <input type="text" x-model="search" placeholder="Search dishes, drinks..." style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; color: #fff; outline: none; font-size: 0.85rem;">
+        </div>
+
+        <select onchange="window.location.href='?lang=' + this.value" style="background: var(--bg-card); color: #fff; border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
+            <option value="hy" {{ $lang == 'hy' ? 'selected' : '' }}>🇦🇲 HY</option>
+            <option value="en" {{ $lang == 'en' ? 'selected' : '' }}>🇬🇧 EN</option>
+            <option value="ru" {{ $lang == 'ru' ? 'selected' : '' }}>🇷🇺 RU</option>
+        </select>
+    </div>
+
+    <!-- Category Tabs Navigation -->
+    <nav class="category-nav-wrapper" style="margin-top: 0.5rem;">
+        <button class="cat-chip" :class="{ 'active': activeCat === 'all' }" @click="activeCat = 'all'">All Items</button>
+        @foreach($categories as $cat)
+            <button class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="activeCat = 'cat-{{ $cat->id }}'">
+                {{ $cat->getTranslatedName($lang) }}
+            </button>
+        @endforeach
+    </nav>
+
+    <!-- Main Dishes List -->
+    <div style="padding: 1.25rem;">
+        @foreach($categories as $cat)
+            <div x-show="activeCat === 'all' || activeCat === 'cat-{{ $cat->id }}'" style="margin-bottom: 2rem;">
+                <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">
+                    {{ $cat->getTranslatedName($lang) }}
+                </h2>
+
+                <div>
+                    @foreach($cat->products as $prod)
+                        <div class="dish-card" x-show="matchesSearch('{{ strtolower($prod->getTranslatedName($lang)) }}')" @click="openDishModal({{ json_encode($prod) }})">
+                            <img src="{{ $prod->image }}" class="dish-img">
+                            <div class="dish-content">
+                                <div>
+                                    <div class="dish-title">{{ $prod->getTranslatedName($lang) }}</div>
+                                    <div class="dish-desc">{{ $prod->getTranslatedDescription($lang) }}</div>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
+                                    <div class="dish-price">{{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}</div>
+                                    
+                                    <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.8rem;" @click.stop="addToCart({{ json_encode($prod) }})">
+                                        + Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <!-- Floating Order Bar -->
+    <div class="floating-cart-bar" x-show="cart.length > 0" @click="showCartModal = true">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="background: #000; color: var(--primary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" x-text="cartTotalCount">0</span>
+            <span>View Order Tray</span>
+        </div>
+        <div style="font-family: 'Outfit'; font-size: 1.1rem;" x-text="cartTotalPrice + ' {{ $vendor->currency }}'">0 AMD</div>
+    </div>
+
+    <!-- Modal Cart Drawer -->
+    <div x-show="showCartModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
+        <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <h3 style="font-family: 'Outfit'; font-size: 1.3rem;">Your Order Selection</h3>
+                <button @click="showCartModal = false" style="background: none; border: none; color: #fff; font-size: 1.25rem; cursor: pointer;">✕</button>
+            </div>
+
+            <!-- Items -->
+            <template x-for="(item, idx) in cart" :key="idx">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-weight: 700;" x-text="item.name"></div>
+                        <div style="font-size: 0.8rem; color: var(--primary);" x-text="item.price + ' AMD'"></div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.05); padding: 0.25rem 0.5rem; border-radius: 8px;">
+                        <button @click="changeQty(idx, -1)" style="background: none; border: none; color: #fff; font-size: 1rem; cursor: pointer;">-</button>
+                        <span x-text="item.qty" style="font-weight: 700;"></span>
+                        <button @click="changeQty(idx, 1)" style="background: none; border: none; color: #fff; font-size: 1rem; cursor: pointer;">+</button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Table or Details -->
+            <div style="margin-top: 1.5rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Table Number / Customer Name</label>
+                <input type="text" x-model="customerName" placeholder="e.g. Table {{ $table ?? '4' }} or Armen" style="width: 100%; padding: 0.65rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
+                <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #000; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
+                    <i class="fa-solid fa-paper-plane"></i> Show / Send Order to Server
+                </button>
+                <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
+                    <i class="fa-brands fa-whatsapp"></i> Direct Order via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Service Worker script -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('{{ route("client.sw", ["vendor_slug" => $vendor->slug]) }}');
+        }
+
+        function storefrontApp() {
+            return {
+                showPWA: true,
+                activeCat: 'all',
+                search: '',
+                cart: [],
+                showCartModal: false,
+                customerName: '{{ $table ? "Table " . $table : "" }}',
+                
+                matchesSearch(title) {
+                    if (!this.search) return true;
+                    return title.includes(this.search.toLowerCase());
+                },
+                addToCart(prod) {
+                    let existing = this.cart.find(c => c.id === prod.id);
+                    if (existing) {
+                        existing.qty++;
+                    } else {
+                        this.cart.push({
+                            id: prod.id,
+                            name: prod.name,
+                            price: prod.price,
+                            qty: 1
+                        });
+                    }
+                },
+                changeQty(idx, delta) {
+                    this.cart[idx].qty += delta;
+                    if (this.cart[idx].qty <= 0) {
+                        this.cart.splice(idx, 1);
+                    }
+                },
+                get cartTotalCount() {
+                    return this.cart.reduce((a, b) => a + b.qty, 0);
+                },
+                get cartTotalPrice() {
+                    return this.cart.reduce((a, b) => a + (b.price * b.qty), 0);
+                },
+                openDishModal(prod) {
+                    this.addToCart(prod);
+                },
+                async submitOrder(type) {
+                    if (this.cart.length === 0) return;
+                    const res = await fetch('{{ route("client.order.submit", ["vendor_slug" => $vendor->slug]) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            location_id: {{ $location?->id ?? 1 }},
+                            table_number: '{{ $table ?? "Table 4" }}',
+                            type: type,
+                            customer_name: this.customerName || 'Guest',
+                            items: this.cart.map(c => ({ product_id: c.id, quantity: c.qty }))
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        if (data.whatsapp_url && type === 'whatsapp') {
+                            window.location.href = data.whatsapp_url;
+                        } else {
+                            alert('🎉 Order #' + data.order_number + ' submitted successfully!');
+                            this.cart = [];
+                            this.showCartModal = false;
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

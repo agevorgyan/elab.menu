@@ -88,6 +88,12 @@
 - Run Laravel feature tests and browser checks.
 - Verify multi-location overrides, AI translation API handlers, PWA manifest validity, and QR code generation.
 
+### Phase 6: Light Mode Fixes & Custom Color Controls (Current Focus)
+- Fix Light Mode rendering across all 3 client storefront theme templates (`luxury-dark`, `modern-bistro`, `vibrant-glass`).
+- Enhance Theme Customizer (`admin/branding/index.blade.php`) with real-time live preview query parameters (`theme_mode`, `primary_color`, `accent_color`, `secondary_color`, `bg_color`, `text_color`, `menu_template_id`).
+- Ensure `ClientStorefrontController.php` dynamically overrides vendor parameters for real-time live preview iframe.
+- Verify end-to-end functionality across all themes in both Light and Dark modes.
+
 ---
 
 ## User Review Required
@@ -106,7 +112,7 @@
 - `php artisan migrate:fresh --seed`: Verify database migrations and mock seeders.
 
 ### Manual Verification
-- Test client storefront on multiple viewports (Mobile, Tablet, Desktop) across all 3 visual themes.
+- Test client storefront on multiple viewports (Mobile, Tablet, Desktop) across all 3 visual themes in both Light and Dark modes.
+- Verify Theme Customizer color pickers (Primary, Accent, Secondary, Background, Text colors) dynamically update iframe preview.
 - Test QR code generation and Table parameter detection (`?table=12`).
 - Test WhatsApp ordering flow formatting.
-- Test PWA manifest generation and service worker caching.

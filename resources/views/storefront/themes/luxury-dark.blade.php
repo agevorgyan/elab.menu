@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $lang }}" class="dark">
+<html lang="{{ $lang }}" class="{{ $vendor->theme_mode ?? 'dark' }}" data-theme="{{ $vendor->theme_mode ?? 'dark' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -19,12 +19,14 @@
     <style>
         :root {
             --primary: {{ $vendor->primary_color ?? '#f59e0b' }};
-            --bg-main: #09090b;
-            --bg-card: #18181b;
-            --bg-glass: rgba(24, 24, 27, 0.85);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-main: #f4f4f5;
-            --text-muted: #a1a1aa;
+            --accent: {{ $vendor->accent_color ?? $vendor->primary_color ?? '#f59e0b' }};
+            --secondary: {{ $vendor->secondary_color ?? '#4f46e5' }};
+            --bg-main: {{ $vendor->bg_color ?? ($vendor->theme_mode == 'light' ? '#f8fafc' : '#09090b') }};
+            --bg-card: {{ $vendor->theme_mode == 'light' ? '#ffffff' : '#18181b' }};
+            --bg-glass: {{ $vendor->theme_mode == 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(24, 24, 27, 0.85)' }};
+            --border-color: {{ $vendor->theme_mode == 'light' ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)' }};
+            --text-main: {{ $vendor->text_color ?? ($vendor->theme_mode == 'light' ? '#0f172a' : '#f4f4f5') }};
+            --text-muted: {{ $vendor->theme_mode == 'light' ? '#64748b' : '#a1a1aa' }};
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -40,7 +42,7 @@
         .cover-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(9,9,11,0.3), var(--bg-main));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), var(--bg-main));
         }
 
         /* Vendor Info Box */
@@ -59,12 +61,13 @@
             border-radius: 20px;
             object-fit: cover;
             border: 3px solid var(--primary);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
         .vendor-meta h1 {
             font-family: 'Outfit', sans-serif;
             font-size: 1.5rem;
             font-weight: 800;
+            color: var(--text-main);
         }
 
         /* Category Nav */
@@ -85,7 +88,7 @@
         .cat-chip {
             padding: 0.5rem 1rem;
             border-radius: 9999px;
-            background: rgba(255,255,255,0.05);
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
             color: var(--text-muted);
             font-size: 0.85rem;
@@ -97,7 +100,7 @@
         }
         .cat-chip.active {
             background: var(--primary);
-            color: #000;
+            color: #ffffff;
             border-color: var(--primary);
         }
 
@@ -112,6 +115,7 @@
             padding: 0.85rem;
             margin-bottom: 1rem;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
             transition: transform 0.2s;
         }
         .dish-card:active { transform: scale(0.98); }
@@ -122,9 +126,9 @@
             object-fit: cover;
         }
         .dish-content { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .dish-title { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; }
+        .dish-title { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
         .dish-desc { font-size: 0.8rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 0.25rem; }
-        .dish-price { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--primary); }
+        .dish-price { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--accent); }
 
         /* Floating Cart Bar */
         .floating-cart-bar {
@@ -134,13 +138,13 @@
             right: 1.25rem;
             z-index: 50;
             background: var(--primary);
-            color: #000;
+            color: #ffffff;
             padding: 0.85rem 1.25rem;
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
             font-weight: 800;
             cursor: pointer;
         }
@@ -149,9 +153,9 @@
 <body x-data="storefrontApp()">
 
     <!-- PWA Install Banner -->
-    <div x-show="showPWA" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #000; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+    <div x-show="showPWA" style="background: var(--primary); color: #ffffff; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
         <span><i class="fa-solid fa-mobile-screen"></i> Add menu to Home Screen for instant access!</span>
-        <button @click="showPWA = false" style="background: none; border: none; font-weight: 800; cursor: pointer;">✕</button>
+        <button @click="showPWA = false" style="background: none; border: none; color: inherit; font-weight: 800; cursor: pointer;">✕</button>
     </div>
 
     <!-- Header Cover -->
@@ -165,9 +169,9 @@
         <div class="vendor-meta">
             <h1>{{ $vendor->name }}</h1>
             <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
-                <span><i class="fa-solid fa-location-dot text-amber-500"></i> {{ $location?->name ?? 'Main Branch' }}</span>
+                <span><i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> {{ $location?->name ?? 'Main Branch' }}</span>
                 @if($table)
-                    <span style="background: rgba(245, 158, 11, 0.2); color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700;">Table {{ $table }}</span>
+                    <span style="background: var(--primary); color: #ffffff; padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700;">Table {{ $table }}</span>
                 @endif
             </div>
         </div>
@@ -177,10 +181,10 @@
     <div style="padding: 1.25rem 1.25rem 0.5rem; display: flex; gap: 0.75rem;">
         <div style="flex: 1; position: relative;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-            <input type="text" x-model="search" placeholder="Search dishes, drinks..." style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; color: #fff; outline: none; font-size: 0.85rem;">
+            <input type="text" x-model="search" placeholder="Search dishes, drinks..." style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none; font-size: 0.85rem;">
         </div>
 
-        <select onchange="window.location.href='?lang=' + this.value" style="background: var(--bg-card); color: #fff; border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
+        <select onchange="window.location.href='?lang=' + this.value" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
             <option value="hy" {{ $lang == 'hy' ? 'selected' : '' }}>🇦🇲 HY</option>
             <option value="en" {{ $lang == 'en' ? 'selected' : '' }}>🇬🇧 EN</option>
             <option value="ru" {{ $lang == 'ru' ? 'selected' : '' }}>🇷🇺 RU</option>
@@ -201,7 +205,7 @@
     <div style="padding: 1.25rem;">
         @foreach($categories as $cat)
             <div x-show="activeCat === 'all' || activeCat === 'cat-{{ $cat->id }}'" style="margin-bottom: 2rem;">
-                <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">
+                <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
                     {{ $cat->getTranslatedName($lang) }}
                 </h2>
 
@@ -233,31 +237,31 @@
     <!-- Floating Order Bar -->
     <div class="floating-cart-bar" x-show="cart.length > 0" @click="showCartModal = true">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <span style="background: #000; color: var(--primary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" x-text="cartTotalCount">0</span>
+            <span style="background: rgba(0,0,0,0.2); color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" x-text="cartTotalCount">0</span>
             <span>View Order Tray</span>
         </div>
         <div style="font-family: 'Outfit'; font-size: 1.1rem;" x-text="cartTotalPrice + ' {{ $vendor->currency }}'">0 AMD</div>
     </div>
 
     <!-- Modal Cart Drawer -->
-    <div x-show="showCartModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
+    <div x-show="showCartModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
         <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                <h3 style="font-family: 'Outfit'; font-size: 1.3rem;">Your Order Selection</h3>
-                <button @click="showCartModal = false" style="background: none; border: none; color: #fff; font-size: 1.25rem; cursor: pointer;">✕</button>
+                <h3 style="font-family: 'Outfit'; font-size: 1.3rem; color: var(--text-main);">Your Order Selection</h3>
+                <button @click="showCartModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
             </div>
 
             <!-- Items -->
             <template x-for="(item, idx) in cart" :key="idx">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
                     <div>
-                        <div style="font-weight: 700;" x-text="item.name"></div>
-                        <div style="font-size: 0.8rem; color: var(--primary);" x-text="item.price + ' AMD'"></div>
+                        <div style="font-weight: 700; color: var(--text-main);" x-text="item.name"></div>
+                        <div style="font-size: 0.8rem; color: var(--accent);" x-text="item.price + ' AMD'"></div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.05); padding: 0.25rem 0.5rem; border-radius: 8px;">
-                        <button @click="changeQty(idx, -1)" style="background: none; border: none; color: #fff; font-size: 1rem; cursor: pointer;">-</button>
-                        <span x-text="item.qty" style="font-weight: 700;"></span>
-                        <button @click="changeQty(idx, 1)" style="background: none; border: none; color: #fff; font-size: 1rem; cursor: pointer;">+</button>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 8px;">
+                        <button @click="changeQty(idx, -1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">-</button>
+                        <span x-text="item.qty" style="font-weight: 700; color: var(--text-main);"></span>
+                        <button @click="changeQty(idx, 1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">+</button>
                     </div>
                 </div>
             </template>
@@ -265,12 +269,12 @@
             <!-- Table or Details -->
             <div style="margin-top: 1.5rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Table Number / Customer Name</label>
-                <input type="text" x-model="customerName" placeholder="e.g. Table {{ $table ?? '4' }} or Armen" style="width: 100%; padding: 0.65rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: #fff;">
+                <input type="text" x-model="customerName" placeholder="e.g. Table {{ $table ?? '4' }} or Armen" style="width: 100%; padding: 0.65rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main);">
             </div>
 
             <!-- Action Buttons -->
             <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
-                <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #000; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
+                <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
                     <i class="fa-solid fa-paper-plane"></i> Show / Send Order to Server
                 </button>
                 <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">

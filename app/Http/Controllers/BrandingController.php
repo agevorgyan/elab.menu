@@ -22,7 +22,10 @@ class BrandingController extends Controller
         $validated = $request->validate([
             'menu_template_id' => 'required|exists:menu_templates,id',
             'primary_color' => 'required|string|max:20',
-            'secondary_color' => 'required|string|max:20',
+            'secondary_color' => 'nullable|string|max:20',
+            'accent_color' => 'nullable|string|max:20',
+            'text_color' => 'nullable|string|max:20',
+            'bg_color' => 'nullable|string|max:20',
             'theme_mode' => 'required|string|in:dark,light',
             'logo' => 'nullable|string',
             'cover_image' => 'nullable|string',

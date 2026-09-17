@@ -58,6 +58,32 @@ class ClientStorefrontController extends Controller
 
         $themeSlug = $vendor->menuTemplate?->slug ?? 'modern-bistro';
 
+        // Support real-time live preview query parameter overrides
+        if ($request->has('menu_template_id') && $request->get('menu_template_id')) {
+            $tmpl = \App\Models\MenuTemplate::find($request->get('menu_template_id'));
+            if ($tmpl) {
+                $themeSlug = $tmpl->slug;
+            }
+        }
+        if ($request->has('theme_mode') && $request->get('theme_mode')) {
+            $vendor->theme_mode = $request->get('theme_mode');
+        }
+        if ($request->has('primary_color') && $request->get('primary_color')) {
+            $vendor->primary_color = $request->get('primary_color');
+        }
+        if ($request->has('accent_color') && $request->get('accent_color')) {
+            $vendor->accent_color = $request->get('accent_color');
+        }
+        if ($request->has('secondary_color') && $request->get('secondary_color')) {
+            $vendor->secondary_color = $request->get('secondary_color');
+        }
+        if ($request->has('bg_color') && $request->get('bg_color')) {
+            $vendor->bg_color = $request->get('bg_color');
+        }
+        if ($request->has('text_color') && $request->get('text_color')) {
+            $vendor->text_color = $request->get('text_color');
+        }
+
         return view("storefront.themes.{$themeSlug}", compact(
             'vendor',
             'location',

@@ -48,11 +48,27 @@
   - **Dine-In Mode**: «Ցույց տալ / ուղարկել մատուցողին» (Show to server) ցուցակ։
   - **WhatsApp Ordering**: Անմիջապես WhatsApp-ով պատվերի ուղարկում (Zero commission):
 
+### 4. Light Mode & Custom Brand Color Palette Updates (New)
+- **Storefront Theme Light Mode**: Complete Light Mode rendering across all 3 visual menu templates (`Modern Bistro Grid`, `Luxury Dark & Gold`, `Vibrant Glassmorphic Cafe`).
+- **Custom Brand Colors**:
+  - `Primary Color Accent`
+  - `Accent Color`
+  - `Secondary Color`
+  - `Background Color`
+  - `Text Color`
+- **Real-Time Live Preview**: Theme Customizer iframe updates live parameters on input change in real time.
+
 ---
 
-## 📸 Էկրանի Նկարներ (Screenshots)
+## 📸 Էկրանի Նկարներ (Screenshots & Recordings)
 
 ````carousel
+![Light Mode Custom Storefront](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/storefront_light_custom_colors_1789664742043.png)
+<!-- slide -->
+![Modern Bistro Grid Light Mode](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/bistro_grid_light_mode_1789665038433.png)
+<!-- slide -->
+![Vibrant Glassmorphic Cafe Light Mode](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/glassmorphic_light_mode_1789665134930.png)
+<!-- slide -->
 ![Vendor Dashboard](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/vendor_dashboard_1789574998167.png)
 <!-- slide -->
 ![Menu Builder](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/menu_builder_1789575013537.png)
@@ -64,8 +80,6 @@
 ![Theme Customizer](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/theme_customizer_1789575080260.png)
 <!-- slide -->
 ![Table QR Studio](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/table_qr_studio_1789575110221.png)
-<!-- slide -->
-![Digital Menu Storefront](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/digital_storefront_1789575144396.png)
 ````
 
 ---
@@ -78,3 +92,4 @@
 | **Vendor Owner (Bistro Yerevan)** | `owner@bistro.am` | `password` | `http://127.0.0.1:8000/login` |
 | **Cascades Branch Manager** | `manager@bistro.am` | `password` | `http://127.0.0.1:8000/login` |
 | **Customer Storefront** | *(Public)* | *(No auth)* | `http://127.0.0.1:8000/m/bistro-yerevan` |
+

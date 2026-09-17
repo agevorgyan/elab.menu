@@ -147,6 +147,9 @@
             outline: none;
             margin-bottom: 0.65rem;
         }
+        .category-section {
+            scroll-margin-top: 75px;
+        }
     </style>
 </head>
 <body x-data="vibrantGlassApp()">
@@ -179,9 +182,8 @@
 
     <!-- Category Nav -->
     <nav class="category-nav">
-        <button class="cat-chip" :class="{ 'active': activeCat === 'all' }" @click="activeCat = 'all'">All Offerings</button>
         @foreach($categories as $cat)
-            <button class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="activeCat = 'cat-{{ $cat->id }}'">
+            <button id="chip-cat-{{ $cat->id }}" class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="scrollToCat('cat-{{ $cat->id }}')">
                 {{ $cat->getTranslatedName($lang) }}
             </button>
         @endforeach
@@ -190,14 +192,14 @@
     <!-- Main List -->
     <div>
         @foreach($categories as $cat)
-            <div x-show="activeCat === 'all' || activeCat === 'cat-{{ $cat->id }}'" style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary);">
+            <div id="cat-{{ $cat->id }}" class="category-section" style="margin-bottom: 2.5rem;">
+                <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary); padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color);">
                     {{ $cat->getTranslatedName($lang) }}
                 </h2>
 
                 <div>
                     @foreach($cat->products as $prod)
-                        <div class="glass-card" x-show="matchesSearch('{{ strtolower($prod->getTranslatedName($lang)) }}')" @click="addToCart({{ $prod->id }}, '{{ addslashes($prod->getTranslatedName($lang)) }}', {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                        <div class="glass-card" x-show="matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})" @click="addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})">
                             <img src="{{ $prod->image }}" class="glass-img">
                             <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
@@ -211,7 +213,7 @@
                                     <div style="font-weight: 800; color: var(--accent); font-size: 1.15rem;">
                                         {{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}
                                     </div>
-                                    <button class="btn-select" @click.stop="addToCart({{ $prod->id }}, '{{ addslashes($prod->getTranslatedName($lang)) }}', {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                                    <button class="btn-select" @click.stop="addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})">
                                         @if($lang == 'hy')
                                             + Ընտրել
                                         @elseif($lang == 'ru')
@@ -329,7 +331,7 @@
     <script>
         function vibrantGlassApp() {
             return {
-                activeCat: 'all',
+                activeCat: 'cat-{{ $categories->first()?->id ?? 1 }}',
                 search: '',
                 cart: [],
                 showCartModal: false,
@@ -339,6 +341,39 @@
                 tableNumber: '{{ $table ? "Table " . $table : "" }}',
                 marketingOptIn: true,
                 
+                init() {
+                    this.$nextTick(() => {
+                        this.initScrollSpy();
+                    });
+                },
+                scrollToCat(catId) {
+                    this.activeCat = catId;
+                    const el = document.getElementById(catId);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                },
+                initScrollSpy() {
+                    const sections = document.querySelectorAll('.category-section');
+                    if (!sections.length) return;
+
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                this.activeCat = entry.target.id;
+                                const activeChip = document.getElementById('chip-' + entry.target.id);
+                                if (activeChip) {
+                                    activeChip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                }
+                            }
+                        });
+                    }, {
+                        rootMargin: '-75px 0px -55% 0px',
+                        threshold: 0.1
+                    });
+
+                    sections.forEach(sec => observer.observe(sec));
+                },
                 matchesSearch(title) {
                     if (!this.search) return true;
                     return title.includes(this.search.toLowerCase());

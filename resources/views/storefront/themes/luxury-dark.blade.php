@@ -30,6 +30,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
         body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 100px; }
 
         /* Cover Header */
@@ -96,12 +97,18 @@
             white-space: nowrap;
             cursor: pointer;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
         }
         .cat-chip.active {
             background: var(--primary);
             color: #ffffff;
             border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .category-section {
+            scroll-margin-top: 75px;
+            margin-bottom: 2rem;
         }
 
         /* Dish Cards */
@@ -175,7 +182,7 @@
         }
     </style>
 </head>
-<body x-data="storefrontApp()">
+<body x-data="storefrontApp()" x-init="initScrollSpy()">
 
     <!-- PWA Install Banner -->
     <div x-show="showPWA" style="background: var(--primary); color: #ffffff; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
@@ -216,27 +223,26 @@
         </select>
     </div>
 
-    <!-- Category Tabs Navigation -->
-    <nav class="category-nav-wrapper" style="margin-top: 0.5rem;">
-        <button class="cat-chip" :class="{ 'active': activeCat === 'all' }" @click="activeCat = 'all'">All Items</button>
+    <!-- Category Tabs Navigation (Smooth Scroll + Auto Scrollspy) -->
+    <nav class="category-nav-wrapper" id="categoryNavWrapper" style="margin-top: 0.5rem;">
         @foreach($categories as $cat)
-            <button class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="activeCat = 'cat-{{ $cat->id }}'">
+            <button id="chip-cat-{{ $cat->id }}" class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="scrollToCat('cat-{{ $cat->id }}')">
                 {{ $cat->getTranslatedName($lang) }}
             </button>
         @endforeach
     </nav>
 
-    <!-- Main Dishes List -->
+    <!-- Main Dishes List (Continuous scroll sections) -->
     <div style="padding: 1.25rem;">
         @foreach($categories as $cat)
-            <div x-show="activeCat === 'all' || activeCat === 'cat-{{ $cat->id }}'" style="margin-bottom: 2rem;">
+            <div id="cat-{{ $cat->id }}" class="category-section">
                 <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
                     {{ $cat->getTranslatedName($lang) }}
                 </h2>
 
                 <div>
                     @foreach($cat->products as $prod)
-                        <div class="dish-card" x-show="matchesSearch('{{ strtolower($prod->getTranslatedName($lang)) }}')" @click="addToCart({{ $prod->id }}, '{{ addslashes($prod->getTranslatedName($lang)) }}', {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                        <div class="dish-card" x-show="matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})" @click="addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})">
                             <img src="{{ $prod->image }}" class="dish-img">
                             <div class="dish-content">
                                 <div>
@@ -247,7 +253,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
                                     <div class="dish-price">{{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}</div>
                                     
-                                    <button class="btn btn-primary" @click.stop="addToCart({{ $prod->id }}, '{{ addslashes($prod->getTranslatedName($lang)) }}', {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                                    <button class="btn btn-primary" @click.stop="addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})">
                                         @if($lang == 'hy')
                                             + Ավելացնել
                                         @elseif($lang == 'ru')
@@ -373,7 +379,7 @@
         function storefrontApp() {
             return {
                 showPWA: true,
-                activeCat: 'all',
+                activeCat: 'cat-{{ $categories->first()?->id }}',
                 search: '',
                 cart: [],
                 showCartModal: false,
@@ -383,6 +389,39 @@
                 tableNumber: '{{ $table ? "Table " . $table : "" }}',
                 marketingOptIn: true,
                 
+                initScrollSpy() {
+                    this.$nextTick(() => {
+                        const observer = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    this.activeCat = entry.target.id;
+                                    const chip = document.getElementById('chip-' + entry.target.id);
+                                    if (chip) {
+                                        chip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                    }
+                                }
+                            });
+                        }, {
+                            rootMargin: '-75px 0px -55% 0px',
+                            threshold: 0
+                        });
+
+                        document.querySelectorAll('.category-section').forEach(sec => observer.observe(sec));
+                    });
+                },
+                scrollToCat(catId) {
+                    this.activeCat = catId;
+                    const el = document.getElementById(catId);
+                    if (el) {
+                        const headerOffset = 75;
+                        const elementPosition = el.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                },
                 matchesSearch(title) {
                     if (!this.search) return true;
                     return title.includes(this.search.toLowerCase());

@@ -14,7 +14,7 @@
         <a href="{{ route('admin.customers.export') }}" class="btn btn-secondary" style="font-size: 0.85rem;">
             <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> Export to Excel / CSV
         </a>
-        <button class="btn btn-primary" onclick="id('addCustomerModal').style.display='flex'" style="font-size: 0.85rem;">
+        <button class="btn btn-primary" onclick="document.getElementById('addCustomerModal').style.display='flex'" style="font-size: 0.85rem;">
             <i class="fa-solid fa-user-plus"></i> + Add Customer
         </button>
     </div>
@@ -168,7 +168,7 @@
     <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; position: relative;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: var(--text-main);"><i class="fa-solid fa-user-plus" style="color: var(--primary);"></i> Add New Customer</h3>
-            <button onclick="id('addCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
+            <button onclick="document.getElementById('addCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
         </div>
 
         <form action="{{ route('admin.customers.store') }}" method="POST">
@@ -201,7 +201,7 @@
             </div>
 
             <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="id('addCustomerModal').style.display='none'">Cancel</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('addCustomerModal').style.display='none'">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Customer</button>
             </div>
         </form>
@@ -213,7 +213,7 @@
     <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; position: relative;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: var(--text-main);"><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Edit Customer</h3>
-            <button onclick="id('editCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
+            <button onclick="document.getElementById('editCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
         </div>
 
         <form id="editCustomerForm" method="POST">
@@ -246,7 +246,7 @@
             </div>
 
             <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="id('editCustomerModal').style.display='none'">Cancel</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('editCustomerModal').style.display='none'">Cancel</button>
                 <button type="submit" class="btn btn-primary">Update Details</button>
             </div>
         </form>
@@ -254,16 +254,14 @@
 </div>
 
 <script>
-    function id(name) { return document.getElementById(name); }
-
     function editCustomer(c) {
-        id('editCustomerForm').action = "/admin/customers/" + c.id;
-        id('edit_name').value = c.name || '';
-        id('edit_phone').value = c.phone || '';
-        id('edit_email').value = c.email || '';
-        id('edit_notes').value = c.notes || '';
-        id('edit_marketing_opt_in').checked = !!c.marketing_opt_in;
-        id('editCustomerModal').style.display = 'flex';
+        document.getElementById('editCustomerForm').action = "/admin/customers/" + c.id;
+        document.getElementById('edit_name').value = c.name || '';
+        document.getElementById('edit_phone').value = c.phone || '';
+        document.getElementById('edit_email').value = c.email || '';
+        document.getElementById('edit_notes').value = c.notes || '';
+        document.getElementById('edit_marketing_opt_in').checked = !!c.marketing_opt_in;
+        document.getElementById('editCustomerModal').style.display = 'flex';
     }
 </script>
 @endsection

@@ -77,11 +77,21 @@
 - **Excel / CSV Export (`/admin/customers/export`)**:
   - 1-Click Excel-compatible UTF-8 BOM CSV export containing customer details, opt-in consent, total orders count, and total spent.
 
+### 9. Category Smooth Scroll & ScrollSpy Active Highlighting (New)
+- **Continuous Storefront Menu**: Removed category filter hiding logic (`x-show`), allowing all categories and items to stay continuously present on the page.
+- **Smooth Category Scroll (`scrollToCat`)**: Clicking any category chip smoothly scrolls the page directly to that category's section with custom sticky header offset (`scroll-margin-top: 75px`).
+- **Real-Time ScrollSpy Highlighting (`initScrollSpy`)**: Integrated high-performance `IntersectionObserver` to track the visible section while scrolling up or down. Automatically highlights the corresponding category chip (`cat-chip active`) and auto-scrolls the active chip into view in the horizontally scrollable navbar.
+- **All 3 Storefront Themes Updated**: Implemented across `luxury-dark.blade.php`, `modern-bistro.blade.php`, and `vibrant-glass.blade.php`.
+
 ---
 
 ## 📸 Էկրանի Նկարներ (Screenshots & Recordings)
 
 ````carousel
+![ScrollSpy Category Smooth Scroll & Active Highlight](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/.tempmediaStorage/media_1789673142879.png)
+<!-- slide -->
+![Category ScrollSpy Auto-Highlighting on Scroll](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/.tempmediaStorage/media_1789673282316.png)
+<!-- slide -->
 ![Customer Profile & Orders Timeline](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/customer_timeline_aram_1789672547404.png)
 <!-- slide -->
 ![Customer Directory & CRM](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/customers_crm_initial_1789671427084.png)

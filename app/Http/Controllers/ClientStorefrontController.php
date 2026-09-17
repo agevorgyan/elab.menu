@@ -176,8 +176,8 @@ self.addEventListener('fetch', event => {
             'total_amount' => 0,
             'status' => 'pending',
             'customer_name' => $validated['customer_name'] ?? 'Guest',
-            'customer_phone' => $validated['customer_phone'],
-            'notes' => $validated['notes'],
+            'customer_phone' => $validated['customer_phone'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         foreach ($validated['items'] as $item) {

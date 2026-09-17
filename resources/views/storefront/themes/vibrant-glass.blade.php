@@ -96,6 +96,7 @@
             gap: 1rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.04);
             transition: transform 0.2s;
+            cursor: pointer;
         }
         .glass-card:active { transform: scale(0.98); }
         .glass-img {
@@ -184,7 +185,7 @@
 
                 <div>
                     @foreach($cat->products as $prod)
-                        <div class="glass-card" x-show="matchesSearch('{{ strtolower($prod->getTranslatedName($lang)) }}')">
+                        <div class="glass-card" x-show="matchesSearch('{{ strtolower($prod->getTranslatedName($lang)) }}')" @click="addToCart({{ $prod->id }}, '{{ addslashes($prod->getTranslatedName($lang)) }}', {{ (float)$prod->getEffectivePrice($location?->id) }})">
                             <img src="{{ $prod->image }}" class="glass-img">
                             <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
@@ -198,8 +199,14 @@
                                     <div style="font-weight: 800; color: var(--accent); font-size: 1.15rem;">
                                         {{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}
                                     </div>
-                                    <button class="btn-select" @click="addToCart({{ json_encode($prod) }})">
-                                        + Select
+                                    <button class="btn-select" @click.stop="addToCart({{ $prod->id }}, '{{ addslashes($prod->getTranslatedName($lang)) }}', {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                                        @if($lang == 'hy')
+                                            + Ընտրել
+                                        @elseif($lang == 'ru')
+                                            + Выбрать
+                                        @else
+                                            + Select
+                                        @endif
                                     </button>
                                 </div>
                             </div>
@@ -214,7 +221,15 @@
     <div class="cart-bar" x-show="cart.length > 0" @click="showCartModal = true">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="background: rgba(0,0,0,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" x-text="cartTotalCount">0</span>
-            <span>Selected Items</span>
+            <span>
+                @if($lang == 'hy')
+                    Զամբյուղ (Պատվեր)
+                @elseif($lang == 'ru')
+                    Корзина (Заказ)
+                @else
+                    View Order Tray
+                @endif
+            </span>
         </div>
         <div style="font-size: 1.1rem;" x-text="cartTotalPrice + ' {{ $vendor->currency }}'">0 AMD</div>
     </div>
@@ -223,7 +238,15 @@
     <div x-show="showCartModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
         <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                <h3 style="font-size: 1.3rem; color: var(--text-main);">Cafe Tray</h3>
+                <h3 style="font-size: 1.3rem; color: var(--text-main);">
+                    @if($lang == 'hy')
+                        Պատվերի ամփոփում
+                    @elseif($lang == 'ru')
+                        Ваш заказ
+                    @else
+                        Order Summary
+                    @endif
+                </h3>
                 <button @click="showCartModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
             </div>
 
@@ -242,16 +265,36 @@
             </template>
 
             <div style="margin-top: 1.5rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Table Number / Customer Name</label>
-                <input type="text" x-model="customerName" placeholder="e.g. Table {{ $table ?? '4' }} or Armen" style="width: 100%; padding: 0.65rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main);">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                    @if($lang == 'hy')
+                        Սեղանի համար / Հաճախորդի անուն
+                    @elseif($lang == 'ru')
+                        Номер стола / Имя клиента
+                    @else
+                        Table Number / Customer Name
+                    @endif
+                </label>
+                <input type="text" x-model="customerName" placeholder="e.g. Table {{ $table ?? '4' }}" style="width: 100%; padding: 0.65rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main);">
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
                 <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                    <i class="fa-solid fa-paper-plane"></i> Send Order to Counter
+                    @if($lang == 'hy')
+                        <i class="fa-solid fa-paper-plane"></i> Պատվիրել
+                    @elseif($lang == 'ru')
+                        <i class="fa-solid fa-paper-plane"></i> Заказать
+                    @else
+                        <i class="fa-solid fa-paper-plane"></i> Order
+                    @endif
                 </button>
                 <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                    <i class="fa-brands fa-whatsapp"></i> Order via WhatsApp
+                    @if($lang == 'hy')
+                        <i class="fa-brands fa-whatsapp"></i> Պատվիրել WhatsApp-ով
+                    @elseif($lang == 'ru')
+                        <i class="fa-brands fa-whatsapp"></i> Заказать через WhatsApp
+                    @else
+                        <i class="fa-brands fa-whatsapp"></i> Order via WhatsApp
+                    @endif
                 </button>
             </div>
         </div>
@@ -270,12 +313,12 @@
                     if (!this.search) return true;
                     return title.includes(this.search.toLowerCase());
                 },
-                addToCart(prod) {
-                    let existing = this.cart.find(c => c.id === prod.id);
+                addToCart(id, name, price) {
+                    let existing = this.cart.find(c => c.id === id);
                     if (existing) {
                         existing.qty++;
                     } else {
-                        this.cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1 });
+                        this.cart.push({ id: id, name: name, price: price, qty: 1 });
                     }
                 },
                 changeQty(idx, delta) {
@@ -306,7 +349,8 @@
                         if (data.whatsapp_url && type === 'whatsapp') {
                             window.location.href = data.whatsapp_url;
                         } else {
-                            alert('🎉 Order #' + data.order_number + ' submitted successfully!');
+                            const successMsg = '{{ $lang == "hy" ? "🎉 Պատվերը #" : ($lang == "ru" ? "🎉 Заказ #" : "🎉 Order #") }}' + data.order_number + '{{ $lang == "hy" ? " հաջողությամբ ուղարկվեց։" : ($lang == "ru" ? " успешно отправлен!" : " submitted successfully!") }}';
+                            alert(successMsg);
                             this.cart = [];
                             this.showCartModal = false;
                         }

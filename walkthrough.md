@@ -48,15 +48,16 @@
   - **Dine-In Mode**: «Ցույց տալ / ուղարկել մատուցողին» (Show to server) ցուցակ։
   - **WhatsApp Ordering**: Անմիջապես WhatsApp-ով պատվերի ուղարկում (Zero commission):
 
-### 4. Light Mode & Custom Brand Color Palette Updates (New)
-- **Storefront Theme Light Mode**: Complete Light Mode rendering across all 3 visual menu templates (`Modern Bistro Grid`, `Luxury Dark & Gold`, `Vibrant Glassmorphic Cafe`).
-- **Custom Brand Colors**:
-  - `Primary Color Accent`
-  - `Accent Color`
-  - `Secondary Color`
-  - `Background Color`
-  - `Text Color`
-- **Real-Time Live Preview**: Theme Customizer iframe updates live parameters on input change in real time.
+### 5. Order Buttons Fix & Multilingual Labels (New)
+- **Ordering Buttons Fix**: Fixed JavaScript syntax/attribute escaping and PHP 8.5 optional array key handling in `ClientStorefrontController.php`.
+- **Multilingual Button Labels**:
+  - 🇦🇲 Armenian (`hy`): **`Պատվիրել`**
+  - 🇬🇧 English (`en`): **`Order`**
+  - 🇷🇺 Russian (`ru`): **`Заказать`**
+- **WhatsApp Order Button**:
+  - 🇦🇲 Armenian (`hy`): **`Պատվիրել WhatsApp-ով`**
+  - 🇬🇧 English (`en`): **`Order via WhatsApp`**
+  - 🇷🇺 Russian (`ru`): **`Заказать через WhatsApp`**
 
 ---
 

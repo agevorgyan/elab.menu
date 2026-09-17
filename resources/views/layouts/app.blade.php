@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,16 +15,57 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Prevent FOUC Theme Script -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('qrmenu_theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <style>
-        :root {
+        /* Theme Variables - Dark Mode (Default) */
+        html[data-theme="dark"] {
             --bg-body: #0b0f19;
             --bg-card: #151c2c;
+            --bg-card-hover: #1e293b;
             --bg-sidebar: #0f172a;
+            --bg-header: rgba(15, 23, 42, 0.85);
             --border-color: rgba(255, 255, 255, 0.08);
-            --primary: #f59e0b;
-            --primary-hover: #d97706;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --nav-hover: rgba(245, 158, 11, 0.08);
+            --nav-active: rgba(245, 158, 11, 0.15);
+            --nav-active-border: #f59e0b;
+            --primary: #f59e0b;
+            --primary-hover: #d97706;
+            --table-row-border: rgba(255, 255, 255, 0.04);
+            --input-bg: rgba(15, 23, 42, 0.8);
+            --badge-bg: rgba(245, 158, 11, 0.15);
+            --badge-text: #fbbf24;
+            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Theme Variables - Light Mode (Minimalist White & Slate) */
+        html[data-theme="light"] {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-header: rgba(255, 255, 255, 0.9);
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --nav-hover: #f1f5f9;
+            --nav-active: #e2e8f0;
+            --nav-active-border: #2563eb;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --table-row-border: #f1f5f9;
+            --input-bg: #ffffff;
+            --badge-bg: #dbeafe;
+            --badge-text: #1d4ed8;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
         }
 
         * {
@@ -32,6 +73,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
         }
 
         body {
@@ -52,8 +94,8 @@
             top: 0;
             bottom: 0;
             left: 0;
-            z-index: 40;
-            transition: all 0.3s ease;
+            z-index: 50;
+            transition: transform 0.3s ease, background-color 0.25s ease;
         }
 
         .sidebar-brand {
@@ -68,7 +110,7 @@
             font-family: 'Outfit', sans-serif;
             font-size: 1.25rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, #ef4444 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -92,25 +134,47 @@
             display: flex;
             align-items: center;
             gap: 0.85rem;
-            padding: 0.75rem 1.5rem;
+            padding: 0.7rem 1.25rem;
+            margin: 0.2rem 0.75rem;
+            border-radius: 12px;
             color: var(--text-muted);
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.2s;
-            border-left: 3px solid transparent;
         }
 
-        .nav-item:hover, .nav-item.active {
+        .nav-item:hover {
             color: var(--text-main);
-            background: rgba(245, 158, 11, 0.08);
-            border-left-color: var(--primary);
+            background: var(--nav-hover);
+        }
+
+        .nav-item.active {
+            color: var(--text-main);
+            background: var(--nav-active);
+            font-weight: 700;
         }
 
         .nav-item i {
             width: 20px;
             text-align: center;
             font-size: 1rem;
+        }
+
+        /* Sidebar Help Banner Widget */
+        .sidebar-widget {
+            margin: 1rem 1rem 1.5rem;
+            padding: 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .sidebar-widget p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
         }
 
         /* Main Container */
@@ -120,13 +184,14 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            transition: margin-left 0.3s ease;
         }
 
         /* Top Header Navbar */
         .header-navbar {
             height: 70px;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
+            background: var(--bg-header);
+            backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -134,7 +199,18 @@
             padding: 0 2rem;
             position: sticky;
             top: 0;
-            z-index: 30;
+            z-index: 40;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-right: 0.5rem;
         }
 
         .location-switcher select {
@@ -142,10 +218,11 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             padding: 0.5rem 1rem;
-            border-radius: 8px;
+            border-radius: 10px;
             outline: none;
             font-size: 0.85rem;
             cursor: pointer;
+            font-weight: 600;
         }
 
         .user-profile {
@@ -154,30 +231,51 @@
             gap: 1rem;
         }
 
+        /* Minimal Theme Toggle Switcher */
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
+            padding: 0.35rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-main);
+            box-shadow: var(--shadow-card);
+        }
+
+        .theme-toggle-btn i {
+            font-size: 0.95rem;
+            color: var(--primary);
+        }
+
         .badge-role {
             padding: 0.25rem 0.65rem;
             border-radius: 9999px;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
         }
 
-        .badge-superadmin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
-        .badge-owner { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-        .badge-manager { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-superadmin { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-owner { background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--border-color); }
+        .badge-manager { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
 
         .content-body {
             padding: 2rem;
             flex: 1;
         }
 
-        /* Common Cards & Buttons */
+        /* Minimalist Modern Cards */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-card);
             margin-bottom: 1.5rem;
         }
 
@@ -185,8 +283,8 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.6rem 1.25rem;
-            border-radius: 8px;
+            padding: 0.65rem 1.25rem;
+            border-radius: 10px;
             font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
@@ -197,35 +295,31 @@
 
         .btn-primary {
             background: var(--primary);
-            color: #000;
+            color: #ffffff;
+        }
+        html[data-theme="dark"] .btn-primary {
+            color: #000000;
         }
         .btn-primary:hover {
             background: var(--primary-hover);
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.08);
+            background: var(--bg-body);
             color: var(--text-main);
             border: 1px solid var(--border-color);
         }
         .btn-secondary:hover {
-            background: rgba(255,255,255,0.15);
+            background: var(--bg-card-hover);
         }
 
-        .btn-success {
-            background: #10b981;
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: #fff;
-        }
+        .btn-success { background: #10b981; color: #fff; }
+        .btn-danger { background: #ef4444; color: #fff; }
 
         /* Alert Notifications */
         .alert {
             padding: 1rem 1.25rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
@@ -233,26 +327,49 @@
         }
         .alert-success {
             background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
         }
 
         /* Grid Utilities */
         .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
         .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
-        @media (max-width: 992px) { .grid-2 { grid-template-columns: 1fr; } }
+        
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 45;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .sidebar-overlay.mobile-open { display: block; }
+            .main-wrapper { margin-left: 0; }
+            .mobile-toggle { display: block; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .header-navbar { padding: 0 1rem; }
+            .content-body { padding: 1.25rem; }
+        }
     </style>
     @yield('styles')
 </head>
-<body>
+<body x-data="themeApp()">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
+    <!-- Mobile Overlay -->
+    <div class="sidebar-overlay" :class="{ 'mobile-open': mobileOpen }" @click="mobileOpen = false"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" :class="{ 'mobile-open': mobileOpen }">
         <div class="sidebar-brand">
-            <i class="fa-solid fa-qrcode text-amber-500 text-2xl"></i>
+            <i class="fa-solid fa-qrcode text-2xl" style="color: var(--primary);"></i>
             <div>
                 <h1>QR Menu SaaS</h1>
-                <small style="color: var(--text-muted); font-size: 0.7rem;">Enterprise Suite</small>
+                <small style="color: var(--text-muted); font-size: 0.7rem;">Minimalist Platform</small>
             </div>
         </div>
 
@@ -279,7 +396,7 @@
                     <i class="fa-solid fa-utensils"></i> Menu Builder
                 </a>
                 <a href="{{ route('admin.ai.import') }}" class="nav-item {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> AI Menu Import & Translate
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> AI Menu & Translate
                 </a>
 
                 <div class="menu-category">Storefront & Marketing</div>
@@ -302,41 +419,62 @@
                 </a>
 
                 @if(Auth::user()?->vendor)
-                    <div style="padding: 1rem 1.5rem; margin-top: 1rem;">
-                        <a href="{{ route('client.menu', ['vendor_slug' => Auth::user()->vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem;">
+                    <div style="padding: 0.5rem 1rem;">
+                        <a href="{{ route('client.menu', ['vendor_slug' => Auth::user()->vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; border-radius: 12px;">
                             <i class="fa-solid fa-external-link"></i> Live Storefront
                         </a>
                     </div>
                 @endif
             @endif
         </nav>
+
+        <!-- Sidebar Help Widget -->
+        <div class="sidebar-widget">
+            <p>Need help or custom menu translation?</p>
+            <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
+                <i class="fa-solid fa-headset"></i> Get Support
+            </a>
+        </div>
     </aside>
 
     <!-- Main Wrapper -->
     <div class="main-wrapper">
         <header class="header-navbar">
-            <div class="location-switcher">
-                @if(Auth::user()?->vendor && Auth::user()->vendor->locations->count() > 0)
-                    <form action="{{ route('admin.dashboard') }}" method="GET" id="locationSwitchForm">
-                        <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;"><i class="fa-solid fa-location-arrow"></i> Active Location:</label>
-                        <select name="location_id" onchange="document.getElementById('locationSwitchForm').submit();">
-                            @foreach(Auth::user()->vendor->locations as $loc)
-                                <option value="{{ $loc->id }}" {{ session('active_location_id') == $loc->id ? 'selected' : '' }}>
-                                    {{ $loc->name }} ({{ $loc->table_count }} tables)
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                @endif
+            <div style="display: flex; align-items: center;">
+                <button class="mobile-toggle" @click="mobileOpen = !mobileOpen">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <div class="location-switcher">
+                    @if(Auth::user()?->vendor && Auth::user()->vendor->locations->count() > 0)
+                        <form action="{{ route('admin.dashboard') }}" method="GET" id="locationSwitchForm">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;" class="hidden sm:inline">
+                                <i class="fa-solid fa-location-arrow"></i> Location:
+                            </label>
+                            <select name="location_id" onchange="document.getElementById('locationSwitchForm').submit();">
+                                @foreach(Auth::user()->vendor->locations as $loc)
+                                    <option value="{{ $loc->id }}" {{ session('active_location_id') == $loc->id ? 'selected' : '' }}>
+                                        {{ $loc->name }} ({{ $loc->table_count }} tables)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @endif
+                </div>
             </div>
 
             <div class="user-profile">
-                <span class="badge-role {{ Auth::user()->isSuperAdmin() ? 'badge-superadmin' : (Auth::user()->isVendorOwner() ? 'badge-owner' : 'badge-manager') }}">
-                    {{ str_replace('_', ' ', Auth::user()->role) }}
-                </span>
-                <span style="font-size: 0.875rem; font-weight: 600;">{{ Auth::user()->name }}</span>
+                <!-- Light / Dark Theme Switcher Button -->
+                <button class="theme-toggle-btn" @click="toggleTheme()" title="Toggle Light / Dark Mode">
+                    <i class="fa-solid" :class="currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
+                    <span x-text="currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode'"></span>
+                </button>
 
-                <form action="{{ route('logout') }}" method="POST" style="margin-left: 0.5rem;">
+                <span class="badge-role {{ Auth::user()?->isSuperAdmin() ? 'badge-superadmin' : (Auth::user()?->isVendorOwner() ? 'badge-owner' : 'badge-manager') }}">
+                    {{ str_replace('_', ' ', Auth::user()?->role ?? 'staff') }}
+                </span>
+
+                <form action="{{ route('logout') }}" method="POST" style="margin-left: 0.25rem;">
                     @csrf
                     <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.75rem;" title="Logout">
                         <i class="fa-solid fa-right-from-bracket"></i>
@@ -357,6 +495,19 @@
         </main>
     </div>
 
+    <script>
+        function themeApp() {
+            return {
+                mobileOpen: false,
+                currentTheme: document.documentElement.getAttribute('data-theme') || 'dark',
+                toggleTheme() {
+                    this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', this.currentTheme);
+                    localStorage.setItem('qrmenu_theme', this.currentTheme);
+                }
+            }
+        }
+    </script>
     @yield('scripts')
 </body>
 </html>

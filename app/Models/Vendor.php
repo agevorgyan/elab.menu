@@ -73,4 +73,9 @@ class Vendor extends Model
     {
         return $this->hasMany(AnalyticsLog::class);
     }
+
+    public function customers()
+    {
+        return $this->hasMany(Customer::class)->latest();
+    }
 }

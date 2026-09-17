@@ -67,11 +67,25 @@
   - 📜 **[Terms of Service (Օգտագործման Պայմաններ)](file:///Users/apple/Projects/qrmenu/resources/views/legal/terms.blade.php)** (`/terms-of-service`)
 - **Kitchen Panel Integration**: Added **Customer Email** display and **`Marketing Consent`** badge in Live Kitchen Orders (`/admin/orders`).
 
+### 8. Customer CRM Module, Auto-Matching & Excel Export (New)
+- **Automatic Customer Matching**: Storefront checkout automatically searches existing customer profiles by **Phone Number** or **Email Address**. If found, updates details and accumulates orders under that profile. If not found, creates a new `Customer` profile.
+- **Vendor Admin Customer Management (`/admin/customers`)**:
+  - Customer directory table with real-time search, marketing consent filter, lifetime value (LTV), and order counts.
+  - **+ Add Customer Modal** (ձեռքով հաճախորդ ավելացնել) & **Edit Customer Modal** (առկա հաճախորդի տվյալների խմբագրում)։
+- **Customer Orders Timeline (`/admin/customers/{customer}`)**:
+  - Chronological timeline displaying customer's full order history, total spent (LTV), average order value, and dish item breakdowns.
+- **Excel / CSV Export (`/admin/customers/export`)**:
+  - 1-Click Excel-compatible UTF-8 BOM CSV export containing customer details, opt-in consent, total orders count, and total spent.
+
 ---
 
 ## 📸 Էկրանի Նկարներ (Screenshots & Recordings)
 
 ````carousel
+![Customer Profile & Orders Timeline](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/customer_timeline_aram_1789672547404.png)
+<!-- slide -->
+![Customer Directory & CRM](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/customers_crm_initial_1789671427084.png)
+<!-- slide -->
 ![Customer Order & Marketing Consent Verified](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/customer_order_verified_1789670094693.png)
 <!-- slide -->
 ![Light Mode Custom Storefront](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/storefront_light_custom_colors_1789664742043.png)

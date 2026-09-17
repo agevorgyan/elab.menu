@@ -88,11 +88,15 @@
 - Run Laravel feature tests and browser checks.
 - Verify multi-location overrides, AI translation API handlers, PWA manifest validity, and QR code generation.
 
-### Phase 6: Light Mode Fixes & Custom Color Controls (Current Focus)
-- Fix Light Mode rendering across all 3 client storefront theme templates (`luxury-dark`, `modern-bistro`, `vibrant-glass`).
-- Enhance Theme Customizer (`admin/branding/index.blade.php`) with real-time live preview query parameters (`theme_mode`, `primary_color`, `accent_color`, `secondary_color`, `bg_color`, `text_color`, `menu_template_id`).
-- Ensure `ClientStorefrontController.php` dynamically overrides vendor parameters for real-time live preview iframe.
-- Verify end-to-end functionality across all themes in both Light and Dark modes.
+### Phase 7: Customer CRM Module, Auto-Matching & Excel Export (Current Focus)
+- Create `customers` table and `customer_id` foreign key on `orders` table.
+- Implement automatic customer matching by email/phone in `ClientStorefrontController.php` during checkout.
+- Build Vendor Admin CRM interface (`/admin/customers`):
+  - Customer list table with search, filter by marketing opt-in, total orders count, and lifetime value (total spent).
+  - Manual Customer CRUD (Add customer modal & edit customer details).
+  - Customer Timeline view (`/admin/customers/{customer}`) displaying complete order history in chronological order.
+  - Excel/CSV Export functionality (`/admin/customers/export`).
+- Add navigation link in Vendor Admin sidebar under "CRM & Marketing".
 
 ---
 
@@ -108,11 +112,11 @@
 ## Verification Plan
 
 ### Automated Tests
-- `php artisan test`: Test authentication, vendor creation, location overrides, order creation, API endpoints.
+- `php artisan test`: Test authentication, vendor creation, location overrides, order creation, customer auto-matching, CSV export API.
 - `php artisan migrate:fresh --seed`: Verify database migrations and mock seeders.
 
 ### Manual Verification
-- Test client storefront on multiple viewports (Mobile, Tablet, Desktop) across all 3 visual themes in both Light and Dark modes.
-- Verify Theme Customizer color pickers (Primary, Accent, Secondary, Background, Text colors) dynamically update iframe preview.
-- Test QR code generation and Table parameter detection (`?table=12`).
-- Test WhatsApp ordering flow formatting.
+- Test placing orders from storefront with same email/phone and verify customer auto-matching and order accumulation.
+- Test manual customer creation and editing in Vendor Admin panel (`/admin/customers`).
+- Test Customer Timeline view displaying complete order history.
+- Test Customer CSV/Excel export download.

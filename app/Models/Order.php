@@ -12,6 +12,7 @@ class Order extends Model
     protected $fillable = [
         'vendor_id',
         'location_id',
+        'customer_id',
         'order_number',
         'table_number',
         'type',
@@ -32,6 +33,11 @@ class Order extends Model
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function location()

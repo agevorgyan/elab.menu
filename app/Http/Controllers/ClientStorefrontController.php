@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Customer;
 use App\Models\AnalyticsLog;
 use App\Models\PushSubscription;
 use Illuminate\Http\Request;
@@ -169,18 +170,56 @@ self.addEventListener('fetch', event => {
         $orderNumber = 'ORD-' . strtoupper(Str::random(6));
         $totalAmount = 0;
 
+        $phone = !empty($validated['customer_phone']) ? trim($validated['customer_phone']) : null;
+        $email = !empty($validated['customer_email']) ? strtolower(trim($validated['customer_email'])) : null;
+        $name = !empty($validated['customer_name']) ? trim($validated['customer_name']) : null;
+        $marketingOptIn = filter_var($validated['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN);
+
+        $customer = null;
+        if ($phone || $email) {
+            $customer = Customer::where('vendor_id', $vendor->id)
+                ->where(function ($q) use ($phone, $email) {
+                    if ($phone) {
+                        $q->where('phone', $phone);
+                    }
+                    if ($email) {
+                        $q->orWhere('email', $email);
+                    }
+                })->first();
+        }
+
+        if ($customer) {
+            $customer->update([
+                'name' => ($name && $name !== 'Guest') ? $name : $customer->name,
+                'phone' => $phone ?: $customer->phone,
+                'email' => $email ?: $customer->email,
+                'marketing_opt_in' => $marketingOptIn,
+                'last_order_at' => now(),
+            ]);
+        } elseif ($phone || $email || ($name && $name !== 'Guest')) {
+            $customer = Customer::create([
+                'vendor_id' => $vendor->id,
+                'name' => $name ?: 'Guest',
+                'phone' => $phone,
+                'email' => $email,
+                'marketing_opt_in' => $marketingOptIn,
+                'last_order_at' => now(),
+            ]);
+        }
+
         $order = Order::create([
             'vendor_id' => $vendor->id,
             'location_id' => $validated['location_id'],
+            'customer_id' => $customer?->id,
             'order_number' => $orderNumber,
             'table_number' => $validated['table_number'] ?? 'Counter',
             'type' => $validated['type'],
             'total_amount' => 0,
             'status' => 'pending',
-            'customer_name' => $validated['customer_name'] ?? 'Guest',
-            'customer_phone' => $validated['customer_phone'] ?? null,
-            'customer_email' => $validated['customer_email'] ?? null,
-            'marketing_opt_in' => filter_var($validated['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'customer_name' => $name ?? 'Guest',
+            'customer_phone' => $phone,
+            'customer_email' => $email,
+            'marketing_opt_in' => $marketingOptIn,
             'notes' => $validated['notes'] ?? null,
         ]);
 
@@ -202,6 +241,10 @@ self.addEventListener('fetch', event => {
         }
 
         $order->update(['total_amount' => $totalAmount]);
+
+        if ($customer) {
+            $customer->recalculateStats();
+        }
 
         // If WhatsApp type, generate WhatsApp API text link
         $whatsappUrl = null;

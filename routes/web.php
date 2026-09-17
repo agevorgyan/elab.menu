@@ -11,7 +11,7 @@ use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ClientStorefrontController;
-
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\RegisterController;
 
 // 1. Landing & Client Storefront PWA Routes
@@ -87,6 +87,14 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff'])->prefix('admin')-
 
     // QR Code Studio
     Route::get('/qr', [QrStudioController::class, 'index'])->name('qr.index');
+
+    // Customers CRM
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::post('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');

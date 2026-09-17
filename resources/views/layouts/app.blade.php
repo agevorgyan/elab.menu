@@ -406,6 +406,9 @@
                 <a href="{{ route('admin.qr.index') }}" class="nav-item {{ request()->routeIs('admin.qr.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-qrcode"></i> Table QR Studio
                 </a>
+                <a href="{{ route('admin.customers.index') }}" class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Customers & CRM
+                </a>
                 <a href="{{ route('admin.analytics.index') }}" class="nav-item {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-chart-pie"></i> Analytics & Traffic
                 </a>

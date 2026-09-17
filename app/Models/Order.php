@@ -19,11 +19,14 @@ class Order extends Model
         'status',
         'customer_name',
         'customer_phone',
+        'customer_email',
+        'marketing_opt_in',
         'notes',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'marketing_opt_in' => 'boolean',
     ];
 
     public function vendor()

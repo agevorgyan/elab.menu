@@ -59,11 +59,21 @@
   - 🇬🇧 English (`en`): **`Order via WhatsApp`**
   - 🇷🇺 Russian (`ru`): **`Заказать через WhatsApp`**
 
+### 7. Customer Data, Privacy Policy & Terms of Service (New)
+- **Customer Information Fields**: Added **Name** (`customer_name`), **Phone Number** (`customer_phone`), and **Email Address** (`customer_email`) to storefront order checkout modal.
+- **Privacy & Marketing Consent**: Added marketing consent checkbox with explicit notification that data is confidential and may be used for promotional offers.
+- **Legal Document Pages**: Created dedicated public pages:
+  - 🔒 **[Privacy Policy (Գաղտնիության Քաղաքականություն)](file:///Users/apple/Projects/qrmenu/resources/views/legal/privacy.blade.php)** (`/privacy-policy`)
+  - 📜 **[Terms of Service (Օգտագործման Պայմաններ)](file:///Users/apple/Projects/qrmenu/resources/views/legal/terms.blade.php)** (`/terms-of-service`)
+- **Kitchen Panel Integration**: Added **Customer Email** display and **`Marketing Consent`** badge in Live Kitchen Orders (`/admin/orders`).
+
 ---
 
 ## 📸 Էկրանի Նկարներ (Screenshots & Recordings)
 
 ````carousel
+![Customer Order & Marketing Consent Verified](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/customer_order_verified_1789670094693.png)
+<!-- slide -->
 ![Light Mode Custom Storefront](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/storefront_light_custom_colors_1789664742043.png)
 <!-- slide -->
 ![Modern Bistro Grid Light Mode](/Users/apple/.gemini/antigravity-ide/brain/4849ef08-5ea2-4d19-b821-c237765ac0f9/bistro_grid_light_mode_1789665038433.png)

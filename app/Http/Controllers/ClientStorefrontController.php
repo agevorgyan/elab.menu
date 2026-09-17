@@ -157,6 +157,8 @@ self.addEventListener('fetch', event => {
             'type' => 'required|string|in:dine_in,takeaway,whatsapp',
             'customer_name' => 'nullable|string',
             'customer_phone' => 'nullable|string',
+            'customer_email' => 'nullable|email',
+            'marketing_opt_in' => 'nullable|boolean',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -177,6 +179,8 @@ self.addEventListener('fetch', event => {
             'status' => 'pending',
             'customer_name' => $validated['customer_name'] ?? 'Guest',
             'customer_phone' => $validated['customer_phone'] ?? null,
+            'customer_email' => $validated['customer_email'] ?? null,
+            'marketing_opt_in' => filter_var($validated['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN),
             'notes' => $validated['notes'] ?? null,
         ]);
 

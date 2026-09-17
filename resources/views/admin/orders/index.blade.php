@@ -44,9 +44,24 @@
                 </div>
             </div>
 
-            @if($order->customer_name)
-                <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
-                    <i class="fa-solid fa-user" style="color: var(--primary);"></i> <strong>{{ $order->customer_name }}</strong> {{ $order->customer_phone ? "({$order->customer_phone})" : '' }}
+            @if($order->customer_name || $order->customer_email || $order->customer_phone)
+                <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;">
+                    <div>
+                        <i class="fa-solid fa-user" style="color: var(--primary);"></i> <strong>{{ $order->customer_name ?? 'Guest' }}</strong>
+                        @if($order->customer_phone)
+                            <span style="color: var(--text-muted);">({{ $order->customer_phone }})</span>
+                        @endif
+                        @if($order->customer_email)
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">
+                                <i class="fa-solid fa-envelope"></i> {{ $order->customer_email }}
+                            </div>
+                        @endif
+                    </div>
+                    @if($order->marketing_opt_in)
+                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px;" title="Consented to privacy policy and marketing communications">
+                            <i class="fa-solid fa-check-double"></i> Marketing Consent
+                        </span>
+                    @endif
                 </div>
             @endif
 

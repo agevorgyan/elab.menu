@@ -13,10 +13,14 @@ class OrderController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $status = $request->get('status', 'all');
 
         $orders = Order::where('vendor_id', $vendor->id)
             ->when($activeLocationId, function ($query, $locId) {
                 return $query->where('location_id', $locId);
+            })
+            ->when($status && $status !== 'all', function ($query) use ($status) {
+                return $query->where('status', $status);
             })
             ->with('items')
             ->latest()
@@ -24,7 +28,7 @@ class OrderController extends Controller
 
         $location = Location::find($activeLocationId);
 
-        return view('admin.orders.index', compact('vendor', 'orders', 'location'));
+        return view('admin.orders.index', compact('vendor', 'orders', 'location', 'status'));
     }
 
     public function updateStatus(Request $request, Order $order)

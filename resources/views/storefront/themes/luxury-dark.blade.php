@@ -161,6 +161,18 @@
             font-weight: 800;
             cursor: pointer;
         }
+
+        .input-field {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+            margin-bottom: 0.65rem;
+        }
     </style>
 </head>
 <body x-data="storefrontApp()">
@@ -301,22 +313,35 @@
                 </div>
             </template>
 
-            <!-- Table or Details -->
-            <div style="margin-top: 1.5rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">
-                    @if($lang == 'hy')
-                        Սեղանի համար / Հաճախորդի անուն
-                    @elseif($lang == 'ru')
-                        Номер стола / Имя клиента
-                    @else
-                        Table Number / Customer Name
-                    @endif
+            <!-- Customer Details Form -->
+            <div style="margin-top: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                    @if($lang == 'hy') 👤 Հաճախորդի տվյալներ @elseif($lang == 'ru') 👤 Данные клиента @else 👤 Customer Details @endif
                 </label>
-                <input type="text" x-model="customerName" placeholder="e.g. Table {{ $table ?? '4' }}" style="width: 100%; padding: 0.65rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main);">
+
+                <input type="text" x-model="customerName" class="input-field" placeholder="{{ $lang == 'hy' ? 'Անուն Ազգանուն' : ($lang == 'ru' ? 'Имя Фамилия' : 'Full Name') }}">
+                <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ $lang == 'hy' ? 'Հեռախոսահամար (օր. 091234567)' : ($lang == 'ru' ? 'Телефон' : 'Phone Number') }}">
+                <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ $lang == 'hy' ? 'Էլ․ փոստի հասցե (օր. example@gmail.com)' : ($lang == 'ru' ? 'Эլ. почта' : 'Email Address') }}">
+                
+                <input type="text" x-model="tableNumber" class="input-field" placeholder="Table {{ $table ?? '4' }}">
+
+                <!-- Consent & Marketing Opt-in -->
+                <label style="display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; border-radius: 10px;">
+                    <input type="checkbox" x-model="marketingOptIn" style="margin-top: 0.15rem;">
+                    <span>
+                        @if($lang == 'hy')
+                            🔒 Ես համաձայն եմ <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Գաղտնիության քաղաքականության</a> և <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Օգտագործման պայմանների</a> հետ (իմ տվյալները պահվում են գաղտնի և կարող են օգտագործվել մարքեթինգային նպատակներով)։
+                        @elseif($lang == 'ru')
+                            🔒 Я согласен с <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Политикой конфиденциальности</a> и <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Условиями использования</a> (мои данные хранятся конфиденциально и могут использоваться в маркетинговых целях).
+                        @else
+                            🔒 I agree to the <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Privacy Policy</a> and <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Terms of Service</a> (my data is kept confidential and may be used for marketing purposes).
+                        @endif
+                    </span>
+                </label>
             </div>
 
             <!-- Action Buttons -->
-            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.25rem;">
                 <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
                     @if($lang == 'hy')
                         <i class="fa-solid fa-paper-plane"></i> Պատվիրել
@@ -352,7 +377,11 @@
                 search: '',
                 cart: [],
                 showCartModal: false,
-                customerName: '{{ $table ? "Table " . $table : "" }}',
+                customerName: '',
+                customerPhone: '',
+                customerEmail: '',
+                tableNumber: '{{ $table ? "Table " . $table : "" }}',
+                marketingOptIn: true,
                 
                 matchesSearch(title) {
                     if (!this.search) return true;
@@ -393,9 +422,12 @@
                         },
                         body: JSON.stringify({
                             location_id: {{ $location?->id ?? 1 }},
-                            table_number: '{{ $table ?? "Table 4" }}',
+                            table_number: this.tableNumber || '{{ $table ?? "Table 4" }}',
                             type: type,
                             customer_name: this.customerName || 'Guest',
+                            customer_phone: this.customerPhone || null,
+                            customer_email: this.customerEmail || null,
+                            marketing_opt_in: this.marketingOptIn,
                             items: this.cart.map(c => ({ product_id: c.id, quantity: c.qty }))
                         })
                     });

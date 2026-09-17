@@ -24,6 +24,15 @@ Route::get('/m/{vendor_slug}/manifest.json', [ClientStorefrontController::class,
 Route::get('/m/{vendor_slug}/sw.js', [ClientStorefrontController::class, 'serviceWorker'])->name('client.sw');
 Route::post('/api/m/{vendor_slug}/order', [ClientStorefrontController::class, 'submitOrder'])->name('client.order.submit');
 
+// Legal Documents
+Route::get('/privacy-policy', function () {
+    return view('legal.privacy');
+})->name('legal.privacy');
+
+Route::get('/terms-of-service', function () {
+    return view('legal.terms');
+})->name('legal.terms');
+
 // 2. Auth & Registration Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');

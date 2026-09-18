@@ -242,7 +242,7 @@
 
                 <div>
                     @foreach($cat->products as $prod)
-                        <div class="dish-card" x-show="matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})" @click="addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                        <div class="dish-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})'>
                             <img src="{{ $prod->image }}" class="dish-img">
                             <div class="dish-content">
                                 <div>
@@ -253,7 +253,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
                                     <div class="dish-price">{{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}</div>
                                     
-                                    <button class="btn btn-primary" @click.stop="addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})">
+                                    <button class="btn btn-primary" @click.stop='addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})'>
                                         @if($lang == 'hy')
                                             + Ավելացնել
                                         @elseif($lang == 'ru')
@@ -318,6 +318,14 @@
                     </div>
                 </div>
             </template>
+
+            <!-- Order Notes Field -->
+            <div style="margin-top: 1.25rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                    @if($lang == 'hy') 📝 Նշումներ պատվերի վերաբերյալ @elseif($lang == 'ru') 📝 Примечания к заказу @else 📝 Order Notes & Special Instructions @endif
+                </label>
+                <textarea x-model="orderNotes" class="input-field" rows="2" style="resize: vertical;" placeholder="{{ $lang == 'hy' ? 'օր․ Առանց սոխի, սոուսը առանձին...' : ($lang == 'ru' ? 'напр. Без лука, соус отдельно...' : 'e.g. No onions, sauce on the side...') }}"></textarea>
+            </div>
 
             <!-- Customer Details Form -->
             <div style="margin-top: 1.25rem;">
@@ -388,6 +396,7 @@
                 customerEmail: '',
                 tableNumber: '{{ $table ? "Table " . $table : "" }}',
                 marketingOptIn: true,
+                orderNotes: '',
                 
                 initScrollSpy() {
                     this.$nextTick(() => {
@@ -467,6 +476,7 @@
                             customer_phone: this.customerPhone || null,
                             customer_email: this.customerEmail || null,
                             marketing_opt_in: this.marketingOptIn,
+                            notes: this.orderNotes,
                             items: this.cart.map(c => ({ product_id: c.id, quantity: c.qty }))
                         })
                     });

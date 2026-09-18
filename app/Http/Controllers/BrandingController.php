@@ -28,9 +28,23 @@ class BrandingController extends Controller
             'bg_color' => 'nullable|string|max:20',
             'theme_mode' => 'required|string|in:dark,light',
             'logo' => 'nullable|string',
+            'logo_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
             'cover_image' => 'nullable|string',
+            'cover_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
             'custom_css' => 'nullable|string',
         ]);
+
+        if ($request->hasFile('logo_file') && $request->file('logo_file')->isValid()) {
+            $path = $request->file('logo_file')->store('branding', 'public');
+            $validated['logo'] = '/storage/' . $path;
+        }
+
+        if ($request->hasFile('cover_file') && $request->file('cover_file')->isValid()) {
+            $path = $request->file('cover_file')->store('branding', 'public');
+            $validated['cover_image'] = '/storage/' . $path;
+        }
+
+        unset($validated['logo_file'], $validated['cover_file']);
 
         $vendor->update($validated);
 

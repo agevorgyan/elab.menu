@@ -208,7 +208,7 @@
             <button onclick="document.getElementById('newProductModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <form action="{{ route('admin.menu.products.store') }}" method="POST">
+        <form action="{{ route('admin.menu.products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Category</label>
@@ -242,8 +242,19 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Image URL</label>
-                <input type="url" name="image" placeholder="https://images.unsplash.com/..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-image" style="color: var(--primary);"></i> Dish Image (Upload File or Enter URL)
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; align-items: center;">
+                    <div>
+                        <input type="file" name="image_file" accept="image/*" style="width: 100%; padding: 0.5rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.8rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">📁 Upload file from computer/device</small>
+                    </div>
+                    <div>
+                        <input type="url" name="image" placeholder="https://..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">🔗 Or paste external image link</small>
+                    </div>
+                </div>
             </div>
 
             <div style="margin-bottom: 1rem;">
@@ -306,7 +317,7 @@
             <button onclick="document.getElementById('editProductModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <form id="editProductForm" method="POST">
+        <form id="editProductForm" method="POST" enctype="multipart/form-data">
             @csrf
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Category</label>
@@ -340,8 +351,19 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Image URL</label>
-                <input type="url" id="edit_prod_image" name="image" placeholder="https://images.unsplash.com/..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-image" style="color: var(--primary);"></i> Dish Image (Upload New File or Change URL)
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; align-items: center;">
+                    <div>
+                        <input type="file" name="image_file" accept="image/*" style="width: 100%; padding: 0.5rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.8rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">📁 Upload new image file</small>
+                    </div>
+                    <div>
+                        <input type="url" id="edit_prod_image" name="image" placeholder="https://..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">🔗 Or edit external image link</small>
+                    </div>
+                </div>
             </div>
 
             <div style="margin-bottom: 1rem;">

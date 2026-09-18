@@ -126,22 +126,20 @@ class ClientStorefrontController extends Controller
     {
         $content = "
 const CACHE_NAME = 'qrmenu-" . $vendor_slug . "-v1';
-const urlsToCache = [
-  '/',
-  '/css/app.css',
-];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))
+      .catch(() => fetch(event.request))
   );
 });
         ";
@@ -261,6 +259,9 @@ self.addEventListener('fetch', event => {
             $msg .= "--------------------\n";
             foreach ($order->items as $i) {
                 $msg .= "• {$i->quantity}x {$i->product_name} ({$i->variation_name}) - " . number_format($i->subtotal) . " {$vendor->currency}\n";
+            }
+            if (!empty($order->notes)) {
+                $msg .= "\n📝 *Notes:* {$order->notes}\n";
             }
             $msg .= "--------------------\n";
             $msg .= "💰 *Total: " . number_format($order->total_amount) . " {$vendor->currency}*";

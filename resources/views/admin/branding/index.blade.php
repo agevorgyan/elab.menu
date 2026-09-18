@@ -15,7 +15,7 @@
 <div class="grid-2">
     <!-- Form Customizer -->
     <div class="card">
-        <form action="{{ route('admin.branding.update') }}" method="POST" id="brandingForm">
+        <form action="{{ route('admin.branding.update') }}" method="POST" id="brandingForm" enctype="multipart/form-data">
             @csrf
             <h3 style="font-family: 'Outfit'; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">1. Choose Digital Menu Template</h3>
             <div style="display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.5rem;">
@@ -68,13 +68,35 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Logo Image URL</label>
-                <input type="url" name="logo" value="{{ $vendor->logo }}" placeholder="https://..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-upload" style="color: var(--primary);"></i> Brand Logo Image
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; align-items: center;">
+                    <div>
+                        <input type="file" name="logo_file" accept="image/*" style="width: 100%; padding: 0.5rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.8rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">📁 Upload logo file</small>
+                    </div>
+                    <div>
+                        <input type="url" name="logo" value="{{ $vendor->logo }}" placeholder="https://..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">🔗 Or logo web URL</small>
+                    </div>
+                </div>
             </div>
 
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Cover Header URL</label>
-                <input type="url" name="cover_image" value="{{ $vendor->cover_image }}" placeholder="https://..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-image" style="color: var(--primary);"></i> Storefront Cover Header Image
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; align-items: center;">
+                    <div>
+                        <input type="file" name="cover_file" accept="image/*" style="width: 100%; padding: 0.5rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.8rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">📁 Upload cover header file</small>
+                    </div>
+                    <div>
+                        <input type="url" name="cover_image" value="{{ $vendor->cover_image }}" placeholder="https://..." style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                        <small style="color: var(--text-muted); font-size: 0.7rem; display: block; margin-top: 0.25rem;">🔗 Or cover web URL</small>
+                    </div>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1rem;">

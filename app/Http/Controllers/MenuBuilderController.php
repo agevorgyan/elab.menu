@@ -95,6 +95,7 @@ class MenuBuilderController extends Controller
             'ru_description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'image' => 'nullable|string',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
             'dietary_tags' => 'nullable|array',
             'allergens' => 'nullable|array',
             'calories' => 'nullable|integer',
@@ -104,6 +105,14 @@ class MenuBuilderController extends Controller
             'preparation_time_min' => 'nullable|integer',
             'is_featured' => 'nullable|boolean',
         ]);
+
+        $imageUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
+        if ($request->hasFile('image_file') && $request->file('image_file')->isValid()) {
+            $path = $request->file('image_file')->store('products', 'public');
+            $imageUrl = '/storage/' . $path;
+        } elseif (!empty($validated['image'])) {
+            $imageUrl = $validated['image'];
+        }
 
         $product = Product::create([
             'vendor_id' => $vendor->id,
@@ -121,7 +130,7 @@ class MenuBuilderController extends Controller
                 'ru' => $validated['ru_description'] ?? ($validated['description'] ?? null),
             ],
             'price' => $validated['price'],
-            'image' => $validated['image'] ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
+            'image' => $imageUrl,
             'dietary_tags' => $validated['dietary_tags'] ?? [],
             'calories' => $validated['calories'] ?? null,
             'protein_g' => $validated['protein_g'] ?? null,
@@ -160,6 +169,7 @@ class MenuBuilderController extends Controller
             'ru_description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'image' => 'nullable|string',
+            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
             'dietary_tags' => 'nullable|array',
             'allergens' => 'nullable|array',
             'calories' => 'nullable|integer',
@@ -170,6 +180,14 @@ class MenuBuilderController extends Controller
             'is_featured' => 'nullable|boolean',
             'is_available' => 'nullable|boolean',
         ]);
+
+        $imageUrl = $product->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
+        if ($request->hasFile('image_file') && $request->file('image_file')->isValid()) {
+            $path = $request->file('image_file')->store('products', 'public');
+            $imageUrl = '/storage/' . $path;
+        } elseif (!empty($validated['image'])) {
+            $imageUrl = $validated['image'];
+        }
 
         $product->update([
             'category_id' => $validated['category_id'],
@@ -186,7 +204,7 @@ class MenuBuilderController extends Controller
                 'ru' => $validated['ru_description'] ?? ($validated['description'] ?? null),
             ],
             'price' => $validated['price'],
-            'image' => !empty($validated['image']) ? $validated['image'] : ($product->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80'),
+            'image' => $imageUrl,
             'dietary_tags' => $validated['dietary_tags'] ?? [],
             'calories' => $validated['calories'] ?? null,
             'protein_g' => $validated['protein_g'] ?? null,

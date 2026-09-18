@@ -489,6 +489,7 @@
                     <input type="text" x-model="customerName" class="input-field" placeholder="{{ __('menu.full_name_placeholder') }}">
                     <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ __('menu.phone_placeholder') }}">
                     <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ __('menu.email_placeholder') }}">
+                    <input type="date" x-model="customerBirthdate" class="input-field" placeholder="{{ __('menu.birthdate_placeholder') }}">
                     
                     <div style="position: relative; margin-bottom: 0.65rem;">
                         <input type="text" 

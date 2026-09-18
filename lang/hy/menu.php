@@ -32,6 +32,7 @@ return [
     'full_name_placeholder' => 'Անուն Ազգանուն',
     'phone_placeholder' => 'Հեռախոսահամար (օր. 091234567)',
     'email_placeholder' => 'Էլ․ փոստի հասցե (օր. example@gmail.com)',
+    'birthdate_placeholder' => 'Ծննդյան ամսաթիվ (օր. 1990-05-15)',
     'privacy_policy' => 'Գաղտնիության քաղաքականության',
     'terms_of_service' => 'Օգտագործման պայմանների',
     'privacy_consent' => '🔒 Ես համաձայն եմ :privacy_link և :terms_link հետ (իմ տվյալները պահվում են գաղտնի և կարող են օգտագործվել մարքեթինգային նպատակներով)։',

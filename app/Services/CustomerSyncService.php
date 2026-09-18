@@ -17,7 +17,8 @@ class CustomerSyncService
         ?string $phone,
         ?string $email,
         bool $marketingOptIn,
-        int|string|null $locationId = null
+        int|string|null $locationId = null,
+        ?string $birthdate = null
     ): ?Customer {
         $phone = !empty($phone) ? trim($phone) : null;
         $email = !empty($email) ? strtolower(trim($email)) : null;
@@ -42,6 +43,7 @@ class CustomerSyncService
                 'name' => ($name && $name !== 'Guest') ? $name : $customer->name,
                 'phone' => $phone ?: $customer->phone,
                 'email' => $email ?: $customer->email,
+                'birthdate' => $birthdate ?: $customer->birthdate,
                 'marketing_opt_in' => $marketingOptIn,
                 'last_order_at' => now(),
             ];
@@ -62,6 +64,7 @@ class CustomerSyncService
                 'name' => $name ?: 'Guest',
                 'phone' => $phone,
                 'email' => $email,
+                'birthdate' => $birthdate,
                 'marketing_opt_in' => $marketingOptIn,
                 'last_order_at' => now(),
             ]);

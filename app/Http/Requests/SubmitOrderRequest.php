@@ -37,6 +37,7 @@ class SubmitOrderRequest extends FormRequest
             'customer_name' => 'nullable|string',
             'customer_phone' => 'nullable|string',
             'customer_email' => 'nullable|email',
+            'customer_birthdate' => 'nullable|date',
             'marketing_opt_in' => 'nullable|boolean',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',

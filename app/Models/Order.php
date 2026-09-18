@@ -23,6 +23,7 @@ class Order extends Model
         'customer_name',
         'customer_phone',
         'customer_email',
+        'customer_birthdate',
         'marketing_opt_in',
         'notes',
     ];

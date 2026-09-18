@@ -32,6 +32,7 @@ return [
     'full_name_placeholder' => 'Full Name',
     'phone_placeholder' => 'Phone Number',
     'email_placeholder' => 'Email Address',
+    'birthdate_placeholder' => 'Date of Birth',
     'privacy_policy' => 'Privacy Policy',
     'terms_of_service' => 'Terms of Service',
     'privacy_consent' => '🔒 I agree to the :privacy_link and :terms_link (my data is kept confidential and may be used for marketing purposes).',

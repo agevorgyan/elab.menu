@@ -16,6 +16,7 @@ class Customer extends Model
         'name',
         'phone',
         'email',
+        'birthdate',
         'notes',
         'marketing_opt_in',
         'total_orders_count',
@@ -27,6 +28,7 @@ class Customer extends Model
         'marketing_opt_in' => 'boolean',
         'total_spent' => 'decimal:2',
         'last_order_at' => 'datetime',
+        'birthdate' => 'date',
     ];
 
     public function vendor()

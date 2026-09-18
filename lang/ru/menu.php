@@ -32,6 +32,7 @@ return [
     'full_name_placeholder' => 'Имя Фамилия',
     'phone_placeholder' => 'Номер телефона',
     'email_placeholder' => 'Адрес эл. почты',
+    'birthdate_placeholder' => 'Дата рождения',
     'privacy_policy' => 'Политикой конфиденциальности',
     'terms_of_service' => 'Условиями использования',
     'privacy_consent' => '🔒 Я согласен с :privacy_link и :terms_link (мои данные хранятся конфиденциально и могут использоваться в маркетинговых целях).',

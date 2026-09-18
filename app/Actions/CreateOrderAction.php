@@ -51,7 +51,8 @@ class CreateOrderAction
                 phone: $dto->customerPhone,
                 email: $dto->customerEmail,
                 marketingOptIn: $dto->marketingOptIn,
-                locationId: $dto->locationId
+                locationId: $dto->locationId,
+                birthdate: $dto->customerBirthdate
             );
 
             // Create base order record
@@ -67,6 +68,7 @@ class CreateOrderAction
                 'customer_name' => $dto->customerName ?? 'Guest',
                 'customer_phone' => $dto->customerPhone,
                 'customer_email' => $dto->customerEmail,
+                'customer_birthdate' => $dto->customerBirthdate,
                 'marketing_opt_in' => $dto->marketingOptIn,
                 'notes' => $dto->notes,
             ]);

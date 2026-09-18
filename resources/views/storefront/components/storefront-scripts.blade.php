@@ -24,6 +24,7 @@
             wifiCopied: false,
             customerName: '',
             customerPhone: '',
+            customerBirthdate: '',
             isTableFixed: {{ !empty($table) ? 'true' : 'false' }},
             tableNumber: customConfig.tableNumber !== undefined ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
             showWaiterModal: false,
@@ -187,6 +188,7 @@
                         customer_name: this.customerName || 'Guest',
                         customer_phone: this.customerPhone || null,
                         customer_email: this.customerEmail || null,
+                        customer_birthdate: this.customerBirthdate || null,
                         marketing_opt_in: this.marketingOptIn,
                         notes: this.orderNotes,
                         items: this.cart.map(c => ({

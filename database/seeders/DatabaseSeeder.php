@@ -21,6 +21,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Subscription Plans
+        $this->call(SubscriptionPlanSeeder::class);
+        $proPlan = \App\Models\SubscriptionPlan::where('slug', 'pro')->first();
+        $businessPlan = \App\Models\SubscriptionPlan::where('slug', 'business')->first();
+
         // 1. Menu Templates
         $t1 = MenuTemplate::create([
             'name' => 'Modern Bistro Grid',
@@ -96,6 +101,7 @@ class DatabaseSeeder extends Seeder
             'secondary_color' => '#ef4444',
             'theme_mode' => 'dark',
             'subscription_plan' => 'pro',
+            'subscription_plan_id' => $proPlan?->id,
             'is_active' => true,
         ]);
 
@@ -397,7 +403,8 @@ class DatabaseSeeder extends Seeder
             'primary_color' => '#06b6d4',
             'secondary_color' => '#6366f1',
             'theme_mode' => 'dark',
-            'subscription_plan' => 'enterprise',
+            'subscription_plan' => 'business',
+            'subscription_plan_id' => $businessPlan?->id,
             'is_active' => true,
         ]);
 

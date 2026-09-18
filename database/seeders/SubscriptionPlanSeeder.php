@@ -55,7 +55,7 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'name' => 'Business',
                 'slug' => 'business',
-                'price' => 34900,
+                'price' => 39900,
                 'currency' => 'AMD',
                 'billing_interval' => 'monthly',
                 'duration_days' => 30,

@@ -47,7 +47,7 @@
                     </td>
                     <td style="padding: 0.75rem; color: var(--text-main);">{{ $v->locations->count() }} Locations</td>
                     <td style="padding: 0.75rem; color: var(--text-main);">{{ $v->menuTemplate?->name ?? 'Default' }}</td>
-                    <td style="padding: 0.75rem;"><span style="background: var(--badge-bg); color: var(--badge-text); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{{ $v->subscription_plan }}</span></td>
+                    <td style="padding: 0.75rem;"><span style="background: var(--badge-bg); color: var(--badge-text); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{{ $v->plan?->name ?? strtoupper($v->subscription_plan) }}</span></td>
                     <td style="padding: 0.75rem;">
                         @if($v->is_active)
                             <span style="color: #10b981; font-weight: 600;"><i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Active</span>
@@ -120,9 +120,11 @@
                 <div>
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Subscription Plan</label>
                     <select name="subscription_plan" style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
-                        <option value="basic">Basic (1 Location)</option>
-                        <option value="pro" selected>Pro (Multi-Location)</option>
-                        <option value="enterprise">Enterprise</option>
+                        @foreach($plans as $plan)
+                            <option value="{{ $plan->slug }}" {{ $plan->slug === 'pro' ? 'selected' : '' }}>
+                                {{ $plan->name }} ({{ number_format($plan->price) }} AMD)
+                            </option>
+                        @endforeach
                     </select>
                 </div>
             </div>

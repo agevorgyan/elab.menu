@@ -13,6 +13,9 @@
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @if(!empty($vendor->custom_css))
+        <style>{!! strip_tags($vendor->custom_css) !!}</style>
+    @endif
     
     <style>
         :root {
@@ -133,9 +136,70 @@
         .category-section {
             scroll-margin-top: 75px;
         }
+
+        /* Toast Notification Feedback */
+        .toast-notification {
+            position: fixed;
+            top: 1.25rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 250;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            padding: 0.7rem 1.25rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            max-width: 90vw;
+            pointer-events: none;
+            backdrop-filter: blur(12px);
+        }
+        .toast-anim-enter, .toast-anim-leave {
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .toast-anim-start {
+            opacity: 0;
+            transform: translate(-50%, -20px) scale(0.95);
+        }
+        .toast-anim-end {
+            opacity: 1;
+            transform: translate(-50%, 0) scale(1);
+        }
+        .toast-success { border-color: rgba(16, 185, 129, 0.4); }
+        .toast-success i { color: #10b981; font-size: 1.05rem; }
+        .toast-info { border-color: rgba(59, 130, 246, 0.4); }
+        .toast-info i { color: #3b82f6; font-size: 1.05rem; }
+        .toast-remove { border-color: rgba(239, 68, 68, 0.4); }
+        .toast-remove i { color: #ef4444; font-size: 1.05rem; }
     </style>
+
+    @if(!empty($vendor->custom_css))
+        <style>
+            {!! $vendor->custom_css !!}
+        </style>
+    @endif
 </head>
 <body x-data="modernBistroApp()">
+
+    <!-- Toast Notification Feedback -->
+    <div x-show="toast.show" 
+         x-transition:enter="toast-anim-enter"
+         x-transition:enter-start="toast-anim-start"
+         x-transition:enter-end="toast-anim-end"
+         x-transition:leave="toast-anim-leave"
+         x-transition:leave-start="toast-anim-end"
+         x-transition:leave-end="toast-anim-start"
+         class="toast-notification"
+         :class="'toast-' + toast.type"
+         x-cloak>
+        <i :class="toast.icon"></i>
+        <span x-text="toast.message"></span>
+    </div>
 
     <!-- Header Hero -->
     <div class="hero-bistro">
@@ -186,7 +250,22 @@
 
                 <div>
                     @foreach($cat->products as $prod)
-                        <div class="dish-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})'>
+                        @php
+                            $prodPayload = [
+                                'id' => $prod->id,
+                                'name' => $prod->getTranslatedName($lang),
+                                'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                                'description' => $prod->getTranslatedDescription($lang),
+                                'base_price' => (float)$prod->getEffectivePrice($location?->id),
+                                'variations' => $prod->variations->map(fn($v) => [
+                                    'id' => $v->id,
+                                    'name' => $v->name,
+                                    'price' => (float)$v->price,
+                                    'is_default' => (bool)$v->is_default
+                                ])->values(),
+                            ];
+                        @endphp
+                        <div class="dish-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='selectDish({{ json_encode($prodPayload) }})'>
                             <img src="{{ $prod->image }}" class="dish-img">
                             <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
@@ -226,15 +305,18 @@
 
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
                                     <div style="font-family: 'Outfit'; font-weight: 800; color: var(--accent); font-size: 1.15rem;">
-                                        {{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}
-                                    </div>
-                                    <button class="btn-add" @click.stop='addToCart({{ $prod->id }}, {!! json_encode($prod->getTranslatedName($lang)) !!}, {{ (float)$prod->getEffectivePrice($location?->id) }})'>
-                                        @if($lang == 'hy')
-                                            + Ավելացնել
-                                        @elseif($lang == 'ru')
-                                            + Добавить
+                                        @if($prod->variations->count() > 1)
+                                            <small style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">{{ $lang == 'hy' ? 'սկսած' : ($lang == 'ru' ? 'от' : 'from') }}</small>
+                                            {{ number_format($prod->variations->min('price')) }} {{ $vendor->currency }}
                                         @else
-                                            + Add
+                                            {{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}
+                                        @endif
+                                    </div>
+                                    <button class="btn-add" @click.stop='selectDish({{ json_encode($prodPayload) }})'>
+                                        @if($prod->variations->count() > 1)
+                                            {{ $lang == 'hy' ? '+ Ընտրել' : ($lang == 'ru' ? '+ Выбрать' : '+ Select') }}
+                                        @else
+                                            {{ $lang == 'hy' ? '+ Ավելացնել' : ($lang == 'ru' ? '+ Добавить' : '+ Add') }}
                                         @endif
                                     </button>
                                 </div>
@@ -263,6 +345,76 @@
         <div style="font-family: 'Outfit'; font-size: 1.1rem;" x-text="cartTotalPrice + ' {{ $vendor->currency }}'">0 AMD</div>
     </div>
 
+    <!-- Variation Selection Modal -->
+    <div x-show="showVariationModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 110; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
+        <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div style="display: flex; gap: 0.85rem; align-items: center;">
+                    <img :src="selectedDish?.image" style="width: 65px; height: 65px; object-fit: cover; border-radius: 12px;" alt="dish">
+                    <div>
+                        <h3 style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 700; color: var(--text-main);" x-text="selectedDish?.name"></h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" x-text="selectedDish?.description"></p>
+                    </div>
+                </div>
+                <button @click="showVariationModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; padding: 0.25rem;">✕</button>
+            </div>
+
+            <div style="margin: 1.25rem 0 0.5rem;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
+                    @if($lang == 'hy')
+                        Ընտրեք չափսը / տարբերակը՝
+                    @elseif($lang == 'ru')
+                        Выберите размер / порцию:
+                    @else
+                        Choose Portion / Option:
+                    @endif
+                </label>
+
+                <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <template x-for="v in selectedDish?.variations" :key="v.id">
+                        <div @click="selectedVariation = v"
+                             :style="selectedVariation?.id === v.id ? 'border: 2px solid var(--primary); background: rgba(225, 29, 72, 0.08);' : 'border: 1px solid var(--border-color); background: var(--bg-main);'"
+                             style="border-radius: 12px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center;">
+                                    <div x-show="selectedVariation?.id === v.id" style="width: 10px; height: 10px; border-radius: 50%; background: var(--primary);"></div>
+                                </div>
+                                <span style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;" x-text="v.name"></span>
+                            </div>
+                            <span style="font-weight: 800; font-family: 'Outfit'; color: var(--accent); font-size: 1.05rem;" x-text="Number(v.price).toLocaleString() + ' {{ $vendor->currency }}'"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px;">
+                <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
+                    @if($lang == 'hy') Քանակ @elseif($lang == 'ru') Количество @else Quantity @endif
+                </span>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button type="button" @click="if(variationQty > 1) variationQty--" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 800; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
+                    <span style="font-weight: 800; font-size: 1.1rem; min-width: 24px; text-align: center; color: var(--text-main);" x-text="variationQty">1</span>
+                    <button type="button" @click="variationQty++" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 800; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                </div>
+            </div>
+
+            <!-- Confirm Add to Cart CTA -->
+            <button type="button" @click="addSelectedVariationToCart()" style="width: 100%; margin-top: 1.25rem; padding: 0.95rem; background: var(--primary); color: #ffffff; border: none; border-radius: 14px; font-weight: 800; font-size: 1.05rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.35);">
+                <span>
+                    @if($lang == 'hy')
+                        <i class="fa-solid fa-plus"></i> Ավելացնել զամբյուղ
+                    @elseif($lang == 'ru')
+                        <i class="fa-solid fa-plus"></i> Добавить в корзину
+                    @else
+                        <i class="fa-solid fa-plus"></i> Add to Order
+                    @endif
+                </span>
+                <span style="font-family: 'Outfit'; font-size: 1.15rem;" x-text="Number((selectedVariation?.price || selectedDish?.base_price || 0) * variationQty).toLocaleString() + ' {{ $vendor->currency }}'"></span>
+            </button>
+        </div>
+    </div>
+
     <!-- Cart Modal -->
     <div x-show="showCartModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
         <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
@@ -279,74 +431,96 @@
                 <button @click="showCartModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
             </div>
 
-            <template x-for="(item, idx) in cart" :key="idx">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
-                    <div>
-                        <div style="font-weight: 700; color: var(--text-main);" x-text="item.name"></div>
-                        <div style="font-size: 0.8rem; color: var(--accent);" x-text="item.price + ' AMD'"></div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 8px;">
-                        <button @click="changeQty(idx, -1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">-</button>
-                        <span x-text="item.qty" style="font-weight: 700; color: var(--text-main);"></span>
-                        <button @click="changeQty(idx, 1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">+</button>
-                    </div>
+            <!-- Empty Cart State -->
+            <div x-show="cart.length === 0" style="text-align: center; padding: 2.5rem 1rem 1.5rem;">
+                <div style="width: 76px; height: 76px; border-radius: 50%; background: var(--bg-main); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+                    <i class="fa-solid fa-basket-shopping" style="font-size: 2rem; color: var(--text-muted); opacity: 0.5;"></i>
                 </div>
-            </template>
-
-            <!-- Order Notes Field -->
-            <div style="margin-top: 1.25rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                    @if($lang == 'hy') 📝 Նշումներ պատվերի վերաբերյալ @elseif($lang == 'ru') 📝 Примечания к заказу @else 📝 Order Notes & Special Instructions @endif
-                </label>
-                <textarea x-model="orderNotes" class="input-field" rows="2" style="resize: vertical;" placeholder="{{ $lang == 'hy' ? 'օր․ Առանց սոխի, սոուսը առանձին...' : ($lang == 'ru' ? 'напр. Без лука, соус отдельно...' : 'e.g. No onions, sauce on the side...') }}"></textarea>
+                <h4 style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem;">
+                    @if($lang == 'hy') Զամբյուղը դատարկ է @elseif($lang == 'ru') Корзина пуста @else Your cart is empty @endif
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 280px; margin: 0 auto 1.5rem; line-height: 1.4;">
+                    @if($lang == 'hy') Դուք դեռ ոչինչ չեք ավելացրել։ Ընտրեք Ձեր նախընտրած ուտեստները մենյուից։ @elseif($lang == 'ru') Вы еще ничего не добавили. Выберите блюда из меню для оформления заказа. @else You haven't added anything yet. Choose delicious dishes from our menu. @endif
+                </p>
+                <button type="button" @click="showCartModal = false" style="background: var(--primary); color: #fff; border: none; padding: 0.75rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);">
+                    @if($lang == 'hy') <i class="fa-solid fa-arrow-left"></i> Դիտել մենյուն @elseif($lang == 'ru') <i class="fa-solid fa-arrow-left"></i> Перейти к меню @else <i class="fa-solid fa-arrow-left"></i> Browse Menu @endif
+                </button>
             </div>
 
-            <!-- Customer Details Form -->
-            <div style="margin-top: 1.25rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                    @if($lang == 'hy') 👤 Հաճախորդի տվյալներ @elseif($lang == 'ru') 👤 Данные клиента @else 👤 Customer Details @endif
-                </label>
+            <!-- Active Cart Items and Checkout -->
+            <div x-show="cart.length > 0">
+                <template x-for="(item, idx) in cart" :key="idx">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main);" x-text="item.name"></div>
+                            <template x-if="item.variation_name && item.variation_name !== 'Standard' && item.variation_name !== 'Standard Portion'">
+                                <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-top: 0.1rem;" x-text="'• ' + item.variation_name"></div>
+                            </template>
+                            <div style="font-size: 0.85rem; color: var(--accent); font-family: 'Outfit'; margin-top: 0.15rem;" x-text="Number(item.price).toLocaleString() + ' AMD'"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 8px;">
+                            <button @click="changeQty(idx, -1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">-</button>
+                            <span x-text="item.qty" style="font-weight: 700; color: var(--text-main);"></span>
+                            <button @click="changeQty(idx, 1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">+</button>
+                        </div>
+                    </div>
+                </template>
 
-                <input type="text" x-model="customerName" class="input-field" placeholder="{{ $lang == 'hy' ? 'Անուն Ազգանուն' : ($lang == 'ru' ? 'Имя Фамилия' : 'Full Name') }}">
-                <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ $lang == 'hy' ? 'Հեռախոսահամար (օր. 091234567)' : ($lang == 'ru' ? 'Телефон' : 'Phone Number') }}">
-                <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ $lang == 'hy' ? 'Էլ․ փոստի հասցե (օր. example@gmail.com)' : ($lang == 'ru' ? 'Эլ. почта' : 'Email Address') }}">
-                
-                <input type="text" x-model="tableNumber" class="input-field" placeholder="Table {{ $table ?? '4' }}">
+                <!-- Order Notes Field -->
+                <div style="margin-top: 1.25rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        @if($lang == 'hy') 📝 Նշումներ պատվերի վերաբերյալ @elseif($lang == 'ru') 📝 Примечания к заказу @else 📝 Order Notes & Special Instructions @endif
+                    </label>
+                    <textarea x-model="orderNotes" class="input-field" rows="2" style="resize: vertical;" placeholder="{{ $lang == 'hy' ? 'օր․ Առանց սոխի, սոուսը առանձին...' : ($lang == 'ru' ? 'напр. Без лука, соус отдельно...' : 'e.g. No onions, sauce on the side...') }}"></textarea>
+                </div>
 
-                <!-- Consent & Marketing Opt-in -->
-                <label style="display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; border-radius: 10px;">
-                    <input type="checkbox" x-model="marketingOptIn" style="margin-top: 0.15rem;">
-                    <span>
+                <!-- Customer Details Form -->
+                <div style="margin-top: 1.25rem;">
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        @if($lang == 'hy') 👤 Հաճախորդի տվյալներ @elseif($lang == 'ru') 👤 Данные клиента @else 👤 Customer Details @endif
+                    </label>
+
+                    <input type="text" x-model="customerName" class="input-field" placeholder="{{ $lang == 'hy' ? 'Անուն Ազգանուն' : ($lang == 'ru' ? 'Имя Фамилия' : 'Full Name') }}">
+                    <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ $lang == 'hy' ? 'Հեռախոսահամար (օր. 091234567)' : ($lang == 'ru' ? 'Телефон' : 'Phone Number') }}">
+                    <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ $lang == 'hy' ? 'Էլ․ փոստի հասցե (օր. example@gmail.com)' : ($lang == 'ru' ? 'Эլ. почта' : 'Email Address') }}">
+                    
+                    <input type="text" x-model="tableNumber" class="input-field" placeholder="Table {{ $table ?? '4' }}">
+
+                    <!-- Consent & Marketing Opt-in -->
+                    <label style="display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; border-radius: 10px;">
+                        <input type="checkbox" x-model="marketingOptIn" style="margin-top: 0.15rem;">
+                        <span>
+                            @if($lang == 'hy')
+                                🔒 Ես համաձայն եմ <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Գաղտնիության քաղաքականության</a> և <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Օգտագործման պայմանների</a> հետ (իմ տվյալները պահվում են գաղտնի և կարող են օգտագործվել մարքեթինգային նպատակներով)։
+                            @elseif($lang == 'ru')
+                                🔒 Я согласен с <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Политикой конфиденциальности</a> и <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Условиями использования</a> (мои данные хранятся конфиденциально и могут использоваться в маркетинговых целях).
+                            @else
+                                🔒 I agree to the <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Privacy Policy</a> and <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Terms of Service</a> (my data is kept confidential and may be used for marketing purposes).
+                            @endif
+                        </span>
+                    </label>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.25rem;">
+                    <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
                         @if($lang == 'hy')
-                            🔒 Ես համաձայն եմ <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Գաղտնիության քաղաքականության</a> և <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Օգտագործման պայմանների</a> հետ (իմ տվյալները պահվում են գաղտնի և կարող են օգտագործվել մարքեթինգային նպատակներով)։
+                            <i class="fa-solid fa-paper-plane"></i> Պատվիրել
                         @elseif($lang == 'ru')
-                            🔒 Я согласен с <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Политикой конфиденциальности</a> и <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Условиями использования</a> (мои данные хранятся конфиденциально и могут использоваться в маркетинговых целях).
+                            <i class="fa-solid fa-paper-plane"></i> Заказать
                         @else
-                            🔒 I agree to the <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Privacy Policy</a> and <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Terms of Service</a> (my data is kept confidential and may be used for marketing purposes).
+                            <i class="fa-solid fa-paper-plane"></i> Order
                         @endif
-                    </span>
-                </label>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.25rem;">
-                <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                    @if($lang == 'hy')
-                        <i class="fa-solid fa-paper-plane"></i> Պատվիրել
-                    @elseif($lang == 'ru')
-                        <i class="fa-solid fa-paper-plane"></i> Заказать
-                    @else
-                        <i class="fa-solid fa-paper-plane"></i> Order
-                    @endif
-                </button>
-                <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                    @if($lang == 'hy')
-                        <i class="fa-brands fa-whatsapp"></i> Պատվիրել WhatsApp-ով
-                    @elseif($lang == 'ru')
-                        <i class="fa-brands fa-whatsapp"></i> Заказать через WhatsApp
-                    @else
-                        <i class="fa-brands fa-whatsapp"></i> Order via WhatsApp
-                    @endif
-                </button>
+                    </button>
+                    <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
+                        @if($lang == 'hy')
+                            <i class="fa-brands fa-whatsapp"></i> Պատվիրել WhatsApp-ով
+                        @elseif($lang == 'ru')
+                            <i class="fa-brands fa-whatsapp"></i> Заказать через WhatsApp
+                        @else
+                            <i class="fa-brands fa-whatsapp"></i> Order via WhatsApp
+                        @endif
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -358,17 +532,41 @@
                 search: '',
                 cart: [],
                 showCartModal: false,
+                showVariationModal: false,
+                selectedDish: null,
+                selectedVariation: null,
+                variationQty: 1,
                 customerName: '',
                 customerPhone: '',
                 customerEmail: '',
                 tableNumber: '{{ $table ? "Table " . $table : "" }}',
                 marketingOptIn: true,
                 orderNotes: '',
+                toast: {
+                    show: false,
+                    message: '',
+                    type: 'success',
+                    icon: 'fa-solid fa-circle-check',
+                    timeout: null
+                },
                 
                 init() {
                     this.$nextTick(() => {
                         this.initScrollSpy();
                     });
+                },
+                triggerToast(message, type = 'success', icon = null) {
+                    if (this.toast.timeout) clearTimeout(this.toast.timeout);
+                    this.toast.message = message;
+                    this.toast.type = type;
+                    this.toast.icon = icon || (type === 'success' ? 'fa-solid fa-circle-check' : (type === 'remove' ? 'fa-solid fa-trash-can' : 'fa-solid fa-circle-info'));
+                    this.toast.show = true;
+                    if (navigator.vibrate) {
+                        try { navigator.vibrate(30); } catch(e) {}
+                    }
+                    this.toast.timeout = setTimeout(() => {
+                        this.toast.show = false;
+                    }, 2500);
                 },
                 scrollToCat(catId) {
                     this.activeCat = catId;
@@ -402,17 +600,64 @@
                     if (!this.search) return true;
                     return title.includes(this.search.toLowerCase());
                 },
-                addToCart(id, name, price) {
-                    let existing = this.cart.find(c => c.id === id);
-                    if (existing) {
-                        existing.qty++;
-                    } else {
-                        this.cart.push({ id: id, name: name, price: price, qty: 1 });
+                selectDish(dish) {
+                    if (!dish.variations || dish.variations.length <= 1) {
+                        const v = (dish.variations && dish.variations.length === 1) ? dish.variations[0] : null;
+                        this.addToCart(
+                            dish.id,
+                            dish.name,
+                            v ? v.price : dish.base_price,
+                            v ? v.name : 'Standard',
+                            v ? v.id : null,
+                            1
+                        );
+                        return;
                     }
+                    this.selectedDish = dish;
+                    this.selectedVariation = dish.variations.find(v => v.is_default) || dish.variations[0];
+                    this.variationQty = 1;
+                    this.showVariationModal = true;
+                },
+                addSelectedVariationToCart() {
+                    if (!this.selectedDish || !this.selectedVariation) return;
+                    this.addToCart(
+                        this.selectedDish.id,
+                        this.selectedDish.name,
+                        this.selectedVariation.price,
+                        this.selectedVariation.name,
+                        this.selectedVariation.id,
+                        this.variationQty
+                    );
+                    this.showVariationModal = false;
+                },
+                addToCart(id, name, price, variationName = 'Standard', variationId = null, qty = 1) {
+                    let existing = this.cart.find(c => c.id === id && c.variation_name === variationName);
+                    if (existing) {
+                        existing.qty += qty;
+                    } else {
+                        this.cart.push({
+                            id: id,
+                            name: name,
+                            price: price,
+                            variation_name: variationName,
+                            variation_id: variationId,
+                            qty: qty
+                        });
+                    }
+                    const addedText = '{{ $lang == "hy" ? "ավելացվեց զամբյուղում" : ($lang == "ru" ? "добавлено в корзину" : "added to cart") }}';
+                    const varLabel = (variationName && variationName !== 'Standard' && variationName !== 'Standard Portion') ? ' (' + variationName + ')' : '';
+                    this.triggerToast('«' + name + varLabel + '» ' + addedText, 'success', 'fa-solid fa-circle-check');
                 },
                 changeQty(idx, delta) {
+                    const item = this.cart[idx];
+                    if (!item) return;
                     this.cart[idx].qty += delta;
-                    if (this.cart[idx].qty <= 0) this.cart.splice(idx, 1);
+                    if (this.cart[idx].qty <= 0) {
+                        const removedName = item.name + (item.variation_name && item.variation_name !== 'Standard' && item.variation_name !== 'Standard Portion' ? ' (' + item.variation_name + ')' : '');
+                        const removedText = '{{ $lang == "hy" ? "հեռացվեց զամբյուղից" : ($lang == "ru" ? "удалено из корзины" : "removed from cart") }}';
+                        this.cart.splice(idx, 1);
+                        this.triggerToast('«' + removedName + '» ' + removedText, 'remove', 'fa-solid fa-trash-can');
+                    }
                 },
                 get cartTotalCount() {
                     return this.cart.reduce((a, b) => a + b.qty, 0);
@@ -434,7 +679,12 @@
                             customer_email: this.customerEmail || null,
                             marketing_opt_in: this.marketingOptIn,
                             notes: this.orderNotes,
-                            items: this.cart.map(c => ({ product_id: c.id, quantity: c.qty }))
+                            items: this.cart.map(c => ({
+                                product_id: c.id,
+                                variation_id: c.variation_id || null,
+                                variation_name: c.variation_name || null,
+                                quantity: c.qty
+                            }))
                         })
                     });
                     const data = await res.json();

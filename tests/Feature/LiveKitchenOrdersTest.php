@@ -127,11 +127,11 @@ class LiveKitchenOrdersTest extends TestCase
             'status' => 'pending',
         ]);
 
-        // Attempt IDOR update
+        // Attempt IDOR update - with TenantScope route model binding returns 404, preventing cross-tenant leakage
         $response = $this->actingAs($user1)->postJson(route('admin.orders.status', $orderOfVendor2->id), [
             'status' => 'preparing',
         ]);
 
-        $response->assertStatus(403);
+        $this->assertTrue(in_array($response->status(), [403, 404]), "Expected 403 or 404, got {$response->status()}");
     }
 }

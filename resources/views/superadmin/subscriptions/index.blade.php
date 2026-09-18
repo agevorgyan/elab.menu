@@ -1,5 +1,42 @@
 @extends('layouts.app')
 
+@section('styles')
+<style>
+    .subs-desktop-table {
+        display: block;
+    }
+    .subs-mobile-cards {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .subs-desktop-table {
+            display: none !important;
+        }
+        .subs-mobile-cards {
+            display: flex !important;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .sub-mobile-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.15rem;
+            box-shadow: var(--shadow-card);
+        }
+        .modal-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .page-header {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 1rem;
+        }
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <div>
@@ -10,7 +47,8 @@
     </div>
 </div>
 
-<div class="glass-card" style="padding: 1.25rem;">
+<!-- Desktop Table View -->
+<div class="glass-card subs-desktop-table" style="padding: 1.25rem;">
     <div style="overflow-x: auto;">
         <table class="data-table">
             <thead>
@@ -99,6 +137,96 @@
     </div>
 </div>
 
+<!-- Mobile Cards View -->
+<div class="subs-mobile-cards">
+    @foreach($vendors as $v)
+        <div class="sub-mobile-card">
+            <!-- Vendor Name & Status -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">{{ $v->name }}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+                        <a href="mailto:{{ $v->email }}" style="color: inherit; text-decoration: none;">{{ $v->email }}</a>
+                        @if($v->phone)
+                            • <a href="tel:{{ $v->phone }}" style="color: var(--primary); text-decoration: none;">{{ $v->phone }}</a>
+                        @endif
+                    </div>
+                </div>
+                <div>
+                    @if($v->isExpired())
+                        <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                            🔴 Ավարտված
+                        </span>
+                    @elseif($v->isTrialing())
+                        <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+                            ⏳ Trial
+                        </span>
+                    @else
+                        <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">
+                            🟢 Ակտիվ
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Plan & Days Left Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 0.9rem; margin-bottom: 0.85rem;">
+                <div>
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
+                        {{ $v->plan?->name ?? strtoupper($v->subscription_plan ?? 'PRO') }}
+                    </span>
+                    <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 0.4rem;">
+                        {{ $v->plan?->formatted_price ?? '—' }}
+                    </span>
+                </div>
+                <div style="text-align: right;">
+                    @if($v->isExpired())
+                        <span style="color: #ef4444; font-weight: 800; font-size: 0.9rem;">0 օր</span>
+                    @else
+                        <span style="color: {{ $v->daysLeft() <= 3 ? '#f59e0b' : '#22c55e' }}; font-weight: 800; font-size: 0.9rem;">
+                            {{ $v->daysLeft() }} օր մնաց
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Expiration & Last Payment details -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.78rem; margin-bottom: 1rem; color: var(--text-muted);">
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.65rem;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;">Ավարտ՝</div>
+                    <div style="font-weight: 700; color: var(--text-main); margin-top: 0.15rem;">
+                        @if($v->isTrialing())
+                            {{ $v->trial_ends_at ? $v->trial_ends_at->format('d.m.Y H:i') : '—' }}
+                        @else
+                            {{ $v->subscription_expires_at ? $v->subscription_expires_at->format('d.m.Y') : 'Անսահմանափակ' }}
+                        @endif
+                    </div>
+                </div>
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.65rem;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;">Վերջին վճարում՝</div>
+                    @if($v->payments->first())
+                        <div style="font-weight: 700; color: #22c55e; margin-top: 0.15rem;">
+                            {{ number_format($v->payments->first()->amount, 0, '.', ' ') }} {{ $v->payments->first()->currency }}
+                        </div>
+                    @else
+                        <div style="color: var(--text-muted); margin-top: 0.15rem;">Չկա</div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                <button class="btn btn-secondary" style="justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.75rem;" onclick="openSubModal({{ json_encode($v) }})">
+                    <i class="fa-solid fa-pen-to-square"></i> Փոխել
+                </button>
+                <button class="btn btn-primary" style="justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.75rem;" onclick="openPaymentModal({{ json_encode($v) }})">
+                    <i class="fa-solid fa-receipt"></i> + Վճարում
+                </button>
+            </div>
+        </div>
+    @endforeach
+</div>
+
 <!-- Edit Subscription Modal -->
 <div id="subModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
     <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 500px; padding: 1.75rem; border-radius: 20px;">
@@ -148,7 +276,7 @@
 
 <!-- Record Payment Modal -->
 <div id="paymentModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 500px; padding: 1.75rem; border-radius: 20px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 1.75rem; border-radius: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <h3 style="font-weight: 800; font-size: 1.2rem; color: var(--text-main);" id="payModalTitle">Գրանցել Վճարում</h3>
             <button onclick="document.getElementById('paymentModal').style.display='none'" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem;">✕</button>
@@ -156,7 +284,7 @@
 
         <form id="payForm" method="POST">
             @csrf
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div>
                     <label class="form-label">Գումար (AMD) *</label>
                     <input type="number" id="pay_amount" name="amount" step="100" min="0" class="form-input" required placeholder="19900">
@@ -172,7 +300,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div>
                     <label class="form-label">Ժամանակահատված Սկիզբ *</label>
                     <input type="date" name="period_start" class="form-input" required value="{{ date('Y-m-d') }}">
@@ -183,7 +311,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div>
                     <label class="form-label">Հաշիվ-Ապրանքագիր #</label>
                     <input type="text" name="invoice_number" class="form-input" placeholder="INV-10045">

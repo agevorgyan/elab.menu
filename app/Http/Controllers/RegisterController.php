@@ -93,6 +93,19 @@ class RegisterController extends Controller
             'phone' => $validated['phone'],
         ]);
 
+        $verificationUrl = route('verification.verify', [
+            'id' => $user->id,
+            'hash' => sha1($user->getEmailForVerification()),
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->queue(
+                new \App\Mail\VendorWelcomeVerificationMail($user, $verificationUrl)
+            );
+        } catch (\Throwable $e) {
+            // Silently handle mail dispatch failure if queue/mailer is offline
+        }
+
         Auth::login($user);
 
         return redirect()->route('verification.notice');

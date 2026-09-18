@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Order;
+use App\Services\CustomerSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
 {
+    public function __construct(
+        protected CustomerSyncService $customerService
+    ) {}
+
     public function index(Request $request)
     {
         $vendor = Auth::user()->vendor;
@@ -98,7 +103,7 @@ class CustomerController extends Controller
         }
 
         $customer->load('location');
-        $customer->recalculateStats();
+        $this->customerService->recalculateStats($customer);
         $orders = $customer->orders()->with('items', 'location')->paginate(20);
 
         return view('admin.customers.show', compact('vendor', 'customer', 'orders'));
@@ -118,16 +123,10 @@ class CustomerController extends Controller
         ]);
 
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $payload = $validated;
+        $payload['location_id'] = $validated['location_id'] ?? $activeLocationId;
 
-        Customer::create([
-            'vendor_id' => $vendor->id,
-            'location_id' => $validated['location_id'] ?? $activeLocationId,
-            'name' => $validated['name'],
-            'phone' => $validated['phone'] ?? null,
-            'email' => $validated['email'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'marketing_opt_in' => $request->has('marketing_opt_in'),
-        ]);
+        $this->customerService->createCustomer($vendor, $payload, $request->has('marketing_opt_in'));
 
         return back()->with('success', 'Customer added successfully!');
     }
@@ -148,14 +147,7 @@ class CustomerController extends Controller
             'marketing_opt_in' => 'nullable|boolean',
         ]);
 
-        $customer->update([
-            'name' => $validated['name'],
-            'location_id' => $validated['location_id'] ?? $customer->location_id,
-            'phone' => $validated['phone'] ?? null,
-            'email' => $validated['email'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'marketing_opt_in' => $request->has('marketing_opt_in'),
-        ]);
+        $this->customerService->updateCustomer($customer, $validated, $request->has('marketing_opt_in'));
 
         return back()->with('success', "Customer {$customer->name} details updated successfully!");
     }
@@ -167,7 +159,7 @@ class CustomerController extends Controller
             abort(403);
         }
 
-        $customer->delete();
+        $this->customerService->deleteCustomer($customer);
         return redirect()->route('admin.customers.index')->with('success', 'Customer record deleted.');
     }
 

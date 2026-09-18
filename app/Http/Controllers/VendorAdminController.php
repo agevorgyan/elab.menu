@@ -117,6 +117,13 @@ class VendorAdminController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
+        if (!empty($validated['location_id'])) {
+            $loc = Location::find($validated['location_id']);
+            if (!$loc || $loc->vendor_id !== $vendor->id) {
+                abort(403, 'Unauthorized location assignment.');
+            }
+        }
+
         User::create([
             'vendor_id' => $vendor->id,
             'location_id' => $validated['location_id'] ?? null,

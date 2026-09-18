@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             \App\Http\Middleware\SetAppLocale::class,
+            \App\Http\Middleware\IdentifyTenant::class,
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,

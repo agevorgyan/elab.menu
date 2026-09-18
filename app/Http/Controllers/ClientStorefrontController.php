@@ -13,6 +13,7 @@ use App\Models\AnalyticsLog;
 use App\Models\PushSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ClientStorefrontController extends Controller
 {
@@ -168,93 +169,110 @@ self.addEventListener('fetch', event => {
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variation_id' => 'nullable|integer',
             'items.*.variation_name' => 'nullable|string',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
-
-        $orderNumber = 'ORD-' . strtoupper(Str::random(6));
-        $totalAmount = 0;
 
         $phone = !empty($validated['customer_phone']) ? trim($validated['customer_phone']) : null;
         $email = !empty($validated['customer_email']) ? strtolower(trim($validated['customer_email'])) : null;
         $name = !empty($validated['customer_name']) ? trim($validated['customer_name']) : null;
         $marketingOptIn = filter_var($validated['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
-        $customer = null;
-        if ($phone || $email) {
-            $customer = Customer::where('vendor_id', $vendor->id)
-                ->where(function ($q) use ($phone, $email) {
-                    if ($phone) {
-                        $q->where('phone', $phone);
-                    }
-                    if ($email) {
-                        $q->orWhere('email', $email);
-                    }
-                })->first();
-        }
+        $order = null;
 
-        if ($customer) {
-            $customerData = [
-                'name' => ($name && $name !== 'Guest') ? $name : $customer->name,
-                'phone' => $phone ?: $customer->phone,
-                'email' => $email ?: $customer->email,
-                'marketing_opt_in' => $marketingOptIn,
-                'last_order_at' => now(),
-            ];
-            if (!$customer->location_id) {
-                $customerData['location_id'] = $validated['location_id'];
+        DB::transaction(function () use ($validated, $vendor, $name, $phone, $email, $marketingOptIn, &$order) {
+            $customer = null;
+            if ($phone || $email) {
+                $customer = Customer::where('vendor_id', $vendor->id)
+                    ->where(function ($q) use ($phone, $email) {
+                        if ($phone) {
+                            $q->where('phone', $phone);
+                        }
+                        if ($email) {
+                            $q->orWhere('email', $email);
+                        }
+                    })->first();
             }
-            $customer->update($customerData);
-        } elseif ($phone || $email || ($name && $name !== 'Guest')) {
-            $customer = Customer::create([
+
+            if ($customer) {
+                $customerData = [
+                    'name' => ($name && $name !== 'Guest') ? $name : $customer->name,
+                    'phone' => $phone ?: $customer->phone,
+                    'email' => $email ?: $customer->email,
+                    'marketing_opt_in' => $marketingOptIn,
+                    'last_order_at' => now(),
+                ];
+                if (!$customer->location_id) {
+                    $customerData['location_id'] = $validated['location_id'];
+                }
+                $customer->update($customerData);
+            } elseif ($phone || $email || ($name && $name !== 'Guest')) {
+                $customer = Customer::create([
+                    'vendor_id' => $vendor->id,
+                    'location_id' => $validated['location_id'],
+                    'name' => $name ?: 'Guest',
+                    'phone' => $phone,
+                    'email' => $email,
+                    'marketing_opt_in' => $marketingOptIn,
+                    'last_order_at' => now(),
+                ]);
+            }
+
+            $order = Order::create([
                 'vendor_id' => $vendor->id,
                 'location_id' => $validated['location_id'],
-                'name' => $name ?: 'Guest',
-                'phone' => $phone,
-                'email' => $email,
+                'customer_id' => $customer?->id,
+                'order_number' => 'ORD-' . strtoupper(Str::random(6)),
+                'table_number' => $validated['table_number'] ?? 'Counter',
+                'type' => $validated['type'],
+                'total_amount' => 0,
+                'status' => 'pending',
+                'customer_name' => $name ?? 'Guest',
+                'customer_phone' => $phone,
+                'customer_email' => $email,
                 'marketing_opt_in' => $marketingOptIn,
-                'last_order_at' => now(),
+                'notes' => $validated['notes'] ?? null,
             ]);
-        }
 
-        $order = Order::create([
-            'vendor_id' => $vendor->id,
-            'location_id' => $validated['location_id'],
-            'customer_id' => $customer?->id,
-            'order_number' => $orderNumber,
-            'table_number' => $validated['table_number'] ?? 'Counter',
-            'type' => $validated['type'],
-            'total_amount' => 0,
-            'status' => 'pending',
-            'customer_name' => $name ?? 'Guest',
-            'customer_phone' => $phone,
-            'customer_email' => $email,
-            'marketing_opt_in' => $marketingOptIn,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+            $totalAmount = 0;
 
-        foreach ($validated['items'] as $item) {
-            $product = Product::find($item['product_id']);
-            $unitPrice = $product ? (float)$product->getEffectivePrice($validated['location_id']) : 0;
-            $subtotal = $unitPrice * $item['quantity'];
-            $totalAmount += $subtotal;
+            foreach ($validated['items'] as $item) {
+                // Multi-tenant safe: ensure product belongs to this vendor
+                $product = Product::where('vendor_id', $vendor->id)->find($item['product_id']);
+                if (!$product) continue;
 
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $product?->id,
-                'product_name' => $product?->name ?? 'Dish',
-                'variation_name' => $item['variation_name'] ?? 'Standard',
-                'unit_price' => $unitPrice,
-                'quantity' => $item['quantity'],
-                'subtotal' => $subtotal,
-            ]);
-        }
+                // Resolve variation and its price
+                $variation = null;
+                if (!empty($item['variation_id'])) {
+                    $variation = $product->variations()->find($item['variation_id']);
+                } elseif (!empty($item['variation_name'])) {
+                    $variation = $product->variations()->where('name', $item['variation_name'])->first();
+                }
 
-        $order->update(['total_amount' => $totalAmount]);
+                $unitPrice = $variation ? (float)$variation->price : (float)$product->getEffectivePrice($validated['location_id']);
+                $variationName = $variation ? $variation->name : ($item['variation_name'] ?? 'Standard Portion');
 
-        if ($customer) {
-            $customer->recalculateStats();
-        }
+                $subtotal = $unitPrice * $item['quantity'];
+                $totalAmount += $subtotal;
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'variation_name' => $variationName,
+                    'unit_price' => $unitPrice,
+                    'quantity' => $item['quantity'],
+                    'subtotal' => $subtotal,
+                ]);
+            }
+
+            $order->update(['total_amount' => $totalAmount]);
+
+            if ($customer) {
+                $customer->recalculateStats();
+            }
+        });
 
         // If WhatsApp type, generate WhatsApp API text link
         $whatsappUrl = null;

@@ -115,6 +115,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     // Live Orders & Kitchen Panel (Pro / Business Plan Feature)
     Route::middleware([EnsurePlanHasFeature::class . ':orders'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/feed', [OrderController::class, 'feed'])->name('orders.feed');
         Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     });
 

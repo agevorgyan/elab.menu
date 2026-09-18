@@ -66,7 +66,10 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff'])->prefix('admin')-
     // Menu Builder
     Route::get('/menu', [MenuBuilderController::class, 'index'])->name('menu.index');
     Route::post('/menu/categories', [MenuBuilderController::class, 'storeCategory'])->name('menu.categories.store');
+    Route::post('/menu/categories/{category}', [MenuBuilderController::class, 'updateCategory'])->name('menu.categories.update');
+    Route::delete('/menu/categories/{category}', [MenuBuilderController::class, 'destroyCategory'])->name('menu.categories.destroy');
     Route::post('/menu/products', [MenuBuilderController::class, 'storeProduct'])->name('menu.products.store');
+    Route::post('/menu/products/{product}', [MenuBuilderController::class, 'updateProduct'])->name('menu.products.update');
     Route::post('/menu/products/{product}/toggle', [MenuBuilderController::class, 'toggleAvailability'])->name('menu.products.toggle');
     Route::post('/menu/products/{product}/override', [MenuBuilderController::class, 'saveOverride'])->name('menu.products.override');
     Route::delete('/menu/products/{product}', [MenuBuilderController::class, 'destroyProduct'])->name('menu.products.destroy');

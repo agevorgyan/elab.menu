@@ -53,6 +53,34 @@ class MenuBuilderController extends Controller
         return back()->with('success', 'Category added successfully!');
     }
 
+    public function updateCategory(Request $request, Category $category)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'hy_name' => 'nullable|string',
+            'ru_name' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
+
+        $category->update([
+            'name' => $validated['name'],
+            'name_translations' => [
+                'hy' => $validated['hy_name'] ?? $validated['name'],
+                'en' => $validated['name'],
+                'ru' => $validated['ru_name'] ?? $validated['name'],
+            ],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        return back()->with('success', 'Category updated successfully!');
+    }
+
+    public function destroyCategory(Category $category)
+    {
+        $category->delete();
+        return back()->with('success', 'Category deleted successfully.');
+    }
+
     public function storeProduct(Request $request)
     {
         $vendor = Auth::user()->vendor;
@@ -120,10 +148,73 @@ class MenuBuilderController extends Controller
         return back()->with('success', 'Product dish created successfully!');
     }
 
-    public function toggleAvailability(Product $product)
+    public function updateProduct(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'hy_name' => 'nullable|string',
+            'ru_name' => 'nullable|string',
+            'description' => 'nullable|string',
+            'hy_description' => 'nullable|string',
+            'ru_description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'image' => 'nullable|string',
+            'dietary_tags' => 'nullable|array',
+            'allergens' => 'nullable|array',
+            'calories' => 'nullable|integer',
+            'protein_g' => 'nullable|numeric',
+            'carbs_g' => 'nullable|numeric',
+            'fat_g' => 'nullable|numeric',
+            'preparation_time_min' => 'nullable|integer',
+            'is_featured' => 'nullable|boolean',
+            'is_available' => 'nullable|boolean',
+        ]);
+
+        $product->update([
+            'category_id' => $validated['category_id'],
+            'name' => $validated['name'],
+            'name_translations' => [
+                'hy' => $validated['hy_name'] ?? $validated['name'],
+                'en' => $validated['name'],
+                'ru' => $validated['ru_name'] ?? $validated['name'],
+            ],
+            'description' => $validated['description'] ?? null,
+            'description_translations' => [
+                'hy' => $validated['hy_description'] ?? ($validated['description'] ?? null),
+                'en' => $validated['description'] ?? null,
+                'ru' => $validated['ru_description'] ?? ($validated['description'] ?? null),
+            ],
+            'price' => $validated['price'],
+            'image' => !empty($validated['image']) ? $validated['image'] : ($product->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80'),
+            'dietary_tags' => $validated['dietary_tags'] ?? [],
+            'calories' => $validated['calories'] ?? null,
+            'protein_g' => $validated['protein_g'] ?? null,
+            'carbs_g' => $validated['carbs_g'] ?? null,
+            'fat_g' => $validated['fat_g'] ?? null,
+            'preparation_time_min' => $validated['preparation_time_min'] ?? null,
+            'is_featured' => $request->boolean('is_featured'),
+            'is_available' => $request->has('is_available') ? $request->boolean('is_available') : $product->is_available,
+        ]);
+
+        if (isset($validated['allergens'])) {
+            $product->allergens()->sync($validated['allergens']);
+        } else {
+            $product->allergens()->detach();
+        }
+
+        return back()->with('success', "Dish {$product->name} updated successfully!");
+    }
+
+    public function toggleAvailability(Request $request, Product $product)
     {
         $product->update(['is_available' => !$product->is_available]);
-        return response()->json(['success' => true, 'is_available' => $product->is_available]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'is_available' => $product->is_available]);
+        }
+
+        return back()->with('success', "Dish '{$product->name}' stock status updated.");
     }
 
     public function saveOverride(Request $request, Product $product)

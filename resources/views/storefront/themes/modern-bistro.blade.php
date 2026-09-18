@@ -29,7 +29,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: 110px; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: calc(115px + env(safe-area-inset-bottom, 0.5rem)); }
 
         .hero-bistro {
             padding: 2rem 1.25rem;
@@ -339,16 +339,6 @@
         @endforeach
     </div>
 
-    <!-- Floating Tray -->
-    <div class="cart-bar" x-show="cart.length > 0" @click="showCartModal = true">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <span style="background: rgba(0,0,0,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" x-text="cartTotalCount">0</span>
-            <span>
-                {{ __('menu.view_cart') }}
-            </span>
-        </div>
-        <div style="font-family: 'Outfit'; font-size: 1.1rem;" x-text="cartTotalPrice + ' {{ $vendor->currency }}'">0 AMD</div>
-    </div>
 
     <!-- Variation Selection Modal -->
     <div x-show="showVariationModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 110; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
@@ -497,6 +487,9 @@
         </div>
     </div>
 
+    @include('storefront.components.bottom-nav')
+    @include('storefront.components.info-modal')
+    @include('storefront.components.order-tracker-modal')
     @include('storefront.components.waiter-modal')
     @include('storefront.components.storefront-scripts')
 </body>

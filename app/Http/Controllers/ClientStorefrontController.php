@@ -90,6 +90,15 @@ class ClientStorefrontController extends Controller
         if ($request->has('text_color') && $request->get('text_color')) {
             $vendor->text_color = $request->get('text_color');
         }
+        if ($request->has('logo') && $request->get('logo')) {
+            $vendor->logo = $request->get('logo');
+        }
+        if ($request->has('cover_image') && $request->get('cover_image')) {
+            $vendor->cover_image = $request->get('cover_image');
+        }
+        if ($request->has('custom_css') && $request->get('custom_css')) {
+            $vendor->custom_css = $request->get('custom_css');
+        }
 
         return view("storefront.themes.{$themeSlug}", compact(
             'vendor',
@@ -185,8 +194,113 @@ self.addEventListener('fetch', event => {
         return response()->json([
             'success' => true,
             'order_number' => $result['order']->order_number,
+            'order_id' => $result['order']->id,
+            'status' => $result['order']->status,
+            'status_label' => __('menu.status_' . $result['order']->status),
             'total_amount' => $result['order']->total_amount,
             'whatsapp_url' => $result['whatsapp_url'],
+        ]);
+    }
+
+    public function orderStatus(string $vendor_slug, string $order_number)
+    {
+        $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
+
+        $order = Order::where('vendor_id', $vendor->id)
+            ->where('order_number', $order_number)
+            ->with(['items.product', 'location'])
+            ->first();
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Պատվերը չի գտնվել։',
+            ], 404);
+        }
+
+        $stepMap = [
+            'pending' => [
+                'step' => 1,
+                'percent' => 25,
+                'label' => __('menu.status_pending'),
+                'desc' => __('menu.status_desc_pending'),
+                'icon' => 'fa-solid fa-clock',
+            ],
+            'accepted' => [
+                'step' => 2,
+                'percent' => 50,
+                'label' => __('menu.status_accepted'),
+                'desc' => __('menu.status_desc_accepted'),
+                'icon' => 'fa-solid fa-clipboard-check',
+            ],
+            'preparing' => [
+                'step' => 3,
+                'percent' => 75,
+                'label' => __('menu.status_preparing'),
+                'desc' => __('menu.status_desc_preparing'),
+                'icon' => 'fa-solid fa-utensils',
+            ],
+            'ready' => [
+                'step' => 4,
+                'percent' => 95,
+                'label' => __('menu.status_ready'),
+                'desc' => __('menu.status_desc_ready'),
+                'icon' => 'fa-solid fa-bell-concierge',
+            ],
+            'completed' => [
+                'step' => 5,
+                'percent' => 100,
+                'label' => __('menu.status_completed'),
+                'desc' => __('menu.status_desc_completed'),
+                'icon' => 'fa-solid fa-circle-check',
+            ],
+            'cancelled' => [
+                'step' => 0,
+                'percent' => 0,
+                'label' => __('menu.status_cancelled'),
+                'desc' => __('menu.status_desc_cancelled'),
+                'icon' => 'fa-solid fa-circle-xmark',
+            ],
+        ];
+
+        $meta = $stepMap[$order->status] ?? [
+            'step' => 1,
+            'percent' => 20,
+            'label' => ucfirst($order->status),
+            'desc' => '',
+            'icon' => 'fa-solid fa-clock',
+        ];
+
+        return response()->json([
+            'success' => true,
+            'order' => [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'table_number' => $order->table_number,
+                'type' => $order->type,
+                'status' => $order->status,
+                'status_step' => $meta['step'],
+                'status_percent' => $meta['percent'],
+                'status_label' => $meta['label'],
+                'status_desc' => $meta['desc'],
+                'status_icon' => $meta['icon'],
+                'total_amount' => (float) $order->total_amount,
+                'currency' => $vendor->currency,
+                'created_at_human' => $order->created_at->diffForHumans(),
+                'created_at_time' => $order->created_at->format('H:i'),
+                'items' => $order->items->map(function ($item) {
+                    $unitPrice = (float) ($item->unit_price ?? $item->price ?? 0);
+                    $subtotal = (float) ($item->subtotal ?? ($unitPrice * $item->quantity));
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->product_name ?? $item->product?->name ?? 'Dish #' . $item->product_id,
+                        'variation_name' => $item->variation_name,
+                        'quantity' => $item->quantity,
+                        'price' => $unitPrice,
+                        'subtotal' => $subtotal,
+                    ];
+                }),
+            ],
         ]);
     }
 

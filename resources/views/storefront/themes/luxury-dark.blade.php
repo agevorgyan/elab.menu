@@ -246,8 +246,36 @@
                             <img src="{{ $prod->image }}" class="dish-img">
                             <div class="dish-content">
                                 <div>
-                                    <div class="dish-title">{{ $prod->getTranslatedName($lang) }}</div>
+                                    <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                        <div class="dish-title">{{ $prod->getTranslatedName($lang) }}</div>
+                                        @if($prod->is_featured)
+                                            <span style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.1rem 0.4rem; border-radius: 6px; font-size: 0.65rem; font-weight: 700;">★ FEATURED</span>
+                                        @endif
+                                        @if(!empty($prod->dietary_tags))
+                                            @foreach($prod->dietary_tags as $tag)
+                                                <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.1rem 0.4rem; border-radius: 6px; font-size: 0.65rem; text-transform: uppercase; font-weight: 700;">{{ str_replace('_', ' ', $tag) }}</span>
+                                            @endforeach
+                                        @endif
+                                    </div>
                                     <div class="dish-desc">{{ $prod->getTranslatedDescription($lang) }}</div>
+                                    @if($prod->calories || $prod->preparation_time_min || ($prod->allergens && $prod->allergens->count() > 0))
+                                        <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.35rem; font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;">
+                                            @if($prod->calories)
+                                                <span><i class="fa-solid fa-fire" style="color: #f97316;"></i> {{ $prod->calories }} kcal</span>
+                                            @endif
+                                            @if($prod->preparation_time_min)
+                                                <span><i class="fa-solid fa-clock"></i> {{ $prod->preparation_time_min }}
+                                                    @if($lang == 'hy') րոպե @elseif($lang == 'ru') мин @else mins @endif
+                                                </span>
+                                            @endif
+                                            @if($prod->allergens && $prod->allergens->count() > 0)
+                                                <span><i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
+                                                    @if($lang == 'hy') Ալերգեններ: @elseif($lang == 'ru') Аллергены: @else Allergens: @endif
+                                                    {{ $prod->allergens->pluck('icon')->join(' ') }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">

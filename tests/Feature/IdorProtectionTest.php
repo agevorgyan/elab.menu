@@ -200,4 +200,78 @@ class IdorProtectionTest extends TestCase
         $this->assertEquals(403, $response->status());
         $this->assertDatabaseMissing('users', ['email' => 'staff@test.com']);
     }
+
+    public function test_abort_if_triggers_403_on_menu_builder_and_order_controller_methods(): void
+    {
+        $this->actingAs($this->user1);
+
+        $menuController = app(\App\Http\Controllers\MenuBuilderController::class);
+        $orderController = app(\App\Http\Controllers\OrderController::class);
+
+        // 1. destroyCategory with Vendor 2's category
+        try {
+            $menuController->destroyCategory($this->cat2);
+            $this->fail('Expected HttpException 403 for destroyCategory');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+
+        // 2. updateCategory with Vendor 2's category
+        try {
+            $menuController->updateCategory(new \App\Http\Requests\UpdateCategoryRequest(), $this->cat2);
+            $this->fail('Expected HttpException 403 for updateCategory');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+
+        // 3. destroyProduct with Vendor 2's product
+        try {
+            $menuController->destroyProduct($this->prod2);
+            $this->fail('Expected HttpException 403 for destroyProduct');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+
+        // 4. updateProduct with Vendor 2's product
+        try {
+            $menuController->updateProduct(new \App\Http\Requests\UpdateProductRequest(), $this->prod2);
+            $this->fail('Expected HttpException 403 for updateProduct');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+
+        // 5. toggleAvailability with Vendor 2's product
+        try {
+            $menuController->toggleAvailability(new \Illuminate\Http\Request(), $this->prod2);
+            $this->fail('Expected HttpException 403 for toggleAvailability');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+
+        // 6. saveOverride with Vendor 2's product
+        try {
+            $menuController->saveOverride(new \Illuminate\Http\Request(), $this->prod2);
+            $this->fail('Expected HttpException 403 for saveOverride');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+
+        // 7. updateStatus with Vendor 2's order
+        $order2 = Order::create([
+            'vendor_id' => $this->vendor2->id,
+            'location_id' => $this->loc2->id,
+            'order_number' => 'ORD-V2-ABORT',
+            'table_number' => 'Table 2',
+            'type' => 'dine_in',
+            'total_amount' => 1000,
+            'status' => 'pending',
+        ]);
+
+        try {
+            $orderController->updateStatus(new \App\Http\Requests\UpdateOrderStatusRequest(), $order2);
+            $this->fail('Expected HttpException 403 for updateStatus');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertEquals(403, $e->getStatusCode());
+        }
+    }
 }

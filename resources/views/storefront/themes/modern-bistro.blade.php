@@ -13,9 +13,7 @@
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    @if(!empty($vendor->custom_css))
-        <style>{!! strip_tags($vendor->custom_css) !!}</style>
-    @endif
+    {!! $vendor->custom_css ? '<style>' . strip_tags($vendor->custom_css) . '</style>' : '' !!}
     
     <style>
         :root {
@@ -177,12 +175,6 @@
         .toast-remove { border-color: rgba(239, 68, 68, 0.4); }
         .toast-remove i { color: #ef4444; font-size: 1.05rem; }
     </style>
-
-    @if(!empty($vendor->custom_css))
-        <style>
-            {!! $vendor->custom_css !!}
-        </style>
-    @endif
 </head>
 <body x-data="modernBistroApp()">
 
@@ -214,6 +206,27 @@
                     @endif
                 </p>
             </div>
+        </div>
+    </div>
+
+    <!-- Table Quick Service Actions (Waiter Call & Bill Request) -->
+    <div style="padding: 0 1.25rem; margin-top: 0.75rem;">
+        <div style="display: flex; gap: 0.6rem; background: var(--bg-card); padding: 0.45rem; border-radius: 14px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <!-- Call Waiter Button -->
+            <button type="button" 
+                    @click="quickCallWaiter()"
+                    style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.65rem 0.75rem; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.1); color: #d97706; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-bell" style="font-size: 0.95rem;"></i>
+                <span>{{ __('menu.call_waiter') }}</span>
+            </button>
+
+            <!-- Request Bill Button -->
+            <button type="button" 
+                    @click="openWaiterModal('bill_cash')"
+                    style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.65rem 0.75rem; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.1); color: #059669; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-receipt" style="font-size: 0.95rem;"></i>
+                <span>{{ __('menu.request_bill') }}</span>
+            </button>
         </div>
     </div>
 
@@ -484,6 +497,7 @@
         </div>
     </div>
 
+    @include('storefront.components.waiter-modal')
     @include('storefront.components.storefront-scripts')
 </body>
 </html>

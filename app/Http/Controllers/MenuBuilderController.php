@@ -45,6 +45,8 @@ class MenuBuilderController extends Controller
 
     public function updateCategory(UpdateCategoryRequest $request, Category $category)
     {
+        abort_if($category->vendor_id !== auth()->user()->vendor_id, 403);
+
         $validated = $request->validated();
 
         $this->menuService->updateCategory($category, $validated);
@@ -54,9 +56,7 @@ class MenuBuilderController extends Controller
 
     public function destroyCategory(Category $category)
     {
-        if ($category->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized category action.');
-        }
+        abort_if($category->vendor_id !== auth()->user()->vendor_id, 403);
 
         $this->menuService->deleteCategory($category);
         return back()->with('success', 'Category deleted successfully.');
@@ -73,6 +73,8 @@ class MenuBuilderController extends Controller
 
     public function updateProduct(UpdateProductRequest $request, Product $product)
     {
+        abort_if($product->vendor_id !== auth()->user()->vendor_id, 403);
+
         $validated = $request->validated();
 
         $this->menuService->updateProduct($product, $validated, $request->file('image_file'));
@@ -82,9 +84,7 @@ class MenuBuilderController extends Controller
 
     public function toggleAvailability(Request $request, Product $product)
     {
-        if ($product->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized product action.');
-        }
+        abort_if($product->vendor_id !== auth()->user()->vendor_id, 403);
 
         $isAvailable = $this->menuService->toggleProductAvailability($product);
 
@@ -97,9 +97,7 @@ class MenuBuilderController extends Controller
 
     public function saveOverride(Request $request, Product $product)
     {
-        if ($product->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized product action.');
-        }
+        abort_if($product->vendor_id !== auth()->user()->vendor_id, 403);
 
         $validated = $request->validate([
             'location_id' => 'required|exists:locations,id',
@@ -108,9 +106,7 @@ class MenuBuilderController extends Controller
         ]);
 
         $location = Location::find($validated['location_id']);
-        if (!$location || $location->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized location action.');
-        }
+        abort_if(!$location || $location->vendor_id !== auth()->user()->vendor_id, 403);
 
         $this->menuService->saveLocationOverride($product, $validated);
 
@@ -119,9 +115,7 @@ class MenuBuilderController extends Controller
 
     public function destroyProduct(Product $product)
     {
-        if ($product->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized product action.');
-        }
+        abort_if($product->vendor_id !== auth()->user()->vendor_id, 403);
 
         $this->menuService->deleteProduct($product);
         return back()->with('success', 'Product deleted successfully.');

@@ -13,6 +13,7 @@
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {!! $vendor->custom_css ? '<style>' . strip_tags($vendor->custom_css) . '</style>' : '' !!}
     
     <style>
         :root {
@@ -191,12 +192,6 @@
         .toast-remove { border-color: rgba(239, 68, 68, 0.5); }
         .toast-remove i { color: #ef4444; font-size: 1.05rem; }
     </style>
-
-    @if(!empty($vendor->custom_css))
-        <style>
-            {!! $vendor->custom_css !!}
-        </style>
-    @endif
 </head>
 <body x-data="vibrantGlassApp()">
 
@@ -225,6 +220,25 @@
                 • <span style="background: var(--primary); color: #fff; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700;">Table {{ $table }}</span>
             @endif
         </p>
+    </div>
+
+    <!-- Table Service Actions (Waiter Call & Bill Request) -->
+    <div style="margin-bottom: 1rem;">
+        <div style="display: flex; gap: 0.6rem; background: var(--bg-card); backdrop-filter: blur(16px); padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 32px rgba(0,0,0,0.04);">
+            <button type="button" 
+                    @click="quickCallWaiter()"
+                    style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.7rem 0.75rem; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.12); color: #d97706; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-bell" style="font-size: 0.95rem;"></i>
+                <span>{{ __('menu.call_waiter') }}</span>
+            </button>
+
+            <button type="button" 
+                    @click="openWaiterModal('bill_cash')"
+                    style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.7rem 0.75rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.12); color: #059669; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-receipt" style="font-size: 0.95rem;"></i>
+                <span>{{ __('menu.request_bill') }}</span>
+            </button>
+        </div>
     </div>
 
     <!-- Search & Lang Bar -->
@@ -494,6 +508,7 @@
         </div>
     </div>
 
+    @include('storefront.components.waiter-modal')
     @include('storefront.components.storefront-scripts')
 </body>
 </html>

@@ -18,6 +18,10 @@
             customerPhone: '',
             customerEmail: '',
             tableNumber: customConfig.tableNumber !== undefined ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
+            showWaiterModal: false,
+            serviceType: 'call_waiter',
+            serviceTable: customConfig.tableNumber !== undefined && customConfig.tableNumber ? customConfig.tableNumber : '{{ $table ?? "" }}',
+            isCallingService: false,
             marketingOptIn: true,
             orderNotes: '',
             toast: {
@@ -192,6 +196,77 @@
                         this.cart = [];
                         this.showCartModal = false;
                     }
+                }
+            },
+
+            openWaiterModal(type = 'call_waiter') {
+                this.serviceType = type;
+                if (!this.serviceTable && this.tableNumber) {
+                    this.serviceTable = this.tableNumber;
+                }
+                this.showWaiterModal = true;
+            },
+
+            async submitServiceCall() {
+                if (!this.serviceTable || this.serviceTable.toString().trim() === '') {
+                    this.triggerToast('{{ __('menu.table_number_prompt') }}', 'remove', 'fa-solid fa-chair');
+                    return;
+                }
+
+                this.isCallingService = true;
+
+                try {
+                    let formattedTable = this.serviceTable.toString().trim();
+                    if (!formattedTable.toLowerCase().startsWith('table ') && !formattedTable.startsWith('Սեղան ')) {
+                        formattedTable = 'Table ' + formattedTable;
+                    }
+
+                    const res = await fetch('{{ route("client.waiter.call", ["vendor_slug" => $vendor->slug]) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            location_id: {{ $location?->id ?? 1 }},
+                            table_number: formattedTable,
+                            type: this.serviceType
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        this.showWaiterModal = false;
+                        const icon = this.serviceType === 'call_waiter' ? 'fa-solid fa-bell' : (this.serviceType === 'bill_cash' ? 'fa-solid fa-money-bill-wave' : 'fa-solid fa-credit-card');
+                        this.triggerToast(data.message, 'success', icon);
+                    } else {
+                        this.triggerToast(data.message || 'Սխալ՝ կրկին փորձեք', 'remove', 'fa-solid fa-triangle-exclamation');
+                    }
+                } catch (e) {
+                    console.error('Service call error:', e);
+                    this.triggerToast('Կապի խնդիր, խնդրում ենք կրկին փորձել', 'remove', 'fa-solid fa-triangle-exclamation');
+                } finally {
+                    this.isCallingService = false;
+                }
+            },
+
+            quickCallWaiter() {
+                if (this.serviceTable && this.serviceTable.toString().trim() !== '') {
+                    this.serviceType = 'call_waiter';
+                    this.submitServiceCall();
+                } else {
+                    this.openWaiterModal('call_waiter');
+                }
+            },
+
+            quickRequestBill(payment = 'cash') {
+                const targetType = payment === 'card' ? 'bill_card' : 'bill_cash';
+                if (this.serviceTable && this.serviceTable.toString().trim() !== '') {
+                    this.serviceType = targetType;
+                    this.submitServiceCall();
+                } else {
+                    this.openWaiterModal(targetType);
                 }
             }
         };

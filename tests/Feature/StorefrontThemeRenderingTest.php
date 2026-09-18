@@ -119,4 +119,23 @@ class StorefrontThemeRenderingTest extends TestCase
         $response->assertSee('addSelectedVariationToCart');
         $response->assertSee('submitOrder');
     }
+
+    public function test_custom_css_renders_in_head_for_all_themes(): void
+    {
+        $themes = ['modern-bistro', 'luxury-dark', 'vibrant-glass'];
+        $customCss = '.custom-badge { background-color: purple; }';
+        $this->vendor->update(['custom_css' => $customCss]);
+
+        foreach ($themes as $themeSlug) {
+            $tmpl = MenuTemplate::firstOrCreate(['slug' => $themeSlug], [
+                'name' => ucfirst(str_replace('-', ' ', $themeSlug)),
+                'is_active' => true,
+            ]);
+            $this->vendor->update(['menu_template_id' => $tmpl->id]);
+
+            $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug]));
+            $response->assertStatus(200);
+            $response->assertSee('<style>' . strip_tags($customCss) . '</style>', false);
+        }
+    }
 }

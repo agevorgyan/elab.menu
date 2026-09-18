@@ -36,12 +36,18 @@ class TenantScopeTest extends TestCase
         ]);
 
         // Create records for Vendor A
+        $locA = Location::create(['vendor_id' => $vendorA->id, 'name' => 'Loc A', 'slug' => 'loc-a']);
         $catA = Category::create(['vendor_id' => $vendorA->id, 'name' => 'Alpha Cat', 'sort_order' => 1]);
         $prodA = Product::create(['vendor_id' => $vendorA->id, 'category_id' => $catA->id, 'name' => 'Alpha Dish', 'price' => 1000]);
+        $custA = Customer::create(['vendor_id' => $vendorA->id, 'name' => 'Customer A', 'phone' => '+37491000001']);
+        $ordA = Order::create(['vendor_id' => $vendorA->id, 'location_id' => $locA->id, 'order_number' => 'ORD-A-01', 'total_amount' => 1000, 'status' => 'pending']);
 
         // Create records for Vendor B
+        $locB = Location::create(['vendor_id' => $vendorB->id, 'name' => 'Loc B', 'slug' => 'loc-b']);
         $catB = Category::create(['vendor_id' => $vendorB->id, 'name' => 'Beta Cat', 'sort_order' => 1]);
         $prodB = Product::create(['vendor_id' => $vendorB->id, 'category_id' => $catB->id, 'name' => 'Beta Dish', 'price' => 2000]);
+        $custB = Customer::create(['vendor_id' => $vendorB->id, 'name' => 'Customer B', 'phone' => '+37491000002']);
+        $ordB = Order::create(['vendor_id' => $vendorB->id, 'location_id' => $locB->id, 'order_number' => 'ORD-B-01', 'total_amount' => 2000, 'status' => 'pending']);
 
         // Activate Tenant A Context
         $tenantContext->setTenantId($vendorA->id);
@@ -55,15 +61,33 @@ class TenantScopeTest extends TestCase
         $this->assertCount(1, $products);
         $this->assertEquals('Alpha Dish', $products->first()->name);
 
+        $locations = Location::all();
+        $this->assertCount(1, $locations);
+        $this->assertEquals('Loc A', $locations->first()->name);
+
+        $customers = Customer::all();
+        $this->assertCount(1, $customers);
+        $this->assertEquals('Customer A', $customers->first()->name);
+
+        $orders = Order::all();
+        $this->assertCount(1, $orders);
+        $this->assertEquals('ORD-A-01', $orders->first()->order_number);
+
         // Finding Tenant B's ID MUST return null under Tenant A's context
         $this->assertNull(Category::find($catB->id));
         $this->assertNull(Product::find($prodB->id));
+        $this->assertNull(Location::find($locB->id));
+        $this->assertNull(Customer::find($custB->id));
+        $this->assertNull(Order::find($ordB->id));
 
         // Switch to Tenant B Context
         $tenantContext->setTenantId($vendorB->id);
         $this->assertCount(1, Category::all());
         $this->assertEquals('Beta Cat', Category::first()->name);
         $this->assertNull(Product::find($prodA->id));
+        $this->assertNull(Location::find($locA->id));
+        $this->assertNull(Customer::find($custA->id));
+        $this->assertNull(Order::find($ordA->id));
 
         $tenantContext->clear();
     }
@@ -81,18 +105,46 @@ class TenantScopeTest extends TestCase
 
         $tenantContext->setTenantId($vendor->id);
 
-        // Create category without explicitly passing 'vendor_id'
+        // Create models without explicitly passing 'vendor_id'
         $category = Category::create([
             'name' => 'Auto Injected Category',
             'sort_order' => 5,
         ]);
 
-        $this->assertEquals($vendor->id, $category->vendor_id);
-        $this->assertDatabaseHas('categories', [
-            'id' => $category->id,
-            'vendor_id' => $vendor->id,
-            'name' => 'Auto Injected Category',
+        $location = Location::create([
+            'name' => 'Auto Branch',
+            'slug' => 'auto-branch',
         ]);
+
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Auto Product',
+            'price' => 1200,
+        ]);
+
+        $customer = Customer::create([
+            'name' => 'Auto Customer',
+            'phone' => '+37499112233',
+        ]);
+
+        $order = Order::create([
+            'location_id' => $location->id,
+            'order_number' => 'ORD-AUTO-01',
+            'total_amount' => 1200,
+            'status' => 'pending',
+        ]);
+
+        $this->assertEquals($vendor->id, $category->vendor_id);
+        $this->assertEquals($vendor->id, $location->vendor_id);
+        $this->assertEquals($vendor->id, $product->vendor_id);
+        $this->assertEquals($vendor->id, $customer->vendor_id);
+        $this->assertEquals($vendor->id, $order->vendor_id);
+
+        $this->assertDatabaseHas('categories', ['id' => $category->id, 'vendor_id' => $vendor->id]);
+        $this->assertDatabaseHas('locations', ['id' => $location->id, 'vendor_id' => $vendor->id]);
+        $this->assertDatabaseHas('products', ['id' => $product->id, 'vendor_id' => $vendor->id]);
+        $this->assertDatabaseHas('customers', ['id' => $customer->id, 'vendor_id' => $vendor->id]);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'vendor_id' => $vendor->id]);
 
         $tenantContext->clear();
     }

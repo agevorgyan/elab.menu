@@ -11,7 +11,9 @@ use App\Models\OrderItem;
 use App\Models\Customer;
 use App\Models\AnalyticsLog;
 use App\Models\PushSubscription;
+use App\Models\WaiterCall;
 use App\Http\Requests\SubmitOrderRequest;
+use App\Http\Requests\CallWaiterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -163,13 +165,65 @@ self.addEventListener('fetch', event => {
 
         $validated = $request->validated();
 
-        $result = $createOrderAction->execute($vendor, $validated);
+        // Ensure all sent product_ids belong to this vendor
+        $productIds = collect($validated['items'])->pluck('product_id')->unique();
+        $vendorProductsCount = Product::where('vendor_id', $vendor->id)
+            ->whereIn('id', $productIds)
+            ->count();
+
+        if ($vendorProductsCount !== $productIds->count()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Պատվերի մեջ առկա են անվավեր կամ այլ վենդորի պատկանող ապրանքներ։',
+            ], 422);
+        }
+
+        $result = DB::transaction(function () use ($createOrderAction, $vendor, $validated) {
+            return $createOrderAction->execute($vendor, $validated);
+        });
 
         return response()->json([
             'success' => true,
             'order_number' => $result['order']->order_number,
             'total_amount' => $result['order']->total_amount,
             'whatsapp_url' => $result['whatsapp_url'],
+        ]);
+    }
+
+    public function callWaiter(CallWaiterRequest $request, string $vendor_slug)
+    {
+        $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
+
+        $validated = $request->validated();
+
+        $locationId = $validated['location_id'] ?? $vendor->locations->first()?->id;
+
+        $call = WaiterCall::create([
+            'vendor_id' => $vendor->id,
+            'location_id' => $locationId,
+            'table_number' => $validated['table_number'],
+            'type' => $validated['type'],
+            'status' => 'pending',
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        $message = match ($call->type) {
+            'call_waiter' => __('menu.waiter_called_success'),
+            'bill_cash', 'bill_card' => __('menu.bill_requested_success'),
+            default => 'Հարցումն ուղարկված է։',
+        };
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'call' => [
+                'id' => $call->id,
+                'table_number' => $call->table_number,
+                'type' => $call->type,
+                'type_label' => $call->getTypeLabel(),
+                'status' => $call->status,
+                'created_at' => $call->created_at->diffForHumans(),
+            ],
         ]);
     }
 }

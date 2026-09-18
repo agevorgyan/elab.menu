@@ -77,6 +77,11 @@
     </div>
 </div>
 
+<!-- Waiter Calls & Bill Requests Container -->
+<div id="waiterCallsContainer">
+    @include('admin.orders.partials.waiter_call_cards', ['waiterCalls' => $waiterCalls])
+</div>
+
 <!-- Orders Grid Container -->
 <div id="ordersContainer">
     @include('admin.orders.partials.order_cards', ['orders' => $orders, 'vendor' => $vendor])
@@ -247,6 +252,9 @@ async function fetchKitchenFeed() {
 
                 // Update container with rendered HTML
                 document.getElementById('ordersContainer').innerHTML = data.html;
+                if (data.waiter_calls_html !== undefined) {
+                    document.getElementById('waiterCallsContainer').innerHTML = data.waiter_calls_html;
+                }
                 lastOrderId = Math.max(lastOrderId, data.latest_order_id);
 
                 // Update Connection Pill
@@ -259,6 +267,27 @@ async function fetchKitchenFeed() {
     } finally {
         isPolling = false;
         pollSecondsRemaining = 4;
+    }
+}
+
+// Mark Waiter Call / Bill Request Attended
+async function markWaiterCallAttended(callId) {
+    try {
+        const res = await fetch(`/admin/waiter-calls/${callId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ status: 'attended' })
+        });
+
+        if (res.ok) {
+            fetchKitchenFeed();
+        }
+    } catch (e) {
+        console.error('Waiter call update error:', e);
     }
 }
 

@@ -23,6 +23,7 @@ Route::get('/m/{vendor_slug}/manifest.json', [ClientStorefrontController::class,
 Route::get('/m/{vendor_slug}/sw.js', [ClientStorefrontController::class, 'serviceWorker'])->name('client.sw');
 Route::get('/m/{vendor_slug}/{location_slug?}', [ClientStorefrontController::class, 'showMenu'])->name('client.menu');
 Route::post('/api/m/{vendor_slug}/order', [ClientStorefrontController::class, 'submitOrder'])->name('client.order.submit');
+Route::post('/api/m/{vendor_slug}/call-waiter', [ClientStorefrontController::class, 'callWaiter'])->name('client.waiter.call');
 
 // Admin Language Switcher
 Route::get('/lang/{locale}', function (string $locale) {
@@ -117,6 +118,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/feed', [OrderController::class, 'feed'])->name('orders.feed');
         Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+        Route::post('/waiter-calls/{waiterCall}/status', [OrderController::class, 'updateWaiterCallStatus'])->name('waiter_calls.status');
     });
 
     // Branding & Theme Customizer

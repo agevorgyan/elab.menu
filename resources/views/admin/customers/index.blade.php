@@ -5,10 +5,21 @@
 @section('content')
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 700;">
-            <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Customer Database & CRM
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage client directory, track order history, consent status, and export customer database.</p>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 700;">
+                <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Customer Database & CRM
+            </h1>
+            @if($selectedLocation)
+                <span style="background: rgba(79, 70, 229, 0.15); color: #4f46e5; border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa-solid fa-location-dot"></i> {{ $selectedLocation->name }}
+                </span>
+            @else
+                <span style="background: rgba(107, 114, 128, 0.15); color: var(--text-muted); border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa-solid fa-layer-group"></i> All Branches
+                </span>
+            @endif
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage client directory by branch, track order history, consent status, and export customer database.</p>
     </div>
     <div style="display: flex; gap: 0.75rem;">
         <a href="{{ route('admin.customers.export') }}" class="btn btn-secondary" style="font-size: 0.85rem;">
@@ -27,7 +38,7 @@
             <i class="fa-solid fa-users"></i>
         </div>
         <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Customers</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Branch Customers</div>
             <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">{{ number_format($totalCustomers) }}</div>
         </div>
     </div>
@@ -47,7 +58,7 @@
             <i class="fa-solid fa-coins"></i>
         </div>
         <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Customer LTV</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Branch Customer Revenue</div>
             <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: #f59e0b;">{{ number_format($totalRevenue) }} {{ $vendor->currency }}</div>
         </div>
     </div>
@@ -56,21 +67,34 @@
 <!-- Search & Filters -->
 <div class="card" style="padding: 1rem; margin-bottom: 1.5rem;">
     <form method="GET" action="{{ route('admin.customers.index') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <div style="flex: 1; position: relative; min-width: 240px;">
+        <div style="flex: 1; position: relative; min-width: 220px;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
             <input type="text" name="search" value="{{ $search }}" placeholder="Search by Name, Phone or Email..." style="width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); outline: none;">
         </div>
 
-        <select name="marketing" onchange="this.form.submit()" style="padding: 0.6rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
-            <option value="">All Marketing Preferences</option>
-            <option value="yes" {{ $consentFilter == 'yes' ? 'selected' : '' }}>Opted-In Only</option>
-            <option value="no" {{ $consentFilter == 'no' ? 'selected' : '' }}>Opted-Out Only</option>
-        </select>
+        <div style="min-width: 200px;">
+            <select name="location_id" onchange="this.form.submit()" style="width: 100%; padding: 0.6rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                <option value="all" {{ $activeLocationId === 'all' ? 'selected' : '' }}>🏢 All Branches (Բոլոր մասնաճյուղերը)</option>
+                @foreach($locations as $loc)
+                    <option value="{{ $loc->id }}" {{ $activeLocationId == $loc->id ? 'selected' : '' }}>
+                        📍 {{ $loc->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <select name="marketing" onchange="this.form.submit()" style="padding: 0.6rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                <option value="">All Marketing Preferences</option>
+                <option value="yes" {{ $consentFilter == 'yes' ? 'selected' : '' }}>Opted-In Only</option>
+                <option value="no" {{ $consentFilter == 'no' ? 'selected' : '' }}>Opted-Out Only</option>
+            </select>
+        </div>
 
         <button type="submit" class="btn btn-secondary" style="font-size: 0.85rem;">
             <i class="fa-solid fa-filter"></i> Filter
         </button>
-        @if($search || $consentFilter)
+        @if($search || $consentFilter || ($activeLocationId && $activeLocationId !== 'all'))
             <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary" style="font-size: 0.85rem;">Clear</a>
         @endif
     </form>
@@ -83,6 +107,7 @@
             <thead>
                 <tr style="background: var(--input-bg); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
                     <th style="padding: 1rem;">Customer Name</th>
+                    <th style="padding: 1rem;">Branch / Location</th>
                     <th style="padding: 1rem;">Phone</th>
                     <th style="padding: 1rem;">Email</th>
                     <th style="padding: 1rem;">Orders</th>
@@ -99,6 +124,11 @@
                             <a href="{{ route('admin.customers.show', $c->id) }}" style="color: var(--text-main); text-decoration: none;">
                                 <i class="fa-solid fa-user-circle" style="color: var(--primary); margin-right: 0.35rem;"></i> {{ $c->name ?? 'Guest' }}
                             </a>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span style="background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> {{ $c->location?->name ?? 'All Branches' }}
+                            </span>
                         </td>
                         <td style="padding: 1rem; color: var(--text-muted);">
                             {{ $c->phone ?? '-' }}
@@ -148,9 +178,9 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                             <i class="fa-solid fa-users" style="font-size: 2.5rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
-                            No customer records found. Customers will automatically accumulate as orders are placed.
+                            No customer records found for this branch selection. Customers will automatically accumulate as orders are placed.
                         </td>
                     </tr>
                 @endforelse
@@ -176,6 +206,17 @@
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Full Name</label>
                 <input type="text" name="name" required placeholder="Armen Sargsyan" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Branch / Location</label>
+                <select name="location_id" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc->id }}" {{ $activeLocationId == $loc->id ? 'selected' : '' }}>
+                            📍 {{ $loc->name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div style="margin-bottom: 1rem;">
@@ -224,6 +265,17 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Branch / Location</label>
+                <select id="edit_location_id" name="location_id" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc->id }}">
+                            📍 {{ $loc->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Phone Number</label>
                 <input type="tel" id="edit_phone" name="phone" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
             </div>
@@ -257,6 +309,9 @@
     function editCustomer(c) {
         document.getElementById('editCustomerForm').action = "/admin/customers/" + c.id;
         document.getElementById('edit_name').value = c.name || '';
+        if (document.getElementById('edit_location_id')) {
+            document.getElementById('edit_location_id').value = c.location_id || '';
+        }
         document.getElementById('edit_phone').value = c.phone || '';
         document.getElementById('edit_email').value = c.email || '';
         document.getElementById('edit_notes').value = c.notes || '';

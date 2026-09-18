@@ -189,16 +189,21 @@ self.addEventListener('fetch', event => {
         }
 
         if ($customer) {
-            $customer->update([
+            $customerData = [
                 'name' => ($name && $name !== 'Guest') ? $name : $customer->name,
                 'phone' => $phone ?: $customer->phone,
                 'email' => $email ?: $customer->email,
                 'marketing_opt_in' => $marketingOptIn,
                 'last_order_at' => now(),
-            ]);
+            ];
+            if (!$customer->location_id) {
+                $customerData['location_id'] = $validated['location_id'];
+            }
+            $customer->update($customerData);
         } elseif ($phone || $email || ($name && $name !== 'Guest')) {
             $customer = Customer::create([
                 'vendor_id' => $vendor->id,
+                'location_id' => $validated['location_id'],
                 'name' => $name ?: 'Guest',
                 'phone' => $phone,
                 'email' => $email,

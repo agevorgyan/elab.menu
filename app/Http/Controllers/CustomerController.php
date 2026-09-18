@@ -3,20 +3,40 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Location;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
 {
     public function index(Request $request)
     {
         $vendor = Auth::user()->vendor;
+        $locations = $vendor->locations;
+
+        $activeLocationId = $request->get('location_id', session('active_location_id', $locations->first()?->id));
+        if ($request->has('location_id')) {
+            session(['active_location_id' => $activeLocationId]);
+        }
+
+        $selectedLocation = ($activeLocationId && $activeLocationId !== 'all') 
+            ? $locations->firstWhere('id', $activeLocationId) 
+            : null;
+
         $search = $request->get('search');
         $consentFilter = $request->get('marketing');
 
-        $query = Customer::where('vendor_id', $vendor->id);
+        $query = Customer::where('vendor_id', $vendor->id)->with('location');
+
+        if ($activeLocationId && $activeLocationId !== 'all') {
+            $query->where(function ($q) use ($activeLocationId) {
+                $q->where('location_id', $activeLocationId)
+                  ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
+                      $oq->where('location_id', $activeLocationId);
+                  });
+            });
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -34,12 +54,40 @@ class CustomerController extends Controller
 
         $customers = $query->orderBy('updated_at', 'desc')->paginate(15);
 
-        // Stats summary
-        $totalCustomers = Customer::where('vendor_id', $vendor->id)->count();
-        $optedInCustomers = Customer::where('vendor_id', $vendor->id)->where('marketing_opt_in', true)->count();
-        $totalRevenue = Customer::where('vendor_id', $vendor->id)->sum('total_spent');
+        // Stats summary filtered by active location
+        $statsQuery = Customer::where('vendor_id', $vendor->id);
+        if ($activeLocationId && $activeLocationId !== 'all') {
+            $statsQuery->where(function ($q) use ($activeLocationId) {
+                $q->where('location_id', $activeLocationId)
+                  ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
+                      $oq->where('location_id', $activeLocationId);
+                  });
+            });
+        }
 
-        return view('admin.customers.index', compact('vendor', 'customers', 'totalCustomers', 'optedInCustomers', 'totalRevenue', 'search', 'consentFilter'));
+        $totalCustomers = (clone $statsQuery)->count();
+        $optedInCustomers = (clone $statsQuery)->where('marketing_opt_in', true)->count();
+
+        if ($activeLocationId && $activeLocationId !== 'all') {
+            $totalRevenue = Order::where('vendor_id', $vendor->id)
+                ->where('location_id', $activeLocationId)
+                ->sum('total_amount');
+        } else {
+            $totalRevenue = Customer::where('vendor_id', $vendor->id)->sum('total_spent');
+        }
+
+        return view('admin.customers.index', compact(
+            'vendor',
+            'locations',
+            'activeLocationId',
+            'selectedLocation',
+            'customers',
+            'totalCustomers',
+            'optedInCustomers',
+            'totalRevenue',
+            'search',
+            'consentFilter'
+        ));
     }
 
     public function show(Customer $customer)
@@ -49,6 +97,7 @@ class CustomerController extends Controller
             abort(403);
         }
 
+        $customer->load('location');
         $customer->recalculateStats();
         $orders = $customer->orders()->with('items', 'location')->paginate(20);
 
@@ -61,14 +110,18 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'location_id' => 'nullable|exists:locations,id',
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'notes' => 'nullable|string',
             'marketing_opt_in' => 'nullable|boolean',
         ]);
 
+        $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+
         Customer::create([
             'vendor_id' => $vendor->id,
+            'location_id' => $validated['location_id'] ?? $activeLocationId,
             'name' => $validated['name'],
             'phone' => $validated['phone'] ?? null,
             'email' => $validated['email'] ?? null,
@@ -88,6 +141,7 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'location_id' => 'nullable|exists:locations,id',
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'notes' => 'nullable|string',
@@ -96,6 +150,7 @@ class CustomerController extends Controller
 
         $customer->update([
             'name' => $validated['name'],
+            'location_id' => $validated['location_id'] ?? $customer->location_id,
             'phone' => $validated['phone'] ?? null,
             'email' => $validated['email'] ?? null,
             'notes' => $validated['notes'] ?? null,
@@ -119,7 +174,20 @@ class CustomerController extends Controller
     public function export(Request $request)
     {
         $vendor = Auth::user()->vendor;
-        $customers = Customer::where('vendor_id', $vendor->id)->orderBy('name', 'asc')->get();
+        $activeLocationId = session('active_location_id');
+
+        $query = Customer::where('vendor_id', $vendor->id)->with('location');
+
+        if ($activeLocationId && $activeLocationId !== 'all') {
+            $query->where(function ($q) use ($activeLocationId) {
+                $q->where('location_id', $activeLocationId)
+                  ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
+                      $oq->where('location_id', $activeLocationId);
+                  });
+            });
+        }
+
+        $customers = $query->orderBy('name', 'asc')->get();
 
         $fileName = 'customers_export_' . date('Y_m_d_His') . '.csv';
 
@@ -139,6 +207,7 @@ class CustomerController extends Controller
             // CSV Header
             fputcsv($file, [
                 'Customer ID',
+                'Branch / Location',
                 'Full Name',
                 'Phone Number',
                 'Email Address',
@@ -153,6 +222,7 @@ class CustomerController extends Controller
             foreach ($customers as $c) {
                 fputcsv($file, [
                     $c->id,
+                    $c->location?->name ?? 'All Branches',
                     $c->name ?? 'Guest',
                     $c->phone ?? '-',
                     $c->email ?? '-',

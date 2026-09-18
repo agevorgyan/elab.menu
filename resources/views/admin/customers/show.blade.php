@@ -71,7 +71,10 @@
             </div>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <span style="background: rgba(79, 70, 229, 0.15); color: #4f46e5; border: 1px solid rgba(79, 70, 229, 0.3); padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700;">
+                <i class="fa-solid fa-location-dot"></i> {{ $customer->location?->name ?? 'All Branches' }}
+            </span>
             @if($customer->marketing_opt_in)
                 <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700;">
                     <i class="fa-solid fa-check-double"></i> Marketing Consented

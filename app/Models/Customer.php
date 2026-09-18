@@ -11,6 +11,7 @@ class Customer extends Model
 
     protected $fillable = [
         'vendor_id',
+        'location_id',
         'name',
         'phone',
         'email',
@@ -30,6 +31,11 @@ class Customer extends Model
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
     }
 
     public function orders()

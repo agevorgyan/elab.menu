@@ -5,10 +5,32 @@ namespace App\Models;
 use App\Models\Traits\BelongsToVendor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
-    use HasFactory, BelongsToVendor;
+    use HasFactory, BelongsToVendor, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Product $product) {
+            $product->deleteImageFile();
+        });
+    }
+
+    /**
+     * Delete the product's associated image file from public storage if stored locally.
+     */
+    public function deleteImageFile(): void
+    {
+        if (!empty($this->image) && !str_starts_with($this->image, 'http://') && !str_starts_with($this->image, 'https://')) {
+            $path = ltrim(str_replace('/storage/', '', $this->image), '/');
+            if (!empty($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+    }
 
     protected $fillable = [
         'vendor_id',
@@ -51,7 +73,7 @@ class Product extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class)->withTrashed();
     }
 
     public function variations()

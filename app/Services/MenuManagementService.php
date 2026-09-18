@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\Vendor;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class MenuManagementService
 {
@@ -122,11 +123,21 @@ class MenuManagementService
      */
     public function updateProduct(Product $product, array $data, ?UploadedFile $imageFile = null): Product
     {
+        $oldImage = $product->image;
+
         $imageUrl = $this->resolveProductImage(
             imageFile: $imageFile,
             fallbackUrl: $data['image'] ?? null,
             defaultUrl: $product->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80'
         );
+
+        // If a new image was set and the old image was stored locally, purge the old file
+        if ($oldImage && $imageUrl !== $oldImage && !str_starts_with($oldImage, 'http://') && !str_starts_with($oldImage, 'https://')) {
+            $oldPath = ltrim(str_replace('/storage/', '', $oldImage), '/');
+            if (!empty($oldPath) && Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
 
         $name = $data['name'];
         $desc = $data['description'] ?? null;
@@ -198,10 +209,11 @@ class MenuManagementService
     }
 
     /**
-     * Delete a product.
+     * Delete a product and its associated media file.
      */
     public function deleteProduct(Product $product): void
     {
+        $product->deleteImageFile();
         $product->delete();
     }
 

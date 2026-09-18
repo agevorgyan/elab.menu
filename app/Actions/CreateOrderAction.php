@@ -2,6 +2,9 @@
 
 namespace App\Actions;
 
+use App\DTOs\CreateOrderDTO;
+use App\DTOs\OrderItemDTO;
+use App\Events\OrderCreated;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Order;
@@ -23,83 +26,80 @@ class CreateOrderAction
      * Process order submission within a database transaction.
      *
      * @param Vendor $vendor
-     * @param array $data Validated request parameters
+     * @param CreateOrderDTO|array $data Validated DTO or parameters array
      * @return array{order: Order, whatsapp_url: ?string}
      */
-    public function execute(Vendor $vendor, array $data): array
+    public function execute(Vendor $vendor, CreateOrderDTO|array $data): array
     {
+        $dto = $data instanceof CreateOrderDTO ? $data : CreateOrderDTO::fromArray($data);
+
         // Multi-tenant validation: ensure location belongs to vendor
-        $location = Location::where('vendor_id', $vendor->id)->find($data['location_id']);
+        $location = Location::where('vendor_id', $vendor->id)->find($dto->locationId);
         if (!$location) {
             throw ValidationException::withMessages([
                 'location_id' => 'The selected location does not belong to this vendor.',
             ]);
         }
 
-        $phone = !empty($data['customer_phone']) ? trim($data['customer_phone']) : null;
-        $email = !empty($data['customer_email']) ? strtolower(trim($data['customer_email'])) : null;
-        $name = !empty($data['customer_name']) ? trim($data['customer_name']) : null;
-        $marketingOptIn = filter_var($data['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN);
-
         $order = null;
 
-        DB::transaction(function () use ($vendor, $data, $name, $phone, $email, $marketingOptIn, &$order) {
+        DB::transaction(function () use ($vendor, $dto, &$order) {
             // Synchronize or create customer profile
             $customer = $this->customerSyncService->syncCustomerFromOrder(
                 vendor: $vendor,
-                name: $name,
-                phone: $phone,
-                email: $email,
-                marketingOptIn: $marketingOptIn,
-                locationId: $data['location_id']
+                name: $dto->customerName,
+                phone: $dto->customerPhone,
+                email: $dto->customerEmail,
+                marketingOptIn: $dto->marketingOptIn,
+                locationId: $dto->locationId
             );
 
             // Create base order record
             $order = Order::create([
                 'vendor_id' => $vendor->id,
-                'location_id' => $data['location_id'],
+                'location_id' => $dto->locationId,
                 'customer_id' => $customer?->id,
                 'order_number' => 'ORD-' . strtoupper(Str::random(6)),
-                'table_number' => $data['table_number'] ?? 'Counter',
-                'type' => $data['type'],
+                'table_number' => $dto->tableNumber ?? 'Counter',
+                'type' => $dto->type,
                 'total_amount' => 0,
                 'status' => 'pending',
-                'customer_name' => $name ?? 'Guest',
-                'customer_phone' => $phone,
-                'customer_email' => $email,
-                'marketing_opt_in' => $marketingOptIn,
-                'notes' => $data['notes'] ?? null,
+                'customer_name' => $dto->customerName ?? 'Guest',
+                'customer_phone' => $dto->customerPhone,
+                'customer_email' => $dto->customerEmail,
+                'marketing_opt_in' => $dto->marketingOptIn,
+                'notes' => $dto->notes,
             ]);
 
             $totalAmount = 0;
 
-            foreach ($data['items'] as $item) {
+            foreach ($dto->items as $item) {
                 // Multi-tenant safe: ensure product belongs to this vendor
-                $product = Product::where('vendor_id', $vendor->id)->find($item['product_id']);
+                $product = Product::where('vendor_id', $vendor->id)->find($item->productId);
                 if (!$product) {
                     throw ValidationException::withMessages([
-                        'items' => "Product #{$item['product_id']} does not belong to this vendor.",
+                        'items' => "Product #{$item->productId} does not belong to this vendor.",
                     ]);
                 }
 
                 $variationsCount = $product->variations()->count();
                 $variation = null;
 
-                // 1. Resolve variation if variation_id is supplied
-                if (!empty($item['variation_id'])) {
-                    $variation = $product->variations()->find($item['variation_id']);
+                // 1. Resolve variation if variationId is supplied
+                if (!empty($item->variationId)) {
+                    $variation = $product->variations()->find($item->variationId);
                     if (!$variation) {
                         throw ValidationException::withMessages([
                             'items' => "Invalid variation selected for dish {$product->name}.",
                         ]);
                     }
                 } 
-                // 2. Resolve variation if variation_name is supplied
-                elseif (!empty($item['variation_name'])) {
-                    $variation = $product->variations()->where('name', $item['variation_name'])->first();
+                // 2. Resolve variation if variationName is supplied
+                elseif (!empty($item->variationName)) {
+                    $variation = $product->variations()->where('name', $item->variationName)->first();
                     if (!$variation && $variationsCount > 0) {
                         throw ValidationException::withMessages([
-                            'items' => "Invalid variation '{$item['variation_name']}' selected for dish {$product->name}.",
+                            'items' => "Invalid variation '{$item->variationName}' selected for dish {$product->name}.",
                         ]);
                     }
                 }
@@ -118,7 +118,7 @@ class CreateOrderAction
 
                 // 5. Determine unit price strictly from variation or location override
                 if ($variation) {
-                    $override = $product->overrides->firstWhere('location_id', $data['location_id']);
+                    $override = $product->overrides->firstWhere('location_id', $dto->locationId);
                     if ($variationsCount === 1 && $override && $override->override_price !== null) {
                         $unitPrice = (float) $override->override_price;
                     } else {
@@ -126,11 +126,11 @@ class CreateOrderAction
                     }
                     $variationName = $variation->name;
                 } else {
-                    $unitPrice = (float) $product->getEffectivePrice($data['location_id']);
-                    $variationName = !empty($item['variation_name']) ? $item['variation_name'] : 'Standard';
+                    $unitPrice = (float) $product->getEffectivePrice($dto->locationId);
+                    $variationName = !empty($item->variationName) ? $item->variationName : 'Standard';
                 }
 
-                $subtotal = $unitPrice * $item['quantity'];
+                $subtotal = $unitPrice * $item->quantity;
                 $totalAmount += $subtotal;
 
                 OrderItem::create([
@@ -139,7 +139,7 @@ class CreateOrderAction
                     'product_name' => $product->name,
                     'variation_name' => $variationName,
                     'unit_price' => $unitPrice,
-                    'quantity' => $item['quantity'],
+                    'quantity' => $item->quantity,
                     'subtotal' => $subtotal,
                 ]);
             }
@@ -151,7 +151,10 @@ class CreateOrderAction
             }
         });
 
-        $whatsappUrl = $this->buildWhatsAppUrl($order, $vendor, (int)$data['location_id']);
+        // Broadcast real-time OrderCreated event for kitchen & staff display
+        event(new OrderCreated($order));
+
+        $whatsappUrl = $this->buildWhatsAppUrl($order, $vendor, $dto->locationId);
 
         if (!empty($order->customer_email)) {
             try {

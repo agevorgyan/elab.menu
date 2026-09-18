@@ -106,6 +106,9 @@ class OrderController extends Controller
 
         $order->update(['status' => $validated['status']]);
 
+        // Broadcast real-time status update for kitchen screens & customer tracker
+        event(new \App\Events\OrderStatusUpdated($order));
+
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'status' => $order->status, 'message' => "Order #{$order->order_number} updated to {$order->status}."]);
         }

@@ -187,8 +187,10 @@ self.addEventListener('fetch', event => {
             ], 422);
         }
 
-        $result = DB::transaction(function () use ($createOrderAction, $vendor, $validated) {
-            return $createOrderAction->execute($vendor, $validated);
+        $dto = \App\DTOs\CreateOrderDTO::fromArray($validated);
+
+        $result = DB::transaction(function () use ($createOrderAction, $vendor, $dto) {
+            return $createOrderAction->execute($vendor, $dto);
         });
 
         return response()->json([
@@ -320,6 +322,9 @@ self.addEventListener('fetch', event => {
             'status' => 'pending',
             'notes' => $validated['notes'] ?? null,
         ]);
+
+        // Broadcast real-time WaiterCalled event
+        event(new \App\Events\WaiterCalled($call));
 
         $message = match ($call->type) {
             'call_waiter' => __('menu.waiter_called_success'),

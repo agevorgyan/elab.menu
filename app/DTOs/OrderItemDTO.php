@@ -23,4 +23,17 @@ class OrderItemDTO
             variationName: !empty($data['variation_name']) ? trim((string) $data['variation_name']) : null,
         );
     }
+
+    /**
+     * Convert DTO to associative array.
+     */
+    public function toArray(): array
+    {
+        return [
+            'product_id' => $this->productId,
+            'quantity' => $this->quantity,
+            'variation_id' => $this->variationId,
+            'variation_name' => $this->variationName,
+        ];
+    }
 }

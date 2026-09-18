@@ -19,6 +19,7 @@ class CreateOrderDTO
         public readonly ?string $customerEmail = null,
         public readonly bool $marketingOptIn = true,
         public readonly ?string $notes = null,
+        public readonly ?string $paymentMethod = null,
     ) {}
 
     /**
@@ -47,7 +48,27 @@ class CreateOrderDTO
             customerEmail: !empty($data['customer_email']) ? strtolower(trim((string) $data['customer_email'])) : null,
             marketingOptIn: filter_var($data['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN),
             notes: !empty($data['notes']) ? trim((string) $data['notes']) : null,
+            paymentMethod: !empty($data['payment_method']) ? trim((string) $data['payment_method']) : null,
         );
+    }
+
+    /**
+     * Convert DTO to associative array.
+     */
+    public function toArray(): array
+    {
+        return [
+            'location_id' => $this->locationId,
+            'type' => $this->type,
+            'items' => array_map(fn(OrderItemDTO $item) => $item->toArray(), $this->items),
+            'table_number' => $this->tableNumber,
+            'customer_name' => $this->customerName,
+            'customer_phone' => $this->customerPhone,
+            'customer_email' => $this->customerEmail,
+            'marketing_opt_in' => $this->marketingOptIn,
+            'notes' => $this->notes,
+            'payment_method' => $this->paymentMethod,
+        ];
     }
 
     /**

@@ -3,6 +3,10 @@
 @section('title', 'Live Kitchen Orders - ' . $vendor->name)
 
 @section('content')
+<!-- Load Pusher & Laravel Echo for Reverb WebSockets -->
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@8.3.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
     <div>
         <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem;">
@@ -16,9 +20,9 @@
     <!-- Live Controls: Connection Status & Sound Toggle -->
     <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
         <!-- Live Status Pill -->
-        <div id="liveStatusPill" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+        <div id="liveStatusPill" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
             <span class="pulse-dot" style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
-            <span id="liveStatusText">Ուղիղ կապ ակտիվ է</span>
+            <span id="liveStatusText">⚡ WebSockets Կապ</span>
         </div>
 
         <!-- Audio Toggle Button -->
@@ -71,7 +75,7 @@
         </a>
     </div>
 
-    <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
+    <div id="pollInfoContainer" style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
         <i class="fa-solid fa-rotate text-xs"></i>
         <span>Ինքնաթարմացում՝ <strong id="pollCounter">4</strong>վ</span>
     </div>
@@ -315,15 +319,152 @@ async function changeOrderStatus(orderId, newStatus) {
     }
 }
 
-// 4-second Polling Timer
+// 4-second / heartbeat Polling Timer
 setInterval(() => {
     pollSecondsRemaining--;
+    const counterEl = document.getElementById('pollCounter');
     if (pollSecondsRemaining <= 0) {
-        document.getElementById('pollCounter').innerText = '...';
-        fetchKitchenFeed();
+        if (counterEl) counterEl.innerText = '...';
+        fetchKitchenFeed(isWebSocketConnected);
     } else {
-        document.getElementById('pollCounter').innerText = pollSecondsRemaining;
+        if (counterEl) counterEl.innerText = pollSecondsRemaining;
     }
 }, 1000);
+
+// Initialize Reverb WebSockets with Echo
+let isWebSocketConnected = false;
+let fallbackPollInterval = 4;
+
+function initEcho() {
+    try {
+        if (typeof Echo === 'undefined') return;
+
+        const reverbKey = '{{ config("broadcasting.connections.reverb.key") ?? env("REVERB_APP_KEY", "") }}';
+        const reverbHost = '{{ config("broadcasting.connections.reverb.options.host") ?? env("REVERB_HOST", request()->getHost()) }}';
+        const reverbPort = {{ config("broadcasting.connections.reverb.options.port") ?? env("REVERB_PORT", 8080) }};
+        const reverbScheme = '{{ config("broadcasting.connections.reverb.options.scheme") ?? env("REVERB_SCHEME", "http") }}';
+
+        window.Echo = new Echo({
+            broadcaster: 'reverb',
+            key: reverbKey,
+            wsHost: reverbHost,
+            wsPort: reverbPort,
+            wssPort: reverbPort,
+            forceTLS: reverbScheme === 'https',
+            enabledTransports: ['ws', 'wss'],
+            authEndpoint: '/broadcasting/auth',
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            }
+        });
+
+        // Listen on vendor's private channel
+        window.Echo.private('vendor.{{ $vendor->id }}')
+            .listen('.OrderCreated', (data) => {
+                handleWebSocketOrderCreated(data);
+            })
+            .listen('OrderCreated', (data) => {
+                handleWebSocketOrderCreated(data);
+            })
+            .listen('.WaiterCalled', (data) => {
+                handleWebSocketWaiterCalled(data);
+            })
+            .listen('WaiterCalled', (data) => {
+                handleWebSocketWaiterCalled(data);
+            })
+            .listen('.OrderStatusUpdated', (data) => {
+                fetchKitchenFeed(true);
+            })
+            .listen('OrderStatusUpdated', (data) => {
+                fetchKitchenFeed(true);
+            });
+
+        if (window.Echo.connector && window.Echo.connector.pusher) {
+            window.Echo.connector.pusher.connection.bind('connected', () => {
+                isWebSocketConnected = true;
+                updateConnectionStatus(true);
+            });
+
+            window.Echo.connector.pusher.connection.bind('disconnected', () => {
+                isWebSocketConnected = false;
+                updateConnectionStatus(false);
+            });
+
+            window.Echo.connector.pusher.connection.bind('unavailable', () => {
+                isWebSocketConnected = false;
+                updateConnectionStatus(false);
+            });
+
+            window.Echo.connector.pusher.connection.bind('failed', () => {
+                isWebSocketConnected = false;
+                updateConnectionStatus(false);
+            });
+        }
+    } catch (err) {
+        console.warn('Echo initialization note:', err);
+        updateConnectionStatus(false);
+    }
+}
+
+function updateConnectionStatus(connected) {
+    const pill = document.getElementById('liveStatusPill');
+    const text = document.getElementById('liveStatusText');
+    const pollInfo = document.getElementById('pollInfoContainer');
+
+    if (connected) {
+        if (pill) {
+            pill.style.background = 'rgba(16, 185, 129, 0.15)';
+            pill.style.color = '#10b981';
+            pill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        }
+        if (text) text.innerHTML = '⚡ WebSockets (Reverb) Ակտիվ է';
+        if (pollInfo) pollInfo.innerHTML = '<i class="fa-solid fa-bolt text-xs" style="color: #10b981;"></i> <span>Իրական ժամանակ (WebSockets)</span>';
+        fallbackPollInterval = 60; // idle heartbeat
+        pollSecondsRemaining = 60;
+    } else {
+        if (pill) {
+            pill.style.background = 'rgba(245, 158, 11, 0.15)';
+            pill.style.color = '#f59e0b';
+            pill.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+        }
+        if (text) text.innerHTML = 'Հարցումների ռեժիմ (Polling 4վ)';
+        if (pollInfo) pollInfo.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i> <span>Ինքնաթարմացում՝ <strong id="pollCounter">4</strong>վ</span>';
+        fallbackPollInterval = 4; // fast fallback polling
+        pollSecondsRemaining = 4;
+    }
+}
+
+function handleWebSocketOrderCreated(data) {
+    playKitchenChime();
+    const banner = document.getElementById('newOrderBanner');
+    const bannerText = document.getElementById('newOrderBannerText');
+    if (banner && bannerText) {
+        bannerText.innerText = `Նոր պատվեր #${data.order_number} (${data.table_number || 'Սեղան'}) — Գումար՝ ${Number(data.total_amount).toLocaleString()} դրամ։`;
+        banner.style.display = 'flex';
+    }
+    document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ #${data.order_number}!`;
+    setTimeout(() => {
+        document.title = 'Live Kitchen Orders - {{ $vendor->name }}';
+    }, 8000);
+    fetchKitchenFeed(true);
+}
+
+function handleWebSocketWaiterCalled(data) {
+    playKitchenChime();
+    const banner = document.getElementById('newOrderBanner');
+    const bannerText = document.getElementById('newOrderBannerText');
+    if (banner && bannerText) {
+        bannerText.innerText = `🔔 Կանչ ${data.table_number || 'Սեղանից'}: ${data.type_label}։`;
+        banner.style.display = 'flex';
+    }
+    fetchKitchenFeed(true);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initEcho();
+});
 </script>
 @endsection

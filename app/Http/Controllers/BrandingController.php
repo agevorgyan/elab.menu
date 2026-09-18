@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MenuTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class BrandingController extends Controller
 {
@@ -35,11 +36,23 @@ class BrandingController extends Controller
         ]);
 
         if ($request->hasFile('logo_file') && $request->file('logo_file')->isValid()) {
+            if (!empty($vendor->logo) && !str_starts_with($vendor->logo, 'http://') && !str_starts_with($vendor->logo, 'https://')) {
+                $oldLogoPath = ltrim(str_replace('/storage/', '', $vendor->logo), '/');
+                if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
+                    Storage::disk('public')->delete($oldLogoPath);
+                }
+            }
             $path = $request->file('logo_file')->store('branding', 'public');
             $validated['logo'] = '/storage/' . $path;
         }
 
         if ($request->hasFile('cover_file') && $request->file('cover_file')->isValid()) {
+            if (!empty($vendor->cover_image) && !str_starts_with($vendor->cover_image, 'http://') && !str_starts_with($vendor->cover_image, 'https://')) {
+                $oldCoverPath = ltrim(str_replace('/storage/', '', $vendor->cover_image), '/');
+                if ($oldCoverPath && Storage::disk('public')->exists($oldCoverPath)) {
+                    Storage::disk('public')->delete($oldCoverPath);
+                }
+            }
             $path = $request->file('cover_file')->store('branding', 'public');
             $validated['cover_image'] = '/storage/' . $path;
         }

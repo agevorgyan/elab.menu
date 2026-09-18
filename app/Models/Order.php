@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Traits\BelongsToVendor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    use HasFactory, BelongsToVendor;
+    use HasFactory, BelongsToVendor, SoftDeletes;
 
     protected $fillable = [
         'vendor_id',

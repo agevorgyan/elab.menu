@@ -150,6 +150,13 @@ self.addEventListener('fetch', event => {
     {
         $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
 
+        if (!$vendor->hasFeature('orders')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Օնլայն պատվերների ֆունկցիան ակտիվ չէ այս մենյուի համար (Basic փաթեթ)։',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'location_id' => 'required|exists:locations,id',
             'table_number' => 'nullable|string',

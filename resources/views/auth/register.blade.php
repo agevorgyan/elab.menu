@@ -139,11 +139,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Բաժանորդագրության տեսակ *</label>
+                    <label>Բաժանորդագրության տեսակ (14 օր անվճար) *</label>
                     <select name="subscription_plan" class="form-select" required>
-                        <option value="basic" {{ old('subscription_plan') == 'basic' ? 'selected' : '' }}>Basic (1 Մասնաճյուղ)</option>
-                        <option value="pro" {{ old('subscription_plan', 'pro') == 'pro' ? 'selected' : '' }}>Pro (Բազմամասնաճյուղ - 0% Commission)</option>
-                        <option value="enterprise" {{ old('subscription_plan') == 'enterprise' ? 'selected' : '' }}>Enterprise (Custom Domain & VIP API)</option>
+                        @if(isset($plans) && $plans->count())
+                            @foreach($plans as $p)
+                                <option value="{{ $p->slug }}" {{ old('subscription_plan', 'pro') == $p->slug ? 'selected' : '' }}>
+                                    {{ $p->name }} — {{ $p->formatted_price }} (14 օր անվճար)
+                                </option>
+                            @endforeach
+                        @else
+                            <option value="basic" {{ old('subscription_plan') == 'basic' ? 'selected' : '' }}>Basic — 9 900 AMD / ամիս (14 օր անվճար)</option>
+                            <option value="pro" {{ old('subscription_plan', 'pro') == 'pro' ? 'selected' : '' }}>Pro — 19 900 AMD / ամիս (14 օր անվճար)</option>
+                            <option value="business" {{ old('subscription_plan') == 'business' ? 'selected' : '' }}>Business — 34 900 AMD / ամիս (14 օր անվճար)</option>
+                            <option value="custom" {{ old('subscription_plan') == 'custom' ? 'selected' : '' }}>Custom — Պայմանագրային</option>
+                        @endif
                     </select>
                 </div>
 

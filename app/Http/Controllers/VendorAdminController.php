@@ -128,4 +128,12 @@ class VendorAdminController extends Controller
 
         return back()->with('success', 'Team member invited successfully!');
     }
+
+    public function subscriptionIndex()
+    {
+        $vendor = Auth::user()->vendor;
+        $vendor->load('plan', 'payments');
+        $allPlans = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        return view('admin.subscription.index', compact('vendor', 'allPlans'));
+    }
 }

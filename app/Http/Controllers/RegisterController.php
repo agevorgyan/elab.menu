@@ -13,12 +13,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
+use App\Models\SubscriptionPlan;
+
 class RegisterController extends Controller
 {
     public function showRegistrationForm()
     {
         $templates = MenuTemplate::where('is_active', true)->get();
-        return view('auth.register', compact('templates'));
+        $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        return view('auth.register', compact('templates', 'plans'));
     }
 
     public function register(Request $request)
@@ -35,13 +38,15 @@ class RegisterController extends Controller
             'contact_person_name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
             'email' => 'required|email|unique:users,email|unique:vendors,email',
-            'subscription_plan' => 'required|string|in:basic,pro,enterprise',
+            'subscription_plan' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
         $template = MenuTemplate::first();
+        $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first() 
+            ?? SubscriptionPlan::where('slug', 'pro')->first();
 
-        // 1. Create Vendor Record
+        // 1. Create Vendor Record with 14-day Free Trial
         $vendor = Vendor::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']) . '-' . Str::random(4),
@@ -55,7 +60,11 @@ class RegisterController extends Controller
             'expected_locations_count' => $validated['expected_locations_count'],
             'phone' => $validated['phone'],
             'email' => $validated['email'],
-            'subscription_plan' => $validated['subscription_plan'],
+            'subscription_plan' => $plan?->slug ?? 'pro',
+            'subscription_plan_id' => $plan?->id,
+            'subscription_status' => 'trialing',
+            'trial_ends_at' => now()->addDays(14),
+            'subscription_expires_at' => now()->addDays(14),
             'menu_template_id' => $template?->id,
             'primary_color' => '#e11d48',
             'secondary_color' => '#4f46e5',

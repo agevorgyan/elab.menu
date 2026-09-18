@@ -331,18 +331,76 @@
             color: #10b981;
         }
 
-        /* Grid Utilities */
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
-        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
-        
-        /* Mobile Overlay */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            z-index: 45;
+        /* Cards & Glass Containers */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-card);
+        }
+
+        /* Form Controls & Inputs */
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: var(--input-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0.65rem 0.9rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 0.85rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--table-row-border);
+            vertical-align: middle;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
         }
 
         @media (max-width: 992px) {
@@ -375,56 +433,78 @@
 
         <nav class="sidebar-menu">
             @if(Auth::user()?->isSuperAdmin())
-                <div class="menu-category">Super Admin</div>
+                <div class="menu-category">{{ __('Super Admin') }}</div>
                 <a href="{{ route('superadmin.dashboard') }}" class="nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                    <i class="fa-solid fa-chart-line"></i> {{ __('Dashboard') }}
                 </a>
                 <a href="{{ route('superadmin.vendors.index') }}" class="nav-item {{ request()->routeIs('superadmin.vendors.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-store"></i> Vendor Directory
+                    <i class="fa-solid fa-store"></i> {{ __('Vendor Directory') }}
+                </a>
+                <a href="{{ route('superadmin.plans.index') }}" class="nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-box-archive"></i> {{ __('Plans') }}
+                </a>
+                <a href="{{ route('superadmin.subscriptions.index') }}" class="nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-credit-card"></i> {{ __('Vendor Subscriptions') }}
                 </a>
             @else
-                <div class="menu-category">Vendor Operations</div>
+                @php $v = Auth::user()?->vendor; @endphp
+                <div class="menu-category">{{ __('Vendor Operations') }}</div>
                 <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-gauge-high"></i> Dashboard
+                    <i class="fa-solid fa-gauge-high"></i> {{ __('Dashboard') }}
                 </a>
-                <a href="{{ route('admin.orders.index') }}" class="nav-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-bell-concierge"></i> Live Kitchen Orders
+                <a href="{{ route('admin.orders.index') }}" class="nav-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" style="justify-content: space-between;">
+                    <span><i class="fa-solid fa-bell-concierge"></i> {{ __('Live Kitchen Orders') }}</span>
+                    @if($v && !$v->hasFeature('orders'))
+                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 PRO</span>
+                    @endif
                 </a>
 
-                <div class="menu-category">Menu & Content</div>
+                <div class="menu-category">{{ __('Menu & Content') }}</div>
                 <a href="{{ route('admin.menu.index') }}" class="nav-item {{ request()->routeIs('admin.menu.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-utensils"></i> Menu Builder
+                    <i class="fa-solid fa-utensils"></i> {{ __('Menu Builder') }}
                 </a>
                 <a href="{{ route('admin.ai.import') }}" class="nav-item {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> AI Menu & Translate
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> {{ __('AI Menu & Translate') }}
                 </a>
 
-                <div class="menu-category">Storefront & Marketing</div>
+                <div class="menu-category">{{ __('Storefront & Marketing') }}</div>
                 <a href="{{ route('admin.branding.index') }}" class="nav-item {{ request()->routeIs('admin.branding.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-palette"></i> Theme Customizer
+                    <i class="fa-solid fa-palette"></i> {{ __('Theme Customizer') }}
                 </a>
                 <a href="{{ route('admin.qr.index') }}" class="nav-item {{ request()->routeIs('admin.qr.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-qrcode"></i> Table QR Studio
+                    <i class="fa-solid fa-qrcode"></i> {{ __('Table QR Studio') }}
                 </a>
-                <a href="{{ route('admin.customers.index') }}" class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Customers & CRM
+                <a href="{{ route('admin.customers.index') }}" class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" style="justify-content: space-between;">
+                    <span><i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> {{ __('Customers & CRM') }}</span>
+                    @if($v && !$v->hasFeature('customers'))
+                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 PRO</span>
+                    @endif
                 </a>
                 <a href="{{ route('admin.analytics.index') }}" class="nav-item {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-chart-pie"></i> Analytics & Traffic
+                    <i class="fa-solid fa-chart-pie"></i> {{ __('Analytics & Traffic') }}
                 </a>
 
-                <div class="menu-category">Settings & Team</div>
-                <a href="{{ route('admin.locations.index') }}" class="nav-item {{ request()->routeIs('admin.locations.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-location-dot"></i> Multi-Locations
+                <div class="menu-category">{{ __('Settings & Subscription') }}</div>
+                <a href="{{ route('admin.subscription') }}" class="nav-item {{ request()->routeIs('admin.subscription') ? 'active' : '' }}">
+                    <i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary);"></i> {{ __('Subscription') }}
                 </a>
-                <a href="{{ route('admin.team.index') }}" class="nav-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-users"></i> Team & Staff
+                <a href="{{ route('admin.locations.index') }}" class="nav-item {{ request()->routeIs('admin.locations.*') ? 'active' : '' }}" style="justify-content: space-between;">
+                    <span><i class="fa-solid fa-location-dot"></i> {{ __('Multi-Locations') }}</span>
+                    @if($v && !$v->hasFeature('locations'))
+                        <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 BIZ</span>
+                    @endif
+                </a>
+                <a href="{{ route('admin.team.index') }}" class="nav-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}" style="justify-content: space-between;">
+                    <span><i class="fa-solid fa-users"></i> {{ __('Team & Staff') }}</span>
+                    @if($v && !$v->hasFeature('team'))
+                        <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 BIZ</span>
+                    @endif
                 </a>
 
                 @if(Auth::user()?->vendor)
                     <div style="padding: 0.5rem 1rem;">
                         <a href="{{ route('client.menu', ['vendor_slug' => Auth::user()->vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; border-radius: 12px;">
-                            <i class="fa-solid fa-external-link"></i> Live Storefront
+                            <i class="fa-solid fa-external-link"></i> {{ __('Live Storefront') }}
                         </a>
                     </div>
                 @endif
@@ -433,9 +513,9 @@
 
         <!-- Sidebar Help Widget -->
         <div class="sidebar-widget">
-            <p>Need help or custom menu translation?</p>
+            <p>{{ __('Need help or custom menu translation?') }}</p>
             <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
-                <i class="fa-solid fa-headset"></i> Get Support
+                <i class="fa-solid fa-headset"></i> {{ __('Get Support') }}
             </a>
         </div>
     </aside>
@@ -452,12 +532,12 @@
                     @if(Auth::user()?->vendor && Auth::user()->vendor->locations->count() > 0)
                         <form action="{{ route('admin.dashboard') }}" method="GET" id="locationSwitchForm">
                             <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;" class="hidden sm:inline">
-                                <i class="fa-solid fa-location-arrow"></i> Location:
+                                <i class="fa-solid fa-location-arrow"></i> {{ __('Location:') }}
                             </label>
                             <select name="location_id" onchange="document.getElementById('locationSwitchForm').submit();">
                                 @foreach(Auth::user()->vendor->locations as $loc)
                                     <option value="{{ $loc->id }}" {{ session('active_location_id') == $loc->id ? 'selected' : '' }}>
-                                        {{ $loc->name }} ({{ $loc->table_count }} tables)
+                                        {{ $loc->name }} ({{ $loc->table_count }} {{ __('tables') }})
                                     </option>
                                 @endforeach
                             </select>
@@ -467,10 +547,34 @@
             </div>
 
             <div class="user-profile">
+                <!-- Admin Language Switcher -->
+                <div style="position: relative;" x-data="{ openLang: false }">
+                    <button @click="openLang = !openLang" class="theme-toggle-btn" style="border-radius: 10px;">
+                        <i class="fa-solid fa-globe" style="color: var(--primary);"></i>
+                        <span>
+                            @if(app()->getLocale() == 'hy') 🇦🇲 AM
+                            @elseif(app()->getLocale() == 'ru') 🇷🇺 RU
+                            @else 🇬🇧 EN @endif
+                        </span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem; color: var(--text-muted);"></i>
+                    </button>
+                    <div x-show="openLang" @click.outside="openLang = false" x-transition style="position: absolute; right: 0; top: 110%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-card); min-width: 140px; z-index: 100; overflow: hidden; padding: 0.25rem 0;">
+                        <a href="{{ route('lang.switch', 'hy') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'hy' ? '700' : '400' }}; background: {{ app()->getLocale() == 'hy' ? 'var(--nav-hover)' : 'transparent' }};">
+                            🇦🇲 Հայերեն
+                        </a>
+                        <a href="{{ route('lang.switch', 'en') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'en' ? '700' : '400' }}; background: {{ app()->getLocale() == 'en' ? 'var(--nav-hover)' : 'transparent' }};">
+                            🇬🇧 English
+                        </a>
+                        <a href="{{ route('lang.switch', 'ru') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'ru' ? '700' : '400' }}; background: {{ app()->getLocale() == 'ru' ? 'var(--nav-hover)' : 'transparent' }};">
+                            🇷🇺 Русский
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Light / Dark Theme Switcher Button -->
                 <button class="theme-toggle-btn" @click="toggleTheme()" title="Toggle Light / Dark Mode">
                     <i class="fa-solid" :class="currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
-                    <span x-text="currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode'"></span>
+                    <span x-text="currentTheme === 'dark' ? '{{ __('Light Mode') }}' : '{{ __('Dark Mode') }}'"></span>
                 </button>
 
                 <span class="badge-role {{ Auth::user()?->isSuperAdmin() ? 'badge-superadmin' : (Auth::user()?->isVendorOwner() ? 'badge-owner' : 'badge-manager') }}">
@@ -491,6 +595,32 @@
                 <div class="alert alert-success">
                     <span><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</span>
                     <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            @endif
+
+            @if(session('warning'))
+                <div class="alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fa-solid fa-triangle-exclamation"></i> {{ session('warning') }}</span>
+                    <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</span>
+                    <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            @endif
+
+            @if(Auth::user()?->vendor && !Auth::user()?->isSuperAdmin() && Auth::user()->vendor->daysLeft() <= 3 && !request()->routeIs('admin.subscription'))
+                <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <i class="fa-solid fa-clock"></i>
+                        <strong>Բաժանորդագրության հիշեցում․</strong> Ձեր փաթեթի/փորձնական շրջանին մնացել է <strong>{{ Auth::user()->vendor->daysLeft() }} օր</strong> ({{ Auth::user()->vendor->subscription_status_label }})։
+                    </div>
+                    <a href="{{ route('admin.subscription') }}" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
+                        Մանրամասներ / Երկարաձգել
+                    </a>
                 </div>
             @endif
 

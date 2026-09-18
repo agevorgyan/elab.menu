@@ -24,6 +24,14 @@ Route::get('/m/{vendor_slug}/sw.js', [ClientStorefrontController::class, 'servic
 Route::get('/m/{vendor_slug}/{location_slug?}', [ClientStorefrontController::class, 'showMenu'])->name('client.menu');
 Route::post('/api/m/{vendor_slug}/order', [ClientStorefrontController::class, 'submitOrder'])->name('client.order.submit');
 
+// Admin Language Switcher
+Route::get('/lang/{locale}', function (string $locale) {
+    if (in_array($locale, ['hy', 'en', 'ru'])) {
+        session(['app_locale' => $locale]);
+    }
+    return redirect()->back();
+})->name('lang.switch');
+
 // Legal Documents
 Route::get('/privacy-policy', function () {
     return view('legal.privacy');
@@ -45,23 +53,47 @@ Route::get('/email/verify', [RegisterController::class, 'showVerificationNotice'
 Route::get('/email/verify/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('verification.verify');
 Route::post('/email/verify/demo', [RegisterController::class, 'directDemoVerify'])->name('verification.demo');
 
+use App\Http\Middleware\EnsureSubscriptionIsActive;
+
 // 3. Super Admin Panel (/superadmin)
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/vendors', [SuperAdminController::class, 'vendorsIndex'])->name('vendors.index');
     Route::post('/vendors', [SuperAdminController::class, 'storeVendor'])->name('vendors.store');
     Route::post('/vendors/{vendor}/toggle', [SuperAdminController::class, 'toggleStatus'])->name('vendors.toggle');
+
+    // Subscription Plans Management
+    Route::get('/plans', [SuperAdminController::class, 'plansIndex'])->name('plans.index');
+    Route::post('/plans', [SuperAdminController::class, 'storePlan'])->name('plans.store');
+    Route::post('/plans/{plan}', [SuperAdminController::class, 'updatePlan'])->name('plans.update');
+    Route::post('/plans/{plan}/toggle', [SuperAdminController::class, 'togglePlan'])->name('plans.toggle');
+    Route::delete('/plans/{plan}', [SuperAdminController::class, 'destroyPlan'])->name('plans.destroy');
+
+    // Vendor Subscriptions & Payment Logs
+    Route::get('/subscriptions', [SuperAdminController::class, 'subscriptionsIndex'])->name('subscriptions.index');
+    Route::post('/subscriptions/{vendor}', [SuperAdminController::class, 'updateVendorSubscription'])->name('subscriptions.update');
+    Route::post('/subscriptions/{vendor}/payments', [SuperAdminController::class, 'storeVendorPayment'])->name('subscriptions.payments.store');
 });
 
+use App\Http\Middleware\EnsurePlanHasFeature;
+
 // 4. Vendor Admin Panel (/admin)
-Route::middleware(['auth', 'role:vendor_owner,manager,staff'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscriptionIsActive::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [VendorAdminController::class, 'dashboard'])->name('dashboard');
     
-    // Locations & Team
-    Route::get('/locations', [VendorAdminController::class, 'locationsIndex'])->name('locations.index');
-    Route::post('/locations', [VendorAdminController::class, 'storeLocation'])->name('locations.store');
-    Route::get('/team', [VendorAdminController::class, 'teamIndex'])->name('team.index');
-    Route::post('/team', [VendorAdminController::class, 'storeTeamMember'])->name('team.store');
+    // Vendor Subscription Status & Payment History
+    Route::get('/subscription', [VendorAdminController::class, 'subscriptionIndex'])->name('subscription');
+
+    // Locations & Team (Business Plan Feature)
+    Route::middleware([EnsurePlanHasFeature::class . ':locations'])->group(function () {
+        Route::get('/locations', [VendorAdminController::class, 'locationsIndex'])->name('locations.index');
+        Route::post('/locations', [VendorAdminController::class, 'storeLocation'])->name('locations.store');
+    });
+
+    Route::middleware([EnsurePlanHasFeature::class . ':team'])->group(function () {
+        Route::get('/team', [VendorAdminController::class, 'teamIndex'])->name('team.index');
+        Route::post('/team', [VendorAdminController::class, 'storeTeamMember'])->name('team.store');
+    });
 
     // Menu Builder
     Route::get('/menu', [MenuBuilderController::class, 'index'])->name('menu.index');
@@ -80,9 +112,11 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff'])->prefix('admin')-
     Route::post('/ai/import/confirm', [AiMenuController::class, 'confirmImport'])->name('ai.import.confirm');
     Route::post('/ai/translate', [AiMenuController::class, 'translateMenu'])->name('ai.translate');
 
-    // Live Orders & Kitchen Panel
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    // Live Orders & Kitchen Panel (Pro / Business Plan Feature)
+    Route::middleware([EnsurePlanHasFeature::class . ':orders'])->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    });
 
     // Branding & Theme Customizer
     Route::get('/branding', [BrandingController::class, 'index'])->name('branding.index');
@@ -91,13 +125,15 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff'])->prefix('admin')-
     // QR Code Studio
     Route::get('/qr', [QrStudioController::class, 'index'])->name('qr.index');
 
-    // Customers CRM
-    Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
-    Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
-    Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
-    Route::post('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
-    Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+    // Customers CRM (Pro / Business Plan Feature)
+    Route::middleware([EnsurePlanHasFeature::class . ':customers'])->group(function () {
+        Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+        Route::post('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+    });
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');

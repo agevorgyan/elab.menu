@@ -35,8 +35,19 @@ class Vendor extends Model
         'theme_mode',
         'custom_css',
         'subscription_plan',
+        'subscription_plan_id',
+        'subscription_status',
+        'trial_ends_at',
+        'subscription_expires_at',
+        'custom_plan_notes',
         'is_active',
         'email_verified_at',
+    ];
+
+    protected $casts = [
+        'trial_ends_at' => 'datetime',
+        'subscription_expires_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     public function menuTemplate()
@@ -77,5 +88,96 @@ class Vendor extends Model
     public function customers()
     {
         return $this->hasMany(Customer::class)->latest();
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(SubscriptionPayment::class)->latest();
+    }
+
+    public function isTrialing(): bool
+    {
+        if ($this->subscription_status === 'trialing') {
+            return $this->trial_ends_at ? $this->trial_ends_at->isFuture() : true;
+        }
+        return false;
+    }
+
+    public function isExpired(): bool
+    {
+        if (!$this->is_active || $this->subscription_status === 'expired') {
+            return true;
+        }
+
+        if ($this->subscription_status === 'trialing' && $this->trial_ends_at && $this->trial_ends_at->isPast()) {
+            return true;
+        }
+
+        if ($this->subscription_expires_at && $this->subscription_expires_at->isPast()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->is_active && !$this->isExpired();
+    }
+
+    public function daysLeft(): int
+    {
+        $targetDate = $this->isTrialing() ? $this->trial_ends_at : $this->subscription_expires_at;
+        if (!$targetDate) return 0;
+        return max(0, (int) ceil(now()->diffInHours($targetDate, false) / 24));
+    }
+
+    public function getSubscriptionStatusLabelAttribute(): string
+    {
+        if ($this->isExpired()) {
+            return 'Ավարտված / Անջատված';
+        }
+        if ($this->isTrialing()) {
+            return 'Փորձնական (14 օր)';
+        }
+        if ($this->subscription_status === 'active') {
+            return 'Ակտիվ';
+        }
+        return ucfirst($this->subscription_status ?? 'Active');
+    }
+
+    public function hasFeature(string $feature): bool
+    {
+        $planSlug = strtolower($this->plan?->slug ?? $this->subscription_plan ?? 'pro');
+
+        if ($planSlug === 'custom' || $planSlug === 'business') {
+            return true;
+        }
+
+        switch ($feature) {
+            case 'orders':
+            case 'online_orders':
+            case 'customers':
+                return in_array($planSlug, ['pro', 'business', 'custom']);
+
+            case 'locations':
+            case 'multi_location':
+            case 'team':
+            case 'staff_roles':
+            case 'advanced_analytics':
+                return in_array($planSlug, ['business', 'custom']);
+
+            case 'menu':
+            case 'qr':
+            case 'branding':
+            case 'analytics':
+            default:
+                return true;
+        }
     }
 }

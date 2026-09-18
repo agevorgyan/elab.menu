@@ -22,24 +22,6 @@
         </div>
     </template>
 
-    <!-- Floating Mini Cart Sticky Bar (Shown when cart has items) -->
-    <template x-if="cart.length > 0 && !showCartModal && !showOrderTracker">
-        <div class="floating-cart-bar" @click="showCartModal = true">
-            <div class="floating-cart-left">
-                <div class="floating-cart-count">
-                    <span x-text="cartTotalCount"></span>
-                </div>
-                <div class="floating-cart-label">
-                    <span>{{ __('menu.view_cart') }}</span>
-                </div>
-            </div>
-            <div class="floating-cart-right">
-                <span class="floating-cart-price" x-text="cartTotalPrice.toLocaleString() + ' {{ $vendor->currency }}'"></span>
-                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; margin-left: 0.4rem;"></i>
-            </div>
-        </div>
-    </template>
-
     <!-- Bottom Navigation Bar -->
     <nav class="storefront-bottom-nav" aria-label="Storefront Mobile Navigation">
         <!-- 1. Home / Menu -->
@@ -66,14 +48,17 @@
 
         <!-- 3. Cart -->
         <button type="button" 
-                class="bottom-nav-item" 
-                :class="{ 'active': showCartModal }"
-                @click="showCartModal = true">
+                class="bottom-nav-item bottom-nav-cart" 
+                :class="{ 'active': showCartModal, 'has-items': cartTotalCount > 0, 'cart-bump': cartBump }"
+                @click="showCartModal = true"
+                title="{{ __('menu.view_cart') }}"
+                aria-label="{{ __('menu.view_cart') }}">
             <div class="nav-icon-wrapper">
                 <i class="fa-solid fa-basket-shopping"></i>
                 <span class="nav-badge" x-show="cartTotalCount > 0" x-text="cartTotalCount" x-transition.scale></span>
             </div>
             <span class="nav-label">{{ __('menu.nav_cart') }}</span>
+            <span style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;">{{ __('menu.view_cart') }}</span>
         </button>
 
         <!-- 4. Info & WiFi -->
@@ -165,82 +150,44 @@
         letter-spacing: -0.01em;
     }
 
+    .bottom-nav-item.has-items {
+        color: var(--primary);
+    }
+
+    .bottom-nav-item.has-items .nav-icon-wrapper i {
+        color: var(--primary);
+    }
+
     .nav-badge {
         position: absolute;
         top: -6px;
         right: -10px;
         background: var(--primary);
         color: #ffffff;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
         font-weight: 800;
-        min-width: 18px;
-        height: 18px;
+        min-width: 19px;
+        height: 19px;
         border-radius: 9999px;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 0 4px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 10px rgba(16, 185, 129, 0.5);
         border: 2px solid var(--bg-card);
         animation: badgePulse 2s infinite;
+        z-index: 5;
     }
 
-    /* Floating Cart Sticky Bar above bottom nav */
-    .floating-cart-bar {
-        pointer-events: auto;
-        max-width: calc(640px - 2rem);
-        margin: 0 auto 0.65rem auto;
-        width: calc(100% - 2rem);
-        background: var(--primary);
-        color: #ffffff;
-        padding: 0.8rem 1.15rem;
-        border-radius: 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-        cursor: pointer;
-        animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    .cart-bump .nav-icon-wrapper {
+        animation: cartBounce 0.5s ease;
     }
 
-    .floating-cart-bar:active {
-        transform: scale(0.98);
-    }
-
-    .floating-cart-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .floating-cart-count {
-        background: rgba(255, 255, 255, 0.25);
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 0.85rem;
-    }
-
-    .floating-cart-label {
-        font-weight: 700;
-        font-size: 0.95rem;
-        letter-spacing: -0.01em;
-    }
-
-    .floating-cart-right {
-        display: flex;
-        align-items: center;
-    }
-
-    .floating-cart-price {
-        font-family: 'Outfit', sans-serif;
-        font-weight: 800;
-        font-size: 1.1rem;
+    @keyframes cartBounce {
+        0% { transform: scale(1); }
+        30% { transform: scale(1.35) rotate(-8deg); }
+        60% { transform: scale(0.92) rotate(4deg); }
+        100% { transform: scale(1) rotate(0deg); }
     }
 
     /* Active Order Floating Pill */

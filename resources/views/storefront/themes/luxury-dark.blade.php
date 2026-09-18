@@ -77,10 +77,9 @@
             position: sticky;
             top: 0;
             z-index: 40;
-            background: var(--bg-glass);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 1rem;
+            background: var(--bg-main);
+            border-bottom: none;
+            padding: 0.5rem 1rem 0.75rem;
             display: flex;
             gap: 0.5rem;
             overflow-x: auto;
@@ -90,7 +89,7 @@
         .cat-chip {
             padding: 0.5rem 1rem;
             border-radius: 9999px;
-            background: var(--bg-card);
+            background: transparent;
             border: 1px solid var(--border-color);
             color: var(--text-muted);
             font-size: 0.85rem;
@@ -142,32 +141,29 @@
             background: var(--primary);
             color: #ffffff;
             border: none;
-            padding: 0.35rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            min-width: 42px;
+            height: 42px;
+            padding: 0 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
             font-weight: 700;
             cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .btn-primary:hover { opacity: 0.9; }
-
-        /* Floating Cart Bar */
-        .floating-cart-bar {
-            position: fixed;
-            bottom: 1.25rem;
-            left: 1.25rem;
-            right: 1.25rem;
-            z-index: 50;
-            background: var(--primary);
-            color: #ffffff;
-            padding: 0.85rem 1.25rem;
-            border-radius: 16px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            font-weight: 800;
-            cursor: pointer;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+        }
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: scale(0.92);
+        }
+        .btn-primary i {
+            font-size: 1.15rem;
         }
 
         .input-field {
@@ -181,46 +177,63 @@
             outline: none;
             margin-bottom: 0.65rem;
         }
+        .input-field.is-locked {
+            cursor: not-allowed !important;
+            background: rgba(16, 185, 129, 0.08) !important;
+            border-color: rgba(16, 185, 129, 0.35) !important;
+            color: var(--text-main) !important;
+            font-weight: 700 !important;
+            padding-right: 2.25rem !important;
+            user-select: none !important;
+        }
 
-        /* Toast Notification Feedback */
+        /* Toast Notification Feedback - Full Width Top Banner */
         .toast-notification {
             position: fixed;
-            top: 1.25rem;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 250;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 300;
             background: var(--bg-card);
             color: var(--text-main);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            padding: 0.7rem 1.25rem;
-            border-radius: 9999px;
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+            padding: max(0.85rem, env(safe-area-inset-top, 0.85rem)) 1.25rem 0.85rem 1.25rem;
+            border-radius: 0 0 16px 16px;
             display: flex;
             align-items: center;
-            gap: 0.7rem;
-            font-size: 0.88rem;
-            font-weight: 600;
-            max-width: 90vw;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-align: center;
+            box-sizing: border-box;
             pointer-events: none;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .toast-notification span {
+            max-width: 90%;
+            word-break: break-word;
         }
         .toast-anim-enter, .toast-anim-leave {
-            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .toast-anim-start {
             opacity: 0;
-            transform: translate(-50%, -20px) scale(0.95);
+            transform: translateY(-100%);
         }
         .toast-anim-end {
             opacity: 1;
-            transform: translate(-50%, 0) scale(1);
+            transform: translateY(0);
         }
-        .toast-success { border-color: rgba(16, 185, 129, 0.5); }
-        .toast-success i { color: #10b981; font-size: 1.05rem; }
-        .toast-info { border-color: rgba(217, 119, 6, 0.5); }
-        .toast-info i { color: #f59e0b; font-size: 1.05rem; }
-        .toast-remove { border-color: rgba(239, 68, 68, 0.5); }
-        .toast-remove i { color: #ef4444; font-size: 1.05rem; }
+        .toast-success { border-bottom-color: #10b981; }
+        .toast-success i { color: #10b981; font-size: 1.15rem; flex-shrink: 0; }
+        .toast-info { border-bottom-color: #f59e0b; }
+        .toast-info i { color: #f59e0b; font-size: 1.15rem; flex-shrink: 0; }
+        .toast-remove { border-bottom-color: #ef4444; }
+        .toast-remove i { color: #ef4444; font-size: 1.15rem; flex-shrink: 0; }
     </style>
 </head>
 <body x-data="storefrontApp()" x-init="initScrollSpy()">
@@ -265,24 +278,6 @@
         </div>
     </div>
 
-    <!-- Table Service Actions (Waiter Call & Bill Request) -->
-    <div style="padding: 0.75rem 1.25rem 0.25rem;">
-        <div style="display: flex; gap: 0.6rem; background: var(--bg-card); padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-            <button type="button" 
-                    @click="quickCallWaiter()"
-                    style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.7rem 0.75rem; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.12); color: #f59e0b; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
-                <i class="fa-solid fa-bell" style="font-size: 0.95rem;"></i>
-                <span>{{ __('menu.call_waiter') }}</span>
-            </button>
-
-            <button type="button" 
-                    @click="openWaiterModal('bill_cash')"
-                    style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.7rem 0.75rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.12); color: #10b981; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
-                <i class="fa-solid fa-receipt" style="font-size: 0.95rem;"></i>
-                <span>{{ __('menu.request_bill') }}</span>
-            </button>
-        </div>
-    </div>
 
     <!-- Language & Search Bar -->
     <div style="padding: 1.25rem 1.25rem 0.5rem; display: flex; gap: 0.75rem;">
@@ -376,11 +371,11 @@
                                         @endif
                                     </div>
                                     
-                                    <button class="btn btn-primary" @click.stop='selectDish({{ json_encode($prodPayload) }})'>
+                                    <button class="btn btn-primary" @click.stop='selectDish({{ json_encode($prodPayload) }})' aria-label="{{ __('menu.add_to_cart') }}" title="{{ __('menu.add_to_cart') }}">
                                         @if($prod->variations->count() > 1)
-                                            {{ __('menu.select_portion_btn') }}
+                                            <span>{{ __('menu.select_portion_btn') }}</span>
                                         @else
-                                            {{ __('menu.add_btn') }}
+                                            <i class="fa-solid fa-cart-plus"></i>
                                         @endif
                                     </button>
                                 </div>
@@ -444,22 +439,43 @@
             <!-- Confirm Add to Cart CTA -->
             <button type="button" @click="addSelectedVariationToCart()" style="width: 100%; margin-top: 1.25rem; padding: 0.95rem; background: var(--primary); color: #ffffff; border: none; border-radius: 14px; font-weight: 800; font-size: 1.05rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);">
                 <span>
-                    <i class="fa-solid fa-plus"></i> {{ __('menu.add_to_cart') }}
+                    <i class="fa-solid fa-cart-plus"></i> {{ __('menu.add_to_cart') }}
                 </span>
                 <span style="font-family: 'Outfit'; font-size: 1.15rem;" x-text="Number((selectedVariation?.price || selectedDish?.base_price || 0) * variationQty).toLocaleString() + ' {{ $vendor->currency }}'"></span>
             </button>
         </div>
     </div>
 
-    <!-- Modal Cart Drawer -->
-    <div x-show="showCartModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
-        <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                <h3 style="font-family: 'Outfit'; font-size: 1.3rem; color: var(--text-main);">
-                    {{ __('menu.order_summary') }}
-                </h3>
-                <button @click="showCartModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
+    <!-- Cart Modal (Full Screen) -->
+    <div x-show="showCartModal" 
+         style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh; background: var(--bg-card); z-index: 200; display: flex; flex-direction: column; overflow: hidden;" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-250"
+         x-transition:enter-start="opacity-0 transform translate-y-4"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform translate-y-4">
+
+        <div style="background: var(--bg-card); width: 100%; max-width: 640px; margin: 0 auto; height: 100%; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;">
+            
+            <!-- Sticky Top Header -->
+            <div style="padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--bg-card); position: sticky; top: 0; z-index: 10;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <div style="width: 38px; height: 38px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                        <i class="fa-solid fa-basket-shopping"></i>
+                    </div>
+                    <h3 style="font-family: 'Outfit'; font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                        {{ __('menu.order_summary') }}
+                    </h3>
+                </div>
+                <button type="button" @click="showCartModal = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
+                    ✕
+                </button>
             </div>
+
+            <!-- Scrollable Content -->
+            <div style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem;">
 
             <!-- Empty Cart State -->
             <div x-show="cart.length === 0" style="text-align: center; padding: 2.5rem 1rem 1.5rem;">
@@ -515,7 +531,26 @@
                     <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ __('menu.phone_placeholder') }}">
                     <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ __('menu.email_placeholder') }}">
                     
-                    <input type="text" x-model="tableNumber" class="input-field" placeholder="{{ __('menu.table') }} {{ $table ?? '4' }}">
+                    <div style="position: relative; margin-bottom: 0.65rem;">
+                        <input type="text" 
+                               x-model="tableNumber" 
+                               :readonly="isTableFixed"
+                               :class="{ 'is-locked': isTableFixed }"
+                               class="input-field" 
+                               style="margin-bottom: 0;"
+                               placeholder="{{ __('menu.table') }} {{ $table ?? '4' }}">
+                        <template x-if="isTableFixed">
+                            <span style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); color: #10b981; font-size: 0.85rem;" title="Ֆիքսված է QR-ով">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                        </template>
+                    </div>
+                    <template x-if="isTableFixed">
+                        <div style="font-size: 0.72rem; color: #10b981; margin-top: -0.35rem; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Սեղանի համարը ֆիքսված է QR կոդով և փոփոխման ենթակա չէ</span>
+                        </div>
+                    </template>
 
                     <!-- Consent & Marketing Opt-in -->
                     <label style="display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; border-radius: 10px;">
@@ -541,6 +576,7 @@
             </div>
         </div>
     </div>
+</div>
 
     @include('storefront.components.bottom-nav')
     @include('storefront.components.info-modal')

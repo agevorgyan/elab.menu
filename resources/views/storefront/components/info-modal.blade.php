@@ -1,44 +1,38 @@
-<!-- Restaurant Info & WiFi Modal -->
+<!-- Restaurant Info & WiFi Modal (Full Screen) -->
 <div x-show="showInfoModal" 
-     style="position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 110; display: flex; flex-direction: column; justify-content: flex-end;" 
+     style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh; background: var(--bg-card); z-index: 200; display: flex; flex-direction: column; overflow: hidden;" 
      x-cloak
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
+     x-transition:enter="transition ease-out duration-250"
+     x-transition:enter-start="opacity-0 transform translate-y-4"
+     x-transition:enter-end="opacity-100 transform translate-y-0"
      x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0">
+     x-transition:leave-start="opacity-100 transform translate-y-0"
+     x-transition:leave-end="opacity-0 transform translate-y-4">
      
-    <div @click.outside="showInfoModal = false"
-         style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto; max-width: 640px; margin: 0 auto; width: 100%; box-shadow: 0 -10px 40px rgba(0,0,0,0.3);"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="transform translate-y-full"
-         x-transition:enter-end="transform translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="transform translate-y-0"
-         x-transition:leave-end="transform translate-y-full">
+    <div style="background: var(--bg-card); width: 100%; max-width: 640px; margin: 0 auto; height: 100%; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;">
          
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <!-- Sticky Top Header -->
+        <div style="padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--bg-card); position: sticky; top: 0; z-index: 10;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(var(--primary-rgb, 225, 29, 72), 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: rgba(var(--primary-rgb, 225, 29, 72), 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;">
                     <i class="fa-solid fa-circle-info"></i>
                 </div>
                 <div>
-                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0; line-height: 1.2;">
                         {{ __('menu.restaurant_info') }}
                     </h3>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0.1rem 0 0 0;">
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
                         {{ $vendor->name }} {{ $location ? '• ' . $location->name : '' }}
                     </p>
                 </div>
             </div>
-            <button type="button" @click="showInfoModal = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; cursor: pointer;">
+            <button type="button" @click="showInfoModal = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
                 ✕
             </button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Scrollable Content -->
+        <div style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
             <!-- Wi-Fi Card -->
             <div style="background: linear-gradient(135deg, rgba(var(--primary-rgb, 225, 29, 72), 0.08), rgba(var(--primary-rgb, 225, 29, 72), 0.02)); border: 1.5px dashed var(--primary); border-radius: 16px; padding: 1.15rem;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">

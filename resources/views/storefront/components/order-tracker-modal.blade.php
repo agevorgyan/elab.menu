@@ -1,29 +1,20 @@
-<!-- Order Real-Time Tracker Screen Modal -->
+<!-- Order Real-Time Tracker Screen Modal (Full Screen) -->
 <div x-show="showOrderTracker" 
-     style="position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); z-index: 120; display: flex; flex-direction: column; justify-content: flex-end;" 
+     style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh; background: var(--bg-card); z-index: 200; display: flex; flex-direction: column; overflow: hidden;" 
      x-cloak
-     x-transition:enter="transition ease-out duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
+     x-transition:enter="transition ease-out duration-250"
+     x-transition:enter-start="opacity-0 transform translate-y-4"
+     x-transition:enter-end="opacity-100 transform translate-y-0"
      x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100"
-     x-transition:leave-end="opacity-0">
+     x-transition:leave-start="opacity-100 transform translate-y-0"
+     x-transition:leave-end="opacity-0 transform translate-y-4">
 
-    <div @click.outside="showOrderTracker = false"
-         style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 28px 28px 0 0; padding: 1.5rem; max-height: 90vh; overflow-y: auto; max-width: 640px; margin: 0 auto; width: 100%; box-shadow: 0 -12px 50px rgba(0,0,0,0.35);"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="transform translate-y-full"
-         x-transition:enter-end="transform translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="transform translate-y-0"
-         x-transition:leave-end="transform translate-y-full">
-
-        <!-- Top Drag Bar & Header -->
-        <div style="width: 44px; height: 5px; background: var(--border-color); border-radius: 9999px; margin: 0 auto 1.25rem auto;"></div>
-
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+    <div style="background: var(--bg-card); width: 100%; max-width: 640px; margin: 0 auto; height: 100%; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;">
+        
+        <!-- Sticky Top Header -->
+        <div style="padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--bg-card); position: sticky; top: 0; z-index: 10;">
             <div>
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
                     <span class="live-pulse-dot"></span>
                     <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em;">
                         {{ __('menu.live_status_badge') }}
@@ -32,14 +23,17 @@
                         <span style="font-size: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.15rem 0.5rem; border-radius: 6px; color: var(--text-muted); font-weight: 600;" x-text="activeOrder.table_number"></span>
                     </template>
                 </div>
-                <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0;">
                     {{ __('menu.order_number_label') }}<span x-text="activeOrder?.order_number"></span>
                 </h2>
             </div>
-            <button type="button" @click="showOrderTracker = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; cursor: pointer;">
+            <button type="button" @click="showOrderTracker = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
                 ✕
             </button>
         </div>
+
+        <!-- Scrollable Content -->
+        <div style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem;">
 
         <!-- Dynamic Status Hero Card -->
         <div style="background: linear-gradient(135deg, rgba(var(--primary-rgb, 225, 29, 72), 0.12), rgba(var(--primary-rgb, 225, 29, 72), 0.03)); border: 1.5px solid var(--primary); border-radius: 20px; padding: 1.5rem 1.25rem; text-align: center; margin-bottom: 1.5rem; position: relative; overflow: hidden;">
@@ -139,7 +133,7 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);">
                     <span style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">Ընդհանուր գումար</span>
-                    <span style="font-family: 'Outfit'; font-weight: 800; font-size: 1.2rem; color: var(--primary);" x-text="Number(activeOrder.total_amount).toLocaleString() + ' ' + (activeOrder.currency || '{{ $vendor->currency }}')"></span>
+                    <span style="font-family: 'Outfit'; font-weight: 800; font-size: 1.2rem; color: var(--primary);" x-text="Number(activeOrder?.total_amount || 0).toLocaleString() + ' ' + (activeOrder?.currency || '{{ $vendor->currency }}')"></span>
                 </div>
             </div>
         </template>
@@ -162,6 +156,7 @@
             </button>
         </div>
     </div>
+</div>
 </div>
 
 <style>

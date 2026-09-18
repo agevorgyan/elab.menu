@@ -8,6 +8,7 @@
             activeCat: customConfig.activeCat || 'cat-{{ $categories->first()?->id ?? 1 }}',
             search: '',
             cart: [],
+            cartBump: false,
             showCartModal: false,
             showVariationModal: false,
             showPWA: true,
@@ -23,11 +24,11 @@
             wifiCopied: false,
             customerName: '',
             customerPhone: '',
-            customerEmail: '',
+            isTableFixed: {{ !empty($table) ? 'true' : 'false' }},
             tableNumber: customConfig.tableNumber !== undefined ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
             showWaiterModal: false,
             serviceType: 'call_waiter',
-            serviceTable: customConfig.tableNumber !== undefined && customConfig.tableNumber ? customConfig.tableNumber : '{{ $table ?? "" }}',
+            serviceTable: customConfig.tableNumber !== undefined && customConfig.tableNumber ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
             isCallingService: false,
             marketingOptIn: true,
             orderNotes: '',
@@ -150,6 +151,8 @@
                 const addedText = '{{ __('menu.added_to_cart') }}';
                 const varLabel = (variationName && variationName !== 'Standard' && variationName !== 'Standard Portion') ? ' (' + variationName + ')' : '';
                 this.triggerToast('«' + name + varLabel + '» ' + addedText, 'success', 'fa-solid fa-circle-check');
+                this.cartBump = true;
+                setTimeout(() => { this.cartBump = false; }, 600);
             },
 
             changeQty(idx, delta) {

@@ -11,11 +11,17 @@ class SetAppLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = session('app_locale', 'hy');
-        if (in_array($locale, ['hy', 'en', 'ru'])) {
-            App::setLocale($locale);
+        $requestedLocale = $request->get('lang') ?? $request->get('locale');
+        if ($requestedLocale && in_array($requestedLocale, ['hy', 'en', 'ru'])) {
+            session(['app_locale' => $requestedLocale, 'locale' => $requestedLocale]);
+            App::setLocale($requestedLocale);
         } else {
-            App::setLocale('hy');
+            $locale = session('app_locale') ?? session('locale', 'hy');
+            if (in_array($locale, ['hy', 'en', 'ru'])) {
+                App::setLocale($locale);
+            } else {
+                App::setLocale('hy');
+            }
         }
 
         return $next($request);

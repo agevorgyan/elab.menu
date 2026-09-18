@@ -271,7 +271,7 @@
     <div style="padding: 1.25rem 1.25rem 0.5rem; display: flex; gap: 0.75rem;">
         <div style="flex: 1; position: relative;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-            <input type="text" x-model="search" placeholder="Search dishes, drinks..." style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none; font-size: 0.85rem;">
+            <input type="text" x-model="search" placeholder="{{ __('menu.search_placeholder') }}" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none; font-size: 0.85rem;">
         </div>
 
         <select onchange="window.location.href='?lang=' + this.value" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
@@ -337,13 +337,11 @@
                                                 <span><i class="fa-solid fa-fire" style="color: #f97316;"></i> {{ $prod->calories }} kcal</span>
                                             @endif
                                             @if($prod->preparation_time_min)
-                                                <span><i class="fa-solid fa-clock"></i> {{ $prod->preparation_time_min }}
-                                                    @if($lang == 'hy') րոպե @elseif($lang == 'ru') мин @else mins @endif
-                                                </span>
+                                                <span><i class="fa-solid fa-clock"></i> {{ $prod->preparation_time_min }} {{ __('menu.mins') }}</span>
                                             @endif
                                             @if($prod->allergens && $prod->allergens->count() > 0)
                                                 <span><i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i>
-                                                    @if($lang == 'hy') Ալերգեններ: @elseif($lang == 'ru') Аллергены: @else Allergens: @endif
+                                                    {{ __('menu.allergens') }}
                                                     {{ $prod->allergens->pluck('icon')->join(' ') }}
                                                 </span>
                                             @endif
@@ -354,7 +352,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
                                     <div class="dish-price">
                                         @if($prod->variations->count() > 1)
-                                            <small style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">{{ $lang == 'hy' ? 'սկսած' : ($lang == 'ru' ? 'от' : 'from') }}</small>
+                                            <small style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">{{ __('menu.starting_from') }}</small>
                                             {{ number_format($prod->variations->min('price')) }} {{ $vendor->currency }}
                                         @else
                                             {{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}
@@ -363,9 +361,9 @@
                                     
                                     <button class="btn btn-primary" @click.stop='selectDish({{ json_encode($prodPayload) }})'>
                                         @if($prod->variations->count() > 1)
-                                            {{ $lang == 'hy' ? '+ Ընտրել' : ($lang == 'ru' ? '+ Выбрать' : '+ Select') }}
+                                            {{ __('menu.select_portion_btn') }}
                                         @else
-                                            {{ $lang == 'hy' ? '+ Ավելացնել' : ($lang == 'ru' ? '+ Добавить' : '+ Add') }}
+                                            {{ __('menu.add_btn') }}
                                         @endif
                                     </button>
                                 </div>
@@ -382,13 +380,7 @@
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="background: rgba(0,0,0,0.2); color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" x-text="cartTotalCount">0</span>
             <span>
-                @if($lang == 'hy')
-                    Զամբյուղ (Պատվեր)
-                @elseif($lang == 'ru')
-                    Корзина (Заказ)
-                @else
-                    View Order Tray
-                @endif
+                {{ __('menu.view_cart') }}
             </span>
         </div>
         <div style="font-family: 'Outfit'; font-size: 1.1rem;" x-text="cartTotalPrice + ' {{ $vendor->currency }}'">0 AMD</div>
@@ -410,13 +402,7 @@
 
             <div style="margin: 1.25rem 0 0.5rem;">
                 <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
-                    @if($lang == 'hy')
-                        Ընտրեք չափսը / տարբերակը՝
-                    @elseif($lang == 'ru')
-                        Выберите размер / порцию:
-                    @else
-                        Choose Portion / Option:
-                    @endif
+                    {{ __('menu.choose_portion') }}
                 </label>
 
                 <div style="display: flex; flex-direction: column; gap: 0.6rem;">
@@ -439,7 +425,7 @@
             <!-- Quantity Selector -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px;">
                 <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
-                    @if($lang == 'hy') Քանակ @elseif($lang == 'ru') Количество @else Quantity @endif
+                    {{ __('menu.quantity') }}
                 </span>
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                     <button type="button" @click="if(variationQty > 1) variationQty--" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 800; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
@@ -451,13 +437,7 @@
             <!-- Confirm Add to Cart CTA -->
             <button type="button" @click="addSelectedVariationToCart()" style="width: 100%; margin-top: 1.25rem; padding: 0.95rem; background: var(--primary); color: #ffffff; border: none; border-radius: 14px; font-weight: 800; font-size: 1.05rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);">
                 <span>
-                    @if($lang == 'hy')
-                        <i class="fa-solid fa-plus"></i> Ավելացնել զամբյուղ
-                    @elseif($lang == 'ru')
-                        <i class="fa-solid fa-plus"></i> Добавить в корзину
-                    @else
-                        <i class="fa-solid fa-plus"></i> Add to Order
-                    @endif
+                    <i class="fa-solid fa-plus"></i> {{ __('menu.add_to_cart') }}
                 </span>
                 <span style="font-family: 'Outfit'; font-size: 1.15rem;" x-text="Number((selectedVariation?.price || selectedDish?.base_price || 0) * variationQty).toLocaleString() + ' {{ $vendor->currency }}'"></span>
             </button>
@@ -469,13 +449,7 @@
         <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 85vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
                 <h3 style="font-family: 'Outfit'; font-size: 1.3rem; color: var(--text-main);">
-                    @if($lang == 'hy')
-                        Պատվերի ամփոփում
-                    @elseif($lang == 'ru')
-                        Ваш заказ
-                    @else
-                        Order Summary
-                    @endif
+                    {{ __('menu.order_summary') }}
                 </h3>
                 <button @click="showCartModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
             </div>
@@ -486,13 +460,13 @@
                     <i class="fa-solid fa-basket-shopping" style="font-size: 2rem; color: var(--text-muted); opacity: 0.5;"></i>
                 </div>
                 <h4 style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem;">
-                    @if($lang == 'hy') Զամբյուղը դատարկ է @elseif($lang == 'ru') Корзина пуста @else Your cart is empty @endif
+                    {{ __('menu.cart_empty') }}
                 </h4>
                 <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 280px; margin: 0 auto 1.5rem; line-height: 1.4;">
-                    @if($lang == 'hy') Դուք դեռ ոչինչ չեք ավելացրել։ Ընտրեք Ձեր նախընտրած ուտեստները մենյուից։ @elseif($lang == 'ru') Вы еще ничего не добавили. Выберите блюда из меню для оформления заказа. @else You haven't added anything yet. Choose delicious dishes from our menu. @endif
+                    {{ __('menu.cart_empty_desc') }}
                 </p>
                 <button type="button" @click="showCartModal = false" style="background: var(--primary); color: #fff; border: none; padding: 0.75rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);">
-                    @if($lang == 'hy') <i class="fa-solid fa-arrow-left"></i> Դիտել մենյուն @elseif($lang == 'ru') <i class="fa-solid fa-arrow-left"></i> Перейти к меню @else <i class="fa-solid fa-arrow-left"></i> Browse Menu @endif
+                    <i class="fa-solid fa-arrow-left"></i> {{ __('menu.browse_menu') }}
                 </button>
             </div>
 
@@ -506,7 +480,7 @@
                             <template x-if="item.variation_name && item.variation_name !== 'Standard' && item.variation_name !== 'Standard Portion'">
                                 <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-top: 0.1rem;" x-text="'• ' + item.variation_name"></div>
                             </template>
-                            <div style="font-size: 0.85rem; color: var(--accent); font-family: 'Outfit'; margin-top: 0.15rem;" x-text="Number(item.price).toLocaleString() + ' AMD'"></div>
+                            <div style="font-size: 0.85rem; color: var(--accent); font-family: 'Outfit'; margin-top: 0.15rem;" x-text="Number(item.price).toLocaleString() + ' {{ $vendor->currency }}'"></div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 8px;">
                             <button @click="changeQty(idx, -1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">-</button>
@@ -519,34 +493,31 @@
                 <!-- Order Notes Field -->
                 <div style="margin-top: 1.25rem;">
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                        @if($lang == 'hy') 📝 Նշումներ պատվերի վերաբերյալ @elseif($lang == 'ru') 📝 Примечания к заказу @else 📝 Order Notes & Special Instructions @endif
+                        {{ __('menu.order_notes') }}
                     </label>
-                    <textarea x-model="orderNotes" class="input-field" rows="2" style="resize: vertical;" placeholder="{{ $lang == 'hy' ? 'օր․ Առանց սոխի, սոուսը առանձին...' : ($lang == 'ru' ? 'напр. Без лука, соус отдельно...' : 'e.g. No onions, sauce on the side...') }}"></textarea>
+                    <textarea x-model="orderNotes" class="input-field" rows="2" style="resize: vertical;" placeholder="{{ __('menu.order_notes_placeholder') }}"></textarea>
                 </div>
 
                 <!-- Customer Details Form -->
                 <div style="margin-top: 1.25rem;">
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                        @if($lang == 'hy') 👤 Հաճախորդի տվյալներ @elseif($lang == 'ru') 👤 Данные клиента @else 👤 Customer Details @endif
+                        {{ __('menu.customer_details') }}
                     </label>
 
-                    <input type="text" x-model="customerName" class="input-field" placeholder="{{ $lang == 'hy' ? 'Անուն Ազգանուն' : ($lang == 'ru' ? 'Имя Фамилия' : 'Full Name') }}">
-                    <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ $lang == 'hy' ? 'Հեռախոսահամար (օր. 091234567)' : ($lang == 'ru' ? 'Телефон' : 'Phone Number') }}">
-                    <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ $lang == 'hy' ? 'Էլ․ փոստի հասցե (օր. example@gmail.com)' : ($lang == 'ru' ? 'Эլ. почта' : 'Email Address') }}">
+                    <input type="text" x-model="customerName" class="input-field" placeholder="{{ __('menu.full_name_placeholder') }}">
+                    <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ __('menu.phone_placeholder') }}">
+                    <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ __('menu.email_placeholder') }}">
                     
-                    <input type="text" x-model="tableNumber" class="input-field" placeholder="Table {{ $table ?? '4' }}">
+                    <input type="text" x-model="tableNumber" class="input-field" placeholder="{{ __('menu.table') }} {{ $table ?? '4' }}">
 
                     <!-- Consent & Marketing Opt-in -->
                     <label style="display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; border-radius: 10px;">
                         <input type="checkbox" x-model="marketingOptIn" style="margin-top: 0.15rem;">
                         <span>
-                            @if($lang == 'hy')
-                                🔒 Ես համաձայն եմ <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Գաղտնիության քաղաքականության</a> և <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Օգտագործման պայմանների</a> հետ (իմ տվյալները պահվում են գաղտնի և կարող են օգտագործվել մարքեթինգային նպատակներով)։
-                            @elseif($lang == 'ru')
-                                🔒 Я согласен с <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Политикой конфиденциальности</a> и <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Условиями использования</a> (мои данные хранятся конфиденциально и могут использоваться в маркетинговых целях).
-                            @else
-                                🔒 I agree to the <a href="{{ route('legal.privacy') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Privacy Policy</a> and <a href="{{ route('legal.terms') }}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Terms of Service</a> (my data is kept confidential and may be used for marketing purposes).
-                            @endif
+                            {!! __('menu.privacy_consent', [
+                                'privacy_link' => '<a href="'.route('legal.privacy').'" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">'.__('menu.privacy_policy').'</a>',
+                                'terms_link' => '<a href="'.route('legal.terms').'" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">'.__('menu.terms_of_service').'</a>'
+                            ]) !!}
                         </span>
                     </label>
                 </div>
@@ -554,214 +525,16 @@
                 <!-- Action Buttons -->
                 <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.25rem;">
                     <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                        @if($lang == 'hy')
-                            <i class="fa-solid fa-paper-plane"></i> Պատվիրել
-                        @elseif($lang == 'ru')
-                            <i class="fa-solid fa-paper-plane"></i> Заказать
-                        @else
-                            <i class="fa-solid fa-paper-plane"></i> Order
-                        @endif
+                        <i class="fa-solid fa-paper-plane"></i> {{ __('menu.checkout') }}
                     </button>
                     <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                        @if($lang == 'hy')
-                            <i class="fa-brands fa-whatsapp"></i> Պատվիրել WhatsApp-ով
-                        @elseif($lang == 'ru')
-                            <i class="fa-brands fa-whatsapp"></i> Заказать через WhatsApp
-                        @else
-                            <i class="fa-brands fa-whatsapp"></i> Order via WhatsApp
-                        @endif
+                        <i class="fa-brands fa-whatsapp"></i> {{ __('menu.order_via_whatsapp') }}
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PWA Service Worker script -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('{{ route("client.sw", ["vendor_slug" => $vendor->slug]) }}');
-        }
-
-        function storefrontApp() {
-            return {
-                showPWA: true,
-                activeCat: 'cat-{{ $categories->first()?->id }}',
-                search: '',
-                cart: [],
-                showCartModal: false,
-                showVariationModal: false,
-                selectedDish: null,
-                selectedVariation: null,
-                variationQty: 1,
-                customerName: '',
-                customerPhone: '',
-                customerEmail: '',
-                tableNumber: '{{ $table ? "Table " . $table : "" }}',
-                marketingOptIn: true,
-                orderNotes: '',
-                toast: {
-                    show: false,
-                    message: '',
-                    type: 'success',
-                    icon: 'fa-solid fa-circle-check',
-                    timeout: null
-                },
-                
-                triggerToast(message, type = 'success', icon = null) {
-                    if (this.toast.timeout) clearTimeout(this.toast.timeout);
-                    this.toast.message = message;
-                    this.toast.type = type;
-                    this.toast.icon = icon || (type === 'success' ? 'fa-solid fa-circle-check' : (type === 'remove' ? 'fa-solid fa-trash-can' : 'fa-solid fa-circle-info'));
-                    this.toast.show = true;
-                    if (navigator.vibrate) {
-                        try { navigator.vibrate(30); } catch(e) {}
-                    }
-                    this.toast.timeout = setTimeout(() => {
-                        this.toast.show = false;
-                    }, 2500);
-                },
-
-                initScrollSpy() {
-                    this.$nextTick(() => {
-                        const observer = new IntersectionObserver((entries) => {
-                            entries.forEach(entry => {
-                                if (entry.isIntersecting) {
-                                    this.activeCat = entry.target.id;
-                                    const chip = document.getElementById('chip-' + entry.target.id);
-                                    if (chip) {
-                                        chip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                                    }
-                                }
-                            });
-                        }, {
-                            rootMargin: '-75px 0px -55% 0px',
-                            threshold: 0
-                        });
-
-                        document.querySelectorAll('.category-section').forEach(sec => observer.observe(sec));
-                    });
-                },
-                scrollToCat(catId) {
-                    this.activeCat = catId;
-                    const el = document.getElementById(catId);
-                    if (el) {
-                        const headerOffset = 75;
-                        const elementPosition = el.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                },
-                matchesSearch(title) {
-                    if (!this.search) return true;
-                    return title.includes(this.search.toLowerCase());
-                },
-                selectDish(dish) {
-                    if (!dish.variations || dish.variations.length <= 1) {
-                        const v = (dish.variations && dish.variations.length === 1) ? dish.variations[0] : null;
-                        this.addToCart(
-                            dish.id,
-                            dish.name,
-                            v ? v.price : dish.base_price,
-                            v ? v.name : 'Standard',
-                            v ? v.id : null,
-                            1
-                        );
-                        return;
-                    }
-                    this.selectedDish = dish;
-                    this.selectedVariation = dish.variations.find(v => v.is_default) || dish.variations[0];
-                    this.variationQty = 1;
-                    this.showVariationModal = true;
-                },
-                addSelectedVariationToCart() {
-                    if (!this.selectedDish || !this.selectedVariation) return;
-                    this.addToCart(
-                        this.selectedDish.id,
-                        this.selectedDish.name,
-                        this.selectedVariation.price,
-                        this.selectedVariation.name,
-                        this.selectedVariation.id,
-                        this.variationQty
-                    );
-                    this.showVariationModal = false;
-                },
-                addToCart(id, name, price, variationName = 'Standard', variationId = null, qty = 1) {
-                    let existing = this.cart.find(c => c.id === id && c.variation_name === variationName);
-                    if (existing) {
-                        existing.qty += qty;
-                    } else {
-                        this.cart.push({
-                            id: id,
-                            name: name,
-                            price: price,
-                            variation_name: variationName,
-                            variation_id: variationId,
-                            qty: qty
-                        });
-                    }
-                    const addedText = '{{ $lang == "hy" ? "ավելացվեց զամբյուղում" : ($lang == "ru" ? "добавлено в корзину" : "added to cart") }}';
-                    const varLabel = (variationName && variationName !== 'Standard' && variationName !== 'Standard Portion') ? ' (' + variationName + ')' : '';
-                    this.triggerToast('«' + name + varLabel + '» ' + addedText, 'success', 'fa-solid fa-circle-check');
-                },
-                changeQty(idx, delta) {
-                    const item = this.cart[idx];
-                    if (!item) return;
-                    this.cart[idx].qty += delta;
-                    if (this.cart[idx].qty <= 0) {
-                        const removedName = item.name + (item.variation_name && item.variation_name !== 'Standard' && item.variation_name !== 'Standard Portion' ? ' (' + item.variation_name + ')' : '');
-                        const removedText = '{{ $lang == "hy" ? "հեռացվեց զամբյուղից" : ($lang == "ru" ? "удалено из корзины" : "removed from cart") }}';
-                        this.cart.splice(idx, 1);
-                        this.triggerToast('«' + removedName + '» ' + removedText, 'remove', 'fa-solid fa-trash-can');
-                    }
-                },
-                get cartTotalCount() {
-                    return this.cart.reduce((a, b) => a + b.qty, 0);
-                },
-                get cartTotalPrice() {
-                    return this.cart.reduce((a, b) => a + (b.price * b.qty), 0);
-                },
-                async submitOrder(type) {
-                    if (this.cart.length === 0) return;
-                    const res = await fetch('{{ route("client.order.submit", ["vendor_slug" => $vendor->slug]) }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            location_id: {{ $location?->id ?? 1 }},
-                            table_number: this.tableNumber || '{{ $table ?? "Table 4" }}',
-                            type: type,
-                            customer_name: this.customerName || 'Guest',
-                            customer_phone: this.customerPhone || null,
-                            customer_email: this.customerEmail || null,
-                            marketing_opt_in: this.marketingOptIn,
-                            notes: this.orderNotes,
-                            items: this.cart.map(c => ({
-                                product_id: c.id,
-                                variation_id: c.variation_id || null,
-                                variation_name: c.variation_name || null,
-                                quantity: c.qty
-                            }))
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        if (data.whatsapp_url && type === 'whatsapp') {
-                            window.location.href = data.whatsapp_url;
-                        } else {
-                            const successMsg = '{{ $lang == "hy" ? "🎉 Պատվերը #" : ($lang == "ru" ? "🎉 Заказ #" : "🎉 Order #") }}' + data.order_number + '{{ $lang == "hy" ? " հաջողությամբ ուղարկվեց։" : ($lang == "ru" ? " успешно отправлен!" : " submitted successfully!") }}';
-                            alert(successMsg);
-                            this.cart = [];
-                            this.showCartModal = false;
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    @include('storefront.components.storefront-scripts')
 </body>
 </html>

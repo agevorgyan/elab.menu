@@ -7,6 +7,10 @@ use App\Models\Product;
 use App\Models\Allergen;
 use App\Models\Location;
 use App\Services\MenuManagementService;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,32 +34,18 @@ class MenuBuilderController extends Controller
         return view('admin.menu.index', compact('vendor', 'categories', 'allergens', 'locations'));
     }
 
-    public function storeCategory(Request $request)
+    public function storeCategory(StoreCategoryRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'hy_name' => 'nullable|string',
-            'ru_name' => 'nullable|string',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $this->menuService->createCategory(Auth::user()->vendor, $validated);
 
         return back()->with('success', 'Category added successfully!');
     }
 
-    public function updateCategory(Request $request, Category $category)
+    public function updateCategory(UpdateCategoryRequest $request, Category $category)
     {
-        if ($category->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized category action.');
-        }
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'hy_name' => 'nullable|string',
-            'ru_name' => 'nullable|string',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $this->menuService->updateCategory($category, $validated);
 
@@ -72,71 +62,18 @@ class MenuBuilderController extends Controller
         return back()->with('success', 'Category deleted successfully.');
     }
 
-    public function storeProduct(Request $request)
+    public function storeProduct(StoreProductRequest $request)
     {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'hy_name' => 'nullable|string',
-            'ru_name' => 'nullable|string',
-            'description' => 'nullable|string',
-            'hy_description' => 'nullable|string',
-            'ru_description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'image' => 'nullable|string',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
-            'dietary_tags' => 'nullable|array',
-            'allergens' => 'nullable|array',
-            'calories' => 'nullable|integer',
-            'protein_g' => 'nullable|numeric',
-            'carbs_g' => 'nullable|numeric',
-            'fat_g' => 'nullable|numeric',
-            'preparation_time_min' => 'nullable|integer',
-            'is_featured' => 'nullable|boolean',
-        ]);
-
-        $category = Category::find($validated['category_id']);
-        if (!$category || $category->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized category selection.');
-        }
+        $validated = $request->validated();
 
         $this->menuService->createProduct(Auth::user()->vendor, $validated, $request->file('image_file'));
 
         return back()->with('success', 'Product dish created successfully!');
     }
 
-    public function updateProduct(Request $request, Product $product)
+    public function updateProduct(UpdateProductRequest $request, Product $product)
     {
-        if ($product->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized product action.');
-        }
-
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'hy_name' => 'nullable|string',
-            'ru_name' => 'nullable|string',
-            'description' => 'nullable|string',
-            'hy_description' => 'nullable|string',
-            'ru_description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'image' => 'nullable|string',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
-            'dietary_tags' => 'nullable|array',
-            'allergens' => 'nullable|array',
-            'calories' => 'nullable|integer',
-            'protein_g' => 'nullable|numeric',
-            'carbs_g' => 'nullable|numeric',
-            'fat_g' => 'nullable|numeric',
-            'preparation_time_min' => 'nullable|integer',
-            'is_featured' => 'nullable|boolean',
-            'is_available' => 'nullable|boolean',
-        ]);
-
-        $category = Category::find($validated['category_id']);
-        if (!$category || $category->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized category selection.');
-        }
+        $validated = $request->validated();
 
         $this->menuService->updateProduct($product, $validated, $request->file('image_file'));
 

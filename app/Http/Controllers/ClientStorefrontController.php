@@ -11,9 +11,11 @@ use App\Models\OrderItem;
 use App\Models\Customer;
 use App\Models\AnalyticsLog;
 use App\Models\PushSubscription;
+use App\Http\Requests\SubmitOrderRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ClientStorefrontController extends Controller
 {
@@ -29,7 +31,12 @@ class ClientStorefrontController extends Controller
             $location = $vendor->locations->first();
         }
 
-        $lang = $request->get('lang', 'hy');
+        $lang = $request->get('lang') ?? session('app_locale', 'hy');
+        if (!in_array($lang, ['hy', 'en', 'ru'])) {
+            $lang = 'hy';
+        }
+        session(['app_locale' => $lang, 'locale' => $lang]);
+        \Illuminate\Support\Facades\App::setLocale($lang);
         $table = $request->get('table', null);
         $channel = $request->get('mode', 'dine_in'); // dine_in vs ordering
 
@@ -48,7 +55,7 @@ class ClientStorefrontController extends Controller
             ->where('is_active', true)
             ->with(['products' => function ($q) {
                 $q->where('is_available', true)
-                  ->with(['variations', 'allergens'])
+                  ->with(['variations', 'allergens', 'overrides'])
                   ->orderBy('sort_order', 'asc');
             }])
             ->orderBy('sort_order', 'asc')
@@ -143,7 +150,7 @@ self.addEventListener('fetch', event => {
         return response($content, 200)->header('Content-Type', 'application/javascript');
     }
 
-    public function submitOrder(Request $request, string $vendor_slug, \App\Actions\CreateOrderAction $createOrderAction)
+    public function submitOrder(SubmitOrderRequest $request, string $vendor_slug, \App\Actions\CreateOrderAction $createOrderAction)
     {
         $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
 
@@ -154,21 +161,7 @@ self.addEventListener('fetch', event => {
             ], 403);
         }
 
-        $validated = $request->validate([
-            'location_id' => 'required|exists:locations,id',
-            'table_number' => 'nullable|string',
-            'type' => 'required|string|in:dine_in,takeaway,whatsapp',
-            'customer_name' => 'nullable|string',
-            'customer_phone' => 'nullable|string',
-            'customer_email' => 'nullable|email',
-            'marketing_opt_in' => 'nullable|boolean',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.variation_id' => 'nullable|integer',
-            'items.*.variation_name' => 'nullable|string',
-            'items.*.quantity' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validated();
 
         $result = $createOrderAction->execute($vendor, $validated);
 

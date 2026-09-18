@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\Models\Vendor;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class SubmitOrderRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        $vendorSlug = $this->route('vendor_slug');
+        $vendor = $vendorSlug ? Vendor::where('slug', $vendorSlug)->first() : null;
+        $vendorId = $vendor?->id;
+
+        return [
+            'location_id' => [
+                'required',
+                Rule::exists('locations', 'id')->where('vendor_id', $vendorId),
+            ],
+            'table_number' => 'nullable|string',
+            'type' => 'required|string|in:dine_in,takeaway,whatsapp',
+            'customer_name' => 'nullable|string',
+            'customer_phone' => 'nullable|string',
+            'customer_email' => 'nullable|email',
+            'marketing_opt_in' => 'nullable|boolean',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => [
+                'required',
+                Rule::exists('products', 'id')->where('vendor_id', $vendorId),
+            ],
+            'items.*.variation_id' => 'nullable|integer',
+            'items.*.variation_name' => 'nullable|string',
+            'items.*.quantity' => 'required|integer|min:1',
+        ];
+    }
+}

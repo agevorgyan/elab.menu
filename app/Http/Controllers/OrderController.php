@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Location;
+use App\Http\Requests\UpdateOrderStatusRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -75,16 +76,9 @@ class OrderController extends Controller
         ]);
     }
 
-    public function updateStatus(Request $request, Order $order)
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
     {
-        // Tenant security check
-        if ($order->vendor_id !== Auth::user()->vendor_id) {
-            abort(403, 'Unauthorized order action.');
-        }
-
-        $validated = $request->validate([
-            'status' => 'required|string|in:pending,accepted,preparing,ready,completed,cancelled',
-        ]);
+        $validated = $request->validated();
 
         $order->update(['status' => $validated['status']]);
 

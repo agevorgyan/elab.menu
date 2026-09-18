@@ -69,16 +69,18 @@ class Product extends Model
         return $this->hasMany(LocationProductOverride::class);
     }
 
-    public function getTranslatedName(string $lang = 'hy'): string
+    public function getTranslatedName(?string $lang = null): string
     {
+        $lang = $lang ?: app()->getLocale();
         if ($this->name_translations && isset($this->name_translations[$lang]) && !empty($this->name_translations[$lang])) {
             return $this->name_translations[$lang];
         }
         return $this->name;
     }
 
-    public function getTranslatedDescription(string $lang = 'hy'): string
+    public function getTranslatedDescription(?string $lang = null): string
     {
+        $lang = $lang ?: app()->getLocale();
         if ($this->description_translations && isset($this->description_translations[$lang]) && !empty($this->description_translations[$lang])) {
             return $this->description_translations[$lang];
         }

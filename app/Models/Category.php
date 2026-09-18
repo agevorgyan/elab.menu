@@ -41,8 +41,9 @@ class Category extends Model
         return $this->hasMany(Product::class)->orderBy('sort_order', 'asc');
     }
 
-    public function getTranslatedName(string $lang = 'hy'): string
+    public function getTranslatedName(?string $lang = null): string
     {
+        $lang = $lang ?: app()->getLocale();
         if ($this->name_translations && isset($this->name_translations[$lang]) && !empty($this->name_translations[$lang])) {
             return $this->name_translations[$lang];
         }

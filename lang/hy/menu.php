@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'price' => 'Գին',
+    'add' => 'Ավելացնել',
     'mins' => 'րոպե',
     'allergens' => 'Ալերգեններ:',
     'choose_portion' => 'Ընտրեք չափսը / տարբերակը՝',
@@ -97,6 +99,9 @@ return [
     'phone' => 'Հեռախոսահամար',
     'contact_whatsapp' => 'Գրել WhatsApp-ով',
     'call_phone' => 'Զանգահարել',
+    'view_map' => 'Քարտեզ',
+    'open_now' => 'Բաց է',
+    'fast_wifi' => 'Գերարագ Wi-Fi',
 
     // Delivery & Order Types
     'order_type' => 'Պատվերի տեսակը',

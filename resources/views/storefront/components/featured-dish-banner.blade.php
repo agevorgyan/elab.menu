@@ -70,7 +70,7 @@
                         <div style="position: absolute; bottom: 0.75rem; right: 1rem; display: flex; gap: 0.4rem;">
                             @if($featuredDish->preparation_time_min)
                                 <span style="background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: #f8fafc; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                    <i class="fa-regular fa-clock" style="color: var(--primary);"></i> {{ $featuredDish->preparation_time_min }} րոպե
+                                    <i class="fa-regular fa-clock" style="color: var(--primary);"></i> {{ $featuredDish->preparation_time_min }} {{ __('menu.mins') }}
                                 </span>
                             @endif
                             @if($featuredDish->calories)
@@ -90,7 +90,7 @@
                         <div style="display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                             @foreach($featuredDish->dietary_tags as $tag)
                                 <span style="background: rgba(245, 158, 11, 0.12); color: var(--primary); border: 1px solid rgba(245, 158, 11, 0.25); padding: 0.15rem 0.45rem; border-radius: 6px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;">
-                                    {{ strtoupper($tag) }}
+                                    {{ strtoupper(str_replace('_', ' ', $tag)) }}
                                 </span>
                             @endforeach
                         </div>

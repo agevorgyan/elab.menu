@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'price' => 'Цена',
+    'add' => 'Добавить',
     'mins' => 'мин',
     'allergens' => 'Аллергены:',
     'choose_portion' => 'Выберите размер / порцию:',
@@ -97,6 +99,9 @@ return [
     'phone' => 'Телефон',
     'contact_whatsapp' => 'Написать в WhatsApp',
     'call_phone' => 'Позвонить',
+    'view_map' => 'Карта',
+    'open_now' => 'Открыто',
+    'fast_wifi' => 'Быстрый Wi-Fi',
 
     // Delivery & Order Types
     'order_type' => 'Тип заказа',

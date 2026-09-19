@@ -10,162 +10,641 @@
     $displayHours = $location?->working_hours ?: ($vendor->working_hours ?: '10:00 - 23:00 (Ամեն օր / Daily)');
 @endphp
 
-<!-- Restaurant Info & WiFi Modal (Full Screen) -->
+<!-- Restaurant Info & WiFi Modal (Modern Glass Bottom Sheet) -->
 <div x-show="showInfoModal" 
-     style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh; background: var(--bg-card); z-index: 200; display: flex; flex-direction: column; overflow: hidden;" 
+     style="position: fixed; inset: 0; z-index: 250; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; flex-direction: column; justify-content: flex-end; align-items: center;" 
      x-cloak
+     @click.self="showInfoModal = false"
      x-transition:enter="transition ease-out duration-250"
-     x-transition:enter-start="opacity-0 transform translate-y-4"
-     x-transition:enter-end="opacity-100 transform translate-y-0"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
      x-transition:leave="transition ease-in duration-200"
-     x-transition:leave-start="opacity-100 transform translate-y-0"
-     x-transition:leave-end="opacity-0 transform translate-y-4">
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
      
-    <div style="background: var(--bg-card); width: 100%; max-width: 640px; margin: 0 auto; height: 100%; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;">
+    <div class="info-sheet-container"
+         x-show="showInfoModal"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="translate-y-full sm:translate-y-6 sm:scale-95 opacity-0"
+         x-transition:enter-end="translate-y-0 sm:scale-100 opacity-100"
+         x-transition:leave="transition ease-in duration-200 transform"
+         x-transition:leave-start="translate-y-0 sm:scale-100 opacity-100"
+         x-transition:leave-end="translate-y-full sm:translate-y-6 sm:scale-95 opacity-0">
          
-        <!-- Sticky Top Header -->
-        <div style="padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--bg-card); position: sticky; top: 0; z-index: 10;">
+        <!-- Mobile Top Pull Bar -->
+        <div class="info-drag-handle" @click="showInfoModal = false"></div>
+
+        <!-- Header -->
+        <div class="info-sheet-header">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 38px; height: 38px; border-radius: 12px; background: rgba(var(--primary-rgb, 225, 29, 72), 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;">
+                <div class="info-header-icon-box">
                     <i class="fa-solid fa-circle-info"></i>
                 </div>
                 <div>
-                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0; line-height: 1.2;">
+                    <h3 class="info-sheet-title">
                         {{ __('menu.restaurant_info') }}
                     </h3>
-                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
-                        {{ $displayName }}
+                    <p class="info-sheet-subtitle">
+                        <i class="fa-solid fa-location-dot" style="font-size: 0.72rem; color: var(--primary);"></i>
+                        <span>{{ $displayName }}</span>
                     </p>
                 </div>
             </div>
-            <button type="button" @click="showInfoModal = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
-                ✕
+            <button type="button" 
+                    @click="showInfoModal = false" 
+                    class="info-close-round-btn"
+                    aria-label="{{ __('menu.close') }}"
+                    title="{{ __('menu.close') }}">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <!-- Scrollable Content -->
-        <div style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-            <!-- Wi-Fi Card -->
-            <div style="background: linear-gradient(135deg, rgba(var(--primary-rgb, 225, 29, 72), 0.08), rgba(var(--primary-rgb, 225, 29, 72), 0.02)); border: 1.5px dashed var(--primary); border-radius: 16px; padding: 1.15rem;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                        <i class="fa-solid fa-wifi" style="font-size: 1.2rem; color: var(--primary);"></i>
-                        <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-main);">
-                            {{ __('menu.wifi_network') }}
-                        </span>
+        <div class="info-sheet-body">
+            
+            <!-- Wi-Fi Card: Premium Glassmorphism Widget -->
+            <div class="info-wifi-card">
+                <!-- Background Ambient Glow -->
+                <div class="info-wifi-glow"></div>
+
+                <!-- Wi-Fi Card Top Row -->
+                <div class="info-wifi-top-row">
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <div class="info-wifi-icon-badge">
+                            <i class="fa-solid fa-wifi"></i>
+                        </div>
+                        <div>
+                            <div class="info-wifi-title">{{ __('menu.wifi_network') }}</div>
+                            <div class="info-wifi-subtitle">Անվճար ինտերնետ հյուրերի համար</div>
+                        </div>
                     </div>
-                    <span style="font-size: 0.75rem; background: var(--primary); color: #fff; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700;">
-                        Free Fast Wi-Fi
+                    <span class="info-wifi-status-tag">
+                        <span class="info-pulse-dot"></span>
+                        <span>{{ __('menu.fast_wifi') }}</span>
                     </span>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.65rem 0.85rem; margin-bottom: 0.65rem;">
+                <!-- SSID Row -->
+                <div class="info-wifi-detail-row">
                     <div>
-                        <div style="font-size: 0.72rem; color: var(--text-muted);">SSID (Ցանց)</div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">{{ $wifiSsid }}</div>
+                        <div class="info-detail-label">SSID (Ցանց)</div>
+                        <div class="info-detail-value">{{ $wifiSsid }}</div>
+                    </div>
+                    <div class="info-wifi-signal-icon" title="High Speed WiFi">
+                        <i class="fa-solid fa-signal"></i>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.65rem 0.85rem;">
-                    <div>
-                        <div style="font-size: 0.72rem; color: var(--text-muted);">{{ __('menu.wifi_password') }}</div>
-                        <div style="font-weight: 800; font-family: monospace; font-size: 1rem; color: var(--primary); letter-spacing: 0.05em;">
-                            {{ $wifiPassword }}
-                        </div>
+                <!-- Password Row with Quick Copy -->
+                <div class="info-wifi-detail-row" style="margin-top: 0.5rem;">
+                    <div style="min-width: 0; flex: 1;">
+                        <div class="info-detail-label">{{ __('menu.wifi_password') }}</div>
+                        <div class="info-password-value">{{ $wifiPassword }}</div>
                     </div>
                     <button type="button" 
                             @click="copyWifiPassword('{{ $wifiPassword }}')"
-                            style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.45rem 0.85rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
-                        <i :class="wifiCopied ? 'fa-solid fa-check text-green-500' : 'fa-regular fa-copy'"></i>
+                            class="info-wifi-copy-btn"
+                            :class="{ 'is-copied': wifiCopied }">
+                        <i :class="wifiCopied ? 'fa-solid fa-check text-emerald-400' : 'fa-regular fa-copy'"></i>
                         <span x-text="wifiCopied ? '{{ __('menu.wifi_copied') }}' : '{{ __('menu.wifi_copy') }}'"></span>
                     </button>
                 </div>
             </div>
 
-            <!-- Address & Contact Details -->
-            <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 16px; padding: 1rem; display: flex; flex-direction: column; gap: 0.85rem;">
+            <!-- Contact & Location Card -->
+            <div class="info-details-stack">
+                
                 <!-- Address -->
-                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                    <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; margin-top: 0.1rem;">
+                <div class="info-detail-item">
+                    <div class="info-icon-square icon-indigo">
                         <i class="fa-solid fa-location-dot"></i>
                     </div>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('menu.address') }}</div>
-                        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-top: 0.1rem;">
-                            {{ $displayAddress }}
-                        </div>
+                    <div class="info-item-content">
+                        <div class="info-item-label">{{ __('menu.address') }}</div>
+                        <div class="info-item-value">{{ $displayAddress }}</div>
                     </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($displayAddress) }}" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       class="info-action-pill"
+                       title="{{ __('menu.view_map') }}">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>{{ __('menu.view_map') }}</span>
+                    </a>
                 </div>
 
                 <!-- Phone -->
-                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                    <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; margin-top: 0.1rem;">
+                <div class="info-detail-item">
+                    <div class="info-icon-square icon-sky">
                         <i class="fa-solid fa-phone"></i>
                     </div>
-                    <div style="flex: 1;">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('menu.phone') }}</div>
-                        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-top: 0.1rem;">
-                            {{ $contactPhone }}
-                        </div>
+                    <div class="info-item-content">
+                        <div class="info-item-label">{{ __('menu.phone') }}</div>
+                        <div class="info-item-value">{{ $contactPhone }}</div>
                     </div>
                     @if($rawPhone)
-                        <a href="tel:{{ $rawPhone }}" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-phone-flip"></i> {{ __('menu.call_phone') }}
+                        <a href="tel:{{ $rawPhone }}" class="info-action-pill" title="{{ __('menu.call_phone') }}">
+                            <i class="fa-solid fa-phone-flip"></i>
+                            <span>{{ __('menu.call_phone') }}</span>
                         </a>
                     @endif
                 </div>
 
                 <!-- WhatsApp Direct Chat -->
                 @if($whatsappNum)
-                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                        <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: #25d366; flex-shrink: 0; margin-top: 0.1rem;">
-                            <i class="fa-brands fa-whatsapp" style="font-size: 1.15rem;"></i>
+                    <div class="info-detail-item">
+                        <div class="info-icon-square icon-whatsapp">
+                            <i class="fa-brands fa-whatsapp"></i>
                         </div>
-                        <div style="flex: 1;">
-                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">WhatsApp</div>
-                            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-top: 0.1rem;">
-                                +{{ $whatsappNum }}
-                            </div>
+                        <div class="info-item-content">
+                            <div class="info-item-label">WhatsApp</div>
+                            <div class="info-item-value">+{{ $whatsappNum }}</div>
                         </div>
-                        <a href="https://wa.me/{{ $whatsappNum }}" target="_blank" style="background: #25d366; color: #fff; padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-brands fa-whatsapp"></i> Chat
+                        <a href="https://wa.me/{{ $whatsappNum }}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="info-action-pill info-action-whatsapp"
+                           title="WhatsApp Chat">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            <span>Chat</span>
                         </a>
                     </div>
                 @endif
 
                 <!-- Working Hours -->
-                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                    <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; margin-top: 0.1rem;">
+                <div class="info-detail-item">
+                    <div class="info-icon-square icon-amber">
                         <i class="fa-solid fa-clock"></i>
                     </div>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('menu.working_hours') }}</div>
-                        <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-main); margin-top: 0.1rem;">
-                            {{ $displayHours }}
-                        </div>
+                    <div class="info-item-content">
+                        <div class="info-item-label">{{ __('menu.working_hours') }}</div>
+                        <div class="info-item-value">{{ $displayHours }}</div>
                     </div>
+                    <span class="info-open-badge">
+                        <span class="info-pulse-dot" style="background: #10b981;"></span>
+                        <span>{{ __('menu.open_now') }}</span>
+                    </span>
                 </div>
 
                 <!-- Table seated info if available -->
                 <template x-if="tableNumber || '{{ $table ?? '' }}'">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
-                        <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0;">
+                    <div class="info-detail-item" style="border-top: 1px dashed var(--border-color); padding-top: 0.65rem; margin-top: 0.1rem;">
+                        <div class="info-icon-square icon-teal">
                             <i class="fa-solid fa-chair"></i>
                         </div>
-                        <div>
-                            <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">{{ __('menu.table') }}</div>
-                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);" x-text="tableNumber || 'Table {{ $table ?? '' }}'"></div>
+                        <div class="info-item-content">
+                            <div class="info-item-label">{{ __('menu.table') }}</div>
+                            <div class="info-item-value" x-text="tableNumber || 'Table {{ $table ?? '' }}'"></div>
                         </div>
+                        <span class="info-table-badge" x-text="tableNumber || 'Table {{ $table ?? '' }}'"></span>
                     </div>
                 </template>
+
             </div>
 
-            <!-- Close Button -->
+            <!-- Bottom Close Button -->
             <button type="button" 
                     @click="showInfoModal = false" 
-                    style="width: 100%; padding: 0.85rem; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 0.25rem;">
-                {{ __('menu.close') }}
+                    class="info-modal-dismiss-btn">
+                <i class="fa-solid fa-xmark"></i>
+                <span>{{ __('menu.close') }}</span>
             </button>
+
         </div>
     </div>
 </div>
+
+<style>
+    /* Info Sheet Container */
+    .info-sheet-container {
+        background: var(--bg-card);
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        max-height: 92vh;
+        max-height: 92dvh;
+        display: flex;
+        flex-direction: column;
+        border-radius: 26px 26px 0 0;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 -16px 48px -8px rgba(0, 0, 0, 0.5);
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+        .info-sheet-container {
+            margin: auto;
+            border-radius: 22px;
+            max-height: 85vh;
+            box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.65);
+        }
+    }
+
+    .info-drag-handle {
+        width: 38px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 9999px;
+        margin: 0.65rem auto 0.2rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    .info-drag-handle:hover {
+        background: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Header */
+    .info-sheet-header {
+        padding: 0.75rem 1.15rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+        flex-shrink: 0;
+    }
+
+    .info-header-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 182, 212, 0.12));
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .info-sheet-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .info-sheet-subtitle {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin: 0.15rem 0 0 0;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .info-close-round-btn {
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+    .info-close-round-btn:hover {
+        color: var(--text-main);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+    }
+
+    /* Scrollable Body */
+    .info-sheet-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.9rem 1.15rem calc(1.5rem + env(safe-area-inset-bottom)) 1.15rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    /* Wi-Fi Card */
+    .info-wifi-card {
+        flex-shrink: 0;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 0.95rem 1rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.25);
+    }
+
+    .info-wifi-glow {
+        position: absolute;
+        top: -35px;
+        right: -35px;
+        width: 120px;
+        height: 120px;
+        background: #10b981;
+        opacity: 0.12;
+        filter: blur(35px);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .info-wifi-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .info-wifi-icon-badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        flex-shrink: 0;
+    }
+
+    .info-wifi-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+
+    .info-wifi-subtitle {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 0.1rem;
+    }
+
+    .info-wifi-status-tag {
+        font-size: 0.7rem;
+        background: rgba(16, 185, 129, 0.14);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .info-pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        animation: infoPulse 2s infinite;
+    }
+
+    @keyframes infoPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    .info-wifi-detail-row {
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.6rem 0.85rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .info-detail-label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-muted);
+        letter-spacing: 0.04em;
+        margin-bottom: 0.1rem;
+    }
+
+    .info-detail-value {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: var(--text-main);
+        word-break: break-all;
+    }
+
+    .info-password-value {
+        font-family: 'Outfit', -apple-system, monospace;
+        font-weight: 700;
+        font-size: 0.98rem;
+        color: var(--text-main);
+        letter-spacing: 0.04em;
+        word-break: break-all;
+    }
+
+    .info-wifi-signal-icon {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        opacity: 0.6;
+    }
+
+    .info-wifi-copy-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: var(--text-main);
+        padding: 0.4rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+    .info-wifi-copy-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.24);
+    }
+    .info-wifi-copy-btn.is-copied {
+        background: rgba(16, 185, 129, 0.18);
+        border-color: rgba(16, 185, 129, 0.4);
+        color: #34d399;
+    }
+
+    /* Details Stack */
+    .info-details-stack {
+        flex-shrink: 0;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 0.4rem 0.95rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .info-detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-icon-square {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .icon-indigo {
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        color: #818cf8;
+    }
+    .icon-sky {
+        background: rgba(14, 165, 233, 0.12);
+        border: 1px solid rgba(14, 165, 233, 0.25);
+        color: #38bdf8;
+    }
+    .icon-whatsapp {
+        background: rgba(37, 211, 102, 0.12);
+        border: 1px solid rgba(37, 211, 102, 0.25);
+        color: #25d366;
+        font-size: 1.1rem;
+    }
+    .icon-amber {
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        color: #fbbf24;
+    }
+    .icon-teal {
+        background: rgba(20, 184, 166, 0.12);
+        border: 1px solid rgba(20, 184, 166, 0.25);
+        color: #2dd4bf;
+    }
+
+    .info-item-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .info-item-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-bottom: 0.08rem;
+    }
+
+    .info-item-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+        word-break: break-word;
+    }
+
+    .info-action-pill {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 0.35rem 0.7rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+    .info-action-pill:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .info-action-whatsapp {
+        background: linear-gradient(135deg, #25d366, #128c7e);
+        border: none;
+        color: #ffffff !important;
+        box-shadow: 0 3px 10px rgba(37, 211, 102, 0.3);
+    }
+    .info-action-whatsapp:hover {
+        background: linear-gradient(135deg, #2ae06e, #149c8c);
+        box-shadow: 0 4px 14px rgba(37, 211, 102, 0.45);
+    }
+
+    .info-open-badge {
+        font-size: 0.7rem;
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        color: #34d399;
+        padding: 0.2rem 0.55rem;
+        border-radius: 9999px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-shrink: 0;
+    }
+
+    .info-table-badge {
+        font-size: 0.72rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 0.2rem 0.55rem;
+        border-radius: 8px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    /* Dismiss Button */
+    .info-modal-dismiss-btn {
+        flex-shrink: 0;
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        border-radius: 12px;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 0.92rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+        margin-top: 0.15rem;
+    }
+    .info-modal-dismiss-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+    }
+</style>

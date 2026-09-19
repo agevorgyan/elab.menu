@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'price' => 'Price',
+    'add' => 'Add',
     'mins' => 'mins',
     'allergens' => 'Allergens:',
     'choose_portion' => 'Choose Portion / Option:',
@@ -95,8 +97,11 @@ return [
     'working_hours' => 'Opening Hours',
     'address' => 'Address',
     'phone' => 'Phone',
-    'contact_whatsapp' => 'Message on WhatsApp',
-    'call_phone' => 'Call Us',
+    'contact_whatsapp' => 'Chat on WhatsApp',
+    'call_phone' => 'Call',
+    'view_map' => 'Map',
+    'open_now' => 'Open Now',
+    'fast_wifi' => 'Fast Wi-Fi',
 
     // Delivery & Order Types
     'order_type' => 'Order Type',

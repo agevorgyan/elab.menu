@@ -14,9 +14,12 @@
                     <div class="order-pill-desc" x-text="activeOrder.status_desc"></div>
                 </div>
             </div>
-            <div class="order-pill-actions">
-                <button type="button" class="order-pill-open-btn" title="{{ __('menu.track_order_btn') }}">
+            <div class="order-pill-actions" style="display: flex; align-items: center; gap: 0.4rem;">
+                <button type="button" class="order-pill-open-btn" title="{{ __('menu.track_order_btn') }}" @click.stop="showOrderTracker = true">
                     <i class="fa-solid fa-chevron-up"></i>
+                </button>
+                <button type="button" class="order-pill-close-btn" @click.stop="dismissTrackerPill()" title="{{ __('menu.close') }}" aria-label="{{ __('menu.close') }}">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
         </div>
@@ -329,6 +332,26 @@
         justify-content: center;
         cursor: pointer;
         font-size: 0.75rem;
+    }
+
+    .order-pill-close-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.15s ease;
+    }
+
+    .order-pill-close-btn:hover {
+        color: #ef4444;
+        border-color: #ef4444;
     }
 
     @keyframes dotPulse {

@@ -479,6 +479,28 @@
                 }
             },
 
+            dismissTrackerPill() {
+                this.hideTrackerPill = true;
+            },
+
+            closeOrderTracker(hidePill = false) {
+                this.showOrderTracker = false;
+                if (hidePill) {
+                    this.hideTrackerPill = true;
+                }
+            },
+
+            clearActiveOrder() {
+                this.stopOrderPolling();
+                this.activeOrder = null;
+                this.showOrderTracker = false;
+                this.hideTrackerPill = true;
+                try {
+                    localStorage.removeItem('active_order_{{ $vendor->slug }}');
+                } catch(e) {}
+                this.triggerToast('Պատվերի հետևումն ավարտված է', 'info', 'fa-solid fa-circle-check');
+            },
+
             openWaiterModal(type = 'call_waiter') {
                 this.serviceType = type;
                 if (!this.serviceTable && this.tableNumber) {

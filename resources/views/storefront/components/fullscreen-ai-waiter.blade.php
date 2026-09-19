@@ -8,59 +8,63 @@
      x-transition:leave-start="opacity-100"
      x-transition:leave-end="opacity-0"
      class="fullscreen-ai-waiter-backdrop"
-     style="position: fixed; inset: 0; z-index: 99995; background: var(--bg-main); display: flex; flex-direction: column; overflow: hidden;"
+     style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100vh; height: 100dvh; z-index: 99995; background: var(--bg-main); display: flex; flex-direction: column; overflow: hidden;"
      x-cloak>
 
     <!-- Top Navigation Bar -->
-    <header style="background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; z-index: 30; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <!-- Sommelier Avatar -->
-            <div style="position: relative; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); padding: 2px; flex-shrink: 0;">
-                <div style="width: 100%; height: 100%; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; color: #8b5cf6; font-size: 1.25rem;">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+    <header style="background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0.85rem 1.25rem; z-index: 30; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); width: 100%;">
+        <div style="max-width: 680px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <!-- Sommelier Avatar -->
+                <div style="position: relative; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); padding: 2px; flex-shrink: 0;">
+                    <div style="width: 100%; height: 100%; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; color: #8b5cf6; font-size: 1.25rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid var(--bg-card);"></span>
                 </div>
-                <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid var(--bg-card);"></span>
+
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                            {{ $vendor->getAiWaiterName() }}
+                        </h3>
+                        <span style="font-size: 0.65rem; font-weight: 700; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.1rem 0.45rem; border-radius: 6px;">AI ADVISOR</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.1rem;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                        <span x-show="selectedLang === 'hy'">Առցանց խորհրդատու</span>
+                        <span x-show="selectedLang === 'en'">Online Sommelier</span>
+                        <span x-show="selectedLang === 'ru'">Онлайн-сомелье</span>
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <div style="display: flex; align-items: center; gap: 0.4rem;">
-                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                        {{ $vendor->getAiWaiterName() }}
-                    </h3>
-                    <span style="font-size: 0.65rem; font-weight: 700; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; padding: 0.1rem 0.45rem; border-radius: 6px;">AI ADVISOR</span>
-                </div>
-                <div style="font-size: 0.75rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.1rem;">
-                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                    <span x-show="selectedLang === 'hy'">Առցանց խորհրդատու</span>
-                    <span x-show="selectedLang === 'en'">Online Sommelier</span>
-                    <span x-show="selectedLang === 'ru'">Онлайн-сомелье</span>
-                </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <!-- Reset Button -->
+                <button type="button" 
+                        @click="resetAiQuiz()"
+                        title="Սկսել նորից"
+                        style="width: 38px; height: 38px; border-radius: 12px; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+
+                <!-- Close Button -->
+                <button type="button" 
+                        @click="closeAiWaiter()" 
+                        style="width: 38px; height: 38px; border-radius: 12px; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <!-- Reset Button -->
-            <button type="button" 
-                    @click="resetAiQuiz()"
-                    title="Սկսել նորից"
-                    style="width: 38px; height: 38px; border-radius: 12px; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
-                <i class="fa-solid fa-rotate-left"></i>
-            </button>
-
-            <!-- Close Button -->
-            <button type="button" 
-                    @click="closeAiWaiter()" 
-                    style="width: 38px; height: 38px; border-radius: 12px; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
         </div>
     </header>
 
-    <!-- Main Scrollable Content Container -->
-    <div style="flex: 1; overflow-y: auto; padding: 1.25rem 1rem 6rem 1rem; max-width: 680px; margin: 0 auto; width: 100%; -webkit-overflow-scrolling: touch;">
+    <!-- Main Scrollable Content Container (Spans 100% width so wheel/touch scrolls anywhere on screen) -->
+    <div class="ai-waiter-scroll-container" 
+         style="flex: 1 1 0%; min-height: 0; width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
+        <div style="max-width: 680px; margin: 0 auto; padding: 1.25rem 1rem 4rem 1rem; width: 100%; box-sizing: border-box;">
 
-        <!-- 1. GUIDED INTERACTIVE QUIZ SECTION -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);">
+            <!-- 1. GUIDED INTERACTIVE QUIZ SECTION -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);">
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
@@ -428,30 +432,33 @@
             </div>
         </div>
 
+        </div>
     </div>
 
-    <!-- Fixed Bottom Sticky Bar -->
-    <footer style="background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 0.85rem 1.25rem max(0.85rem, env(safe-area-inset-bottom)) 1.25rem; display: flex; justify-content: space-between; align-items: center; z-index: 30; flex-shrink: 0; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05); max-width: 680px; margin: 0 auto; width: 100%;">
-        <button type="button" 
-                @click="closeAiWaiter()" 
-                style="background: transparent; border: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-            <i class="fa-solid fa-arrow-left"></i>
-            <span x-show="selectedLang === 'hy'">Մենյու</span>
-            <span x-show="selectedLang === 'en'">Menu</span>
-            <span x-show="selectedLang === 'ru'">В меню</span>
-        </button>
+    <!-- Fixed Bottom Bar -->
+    <footer style="background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 0.85rem 1.25rem max(0.85rem, env(safe-area-inset-bottom)) 1.25rem; z-index: 30; flex-shrink: 0; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05); width: 100%;">
+        <div style="max-width: 680px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <button type="button" 
+                    @click="closeAiWaiter()" 
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span x-show="selectedLang === 'hy'">Մենյու</span>
+                <span x-show="selectedLang === 'en'">Menu</span>
+                <span x-show="selectedLang === 'ru'">В меню</span>
+            </button>
 
-        <button type="button" 
-                @click="closeAiWaiter(); showCartModal = true"
-                style="background: var(--primary); color: #ffffff; border: none; border-radius: 14px; padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 0.65rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
-            <i class="fa-solid fa-basket-shopping"></i>
-            <span x-show="selectedLang === 'hy'">Զամբյուղ</span>
-            <span x-show="selectedLang === 'en'">View Cart</span>
-            <span x-show="selectedLang === 'ru'">Корзина</span>
-            <span x-show="cartTotalCount > 0" 
-                  x-text="cartTotalCount" 
-                  style="background: #ffffff; color: var(--primary); font-size: 0.75rem; font-weight: 800; padding: 0.1rem 0.45rem; border-radius: 9999px;"></span>
-        </button>
+            <button type="button" 
+                    @click="closeAiWaiter(); showCartModal = true"
+                    style="background: var(--primary); color: #ffffff; border: none; border-radius: 14px; padding: 0.65rem 1.25rem; font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; gap: 0.65rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+                <i class="fa-solid fa-basket-shopping"></i>
+                <span x-show="selectedLang === 'hy'">Զամբյուղ</span>
+                <span x-show="selectedLang === 'en'">View Cart</span>
+                <span x-show="selectedLang === 'ru'">Корзина</span>
+                <span x-show="cartTotalCount > 0" 
+                      x-text="cartTotalCount" 
+                      style="background: #ffffff; color: var(--primary); font-size: 0.75rem; font-weight: 800; padding: 0.1rem 0.45rem; border-radius: 9999px;"></span>
+            </button>
+        </div>
     </footer>
 
 </div>

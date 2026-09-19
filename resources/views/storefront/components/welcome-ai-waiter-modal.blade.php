@@ -8,7 +8,7 @@
      x-transition:leave-start="opacity-100"
      x-transition:leave-end="opacity-0"
      class="ai-welcome-modal-backdrop"
-     style="position: fixed; inset: 0; z-index: 99990; display: flex; align-items: center; justify-content: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
+     style="position: fixed; inset: 0; z-index: 99990; display: flex; align-items: center; justify-content: center; padding: 1.25rem; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); overflow-y: auto; -webkit-overflow-scrolling: touch;">
 
     <div @click.away="skipToMenu()" 
          x-show="showWelcomeModal"
@@ -19,7 +19,7 @@
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-6 scale-95"
          class="ai-welcome-card"
-         style="width: 100%; max-width: 440px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); overflow: hidden; position: relative; text-align: center;">
+         style="width: 100%; max-width: 440px; max-height: calc(100vh - 2.5rem); max-height: calc(100dvh - 2.5rem); background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; text-align: center; margin: auto;">
 
         <!-- Top Ambient Glow -->
         <div style="position: absolute; top: 0; left: 0; right: 0; height: 120px; background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.35), transparent 70%); pointer-events: none;"></div>

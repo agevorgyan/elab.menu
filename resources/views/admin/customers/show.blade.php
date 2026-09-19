@@ -59,12 +59,20 @@
                 <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--text-main);">
                     {{ $customer->name ?? 'Guest Customer' }}
                 </h1>
-                <div style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; flex-wrap: wrap;">
+                <div style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; flex-wrap: wrap; align-items: center;">
                     @if($customer->phone)
                         <span><i class="fa-solid fa-phone" style="color: var(--primary);"></i> {{ $customer->phone }}</span>
                     @endif
                     @if($customer->email)
                         <span><i class="fa-solid fa-envelope" style="color: var(--primary);"></i> {{ $customer->email }}</span>
+                    @endif
+                    @if($customer->birthdate)
+                        <span style="color: #ec4899; font-weight: 600;">
+                            <i class="fa-solid fa-cake-candles"></i> {{ $customer->birthdate->format('d M Y') }} ({{ $customer->birthdate->age }} t.)
+                        </span>
+                    @endif
+                    @if($customer->address)
+                        <span><i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> {{ $customer->address }}</span>
                     @endif
                     <span><i class="fa-solid fa-calendar-day"></i> Customer since {{ $customer->created_at->format('M Y') }}</span>
                 </div>

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
-    use HasFactory, BelongsToVendor;
+    use BelongsToVendor, HasFactory;
 
     protected $fillable = [
         'vendor_id',
@@ -17,6 +17,7 @@ class Customer extends Model
         'phone',
         'email',
         'birthdate',
+        'address',
         'notes',
         'marketing_opt_in',
         'total_orders_count',

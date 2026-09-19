@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -22,7 +22,7 @@ return new class extends Migration
                 ->whereNotNull('location_id')
                 ->value('location_id');
 
-            if (!$orderLocationId) {
+            if (! $orderLocationId) {
                 // Fallback to vendor's first location
                 $orderLocationId = DB::table('locations')
                     ->where('vendor_id', $customer->vendor_id)

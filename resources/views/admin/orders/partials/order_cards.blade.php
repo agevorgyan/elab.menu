@@ -26,32 +26,52 @@
                     </div>
 
                     <div style="text-align: right;">
-                        <span style="background: var(--badge-bg); color: var(--badge-text); font-size: 0.8rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px;">
-                            {{ $order->table_number ?? 'Takeaway' }}
-                        </span>
+                        @if($order->type === 'delivery')
+                            <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.8rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-motorcycle"></i> ԱՌԱՔՈՒՄ
+                            </span>
+                        @else
+                            <span style="background: var(--badge-bg); color: var(--badge-text); font-size: 0.8rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px;">
+                                {{ $order->table_number ?? 'Takeaway' }}
+                            </span>
+                        @endif
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; text-transform: uppercase;">
                             {{ str_replace('_', ' ', $order->type) }}
                         </div>
                     </div>
                 </div>
 
-                @if($order->customer_name || $order->customer_email || $order->customer_phone)
-                    <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;">
-                        <div>
-                            <i class="fa-solid fa-user" style="color: var(--primary);"></i> <strong>{{ $order->customer_name ?? 'Guest' }}</strong>
-                            @if($order->customer_phone)
-                                <span style="color: var(--text-muted);">({{ $order->customer_phone }})</span>
-                            @endif
-                            @if($order->customer_email)
-                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">
-                                    <i class="fa-solid fa-envelope"></i> {{ $order->customer_email }}
-                                </div>
+                @if($order->customer_name || $order->customer_email || $order->customer_phone || $order->delivery_address)
+                    <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.4rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4rem;">
+                            <div>
+                                <i class="fa-solid fa-user" style="color: var(--primary);"></i> <strong>{{ $order->customer_name ?? 'Guest' }}</strong>
+                                @if($order->customer_phone)
+                                    <span style="color: var(--text-muted); margin-left: 0.3rem;">
+                                        <i class="fa-solid fa-phone" style="font-size: 0.75rem; color: {{ $order->type === 'delivery' ? '#f59e0b' : 'var(--primary)' }};"></i> 
+                                        <strong>{{ $order->customer_phone }}</strong>
+                                    </span>
+                                @endif
+                                @if($order->customer_email)
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem;">
+                                        <i class="fa-solid fa-envelope"></i> {{ $order->customer_email }}
+                                    </div>
+                                @endif
+                            </div>
+                            @if($order->marketing_opt_in)
+                                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px;" title="Consented to privacy policy and marketing communications">
+                                    <i class="fa-solid fa-check-double"></i> Marketing Consent
+                                </span>
                             @endif
                         </div>
-                        @if($order->marketing_opt_in)
-                            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px;" title="Consented to privacy policy and marketing communications">
-                                <i class="fa-solid fa-check-double"></i> Marketing Consent
-                            </span>
+
+                        @if($order->delivery_address)
+                            <div style="width: 100%; font-size: 0.82rem; color: #f59e0b; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0.45rem 0.7rem; display: flex; align-items: flex-start; gap: 0.5rem;">
+                                <i class="fa-solid fa-map-location-dot" style="margin-top: 0.15rem; flex-shrink: 0;"></i>
+                                <div>
+                                    <strong>Առաքման հասցե՝</strong> {{ $order->delivery_address }}
+                                </div>
+                            </div>
                         @endif
                     </div>
                 @endif

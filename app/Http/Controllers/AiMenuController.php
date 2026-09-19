@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AiMenuService;
+use App\Jobs\TranslateMenuJob;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\AiMenuService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,6 +21,7 @@ class AiMenuController extends Controller
     public function showImportForm()
     {
         $vendor = Auth::user()->vendor;
+
         return view('admin.ai.import', compact('vendor'));
     }
 
@@ -56,7 +58,9 @@ class AiMenuController extends Controller
         $categoriesData = $request->input('categories', []);
 
         foreach ($categoriesData as $cIdx => $catData) {
-            if (empty($catData['name'])) continue;
+            if (empty($catData['name'])) {
+                continue;
+            }
 
             $category = Category::create([
                 'vendor_id' => $vendor->id,
@@ -68,7 +72,9 @@ class AiMenuController extends Controller
 
             if (isset($catData['products']) && is_array($catData['products'])) {
                 foreach ($catData['products'] as $pIdx => $prodData) {
-                    if (empty($prodData['name'])) continue;
+                    if (empty($prodData['name'])) {
+                        continue;
+                    }
 
                     Product::create([
                         'vendor_id' => $vendor->id,
@@ -95,7 +101,7 @@ class AiMenuController extends Controller
         $vendor = Auth::user()->vendor;
         $targetLang = $request->validate(['target_language' => 'required|string|in:hy,en,ru,fr,de,es'])['target_language'];
 
-        \App\Jobs\TranslateMenuJob::dispatch($vendor->id, $targetLang);
+        TranslateMenuJob::dispatch($vendor->id, $targetLang);
 
         return back()->with('success', "✨ Մենյուի թարգմանությունը դեպի [{$targetLang}] մեկնարկեց ֆոնային ռեժիմում։ Խնդրում ենք թարմացնել էջը մի քանի վայրկյանից։");
     }

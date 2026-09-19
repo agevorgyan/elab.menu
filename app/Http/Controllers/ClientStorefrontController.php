@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vendor;
-use App\Models\Location;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Customer;
-use App\Models\AnalyticsLog;
-use App\Models\PushSubscription;
-use App\Models\WaiterCall;
-use App\Http\Requests\SubmitOrderRequest;
+use App\Actions\CreateOrderAction;
+use App\DTOs\CreateOrderDTO;
+use App\Events\WaiterCalled;
 use App\Http\Requests\CallWaiterRequest;
+use App\Http\Requests\SubmitOrderRequest;
+use App\Jobs\RecordAnalyticsVisitJob;
+use App\Models\Category;
+use App\Models\Location;
+use App\Models\MenuTemplate;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Vendor;
+use App\Models\WaiterCall;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class ClientStorefrontController extends Controller
 {
@@ -29,21 +29,21 @@ class ClientStorefrontController extends Controller
         if ($location_slug) {
             $location = Location::where('vendor_id', $vendor->id)->where('slug', $location_slug)->first();
         }
-        if (!$location) {
+        if (! $location) {
             $location = $vendor->locations->first();
         }
 
         $lang = $request->get('lang') ?? session('app_locale', 'hy');
-        if (!in_array($lang, ['hy', 'en', 'ru'])) {
+        if (! in_array($lang, ['hy', 'en', 'ru'])) {
             $lang = 'hy';
         }
         session(['app_locale' => $lang, 'locale' => $lang]);
-        \Illuminate\Support\Facades\App::setLocale($lang);
+        App::setLocale($lang);
         $table = $request->get('table', null);
         $channel = $request->get('mode', 'dine_in'); // dine_in vs ordering
 
         // Dispatch analytics visit asynchronously to background queue
-        \App\Jobs\RecordAnalyticsVisitJob::dispatch([
+        RecordAnalyticsVisitJob::dispatch([
             'vendor_id' => $vendor->id,
             'location_id' => $location?->id,
             'channel' => $channel,
@@ -57,8 +57,8 @@ class ClientStorefrontController extends Controller
             ->where('is_active', true)
             ->with(['products' => function ($q) {
                 $q->where('is_available', true)
-                  ->with(['variations', 'allergens', 'overrides'])
-                  ->orderBy('sort_order', 'asc');
+                    ->with(['variations', 'allergens', 'overrides'])
+                    ->orderBy('sort_order', 'asc');
             }])
             ->orderBy('sort_order', 'asc')
             ->get();
@@ -67,7 +67,7 @@ class ClientStorefrontController extends Controller
 
         // Support real-time live preview query parameter overrides
         if ($request->has('menu_template_id') && $request->get('menu_template_id')) {
-            $tmpl = \App\Models\MenuTemplate::find($request->get('menu_template_id'));
+            $tmpl = MenuTemplate::find($request->get('menu_template_id'));
             if ($tmpl) {
                 $themeSlug = $tmpl->slug;
             }
@@ -121,26 +121,26 @@ class ClientStorefrontController extends Controller
                 [
                     'src' => $vendor->logo ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=192&h=192&q=80',
                     'sizes' => '192x192',
-                    'type' => 'image/png'
+                    'type' => 'image/png',
                 ],
                 [
                     'src' => $vendor->logo ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=512&h=512&q=80',
                     'sizes' => '512x512',
-                    'type' => 'image/png'
-                ]
+                    'type' => 'image/png',
+                ],
             ],
             'start_url' => route('client.menu', ['vendor_slug' => $vendor->slug]),
             'background_color' => '#0f172a',
             'theme_color' => $vendor->primary_color ?? '#e11d48',
             'display' => 'standalone',
-            'orientation' => 'portrait'
+            'orientation' => 'portrait',
         ]);
     }
 
     public function serviceWorker(string $vendor_slug)
     {
         $content = "
-const CACHE_NAME = 'qrmenu-" . $vendor_slug . "-v1';
+const CACHE_NAME = 'qrmenu-".$vendor_slug."-v1';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -158,14 +158,15 @@ self.addEventListener('fetch', event => {
   );
 });
         ";
+
         return response($content, 200)->header('Content-Type', 'application/javascript');
     }
 
-    public function submitOrder(SubmitOrderRequest $request, string $vendor_slug, \App\Actions\CreateOrderAction $createOrderAction)
+    public function submitOrder(SubmitOrderRequest $request, string $vendor_slug, CreateOrderAction $createOrderAction)
     {
         $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
 
-        if (!$vendor->hasFeature('orders')) {
+        if (! $vendor->hasFeature('orders')) {
             return response()->json([
                 'success' => false,
                 'message' => 'Օնլայն պատվերների ֆունկցիան ակտիվ չէ այս մենյուի համար (Basic փաթեթ)։',
@@ -187,7 +188,7 @@ self.addEventListener('fetch', event => {
             ], 422);
         }
 
-        $dto = \App\DTOs\CreateOrderDTO::fromArray($validated);
+        $dto = CreateOrderDTO::fromArray($validated);
 
         $result = DB::transaction(function () use ($createOrderAction, $vendor, $dto) {
             return $createOrderAction->execute($vendor, $dto);
@@ -198,7 +199,7 @@ self.addEventListener('fetch', event => {
             'order_number' => $result['order']->order_number,
             'order_id' => $result['order']->id,
             'status' => $result['order']->status,
-            'status_label' => __('menu.status_' . $result['order']->status),
+            'status_label' => __('menu.status_'.$result['order']->status),
             'total_amount' => $result['order']->total_amount,
             'whatsapp_url' => $result['whatsapp_url'],
         ]);
@@ -213,7 +214,7 @@ self.addEventListener('fetch', event => {
             ->with(['items.product', 'location'])
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
                 'success' => false,
                 'message' => 'Պատվերը չի գտնվել։',
@@ -293,9 +294,10 @@ self.addEventListener('fetch', event => {
                 'items' => $order->items->map(function ($item) {
                     $unitPrice = (float) ($item->unit_price ?? $item->price ?? 0);
                     $subtotal = (float) ($item->subtotal ?? ($unitPrice * $item->quantity));
+
                     return [
                         'id' => $item->id,
-                        'name' => $item->product_name ?? $item->product?->name ?? 'Dish #' . $item->product_id,
+                        'name' => $item->product_name ?? $item->product?->name ?? 'Dish #'.$item->product_id,
                         'variation_name' => $item->variation_name,
                         'quantity' => $item->quantity,
                         'price' => $unitPrice,
@@ -324,7 +326,7 @@ self.addEventListener('fetch', event => {
         ]);
 
         // Broadcast real-time WaiterCalled event
-        event(new \App\Events\WaiterCalled($call));
+        event(new WaiterCalled($call));
 
         $message = match ($call->type) {
             'call_waiter' => __('menu.waiter_called_success'),

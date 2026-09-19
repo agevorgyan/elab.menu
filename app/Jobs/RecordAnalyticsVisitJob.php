@@ -10,12 +10,12 @@ use Illuminate\Queue\SerializesModels;
 
 class RecordAnalyticsVisitJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
      *
-     * @param array $data Analytics visit payload
+     * @param  array  $data  Analytics visit payload
      */
     public function __construct(
         public array $data

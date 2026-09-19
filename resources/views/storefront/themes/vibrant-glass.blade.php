@@ -280,13 +280,13 @@
                                 'base_price' => (float)$prod->getEffectivePrice($location?->id),
                                 'variations' => $prod->variations->map(fn($v) => [
                                     'id' => $v->id,
-                                    'name' => $v->name,
+                                    'name' => $v->getTranslatedName($lang),
                                     'price' => (float)$v->price,
                                     'is_default' => (bool)$v->is_default
                                 ])->values(),
                             ];
                         @endphp
-                        <div class="glass-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='selectDish({{ json_encode($prodPayload) }})'>
+                        <div class="glass-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})'>
                             <img src="{{ $prod->image }}" class="glass-img">
                             <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
@@ -331,7 +331,7 @@
                                             {{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}
                                         @endif
                                     </div>
-                                    <button class="btn-select" @click.stop='selectDish({{ json_encode($prodPayload) }})' aria-label="{{ __('menu.add_to_cart') }}" title="{{ __('menu.add_to_cart') }}">
+                                    <button class="btn-select" @click.stop='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})' aria-label="{{ __('menu.add_to_cart') }}" title="{{ __('menu.add_to_cart') }}">
                                         @if($prod->variations->count() > 1)
                                             <span>{{ __('menu.select_portion_btn') }}</span>
                                         @else
@@ -349,193 +349,10 @@
 
 
     <!-- Variation Selection Modal -->
-    <div x-show="showVariationModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); z-index: 110; display: flex; flex-direction: column; justify-content: flex-end;" x-cloak>
-        <div style="background: var(--bg-card); border-top: 1px solid var(--border-color); border-radius: 24px 24px 0 0; padding: 1.5rem; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                <div style="display: flex; gap: 0.85rem; align-items: center;">
-                    <img :src="selectedDish?.image" style="width: 65px; height: 65px; object-fit: cover; border-radius: 14px; border: 1px solid var(--border-color);" alt="dish">
-                    <div>
-                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);" x-text="selectedDish?.name"></h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" x-text="selectedDish?.description"></p>
-                    </div>
-                </div>
-                <button @click="showVariationModal = false" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer; padding: 0.25rem;">✕</button>
-            </div>
+    @include('storefront.components.variation-modal')
 
-            <div style="margin: 1.25rem 0 0.5rem;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
-                    {{ __('menu.choose_portion') }}
-                </label>
-
-                <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                    <template x-for="v in selectedDish?.variations" :key="v.id">
-                        <div @click="selectedVariation = v"
-                             :style="selectedVariation?.id === v.id ? 'border: 2px solid var(--primary); background: rgba(6, 182, 212, 0.12);' : 'border: 1px solid var(--border-color); background: var(--bg-main);'"
-                             style="border-radius: 14px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s ease;">
-                            <div style="display: flex; align-items: center; gap: 0.65rem;">
-                                <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center;">
-                                    <div x-show="selectedVariation?.id === v.id" style="width: 10px; height: 10px; border-radius: 50%; background: var(--primary);"></div>
-                                </div>
-                                <span style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;" x-text="v.name"></span>
-                            </div>
-                            <span style="font-weight: 800; color: var(--accent); font-size: 1.05rem;" x-text="Number(v.price).toLocaleString() + ' {{ $vendor->currency }}'"></span>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Quantity Selector -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 14px;">
-                <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">
-                    {{ __('menu.quantity') }}
-                </span>
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <button type="button" @click="if(variationQty > 1) variationQty--" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 800; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
-                    <span style="font-weight: 800; font-size: 1.1rem; min-width: 24px; text-align: center; color: var(--text-main);" x-text="variationQty">1</span>
-                    <button type="button" @click="variationQty++" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-weight: 800; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
-                </div>
-            </div>
-
-            <!-- Confirm Add to Cart CTA -->
-            <button type="button" @click="addSelectedVariationToCart()" style="width: 100%; margin-top: 1.25rem; padding: 0.95rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #ffffff; border: none; border-radius: 14px; font-weight: 800; font-size: 1.05rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);">
-                <span>
-                    <i class="fa-solid fa-cart-plus"></i> {{ __('menu.add_to_cart') }}
-                </span>
-                <span style="font-size: 1.15rem;" x-text="Number((selectedVariation?.price || selectedDish?.base_price || 0) * variationQty).toLocaleString() + ' {{ $vendor->currency }}'"></span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Cart Modal (Full Screen) -->
-    <div x-show="showCartModal" 
-         style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh; background: var(--bg-card); z-index: 200; display: flex; flex-direction: column; overflow: hidden;" 
-         x-cloak
-         x-transition:enter="transition ease-out duration-250"
-         x-transition:enter-start="opacity-0 transform translate-y-4"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 transform translate-y-0"
-         x-transition:leave-end="opacity-0 transform translate-y-4">
-
-        <div style="background: var(--bg-card); width: 100%; max-width: 640px; margin: 0 auto; height: 100%; height: 100dvh; display: flex; flex-direction: column; box-sizing: border-box;">
-            
-            <!-- Sticky Top Header -->
-            <div style="padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--bg-card); position: sticky; top: 0; z-index: 10;">
-                <div style="display: flex; align-items: center; gap: 0.65rem;">
-                    <div style="width: 38px; height: 38px; border-radius: 12px; background: rgba(6, 182, 212, 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
-                        <i class="fa-solid fa-basket-shopping"></i>
-                    </div>
-                    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                        {{ __('menu.order_summary') }}
-                    </h3>
-                </div>
-                <button type="button" @click="showCartModal = false" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
-                    ✕
-                </button>
-            </div>
-
-            <!-- Scrollable Content -->
-            <div style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.25rem calc(2.5rem + env(safe-area-inset-bottom)) 1.25rem;">
-
-            <!-- Empty Cart State -->
-            <div x-show="cart.length === 0" style="text-align: center; padding: 2.5rem 1rem 1.5rem;">
-                <div style="width: 76px; height: 76px; border-radius: 50%; background: var(--bg-main); border: 1px solid var(--border-color); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
-                    <i class="fa-solid fa-basket-shopping" style="font-size: 2rem; color: var(--text-muted); opacity: 0.5;"></i>
-                </div>
-                <h4 style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem;">
-                    {{ __('menu.cart_empty') }}
-                </h4>
-                <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 280px; margin: 0 auto 1.5rem; line-height: 1.4;">
-                    {{ __('menu.cart_empty_desc') }}
-                </p>
-                <button type="button" @click="showCartModal = false" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; padding: 0.75rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);">
-                    <i class="fa-solid fa-arrow-left"></i> {{ __('menu.browse_menu') }}
-                </button>
-            </div>
-
-            <!-- Active Cart Items and Checkout -->
-            <div x-show="cart.length > 0">
-                <template x-for="(item, idx) in cart" :key="idx">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
-                        <div>
-                            <div style="font-weight: 700; color: var(--text-main);" x-text="item.name"></div>
-                            <template x-if="item.variation_name && item.variation_name !== 'Standard' && item.variation_name !== 'Standard Portion'">
-                                <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-top: 0.1rem;" x-text="'• ' + item.variation_name"></div>
-                            </template>
-                            <div style="font-size: 0.8rem; color: var(--accent);" x-text="Number(item.price).toLocaleString() + ' {{ $vendor->currency }}'"></div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 8px;">
-                            <button @click="changeQty(idx, -1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">-</button>
-                            <span x-text="item.qty" style="font-weight: 700; color: var(--text-main);"></span>
-                            <button @click="changeQty(idx, 1)" style="background: none; border: none; color: var(--text-main); font-size: 1rem; cursor: pointer;">+</button>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Order Notes Field -->
-                <div style="margin-top: 1.25rem;">
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                        {{ __('menu.order_notes') }}
-                    </label>
-                    <textarea x-model="orderNotes" class="input-field" rows="2" style="resize: vertical;" placeholder="{{ __('menu.order_notes_placeholder') }}"></textarea>
-                </div>
-
-                <!-- Customer Details Form -->
-                <div style="margin-top: 1.25rem;">
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">
-                        {{ __('menu.customer_details') }}
-                    </label>
-
-                    <input type="text" x-model="customerName" class="input-field" placeholder="{{ __('menu.full_name_placeholder') }}">
-                    <input type="tel" x-model="customerPhone" class="input-field" placeholder="{{ __('menu.phone_placeholder') }}">
-                    <input type="email" x-model="customerEmail" class="input-field" placeholder="{{ __('menu.email_placeholder') }}">
-                    <input type="date" x-model="customerBirthdate" class="input-field" placeholder="{{ __('menu.birthdate_placeholder') }}">
-                    
-                    <div style="position: relative; margin-bottom: 0.65rem;">
-                        <input type="text" 
-                               x-model="tableNumber" 
-                               :readonly="isTableFixed"
-                               :class="{ 'is-locked': isTableFixed }"
-                               class="input-field" 
-                               style="margin-bottom: 0;"
-                               placeholder="{{ __('menu.table') }} {{ $table ?? '4' }}">
-                        <template x-if="isTableFixed">
-                            <span style="position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); color: #10b981; font-size: 0.85rem;" title="Ֆիքսված է QR-ով">
-                                <i class="fa-solid fa-lock"></i>
-                            </span>
-                        </template>
-                    </div>
-                    <template x-if="isTableFixed">
-                        <div style="font-size: 0.72rem; color: #10b981; margin-top: -0.35rem; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>Սեղանի համարը ֆիքսված է QR կոդով և փոփոխման ենթակա չէ</span>
-                        </div>
-                    </template>
-
-                    <!-- Consent & Marketing Opt-in -->
-                    <label style="display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; margin-top: 0.5rem; background: var(--bg-main); border: 1px solid var(--border-color); padding: 0.65rem 0.85rem; border-radius: 10px;">
-                        <input type="checkbox" x-model="marketingOptIn" style="margin-top: 0.15rem;">
-                        <span>
-                            {!! __('menu.privacy_consent', [
-                                'privacy_link' => '<a href="'.route('legal.privacy').'" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">'.__('menu.privacy_policy').'</a>',
-                                'terms_link' => '<a href="'.route('legal.terms').'" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: underline;">'.__('menu.terms_of_service').'</a>'
-                            ]) !!}
-                        </span>
-                    </label>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.25rem;">
-                    <button @click="submitOrder('dine_in')" style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                        <i class="fa-solid fa-paper-plane"></i> {{ __('menu.checkout') }}
-                    </button>
-                    <button @click="submitOrder('whatsapp')" style="width: 100%; padding: 0.85rem; background: #25d366; color: #fff; font-weight: 800; font-size: 1rem; border: none; border-radius: 12px; cursor: pointer;">
-                        <i class="fa-brands fa-whatsapp"></i> {{ __('menu.order_via_whatsapp') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <!-- Modern Cart & Checkout Modal -->
+    @include('storefront.components.cart-modal')
 
     @include('storefront.components.bottom-nav')
     @include('storefront.components.info-modal')

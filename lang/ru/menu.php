@@ -4,6 +4,7 @@ return [
     'mins' => 'мин',
     'allergens' => 'Аллергены:',
     'choose_portion' => 'Выберите размер / порцию:',
+    'options_available' => 'варианта',
     'quantity' => 'Количество',
     'add_to_cart' => 'Добавить в заказ',
     'cart' => 'Корзина',
@@ -51,6 +52,11 @@ return [
     'service_modal_desc' => 'Выберите необходимую услугу для вашего стола',
     'cancel' => 'Отмена',
     'send' => 'Отправить',
+    'subtotal' => 'Подытог',
+    'total_to_pay' => 'Итого к оплате',
+    'items_count' => 'позиций',
+    'fixed_qr' => 'Зафиксировано по QR',
+    'fixed_qr_notice' => 'Номер стола зафиксирован по QR-коду и не подлежит изменению',
 
     // Bottom Navigation
     'nav_home' => 'Меню',
@@ -91,4 +97,15 @@ return [
     'phone' => 'Телефон',
     'contact_whatsapp' => 'Написать в WhatsApp',
     'call_phone' => 'Позвонить',
+
+    // Delivery & Order Types
+    'order_type' => 'Тип заказа',
+    'dine_in' => 'В зале',
+    'delivery' => 'Доставка',
+    'delivery_address' => 'Адрес доставки',
+    'delivery_address_placeholder' => 'Город, улица, дом, квартира...',
+    'order_delivery' => 'Заказать доставку',
+    'order_delivery_via_whatsapp' => 'Заказать доставку в WhatsApp',
+    'delivery_address_required' => 'Пожалуйста, укажите адрес доставки',
+    'delivery_phone_required' => 'Номер телефона обязателен для доставки',
 ];

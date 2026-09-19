@@ -15,7 +15,7 @@ class EnsurePlanHasFeature
         if ($user && $user->vendor) {
             $vendor = $user->vendor;
 
-            if (!$vendor->hasFeature($feature)) {
+            if (! $vendor->hasFeature($feature)) {
                 $featureNames = [
                     'orders' => 'Օնլայն պատվերների',
                     'customers' => 'Հաճախորդների CRM',

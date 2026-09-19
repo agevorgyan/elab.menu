@@ -44,6 +44,7 @@ class SubscriptionPlan extends Model
         if ($this->is_custom || $this->price <= 0) {
             return 'Պայմանագրային';
         }
-        return number_format($this->price, 0, '.', ' ') . ' ' . $this->currency . ' / ամիս';
+
+        return number_format($this->price, 0, '.', ' ').' '.$this->currency.' / ամիս';
     }
 }

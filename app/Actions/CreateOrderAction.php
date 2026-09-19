@@ -3,8 +3,8 @@
 namespace App\Actions;
 
 use App\DTOs\CreateOrderDTO;
-use App\DTOs\OrderItemDTO;
 use App\Events\OrderCreated;
+use App\Mail\OrderReceiptMail;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Order;
@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Services\CustomerSyncService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -25,8 +26,7 @@ class CreateOrderAction
     /**
      * Process order submission within a database transaction.
      *
-     * @param Vendor $vendor
-     * @param CreateOrderDTO|array $data Validated DTO or parameters array
+     * @param  CreateOrderDTO|array  $data  Validated DTO or parameters array
      * @return array{order: Order, whatsapp_url: ?string}
      */
     public function execute(Vendor $vendor, CreateOrderDTO|array $data): array
@@ -35,7 +35,7 @@ class CreateOrderAction
 
         // Multi-tenant validation: ensure location belongs to vendor
         $location = Location::where('vendor_id', $vendor->id)->find($dto->locationId);
-        if (!$location) {
+        if (! $location) {
             throw ValidationException::withMessages([
                 'location_id' => 'The selected location does not belong to this vendor.',
             ]);
@@ -52,7 +52,8 @@ class CreateOrderAction
                 email: $dto->customerEmail,
                 marketingOptIn: $dto->marketingOptIn,
                 locationId: $dto->locationId,
-                birthdate: $dto->customerBirthdate
+                birthdate: $dto->customerBirthdate,
+                address: $dto->deliveryAddress
             );
 
             // Create base order record
@@ -60,8 +61,9 @@ class CreateOrderAction
                 'vendor_id' => $vendor->id,
                 'location_id' => $dto->locationId,
                 'customer_id' => $customer?->id,
-                'order_number' => 'ORD-' . strtoupper(Str::random(6)),
-                'table_number' => $dto->tableNumber ?? 'Counter',
+                'order_number' => 'ORD-'.strtoupper(Str::random(6)),
+                'table_number' => $dto->type === 'delivery' ? null : ($dto->tableNumber ?? 'Counter'),
+                'delivery_address' => $dto->deliveryAddress,
                 'type' => $dto->type,
                 'total_amount' => 0,
                 'status' => 'pending',
@@ -78,7 +80,7 @@ class CreateOrderAction
             foreach ($dto->items as $item) {
                 // Multi-tenant safe: ensure product belongs to this vendor
                 $product = Product::where('vendor_id', $vendor->id)->find($item->productId);
-                if (!$product) {
+                if (! $product) {
                     throw ValidationException::withMessages([
                         'items' => "Product #{$item->productId} does not belong to this vendor.",
                     ]);
@@ -88,18 +90,23 @@ class CreateOrderAction
                 $variation = null;
 
                 // 1. Resolve variation if variationId is supplied
-                if (!empty($item->variationId)) {
+                if (! empty($item->variationId)) {
                     $variation = $product->variations()->find($item->variationId);
-                    if (!$variation) {
+                    if (! $variation) {
                         throw ValidationException::withMessages([
                             'items' => "Invalid variation selected for dish {$product->name}.",
                         ]);
                     }
-                } 
+                }
                 // 2. Resolve variation if variationName is supplied
-                elseif (!empty($item->variationName)) {
-                    $variation = $product->variations()->where('name', $item->variationName)->first();
-                    if (!$variation && $variationsCount > 0) {
+                elseif (! empty($item->variationName)) {
+                    $variation = $product->variations()->where(function ($query) use ($item) {
+                        $query->where('name', $item->variationName)
+                            ->orWhere('name_translations->hy', $item->variationName)
+                            ->orWhere('name_translations->ru', $item->variationName)
+                            ->orWhere('name_translations->en', $item->variationName);
+                    })->first();
+                    if (! $variation && $variationsCount > 0) {
                         throw ValidationException::withMessages([
                             'items' => "Invalid variation '{$item->variationName}' selected for dish {$product->name}.",
                         ]);
@@ -107,14 +114,14 @@ class CreateOrderAction
                 }
 
                 // 3. Prevent pricing bypass: multi-variation dishes must have an explicit valid variation
-                if ($variationsCount > 1 && !$variation) {
+                if ($variationsCount > 1 && ! $variation) {
                     throw ValidationException::withMessages([
                         'items' => "A valid variation must be selected for dish {$product->name}.",
                     ]);
                 }
 
                 // 4. If product has exactly 1 variation and none was passed, auto-select it
-                if ($variationsCount === 1 && !$variation) {
+                if ($variationsCount === 1 && ! $variation) {
                     $variation = $product->variations()->first();
                 }
 
@@ -129,7 +136,7 @@ class CreateOrderAction
                     $variationName = $variation->name;
                 } else {
                     $unitPrice = (float) $product->getEffectivePrice($dto->locationId);
-                    $variationName = !empty($item->variationName) ? $item->variationName : 'Standard';
+                    $variationName = ! empty($item->variationName) ? $item->variationName : 'Standard';
                 }
 
                 $subtotal = $unitPrice * $item->quantity;
@@ -158,10 +165,10 @@ class CreateOrderAction
 
         $whatsappUrl = $this->buildWhatsAppUrl($order, $vendor, $dto->locationId);
 
-        if (!empty($order->customer_email)) {
+        if (! empty($order->customer_email)) {
             try {
-                \Illuminate\Support\Facades\Mail::to($order->customer_email)->queue(
-                    new \App\Mail\OrderReceiptMail($order)
+                Mail::to($order->customer_email)->queue(
+                    new OrderReceiptMail($order)
                 );
             } catch (\Throwable $e) {
                 // Silently ignore mail failure in queue dispatch
@@ -180,28 +187,37 @@ class CreateOrderAction
     protected function buildWhatsAppUrl(Order $order, Vendor $vendor, int $locationId): ?string
     {
         $location = Location::find($locationId);
-        if (!$location || empty($location->whatsapp_number)) {
+        if (! $location || empty($location->whatsapp_number)) {
             return null;
         }
 
         $msg = "🧾 *New Order #{$order->order_number}*\n";
-        $msg .= "📍 *{$location->name}* " . ($order->table_number ? "({$order->table_number})" : "") . "\n";
+        if ($order->type === 'delivery') {
+            $msg .= "🛵 *Տեսակը՝ ԱՌԱՔՈՒՄ (Delivery)*\n";
+            $msg .= "📍 *Առաքման հասցե՝* {$order->delivery_address}\n";
+        } else {
+            $msg .= "🍽️ *Տեսակը՝ ՌԵՍՏՈՐԱՆՈՒՄ (Dine-in)*\n";
+            $msg .= "📍 *{$location->name}* ".($order->table_number ? "({$order->table_number})" : '')."\n";
+        }
         $msg .= "👤 Name: {$order->customer_name}\n";
+        if (! empty($order->customer_phone)) {
+            $msg .= "📞 Phone: {$order->customer_phone}\n";
+        }
         $msg .= "--------------------\n";
 
         foreach ($order->items as $i) {
-            $msg .= "• {$i->quantity}x {$i->product_name} ({$i->variation_name}) - " . number_format($i->subtotal) . " {$vendor->currency}\n";
+            $msg .= "• {$i->quantity}x {$i->product_name} ({$i->variation_name}) - ".number_format($i->subtotal)." {$vendor->currency}\n";
         }
 
-        if (!empty($order->notes)) {
+        if (! empty($order->notes)) {
             $msg .= "\n📝 *Notes:* {$order->notes}\n";
         }
 
         $msg .= "--------------------\n";
-        $msg .= "💰 *Total: " . number_format($order->total_amount) . " {$vendor->currency}*";
+        $msg .= '💰 *Total: '.number_format($order->total_amount)." {$vendor->currency}*";
 
         $cleanPhone = preg_replace('/[^0-9]/', '', $location->whatsapp_number);
 
-        return "https://wa.me/{$cleanPhone}?text=" . urlencode($msg);
+        return "https://wa.me/{$cleanPhone}?text=".urlencode($msg);
     }
 }

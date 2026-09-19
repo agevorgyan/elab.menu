@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Location;
-use App\Models\Order;
 use App\Models\Product;
-use App\Models\ProductVariation;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,11 +14,15 @@ class CrossTenantOrderInjectionTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor1;
+
     protected Location $location1;
+
     protected Product $product1;
 
     protected Vendor $vendor2;
+
     protected Location $location2;
+
     protected Product $product2;
 
     protected function setUp(): void
@@ -99,8 +101,8 @@ class CrossTenantOrderInjectionTest extends TestCase
                 [
                     'product_id' => $this->product2->id, // Belongs to Vendor 2!
                     'quantity' => 2,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(422);
@@ -124,8 +126,8 @@ class CrossTenantOrderInjectionTest extends TestCase
                 [
                     'product_id' => $this->product1->id,
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(422);
@@ -148,8 +150,8 @@ class CrossTenantOrderInjectionTest extends TestCase
                 [
                     'product_id' => $this->product1->id,
                     'quantity' => 2,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(200);

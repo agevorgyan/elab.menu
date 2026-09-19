@@ -53,7 +53,7 @@ class CreateOrderActionTest extends TestCase
             'is_default' => false,
         ]);
 
-        $action = new CreateOrderAction(new CustomerSyncService());
+        $action = new CreateOrderAction(new CustomerSyncService);
 
         $payload = [
             'location_id' => $location->id,
@@ -70,8 +70,8 @@ class CreateOrderActionTest extends TestCase
                     'variation_id' => $variationLarge->id,
                     'variation_name' => $variationLarge->name,
                     'quantity' => 2,
-                ]
-            ]
+                ],
+            ],
         ];
 
         $result = $action->execute($vendor, $payload);

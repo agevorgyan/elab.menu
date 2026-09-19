@@ -4,6 +4,7 @@ return [
     'mins' => 'րոպե',
     'allergens' => 'Ալերգեններ:',
     'choose_portion' => 'Ընտրեք չափսը / տարբերակը՝',
+    'options_available' => 'տարբերակ',
     'quantity' => 'Քանակ',
     'add_to_cart' => 'Ավելացնել զամբյուղ',
     'cart' => 'Զամբյուղ',
@@ -51,6 +52,11 @@ return [
     'service_modal_desc' => 'Ընտրեք Ձեզ անհրաժեշտ ծառայությունը',
     'cancel' => 'Չեղարկել',
     'send' => 'Ուղարկել',
+    'subtotal' => 'Ենթագումար',
+    'total_to_pay' => 'Ընդհանուր գումար',
+    'items_count' => 'ուտեստ',
+    'fixed_qr' => 'Ֆիքսված է QR-ով',
+    'fixed_qr_notice' => 'Սեղանի համարը ֆիքսված է QR կոդով և փոփոխման ենթակա չէ',
 
     // Bottom Navigation
     'nav_home' => 'Մենյու',
@@ -91,4 +97,15 @@ return [
     'phone' => 'Հեռախոսահամար',
     'contact_whatsapp' => 'Գրել WhatsApp-ով',
     'call_phone' => 'Զանգահարել',
+
+    // Delivery & Order Types
+    'order_type' => 'Պատվերի տեսակը',
+    'dine_in' => 'Ռեստորանում',
+    'delivery' => 'Առաքում',
+    'delivery_address' => 'Առաքման հասցե',
+    'delivery_address_placeholder' => 'Քաղաք, փողոց, շենք, բնակարան...',
+    'order_delivery' => 'Պատվիրել առաքում',
+    'order_delivery_via_whatsapp' => 'Պատվիրել առաքում WhatsApp-ով',
+    'delivery_address_required' => 'Խնդրում ենք լրացնել առաքման հասցեն',
+    'delivery_phone_required' => 'Առաքման համար հեռախոսահամարը պարտադիր է',
 ];

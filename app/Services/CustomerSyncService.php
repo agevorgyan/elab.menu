@@ -18,11 +18,12 @@ class CustomerSyncService
         ?string $email,
         bool $marketingOptIn,
         int|string|null $locationId = null,
-        ?string $birthdate = null
+        ?string $birthdate = null,
+        ?string $address = null
     ): ?Customer {
-        $phone = !empty($phone) ? trim($phone) : null;
-        $email = !empty($email) ? strtolower(trim($email)) : null;
-        $name = !empty($name) ? trim($name) : null;
+        $phone = ! empty($phone) ? trim($phone) : null;
+        $email = ! empty($email) ? strtolower(trim($email)) : null;
+        $name = ! empty($name) ? trim($name) : null;
 
         $customer = null;
 
@@ -44,15 +45,17 @@ class CustomerSyncService
                 'phone' => $phone ?: $customer->phone,
                 'email' => $email ?: $customer->email,
                 'birthdate' => $birthdate ?: $customer->birthdate,
+                'address' => $address ?: $customer->address,
                 'marketing_opt_in' => $marketingOptIn,
                 'last_order_at' => now(),
             ];
 
-            if (!$customer->location_id && $locationId) {
+            if (! $customer->location_id && $locationId) {
                 $updateData['location_id'] = $locationId;
             }
 
             $customer->update($updateData);
+
             return $customer;
         }
 
@@ -65,6 +68,7 @@ class CustomerSyncService
                 'phone' => $phone,
                 'email' => $email,
                 'birthdate' => $birthdate,
+                'address' => $address,
                 'marketing_opt_in' => $marketingOptIn,
                 'last_order_at' => now(),
             ]);
@@ -84,6 +88,8 @@ class CustomerSyncService
             'name' => $data['name'],
             'phone' => $data['phone'] ?? null,
             'email' => $data['email'] ?? null,
+            'birthdate' => $data['birthdate'] ?? null,
+            'address' => $data['address'] ?? null,
             'notes' => $data['notes'] ?? null,
             'marketing_opt_in' => $marketingOptIn,
         ]);
@@ -94,16 +100,16 @@ class CustomerSyncService
      */
     public function updateCustomer(Customer $customer, array $data, bool $marketingOptIn = false): Customer
     {
-        $customer->update([
+        return tap($customer)->update([
             'name' => $data['name'],
             'location_id' => $data['location_id'] ?? $customer->location_id,
             'phone' => $data['phone'] ?? null,
             'email' => $data['email'] ?? null,
+            'birthdate' => array_key_exists('birthdate', $data) ? $data['birthdate'] : $customer->birthdate,
+            'address' => array_key_exists('address', $data) ? $data['address'] : $customer->address,
             'notes' => $data['notes'] ?? null,
             'marketing_opt_in' => $marketingOptIn,
         ]);
-
-        return $customer;
     }
 
     /**

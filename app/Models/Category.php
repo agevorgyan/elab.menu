@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use HasFactory, BelongsToVendor, SoftDeletes;
+    use BelongsToVendor, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'vendor_id',
@@ -45,9 +45,10 @@ class Category extends Model
     public function getTranslatedName(?string $lang = null): string
     {
         $lang = $lang ?: app()->getLocale();
-        if ($this->name_translations && isset($this->name_translations[$lang]) && !empty($this->name_translations[$lang])) {
+        if ($this->name_translations && isset($this->name_translations[$lang]) && ! empty($this->name_translations[$lang])) {
             return $this->name_translations[$lang];
         }
+
         return $this->name;
     }
 }

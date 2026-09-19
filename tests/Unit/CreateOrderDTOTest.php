@@ -37,8 +37,8 @@ class CreateOrderDTOTest extends TestCase
                 [
                     'product_id' => 11,
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ];
 
         $dto = CreateOrderDTO::fromArray($raw);
@@ -101,7 +101,7 @@ class CreateOrderDTOTest extends TestCase
                 new OrderItemDTO(
                     productId: $product->id,
                     quantity: 2,
-                )
+                ),
             ],
             tableNumber: 'Table 7',
             customerName: 'Ani',

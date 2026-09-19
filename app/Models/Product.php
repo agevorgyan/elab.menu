@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
-    use HasFactory, BelongsToVendor, SoftDeletes;
+    use BelongsToVendor, HasFactory, SoftDeletes;
 
     protected static function booted(): void
     {
@@ -24,9 +24,9 @@ class Product extends Model
      */
     public function deleteImageFile(): void
     {
-        if (!empty($this->image) && !str_starts_with($this->image, 'http://') && !str_starts_with($this->image, 'https://')) {
+        if (! empty($this->image) && ! str_starts_with($this->image, 'http://') && ! str_starts_with($this->image, 'https://')) {
             $path = ltrim(str_replace('/storage/', '', $this->image), '/');
-            if (!empty($path) && Storage::disk('public')->exists($path)) {
+            if (! empty($path) && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }
         }
@@ -94,18 +94,20 @@ class Product extends Model
     public function getTranslatedName(?string $lang = null): string
     {
         $lang = $lang ?: app()->getLocale();
-        if ($this->name_translations && isset($this->name_translations[$lang]) && !empty($this->name_translations[$lang])) {
+        if ($this->name_translations && isset($this->name_translations[$lang]) && ! empty($this->name_translations[$lang])) {
             return $this->name_translations[$lang];
         }
+
         return $this->name;
     }
 
     public function getTranslatedDescription(?string $lang = null): string
     {
         $lang = $lang ?: app()->getLocale();
-        if ($this->description_translations && isset($this->description_translations[$lang]) && !empty($this->description_translations[$lang])) {
+        if ($this->description_translations && isset($this->description_translations[$lang]) && ! empty($this->description_translations[$lang])) {
             return $this->description_translations[$lang];
         }
+
         return $this->description ?? '';
     }
 
@@ -117,18 +119,22 @@ class Product extends Model
                 return (float) $override->override_price;
             }
         }
+
         return (float) $this->price;
     }
 
     public function isAvailableAtLocation(?int $locationId = null): bool
     {
-        if (!$this->is_available) return false;
+        if (! $this->is_available) {
+            return false;
+        }
         if ($locationId) {
             $override = $this->overrides->firstWhere('location_id', $locationId);
             if ($override !== null && isset($override->is_available)) {
                 return (bool) $override->is_available;
             }
         }
+
         return true;
     }
 }

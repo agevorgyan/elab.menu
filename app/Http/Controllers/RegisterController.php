@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vendor;
+use App\Mail\VendorWelcomeVerificationMail;
 use App\Models\Location;
-use App\Models\User;
 use App\Models\MenuTemplate;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
-
 use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Models\Vendor;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
@@ -21,6 +20,7 @@ class RegisterController extends Controller
     {
         $templates = MenuTemplate::where('is_active', true)->get();
         $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+
         return view('auth.register', compact('templates', 'plans'));
     }
 
@@ -43,13 +43,13 @@ class RegisterController extends Controller
         ]);
 
         $template = MenuTemplate::first();
-        $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first() 
+        $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first()
             ?? SubscriptionPlan::where('slug', 'pro')->first();
 
         // 1. Create Vendor Record with 14-day Free Trial
         $vendor = Vendor::create([
             'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']) . '-' . Str::random(4),
+            'slug' => Str::slug($validated['name']).'-'.Str::random(4),
             'type' => $validated['type'],
             'legal_name' => $validated['legal_name'],
             'legal_address' => $validated['legal_address'],
@@ -74,7 +74,7 @@ class RegisterController extends Controller
         // 2. Create Initial Main Location
         $location = Location::create([
             'vendor_id' => $vendor->id,
-            'name' => $validated['name'] . ' (Main)',
+            'name' => $validated['name'].' (Main)',
             'slug' => 'main',
             'address' => $validated['operating_address'],
             'phone' => $validated['phone'],
@@ -99,8 +99,8 @@ class RegisterController extends Controller
         ]);
 
         try {
-            \Illuminate\Support\Facades\Mail::to($user->email)->queue(
-                new \App\Mail\VendorWelcomeVerificationMail($user, $verificationUrl)
+            Mail::to($user->email)->queue(
+                new VendorWelcomeVerificationMail($user, $verificationUrl)
             );
         } catch (\Throwable $e) {
             // Silently handle mail dispatch failure if queue/mailer is offline
@@ -120,11 +120,11 @@ class RegisterController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
             abort(403, 'Invalid verification link.');
         }
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
             if ($user->vendor) {
                 $user->vendor->update(['email_verified_at' => now()]);
@@ -137,7 +137,7 @@ class RegisterController extends Controller
     public function directDemoVerify(Request $request)
     {
         $user = Auth::user();
-        if ($user && !$user->hasVerifiedEmail()) {
+        if ($user && ! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
             if ($user->vendor) {
                 $user->vendor->update(['email_verified_at' => now()]);

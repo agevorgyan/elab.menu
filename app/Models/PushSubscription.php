@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PushSubscription extends Model
 {
-    use HasFactory, BelongsToVendor;
+    use BelongsToVendor, HasFactory;
 
     protected $fillable = [
         'vendor_id',

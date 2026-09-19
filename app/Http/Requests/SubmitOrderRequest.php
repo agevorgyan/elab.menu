@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Vendor;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class SubmitOrderRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -33,9 +34,10 @@ class SubmitOrderRequest extends FormRequest
                 Rule::exists('locations', 'id')->where('vendor_id', $vendorId),
             ],
             'table_number' => 'nullable|string',
-            'type' => 'required|string|in:dine_in,takeaway,whatsapp',
+            'delivery_address' => 'required_if:type,delivery|nullable|string|max:500',
+            'type' => 'required|string|in:dine_in,takeaway,delivery,whatsapp',
             'customer_name' => 'nullable|string',
-            'customer_phone' => 'nullable|string',
+            'customer_phone' => 'required_if:type,delivery|nullable|string|max:50',
             'customer_email' => 'nullable|email',
             'customer_birthdate' => 'nullable|date',
             'marketing_opt_in' => 'nullable|boolean',

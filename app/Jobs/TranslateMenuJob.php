@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 class TranslateMenuJob implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
@@ -28,15 +28,20 @@ class TranslateMenuJob implements ShouldQueue
     public function handle(AiMenuService $aiService, TenantContext $tenantContext): void
     {
         $tenantContext->runInTenantContext($this->vendorId, function () use ($aiService) {
-            $categories = Category::where('vendor_id', $this->vendorId)->with('products')->get();
+            $categories = Category::where('vendor_id', $this->vendorId)->with('products.variations')->get();
 
             $itemsToTranslate = [];
             foreach ($categories as $cat) {
                 $itemsToTranslate["cat_{$cat->id}"] = $cat->name;
                 foreach ($cat->products as $prod) {
                     $itemsToTranslate["prod_name_{$prod->id}"] = $prod->name;
-                    if (!empty($prod->description)) {
+                    if (! empty($prod->description)) {
                         $itemsToTranslate["prod_desc_{$prod->id}"] = $prod->description;
+                    }
+                    foreach ($prod->variations as $var) {
+                        if (! empty($var->name) && ! in_array($var->name, ['Standard', 'Standard Portion'])) {
+                            $itemsToTranslate["var_name_{$var->id}"] = $var->name;
+                        }
                     }
                 }
             }
@@ -69,6 +74,14 @@ class TranslateMenuJob implements ShouldQueue
                         'name_translations' => $pNameTrans,
                         'description_translations' => $pDescTrans,
                     ]);
+
+                    foreach ($prod->variations as $var) {
+                        if (isset($translated["var_name_{$var->id}"])) {
+                            $vTrans = $var->name_translations ?? [];
+                            $vTrans[$this->targetLang] = $translated["var_name_{$var->id}"];
+                            $var->update(['name_translations' => $vTrans]);
+                        }
+                    }
                 }
             }
         });

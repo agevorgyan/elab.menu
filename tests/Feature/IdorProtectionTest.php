@@ -2,6 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\MenuBuilderController;
+use App\Http\Controllers\OrderController;
+use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\UpdateOrderStatusRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\Order;
@@ -11,6 +16,8 @@ use App\Models\User;
 use App\Models\Vendor;
 use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class IdorProtectionTest extends TestCase
@@ -18,14 +25,23 @@ class IdorProtectionTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor1;
+
     protected User $user1;
+
     protected Vendor $vendor2;
+
     protected User $user2;
+
     protected Location $loc1;
+
     protected Location $loc2;
+
     protected Category $cat1;
+
     protected Category $cat2;
+
     protected Product $prod1;
+
     protected Product $prod2;
 
     protected function setUp(): void
@@ -205,22 +221,22 @@ class IdorProtectionTest extends TestCase
     {
         $this->actingAs($this->user1);
 
-        $menuController = app(\App\Http\Controllers\MenuBuilderController::class);
-        $orderController = app(\App\Http\Controllers\OrderController::class);
+        $menuController = app(MenuBuilderController::class);
+        $orderController = app(OrderController::class);
 
         // 1. destroyCategory with Vendor 2's category
         try {
             $menuController->destroyCategory($this->cat2);
             $this->fail('Expected HttpException 403 for destroyCategory');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
 
         // 2. updateCategory with Vendor 2's category
         try {
-            $menuController->updateCategory(new \App\Http\Requests\UpdateCategoryRequest(), $this->cat2);
+            $menuController->updateCategory(new UpdateCategoryRequest, $this->cat2);
             $this->fail('Expected HttpException 403 for updateCategory');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
 
@@ -228,31 +244,31 @@ class IdorProtectionTest extends TestCase
         try {
             $menuController->destroyProduct($this->prod2);
             $this->fail('Expected HttpException 403 for destroyProduct');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
 
         // 4. updateProduct with Vendor 2's product
         try {
-            $menuController->updateProduct(new \App\Http\Requests\UpdateProductRequest(), $this->prod2);
+            $menuController->updateProduct(new UpdateProductRequest, $this->prod2);
             $this->fail('Expected HttpException 403 for updateProduct');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
 
         // 5. toggleAvailability with Vendor 2's product
         try {
-            $menuController->toggleAvailability(new \Illuminate\Http\Request(), $this->prod2);
+            $menuController->toggleAvailability(new Request, $this->prod2);
             $this->fail('Expected HttpException 403 for toggleAvailability');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
 
         // 6. saveOverride with Vendor 2's product
         try {
-            $menuController->saveOverride(new \Illuminate\Http\Request(), $this->prod2);
+            $menuController->saveOverride(new Request, $this->prod2);
             $this->fail('Expected HttpException 403 for saveOverride');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
 
@@ -268,9 +284,9 @@ class IdorProtectionTest extends TestCase
         ]);
 
         try {
-            $orderController->updateStatus(new \App\Http\Requests\UpdateOrderStatusRequest(), $order2);
+            $orderController->updateStatus(new UpdateOrderStatusRequest, $order2);
             $this->fail('Expected HttpException 403 for updateStatus');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertEquals(403, $e->getStatusCode());
         }
     }

@@ -12,7 +12,7 @@
         <button class="btn btn-secondary" onclick="document.getElementById('newCategoryModal').style.display='flex'">
             <i class="fa-solid fa-folder-plus"></i> New Category
         </button>
-        <button class="btn btn-primary" onclick="document.getElementById('newProductModal').style.display='flex'">
+        <button class="btn btn-primary" onclick="openNewProductModal()">
             <i class="fa-solid fa-plus"></i> Add New Dish
         </button>
     </div>
@@ -82,6 +82,50 @@
 
                             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">{{ $product->description }}</p>
 
+                            <!-- Variations & Portions Display -->
+                            @if($product->variations && $product->variations->count() > 0)
+                                @php
+                                    $hasCustomVariations = $product->variations->count() > 1 || 
+                                        ($product->variations->count() === 1 && !in_array($product->variations->first()->name, ['Standard', 'Standard Portion']));
+                                @endphp
+                                @if($hasCustomVariations)
+                                    <div style="margin-top: 0.65rem; padding: 0.55rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                                            <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.35rem;">
+                                                <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Variations / Portions ({{ $product->variations->count() }}):
+                                            </span>
+                                        </div>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                            @foreach($product->variations as $var)
+                                                <div style="display: inline-flex; align-items: center; gap: 0.45rem; background: var(--input-bg); border: 1px solid {{ $var->is_default ? 'var(--primary)' : 'var(--border-color)' }}; padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.78rem;">
+                                                    @if($var->is_default)
+                                                        <i class="fa-solid fa-circle-check" style="color: var(--primary); font-size: 0.75rem;" title="Default Portion"></i>
+                                                    @else
+                                                        <i class="fa-regular fa-circle" style="color: var(--text-muted); font-size: 0.7rem;"></i>
+                                                    @endif
+                                                    <span style="font-weight: 700; color: var(--text-main);">{{ $var->name }}</span>
+                                                    @php
+                                                        $extraTrans = array_filter([
+                                                            $var->name_translations['hy'] ?? null,
+                                                            $var->name_translations['ru'] ?? null
+                                                        ], fn($t) => !empty($t) && $t !== $var->name);
+                                                    @endphp
+                                                    @if(!empty($extraTrans))
+                                                        <span style="color: var(--text-muted); font-size: 0.72rem;">({{ implode(' • ', $extraTrans) }})</span>
+                                                    @endif
+                                                    <span style="font-family: 'Outfit', sans-serif; font-weight: 800; color: var(--primary); margin-left: 0.15rem;">
+                                                        {{ number_format($var->price) }} {{ $vendor->currency }}
+                                                    </span>
+                                                    @if($var->is_default)
+                                                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.15); color: var(--primary); padding: 0.05rem 0.3rem; border-radius: 4px; font-weight: 800;">DEFAULT</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
+
                             <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted); flex-wrap: wrap;">
                                 @if($product->calories)
                                     <span><i class="fa-solid fa-fire" style="color: var(--primary);"></i> {{ $product->calories }} kcal</span>
@@ -97,11 +141,20 @@
 
                         <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                             <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary); font-family: 'Outfit';">
-                                {{ number_format($product->price) }} {{ $vendor->currency }}
+                                @if($product->variations->count() > 1)
+                                    {{ number_format($product->variations->min('price')) }} - {{ number_format($product->variations->max('price')) }} {{ $vendor->currency }}
+                                @else
+                                    {{ number_format($product->price) }} {{ $vendor->currency }}
+                                @endif
                             </div>
+                            @if($product->variations->count() > 1)
+                                <span style="font-size: 0.72rem; color: var(--primary); background: rgba(245, 158, 11, 0.12); border: 1px solid var(--border-color); padding: 0.15rem 0.55rem; border-radius: 9999px; font-weight: 700;">
+                                    {{ $product->variations->count() }} options
+                                </span>
+                            @endif
 
                             <div style="display: flex; gap: 0.5rem;">
-                                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="editProduct({{ json_encode($product->load('allergens')) }})">
+                                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="editProduct({{ json_encode($product->load(['allergens', 'variations'])) }})">
                                     <i class="fa-solid fa-pen"></i> Edit
                                 </button>
 
@@ -262,6 +315,22 @@
                 <textarea name="description" rows="2" style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;"></textarea>
             </div>
 
+            <!-- Portions & Variations Section -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
+                            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Portions & Variations (Optional)
+                        </label>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Add sizes/options with translations (EN, Հայերեն, Русский)</small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" onclick="addVariationRow('new')">
+                        <i class="fa-solid fa-plus"></i> Add Portion
+                    </button>
+                </div>
+                <div id="new_variations_container" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
             <!-- Dietary & Allergens -->
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Dietary Tags</label>
@@ -382,6 +451,22 @@
                 </div>
             </div>
 
+            <!-- Portions & Variations Section -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
+                            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Portions & Variations (Optional)
+                        </label>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Add or edit portions with translations (EN, Հայերեն, Русский)</small>
+                    </div>
+                    <button type="button" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" onclick="addVariationRow('edit')">
+                        <i class="fa-solid fa-plus"></i> Add Portion
+                    </button>
+                </div>
+                <div id="edit_variations_container" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+            </div>
+
             <!-- Dietary & Allergens -->
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Dietary Tags</label>
@@ -476,7 +561,77 @@
         document.getElementById('edit_prod_is_featured').checked = !!prod.is_featured;
         document.getElementById('edit_prod_is_available').checked = !!prod.is_available;
         
+        // Populate Variations
+        const editContainer = document.getElementById('edit_variations_container');
+        if (editContainer) {
+            editContainer.innerHTML = '';
+            if (prod.variations && prod.variations.length > 0) {
+                prod.variations.forEach(v => {
+                    addVariationRow('edit', v);
+                });
+            }
+        }
+
         document.getElementById('editProductModal').style.display = 'flex';
+    }
+
+    let variationCounter = 0;
+
+    function addVariationRow(prefix, varData = null) {
+        const container = document.getElementById(prefix + '_variations_container');
+        if (!container) return;
+
+        const idx = variationCounter++;
+        const id = varData ? (varData.id || '') : '';
+        const name = varData ? (varData.name || '') : '';
+        const hyName = (varData && varData.name_translations && varData.name_translations.hy) ? varData.name_translations.hy : ((varData && varData.hy_name) ? varData.hy_name : '');
+        const ruName = (varData && varData.name_translations && varData.name_translations.ru) ? varData.name_translations.ru : ((varData && varData.ru_name) ? varData.ru_name : '');
+        const price = varData ? (varData.price || '') : '';
+        const isDefault = varData ? !!varData.is_default : (container.children.length === 0);
+
+        const row = document.createElement('div');
+        row.className = 'variation-row';
+        row.style = 'display: flex; flex-direction: column; gap: 0.4rem; padding: 0.65rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 0.35rem;';
+        row.innerHTML = `
+            <input type="hidden" name="variations[${idx}][id]" value="${id}">
+            <input type="hidden" name="variations[${idx}][is_default]" class="var-is-default-input" value="${isDefault ? '1' : '0'}">
+            
+            <div style="display: grid; grid-template-columns: 2fr 1.2fr auto auto; gap: 0.5rem; align-items: center;">
+                <input type="text" name="variations[${idx}][name]" value="${name}" placeholder="English (e.g. Medium Rare)" required style="padding: 0.45rem 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                <input type="number" name="variations[${idx}][price]" value="${price}" placeholder="Price" step="100" required style="padding: 0.45rem 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; white-space: nowrap;" title="Default Portion">
+                    <input type="radio" name="${prefix}_default_radio" ${isDefault ? 'checked' : ''} onchange="setDefaultVariation(this)">
+                    <span>Default</span>
+                </label>
+                <button type="button" class="btn btn-danger" style="padding: 0.35rem 0.55rem; font-size: 0.75rem;" onclick="this.closest('.variation-row').remove()" title="Remove portion">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <input type="text" name="variations[${idx}][hy_name]" value="${hyName}" placeholder="Հայերեն (օր. Միջին հում)" style="padding: 0.4rem 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.8rem; outline: none;">
+                <input type="text" name="variations[${idx}][ru_name]" value="${ruName}" placeholder="Русский (напр. Средней прожарки)" style="padding: 0.4rem 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 0.8rem; outline: none;">
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    function setDefaultVariation(radioEl) {
+        const container = radioEl.closest('#new_variations_container, #edit_variations_container');
+        if (!container) return;
+        container.querySelectorAll('.variation-row').forEach(row => {
+            const rowRadio = row.querySelector('input[type="radio"]');
+            const defaultInput = row.querySelector('.var-is-default-input');
+            if (rowRadio && defaultInput) {
+                defaultInput.value = rowRadio.checked ? '1' : '0';
+            }
+        });
+    }
+
+    function openNewProductModal() {
+        const container = document.getElementById('new_variations_container');
+        if (container) container.innerHTML = '';
+        document.getElementById('newProductModal').style.display = 'flex';
     }
 </script>
 @endsection

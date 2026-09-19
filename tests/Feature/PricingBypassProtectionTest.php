@@ -16,10 +16,15 @@ class PricingBypassProtectionTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected Location $location;
+
     protected Category $category;
+
     protected Product $steakProduct;
+
     protected ProductVariation $variationStandard;
+
     protected ProductVariation $variationLarge;
 
     protected function setUp(): void
@@ -84,8 +89,8 @@ class PricingBypassProtectionTest extends TestCase
                     'product_id' => $this->steakProduct->id,
                     'variation_id' => $this->variationLarge->id,
                     'quantity' => 2,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -114,8 +119,8 @@ class PricingBypassProtectionTest extends TestCase
                     'product_id' => $this->steakProduct->id,
                     // No variation_id and no variation_name!
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(422);
@@ -155,8 +160,8 @@ class PricingBypassProtectionTest extends TestCase
                     'product_id' => $this->steakProduct->id,
                     'variation_id' => $cheapVariation->id, // Belongs to Garden Salad!
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(422);
@@ -180,8 +185,8 @@ class PricingBypassProtectionTest extends TestCase
                     'product_id' => $this->steakProduct->id,
                     'variation_name' => 'Free Wagyu 1kg Portion',
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(422);
@@ -204,8 +209,8 @@ class PricingBypassProtectionTest extends TestCase
                     'product_id' => $this->steakProduct->id,
                     'variation_name' => 'Large Cut (550g)',
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -232,8 +237,8 @@ class PricingBypassProtectionTest extends TestCase
                     'product_id' => $this->steakProduct->id,
                     'variation_id' => $this->variationLarge->id,
                     'quantity' => 2,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -276,8 +281,8 @@ class PricingBypassProtectionTest extends TestCase
                 [
                     'product_id' => $singleVarProduct->id,
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(200);

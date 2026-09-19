@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Models\Customer;
+use App\Models\Location;
 use App\Models\Vendor;
 use App\Services\CustomerSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,13 +21,13 @@ class CustomerSyncServiceTest extends TestCase
             'password' => bcrypt('secret'),
         ]);
 
-        $location = \App\Models\Location::create([
+        $location = Location::create([
             'vendor_id' => $vendor->id,
             'name' => 'Main Branch',
             'slug' => 'main-branch',
         ]);
 
-        $service = new CustomerSyncService();
+        $service = new CustomerSyncService;
 
         // Initial creation
         $customer1 = $service->syncCustomerFromOrder(
@@ -68,7 +68,7 @@ class CustomerSyncServiceTest extends TestCase
             'password' => bcrypt('secret'),
         ]);
 
-        $service = new CustomerSyncService();
+        $service = new CustomerSyncService;
 
         $customer = $service->createCustomer($vendor, [
             'name' => 'Anahit',

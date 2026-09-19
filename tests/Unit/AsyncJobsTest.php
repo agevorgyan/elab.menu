@@ -7,7 +7,6 @@ use App\Jobs\RecordAnalyticsVisitJob;
 use App\Jobs\TranslateMenuJob;
 use App\Mail\OrderReceiptMail;
 use App\Mail\VendorWelcomeVerificationMail;
-use App\Models\AnalyticsLog;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\Product;
@@ -17,7 +16,6 @@ use App\Services\CustomerSyncService;
 use App\Services\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class AsyncJobsTest extends TestCase
@@ -105,7 +103,7 @@ class AsyncJobsTest extends TestCase
         $category = Category::create(['vendor_id' => $vendor->id, 'name' => 'Burgers', 'sort_order' => 1]);
         $product = Product::create(['vendor_id' => $vendor->id, 'category_id' => $category->id, 'name' => 'Cheeseburger', 'price' => 2000]);
 
-        $action = new CreateOrderAction(new CustomerSyncService());
+        $action = new CreateOrderAction(new CustomerSyncService);
 
         $action->execute($vendor, [
             'location_id' => $location->id,

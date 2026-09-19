@@ -124,6 +124,16 @@
                             <a href="{{ route('admin.customers.show', $c->id) }}" style="color: var(--text-main); text-decoration: none;">
                                 <i class="fa-solid fa-user-circle" style="color: var(--primary); margin-right: 0.35rem;"></i> {{ $c->name ?? 'Guest' }}
                             </a>
+                            @if($c->birthdate)
+                                <div style="font-size: 0.75rem; color: #ec4899; font-weight: 600; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-cake-candles"></i> {{ $c->birthdate->format('d M Y') }} ({{ $c->birthdate->age }} t.)
+                                </div>
+                            @endif
+                            @if($c->address)
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; display: flex; align-items: center; gap: 0.35rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> {{ $c->address }}
+                                </div>
+                            @endif
                         </td>
                         <td style="padding: 1rem;">
                             <span style="background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -229,6 +239,17 @@
                 <input type="email" name="email" placeholder="armen@example.com" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i> Birthday</label>
+                    <input type="date" name="birthdate" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> Address</label>
+                    <input type="text" name="address" placeholder="Tumanyan 12, apt 5" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                </div>
+            </div>
+
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Customer Notes</label>
                 <textarea name="notes" rows="2" placeholder="VIP Client, prefers window seat..." style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;"></textarea>
@@ -285,6 +306,17 @@
                 <input type="email" id="edit_email" name="email" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i> Birthday</label>
+                    <input type="date" id="edit_birthdate" name="birthdate" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> Address</label>
+                    <input type="text" id="edit_address" name="address" placeholder="Tumanyan 12, apt 5" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                </div>
+            </div>
+
             <div style="margin-bottom: 1rem;">
                 <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Customer Notes</label>
                 <textarea id="edit_notes" name="notes" rows="2" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;"></textarea>
@@ -314,6 +346,8 @@
         }
         document.getElementById('edit_phone').value = c.phone || '';
         document.getElementById('edit_email').value = c.email || '';
+        document.getElementById('edit_birthdate').value = c.birthdate ? c.birthdate.substring(0, 10) : '';
+        document.getElementById('edit_address').value = c.address || '';
         document.getElementById('edit_notes').value = c.notes || '';
         document.getElementById('edit_marketing_opt_in').checked = !!c.marketing_opt_in;
         document.getElementById('editCustomerModal').style.display = 'flex';

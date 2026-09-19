@@ -2,11 +2,8 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Vendor;
-use App\Models\MenuTemplate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class VendorSelfRegistrationTest extends TestCase
 {

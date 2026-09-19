@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Vendor;
+use App\Models\Allergen;
+use App\Models\AnalyticsLog;
+use App\Models\Category;
 use App\Models\Location;
 use App\Models\MenuTemplate;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductVariation;
-use App\Models\Allergen;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\AnalyticsLog;
+use App\Models\Product;
+use App\Models\ProductVariation;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Models\Vendor;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,8 +24,8 @@ class DatabaseSeeder extends Seeder
     {
         // 0. Subscription Plans
         $this->call(SubscriptionPlanSeeder::class);
-        $proPlan = \App\Models\SubscriptionPlan::where('slug', 'pro')->first();
-        $businessPlan = \App\Models\SubscriptionPlan::where('slug', 'business')->first();
+        $proPlan = SubscriptionPlan::where('slug', 'pro')->first();
+        $businessPlan = SubscriptionPlan::where('slug', 'business')->first();
 
         // 1. Menu Templates
         $t1 = MenuTemplate::create([
@@ -271,9 +272,39 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Product Variations for Ribeye
-        ProductVariation::create(['product_id' => $p3->id, 'name' => 'Medium Rare', 'price' => 12500, 'is_default' => true]);
-        ProductVariation::create(['product_id' => $p3->id, 'name' => 'Medium Well', 'price' => 12500, 'is_default' => false]);
-        ProductVariation::create(['product_id' => $p3->id, 'name' => 'Large Cut (500g)', 'price' => 17500, 'is_default' => false]);
+        ProductVariation::create([
+            'product_id' => $p3->id,
+            'name' => 'Medium Rare',
+            'name_translations' => [
+                'en' => 'Medium Rare',
+                'hy' => 'Միջին հում (Medium Rare)',
+                'ru' => 'Средней прожарки (Medium Rare)',
+            ],
+            'price' => 12500,
+            'is_default' => true,
+        ]);
+        ProductVariation::create([
+            'product_id' => $p3->id,
+            'name' => 'Medium Well',
+            'name_translations' => [
+                'en' => 'Medium Well',
+                'hy' => 'Լավ տապակած (Medium Well)',
+                'ru' => 'Почти прожаренное (Medium Well)',
+            ],
+            'price' => 12500,
+            'is_default' => false,
+        ]);
+        ProductVariation::create([
+            'product_id' => $p3->id,
+            'name' => 'Large Cut (500g)',
+            'name_translations' => [
+                'en' => 'Large Cut (500g)',
+                'hy' => 'Մեծ կտոր (500գ)',
+                'ru' => 'Большой кусок (500г)',
+            ],
+            'price' => 17500,
+            'is_default' => false,
+        ]);
 
         $p4 = Product::create([
             'vendor_id' => $vendor1->id,
@@ -460,7 +491,7 @@ class DatabaseSeeder extends Seeder
         // 7. Seed Analytics Logs for the past 7 days
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            
+
             // Dine in scans
             for ($k = 0; $k < rand(35, 120); $k++) {
                 AnalyticsLog::create([

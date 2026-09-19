@@ -1,18 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SuperAdminController;
-use App\Http\Controllers\VendorAdminController;
-use App\Http\Controllers\MenuBuilderController;
 use App\Http\Controllers\AiMenuController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\BrandingController;
-use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\ClientStorefrontController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\MenuBuilderController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\VendorAdminController;
+use Illuminate\Support\Facades\Route;
 
 // 1. Landing & Client Storefront PWA Routes
 Route::get('/', function () {
@@ -37,6 +37,7 @@ Route::get('/lang/{locale}', function (string $locale) {
     if (in_array($locale, ['hy', 'en', 'ru'])) {
         session(['app_locale' => $locale]);
     }
+
     return redirect()->back();
 })->name('lang.switch');
 
@@ -88,17 +89,17 @@ use App\Http\Middleware\EnsurePlanHasFeature;
 // 4. Vendor Admin Panel (/admin)
 Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscriptionIsActive::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [VendorAdminController::class, 'dashboard'])->name('dashboard');
-    
+
     // Vendor Subscription Status & Payment History
     Route::get('/subscription', [VendorAdminController::class, 'subscriptionIndex'])->name('subscription');
 
     // Locations & Team (Business Plan Feature)
-    Route::middleware([EnsurePlanHasFeature::class . ':locations'])->group(function () {
+    Route::middleware([EnsurePlanHasFeature::class.':locations'])->group(function () {
         Route::get('/locations', [VendorAdminController::class, 'locationsIndex'])->name('locations.index');
         Route::post('/locations', [VendorAdminController::class, 'storeLocation'])->name('locations.store');
     });
 
-    Route::middleware([EnsurePlanHasFeature::class . ':team'])->group(function () {
+    Route::middleware([EnsurePlanHasFeature::class.':team'])->group(function () {
         Route::get('/team', [VendorAdminController::class, 'teamIndex'])->name('team.index');
         Route::post('/team', [VendorAdminController::class, 'storeTeamMember'])->name('team.store');
     });
@@ -121,7 +122,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     Route::post('/ai/translate', [AiMenuController::class, 'translateMenu'])->name('ai.translate');
 
     // Live Orders & Kitchen Panel (Pro / Business Plan Feature)
-    Route::middleware([EnsurePlanHasFeature::class . ':orders'])->group(function () {
+    Route::middleware([EnsurePlanHasFeature::class.':orders'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/feed', [OrderController::class, 'feed'])->name('orders.feed');
         Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
@@ -136,7 +137,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     Route::get('/qr', [QrStudioController::class, 'index'])->name('qr.index');
 
     // Customers CRM (Pro / Business Plan Feature)
-    Route::middleware([EnsurePlanHasFeature::class . ':customers'])->group(function () {
+    Route::middleware([EnsurePlanHasFeature::class.':customers'])->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
         Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');

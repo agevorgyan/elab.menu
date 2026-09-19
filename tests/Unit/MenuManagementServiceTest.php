@@ -28,7 +28,7 @@ class MenuManagementServiceTest extends TestCase
             'slug' => 'north',
         ]);
 
-        $service = new MenuManagementService();
+        $service = new MenuManagementService;
 
         // 1. Create Category
         $category = $service->createCategory($vendor, [

@@ -16,7 +16,7 @@ trait BelongsToVendor
      */
     protected static function bootBelongsToVendor(): void
     {
-        static::addGlobalScope(new TenantScope());
+        static::addGlobalScope(new TenantScope);
 
         static::creating(function (Model $model) {
             if (empty($model->vendor_id)) {

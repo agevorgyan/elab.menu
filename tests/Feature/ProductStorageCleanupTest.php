@@ -18,8 +18,11 @@ class ProductStorageCleanupTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected User $user;
+
     protected Category $category;
+
     protected MenuManagementService $menuService;
 
     protected function setUp(): void

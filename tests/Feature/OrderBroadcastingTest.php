@@ -11,7 +11,6 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Models\WaiterCall;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,8 +22,11 @@ class OrderBroadcastingTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected Location $location;
+
     protected Product $product;
+
     protected User $user;
 
     protected function setUp(): void
@@ -80,8 +82,8 @@ class OrderBroadcastingTest extends TestCase
                 [
                     'product_id' => $this->product->id,
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response->assertStatus(200);
@@ -90,9 +92,10 @@ class OrderBroadcastingTest extends TestCase
             $channels = $event->broadcastOn();
             $this->assertCount(1, $channels);
             $this->assertInstanceOf(PrivateChannel::class, $channels[0]);
-            $this->assertSame('private-vendor.' . $this->vendor->id, $channels[0]->name);
+            $this->assertSame('private-vendor.'.$this->vendor->id, $channels[0]->name);
             $this->assertSame($this->vendor->id, $event->order->vendor_id);
             $this->assertSame('Table 5', $event->order->table_number);
+
             return true;
         });
     }
@@ -114,9 +117,10 @@ class OrderBroadcastingTest extends TestCase
             $channels = $event->broadcastOn();
             $this->assertCount(1, $channels);
             $this->assertInstanceOf(PrivateChannel::class, $channels[0]);
-            $this->assertSame('private-vendor.' . $this->vendor->id, $channels[0]->name);
+            $this->assertSame('private-vendor.'.$this->vendor->id, $channels[0]->name);
             $this->assertSame('Table 14', $event->waiterCall->table_number);
             $this->assertSame('bill_card', $event->waiterCall->type);
+
             return true;
         });
     }
@@ -146,10 +150,11 @@ class OrderBroadcastingTest extends TestCase
             $channels = $event->broadcastOn();
             $this->assertCount(2, $channels);
             $this->assertInstanceOf(PrivateChannel::class, $channels[0]);
-            $this->assertSame('private-vendor.' . $this->vendor->id, $channels[0]->name);
+            $this->assertSame('private-vendor.'.$this->vendor->id, $channels[0]->name);
             $this->assertInstanceOf(Channel::class, $channels[1]);
-            $this->assertSame('order.' . $order->order_number, $channels[1]->name);
+            $this->assertSame('order.'.$order->order_number, $channels[1]->name);
             $this->assertSame('preparing', $event->order->status);
+
             return true;
         });
     }
@@ -177,7 +182,7 @@ class OrderBroadcastingTest extends TestCase
         // Authorizing to own vendor channel should succeed
         $responseOwn = $this->actingAs($this->user)
             ->post('/broadcasting/auth', [
-                'channel_name' => 'private-vendor.' . $this->vendor->id,
+                'channel_name' => 'private-vendor.'.$this->vendor->id,
                 'socket_id' => '1234.5678',
             ]);
         $responseOwn->assertStatus(200);
@@ -185,7 +190,7 @@ class OrderBroadcastingTest extends TestCase
         // Authorizing to another vendor's channel should be forbidden (403)
         $responseOther = $this->actingAs($this->user)
             ->post('/broadcasting/auth', [
-                'channel_name' => 'private-vendor.' . $otherVendor->id,
+                'channel_name' => 'private-vendor.'.$otherVendor->id,
                 'socket_id' => '1234.5678',
             ]);
         $responseOther->assertStatus(403);

@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Auth;
 class TenantContext
 {
     protected ?int $tenantId = null;
+
     protected ?Vendor $tenant = null;
+
     protected bool $bypassed = false;
 
     /**
@@ -43,6 +45,7 @@ class TenantContext
         $id = $this->getTenantId();
         if ($id !== null) {
             $this->tenant = Vendor::find($id);
+
             return $this->tenant;
         }
 
@@ -72,7 +75,7 @@ class TenantContext
                 return null;
             }
 
-            if ($user && !empty($user->vendor_id)) {
+            if ($user && ! empty($user->vendor_id)) {
                 return (int) $user->vendor_id;
             }
         }

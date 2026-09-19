@@ -32,14 +32,14 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('currency', 10)->default('AMD');
             $table->string('custom_domain')->nullable();
-            
+
             // Branding & Design
             $table->foreignId('menu_template_id')->nullable()->constrained('menu_templates')->nullOnDelete();
             $table->string('primary_color', 20)->default('#e11d48');
             $table->string('secondary_color', 20)->default('#4f46e5');
             $table->string('theme_mode', 10)->default('dark'); // dark, light, system
             $table->text('custom_css')->nullable();
-            
+
             // Features & Limits
             $table->string('subscription_plan')->default('pro'); // basic, pro, enterprise
             $table->boolean('is_active')->default(true);
@@ -70,7 +70,7 @@ return new class extends Migration
             $table->decimal('minimum_order_amount', 10, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->unique(['vendor_id', 'slug']);
         });
 
@@ -110,7 +110,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->string('image')->nullable();
             $table->json('gallery')->nullable();
-            
+
             // Dietary & Nutrition
             $table->json('dietary_tags')->nullable(); // vegan, gluten-free, halal, etc.
             $table->integer('calories')->nullable();
@@ -118,7 +118,7 @@ return new class extends Migration
             $table->decimal('carbs_g', 6, 1)->nullable();
             $table->decimal('fat_g', 6, 1)->nullable();
             $table->integer('preparation_time_min')->nullable();
-            
+
             // Flags
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_available')->default(true);
@@ -152,7 +152,7 @@ return new class extends Migration
             $table->decimal('override_price', 10, 2)->nullable();
             $table->boolean('is_available')->default(true);
             $table->timestamps();
-            
+
             $table->unique(['location_id', 'product_id']);
         });
 
@@ -223,7 +223,7 @@ return new class extends Migration
         Schema::dropIfExists('categories');
         Schema::dropIfExists('allergens');
         Schema::dropIfExists('locations');
-        
+
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['vendor_id']);
             $table->dropColumn(['vendor_id', 'location_id', 'role', 'phone']);

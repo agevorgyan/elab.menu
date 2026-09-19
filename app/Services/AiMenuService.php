@@ -14,37 +14,37 @@ class AiMenuService
     {
         $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
 
-        if (!empty($geminiApiKey)) {
+        if (! empty($geminiApiKey)) {
             try {
-                $prompt = "You are a professional restaurant menu extraction AI. Extract the menu categories, products, prices, descriptions, dietary tags (vegan, vegetarian, gluten_free, chef_special), and calories from the following raw text. Output strictly valid JSON matching this structure:
+                $prompt = 'You are a professional restaurant menu extraction AI. Extract the menu categories, products, prices, descriptions, dietary tags (vegan, vegetarian, gluten_free, chef_special), and calories from the following raw text. Output strictly valid JSON matching this structure:
 {
-  \"categories\": [
+  "categories": [
     {
-      \"name\": \"Category Name\",
-      \"products\": [
+      "name": "Category Name",
+      "products": [
         {
-          \"name\": \"Product Name\",
-          \"description\": \"Description\",
-          \"price\": 3500,
-          \"dietary_tags\": [\"vegan\"],
-          \"calories\": 450
+          "name": "Product Name",
+          "description": "Description",
+          "price": 3500,
+          "dietary_tags": ["vegan"],
+          "calories": 450
         }
       ]
     }
   ]
 }
 Menu text:
-" . $rawText;
+'.$rawText;
 
                 $response = Http::withHeaders(['Content-Type' => 'application/json'])
                     ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
-                        'contents' => [['parts' => [['text' => $prompt]]]]
+                        'contents' => [['parts' => [['text' => $prompt]]]],
                     ]);
 
                 if ($response->successful()) {
                     $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
                     preg_match('/\{.*\}/s', $jsonText, $matches);
-                    if (!empty($matches[0])) {
+                    if (! empty($matches[0])) {
                         $decoded = json_decode($matches[0], true);
                         if (isset($decoded['categories'])) {
                             return $decoded;
@@ -52,7 +52,7 @@ Menu text:
                     }
                 }
             } catch (\Throwable $e) {
-                Log::warning("Gemini AI parse failed, using fallback parser: " . $e->getMessage());
+                Log::warning('Gemini AI parse failed, using fallback parser: '.$e->getMessage());
             }
         }
 
@@ -67,18 +67,18 @@ Menu text:
     {
         $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
 
-        if (!empty($geminiApiKey)) {
+        if (! empty($geminiApiKey)) {
             try {
-                $prompt = "Translate the following menu strings to target language '{$targetLang}'. Maintain food culinary accuracy. Input JSON: " . json_encode($items) . ". Output JSON format strictly as key-value pairs matching input keys.";
+                $prompt = "Translate the following menu strings to target language '{$targetLang}'. Maintain food culinary accuracy. Input JSON: ".json_encode($items).'. Output JSON format strictly as key-value pairs matching input keys.';
 
                 $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
-                    'contents' => [['parts' => [['text' => $prompt]]]]
+                    'contents' => [['parts' => [['text' => $prompt]]]],
                 ]);
 
                 if ($response->successful()) {
                     $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
                     preg_match('/\{.*\}/s', $jsonText, $matches);
-                    if (!empty($matches[0])) {
+                    if (! empty($matches[0])) {
                         $decoded = json_decode($matches[0], true);
                         if (is_array($decoded)) {
                             return $decoded;
@@ -86,7 +86,7 @@ Menu text:
                     }
                 }
             } catch (\Throwable $e) {
-                Log::warning("Gemini AI translation failed, using fallback translator: " . $e->getMessage());
+                Log::warning('Gemini AI translation failed, using fallback translator: '.$e->getMessage());
             }
         }
 
@@ -102,14 +102,17 @@ Menu text:
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line)) continue;
+            if (empty($line)) {
+                continue;
+            }
 
             // Check if line looks like a category header (e.g. UPPERCASE or starts with #)
             if (preg_match('/^[A-Z\s]{4,}$/', $line) || str_starts_with($line, '#')) {
-                if (!empty($currentCategory['products'])) {
+                if (! empty($currentCategory['products'])) {
                     $categories[] = $currentCategory;
                 }
                 $currentCategory = ['name' => trim($line, '# '), 'products' => []];
+
                 continue;
             }
 
@@ -127,7 +130,7 @@ Menu text:
             }
         }
 
-        if (!empty($currentCategory['products'])) {
+        if (! empty($currentCategory['products'])) {
             $categories[] = $currentCategory;
         }
 
@@ -138,7 +141,7 @@ Menu text:
                 'products' => [
                     ['name' => 'Chef Artisanal Pizza', 'description' => 'Wood-fired sourdough pizza with mozzarella and fresh basil.', 'price' => 4500, 'dietary_tags' => ['vegetarian'], 'calories' => 680],
                     ['name' => 'Fresh Berry Smoothie', 'description' => 'Blended organic strawberries, blueberries, and almond milk.', 'price' => 2200, 'dietary_tags' => ['vegan'], 'calories' => 210],
-                ]
+                ],
             ];
         }
 
@@ -177,7 +180,7 @@ Menu text:
                 'Հիմնական Ուտեստներ և Սթեյքեր' => 'Signature Mains & Steaks',
                 'Աղանդերներ' => 'Desserts & Sweets',
                 'Կոկտեյլներ և Գինիներ' => 'Craft Cocktails & Wines',
-            ]
+            ],
         ];
 
         $translated = [];
@@ -186,17 +189,18 @@ Menu text:
                 $translated[$key] = $dictionary[$targetLang][$text];
             } else {
                 // Prepend language tag indication if exact dictionary key is missing
-                $translated[$key] = match($targetLang) {
-                    'hy' => $text . ' (Հայ)',
-                    'ru' => $text . ' (Рус)',
-                    'en' => $text . ' (Eng)',
-                    'fr' => $text . ' (Fr)',
-                    'de' => $text . ' (De)',
-                    'es' => $text . ' (Es)',
+                $translated[$key] = match ($targetLang) {
+                    'hy' => $text.' (Հայ)',
+                    'ru' => $text.' (Рус)',
+                    'en' => $text.' (Eng)',
+                    'fr' => $text.' (Fr)',
+                    'de' => $text.' (De)',
+                    'es' => $text.' (Es)',
                     default => $text,
                 };
             }
         }
+
         return $translated;
     }
 }

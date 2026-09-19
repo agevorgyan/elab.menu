@@ -105,12 +105,13 @@ class Vendor extends Model
         if ($this->subscription_status === 'trialing') {
             return $this->trial_ends_at ? $this->trial_ends_at->isFuture() : true;
         }
+
         return false;
     }
 
     public function isExpired(): bool
     {
-        if (!$this->is_active || $this->subscription_status === 'expired') {
+        if (! $this->is_active || $this->subscription_status === 'expired') {
             return true;
         }
 
@@ -127,13 +128,16 @@ class Vendor extends Model
 
     public function hasActiveSubscription(): bool
     {
-        return $this->is_active && !$this->isExpired();
+        return $this->is_active && ! $this->isExpired();
     }
 
     public function daysLeft(): int
     {
         $targetDate = $this->isTrialing() ? $this->trial_ends_at : $this->subscription_expires_at;
-        if (!$targetDate) return 0;
+        if (! $targetDate) {
+            return 0;
+        }
+
         return max(0, (int) ceil(now()->diffInHours($targetDate, false) / 24));
     }
 
@@ -148,6 +152,7 @@ class Vendor extends Model
         if ($this->subscription_status === 'active') {
             return 'Ակտիվ';
         }
+
         return ucfirst($this->subscription_status ?? 'Active');
     }
 

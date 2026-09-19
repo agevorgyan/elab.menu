@@ -98,22 +98,55 @@ class MenuManagementService
             'carbs_g' => $data['carbs_g'] ?? null,
             'fat_g' => $data['fat_g'] ?? null,
             'preparation_time_min' => $data['preparation_time_min'] ?? null,
-            'is_featured' => !empty($data['is_featured']),
+            'is_featured' => ! empty($data['is_featured']),
             'is_available' => true,
             'sort_order' => (int) (Product::where('category_id', $data['category_id'])->max('sort_order') ?? 0) + 1,
         ]);
 
-        if (!empty($data['allergens'])) {
+        if (! empty($data['allergens'])) {
             $product->allergens()->sync($data['allergens']);
         }
 
-        // Initialize default standard portion variation
-        ProductVariation::create([
-            'product_id' => $product->id,
-            'name' => 'Standard Portion',
-            'price' => $data['price'],
-            'is_default' => true,
-        ]);
+        if (! empty($data['variations']) && is_array($data['variations'])) {
+            $hasDefault = false;
+            foreach ($data['variations'] as $idx => $vData) {
+                if (empty($vData['name'])) {
+                    continue;
+                }
+                $isDef = ! empty($vData['is_default']) || (! $hasDefault && $idx === 0);
+                if ($isDef) {
+                    $hasDefault = true;
+                }
+                $varName = trim($vData['name']);
+                $hyName = ! empty($vData['hy_name']) ? trim($vData['hy_name']) : (! empty($vData['name_translations']['hy']) ? trim($vData['name_translations']['hy']) : $varName);
+                $ruName = ! empty($vData['ru_name']) ? trim($vData['ru_name']) : (! empty($vData['name_translations']['ru']) ? trim($vData['name_translations']['ru']) : $varName);
+
+                ProductVariation::create([
+                    'product_id' => $product->id,
+                    'name' => $varName,
+                    'name_translations' => [
+                        'en' => $varName,
+                        'hy' => $hyName,
+                        'ru' => $ruName,
+                    ],
+                    'price' => (float) ($vData['price'] ?? $data['price']),
+                    'is_default' => $isDef,
+                ]);
+            }
+        } else {
+            // Initialize default standard portion variation
+            ProductVariation::create([
+                'product_id' => $product->id,
+                'name' => 'Standard Portion',
+                'name_translations' => [
+                    'en' => 'Standard Portion',
+                    'hy' => 'Ստանդարտ չափաբաժին',
+                    'ru' => 'Стандартная порция',
+                ],
+                'price' => $data['price'],
+                'is_default' => true,
+            ]);
+        }
 
         return $product;
     }
@@ -132,9 +165,9 @@ class MenuManagementService
         );
 
         // If a new image was set and the old image was stored locally, purge the old file
-        if ($oldImage && $imageUrl !== $oldImage && !str_starts_with($oldImage, 'http://') && !str_starts_with($oldImage, 'https://')) {
+        if ($oldImage && $imageUrl !== $oldImage && ! str_starts_with($oldImage, 'http://') && ! str_starts_with($oldImage, 'https://')) {
             $oldPath = ltrim(str_replace('/storage/', '', $oldImage), '/');
-            if (!empty($oldPath) && Storage::disk('public')->exists($oldPath)) {
+            if (! empty($oldPath) && Storage::disk('public')->exists($oldPath)) {
                 Storage::disk('public')->delete($oldPath);
             }
         }
@@ -164,7 +197,7 @@ class MenuManagementService
             'carbs_g' => $data['carbs_g'] ?? null,
             'fat_g' => $data['fat_g'] ?? null,
             'preparation_time_min' => $data['preparation_time_min'] ?? null,
-            'is_featured' => !empty($data['is_featured']),
+            'is_featured' => ! empty($data['is_featured']),
         ];
 
         if (array_key_exists('is_available', $data)) {
@@ -173,10 +206,69 @@ class MenuManagementService
 
         $product->update($updatePayload);
 
-        if (!empty($data['allergens'])) {
+        if (! empty($data['allergens'])) {
             $product->allergens()->sync($data['allergens']);
         } else {
             $product->allergens()->detach();
+        }
+
+        if (array_key_exists('variations', $data) && is_array($data['variations'])) {
+            $keptIds = [];
+            $hasDefault = false;
+            foreach ($data['variations'] as $v) {
+                if (! empty($v['is_default'])) {
+                    $hasDefault = true;
+                    break;
+                }
+            }
+
+            foreach ($data['variations'] as $idx => $varData) {
+                if (empty($varData['name'])) {
+                    continue;
+                }
+                $isDef = ! empty($varData['is_default']) || (! $hasDefault && $idx === 0);
+                if ($isDef) {
+                    $hasDefault = true;
+                }
+
+                $varName = trim($varData['name']);
+                $hyName = ! empty($varData['hy_name']) ? trim($varData['hy_name']) : (! empty($varData['name_translations']['hy']) ? trim($varData['name_translations']['hy']) : $varName);
+                $ruName = ! empty($varData['ru_name']) ? trim($varData['ru_name']) : (! empty($varData['name_translations']['ru']) ? trim($varData['name_translations']['ru']) : $varName);
+
+                $transData = [
+                    'en' => $varName,
+                    'hy' => $hyName,
+                    'ru' => $ruName,
+                ];
+
+                $varId = ! empty($varData['id']) ? (int) $varData['id'] : null;
+                $existing = $varId ? ProductVariation::where('product_id', $product->id)->find($varId) : null;
+
+                if ($existing) {
+                    $existing->update([
+                        'name' => $varName,
+                        'name_translations' => $transData,
+                        'price' => (float) ($varData['price'] ?? $product->price),
+                        'is_default' => $isDef,
+                    ]);
+                    $keptIds[] = $existing->id;
+                } else {
+                    $newVar = ProductVariation::create([
+                        'product_id' => $product->id,
+                        'name' => $varName,
+                        'name_translations' => $transData,
+                        'price' => (float) ($varData['price'] ?? $product->price),
+                        'is_default' => $isDef,
+                    ]);
+                    $keptIds[] = $newVar->id;
+                }
+            }
+
+            if (! empty($keptIds)) {
+                ProductVariation::where('product_id', $product->id)
+                    ->whereNotIn('id', $keptIds)
+                    ->delete();
+            }
         }
 
         return $product;
@@ -187,7 +279,8 @@ class MenuManagementService
      */
     public function toggleProductAvailability(Product $product): bool
     {
-        $product->update(['is_available' => !$product->is_available]);
+        $product->update(['is_available' => ! $product->is_available]);
+
         return (bool) $product->is_available;
     }
 
@@ -224,10 +317,11 @@ class MenuManagementService
     {
         if ($imageFile && $imageFile->isValid()) {
             $path = $imageFile->store('products', 'public');
-            return '/storage/' . $path;
+
+            return '/storage/'.$path;
         }
 
-        if (!empty($fallbackUrl)) {
+        if (! empty($fallbackUrl)) {
             return $fallbackUrl;
         }
 

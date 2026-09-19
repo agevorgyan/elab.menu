@@ -4,6 +4,7 @@ return [
     'mins' => 'mins',
     'allergens' => 'Allergens:',
     'choose_portion' => 'Choose Portion / Option:',
+    'options_available' => 'options',
     'quantity' => 'Quantity',
     'add_to_cart' => 'Add to Order',
     'cart' => 'Cart',
@@ -47,10 +48,15 @@ return [
     'payment_method' => 'Payment Method',
     'cash' => 'Cash',
     'card' => 'Credit / Debit Card',
-    'service_modal_title' => 'Table Service',
-    'service_modal_desc' => 'Select a service request for your table',
+    'service_modal_title' => 'Service Call',
+    'service_modal_desc' => 'Select the service you require',
     'cancel' => 'Cancel',
     'send' => 'Send',
+    'subtotal' => 'Subtotal',
+    'total_to_pay' => 'Total Amount',
+    'items_count' => 'items',
+    'fixed_qr' => 'Locked by QR',
+    'fixed_qr_notice' => 'Table number is locked by QR code and cannot be modified',
 
     // Bottom Navigation
     'nav_home' => 'Menu',
@@ -91,4 +97,15 @@ return [
     'phone' => 'Phone',
     'contact_whatsapp' => 'Message on WhatsApp',
     'call_phone' => 'Call Us',
+
+    // Delivery & Order Types
+    'order_type' => 'Order Type',
+    'dine_in' => 'Dine-in',
+    'delivery' => 'Delivery',
+    'delivery_address' => 'Delivery Address',
+    'delivery_address_placeholder' => 'City, street, building, apt...',
+    'order_delivery' => 'Order Delivery',
+    'order_delivery_via_whatsapp' => 'Order Delivery via WhatsApp',
+    'delivery_address_required' => 'Please provide a delivery address',
+    'delivery_phone_required' => 'Phone number is required for delivery',
 ];

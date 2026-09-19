@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnalyticsLog;
-use App\Models\Order;
 use App\Models\OrderItem;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
@@ -16,7 +15,7 @@ class AnalyticsController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
-        
+
         $days = $request->get('range', 7);
         $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
 

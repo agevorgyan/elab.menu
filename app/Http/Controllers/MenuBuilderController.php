@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\Allergen;
-use App\Models\Location;
-use App\Services\MenuManagementService;
 use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Models\Allergen;
+use App\Models\Category;
+use App\Models\Location;
+use App\Models\Product;
+use App\Services\MenuManagementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,7 +27,7 @@ class MenuBuilderController extends Controller
             ->with(['products.variations', 'products.allergens', 'products.overrides'])
             ->orderBy('sort_order', 'asc')
             ->get();
-            
+
         $allergens = Allergen::all();
         $locations = $vendor->locations;
 
@@ -59,6 +59,7 @@ class MenuBuilderController extends Controller
         abort_if($category->vendor_id !== auth()->user()->vendor_id, 403);
 
         $this->menuService->deleteCategory($category);
+
         return back()->with('success', 'Category deleted successfully.');
     }
 
@@ -106,7 +107,7 @@ class MenuBuilderController extends Controller
         ]);
 
         $location = Location::find($validated['location_id']);
-        abort_if(!$location || $location->vendor_id !== auth()->user()->vendor_id, 403);
+        abort_if(! $location || $location->vendor_id !== auth()->user()->vendor_id, 403);
 
         $this->menuService->saveLocationOverride($product, $validated);
 
@@ -118,6 +119,7 @@ class MenuBuilderController extends Controller
         abort_if($product->vendor_id !== auth()->user()->vendor_id, 403);
 
         $this->menuService->deleteProduct($product);
+
         return back()->with('success', 'Product deleted successfully.');
     }
 }

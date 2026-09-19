@@ -17,11 +17,15 @@ class WaiterCallTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor1;
+
     protected Location $location1;
+
     protected User $user1;
 
     protected Vendor $vendor2;
+
     protected Location $location2;
+
     protected User $user2;
 
     protected function setUp(): void

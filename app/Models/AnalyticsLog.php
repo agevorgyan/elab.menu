@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AnalyticsLog extends Model
 {
-    use HasFactory, BelongsToVendor;
+    use BelongsToVendor, HasFactory;
 
     protected $fillable = [
         'vendor_id',

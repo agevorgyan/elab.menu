@@ -7,13 +7,14 @@ use App\Http\Requests\SubmitOrderRequest;
 class CreateOrderDTO
 {
     /**
-     * @param OrderItemDTO[] $items
+     * @param  OrderItemDTO[]  $items
      */
     public function __construct(
         public readonly int $locationId,
         public readonly string $type,
         public readonly array $items,
         public readonly ?string $tableNumber = null,
+        public readonly ?string $deliveryAddress = null,
         public readonly ?string $customerName = null,
         public readonly ?string $customerPhone = null,
         public readonly ?string $customerEmail = null,
@@ -41,16 +42,17 @@ class CreateOrderDTO
 
         return new self(
             locationId: (int) $data['location_id'],
-            type: !empty($data['type']) ? (string) $data['type'] : 'dine_in',
+            type: ! empty($data['type']) ? (string) $data['type'] : 'dine_in',
             items: $items,
-            tableNumber: !empty($data['table_number']) ? trim((string) $data['table_number']) : null,
-            customerName: !empty($data['customer_name']) ? trim((string) $data['customer_name']) : null,
-            customerPhone: !empty($data['customer_phone']) ? trim((string) $data['customer_phone']) : null,
-            customerEmail: !empty($data['customer_email']) ? strtolower(trim((string) $data['customer_email'])) : null,
-            customerBirthdate: !empty($data['customer_birthdate']) ? trim((string) $data['customer_birthdate']) : null,
+            tableNumber: ! empty($data['table_number']) ? trim((string) $data['table_number']) : null,
+            deliveryAddress: ! empty($data['delivery_address']) ? trim((string) $data['delivery_address']) : null,
+            customerName: ! empty($data['customer_name']) ? trim((string) $data['customer_name']) : null,
+            customerPhone: ! empty($data['customer_phone']) ? trim((string) $data['customer_phone']) : null,
+            customerEmail: ! empty($data['customer_email']) ? strtolower(trim((string) $data['customer_email'])) : null,
+            customerBirthdate: ! empty($data['customer_birthdate']) ? trim((string) $data['customer_birthdate']) : null,
             marketingOptIn: filter_var($data['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN),
-            notes: !empty($data['notes']) ? trim((string) $data['notes']) : null,
-            paymentMethod: !empty($data['payment_method']) ? trim((string) $data['payment_method']) : null,
+            notes: ! empty($data['notes']) ? trim((string) $data['notes']) : null,
+            paymentMethod: ! empty($data['payment_method']) ? trim((string) $data['payment_method']) : null,
         );
     }
 
@@ -62,8 +64,9 @@ class CreateOrderDTO
         return [
             'location_id' => $this->locationId,
             'type' => $this->type,
-            'items' => array_map(fn(OrderItemDTO $item) => $item->toArray(), $this->items),
+            'items' => array_map(fn (OrderItemDTO $item) => $item->toArray(), $this->items),
             'table_number' => $this->tableNumber,
+            'delivery_address' => $this->deliveryAddress,
             'customer_name' => $this->customerName,
             'customer_phone' => $this->customerPhone,
             'customer_email' => $this->customerEmail,

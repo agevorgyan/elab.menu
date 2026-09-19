@@ -9,7 +9,6 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Models\MenuTemplate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +17,9 @@ class OrderTrackerTest extends TestCase
     use RefreshDatabase;
 
     private Vendor $vendor;
+
     private Location $location;
+
     private Product $product;
 
     protected function setUp(): void

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\SubscriptionPlan;
 use App\Models\Vendor;
 use Database\Seeders\SubscriptionPlanSeeder;
@@ -16,8 +17,11 @@ class StorefrontLocalizationTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected Location $location;
+
     protected Category $category;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -142,5 +146,50 @@ class StorefrontLocalizationTest extends TestCase
             $response->assertSee(__('menu.order_via_whatsapp', [], 'ru'));
             $response->assertSee(__('menu.order_summary', [], 'ru'));
         }
+    }
+
+    public function test_storefront_renders_translated_variations_for_different_languages(): void
+    {
+        ProductVariation::create([
+            'product_id' => $this->product->id,
+            'name' => 'Single Serving',
+            'name_translations' => [
+                'en' => 'Single Serving',
+                'hy' => 'Մեկ բաժին',
+                'ru' => 'Одинарная порция',
+            ],
+            'price' => 2000,
+            'is_default' => true,
+        ]);
+
+        ProductVariation::create([
+            'product_id' => $this->product->id,
+            'name' => 'Double Serving',
+            'name_translations' => [
+                'en' => 'Double Serving',
+                'hy' => 'Կրկնակի բաժին',
+                'ru' => 'Двойная порция',
+            ],
+            'price' => 3500,
+            'is_default' => false,
+        ]);
+
+        // Armenian storefront
+        $responseHy = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug, 'lang' => 'hy']));
+        $responseHy->assertStatus(200);
+        $responseHy->assertSee('Մեկ բաժին');
+        $responseHy->assertSee('Կրկնակի բաժին');
+
+        // Russian storefront
+        $responseRu = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug, 'lang' => 'ru']));
+        $responseRu->assertStatus(200);
+        $responseRu->assertSee('Одинарная порция');
+        $responseRu->assertSee('Двойная порция');
+
+        // English storefront
+        $responseEn = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug, 'lang' => 'en']));
+        $responseEn->assertStatus(200);
+        $responseEn->assertSee('Single Serving');
+        $responseEn->assertSee('Double Serving');
     }
 }

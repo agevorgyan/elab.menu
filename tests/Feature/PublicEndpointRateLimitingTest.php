@@ -7,7 +7,6 @@ use App\Models\Location;
 use App\Models\Product;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class PublicEndpointRateLimitingTest extends TestCase
@@ -15,7 +14,9 @@ class PublicEndpointRateLimitingTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected Location $location;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -77,7 +78,7 @@ class PublicEndpointRateLimitingTest extends TestCase
         for ($i = 1; $i <= 15; $i++) {
             $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
                 'location_id' => $this->location->id,
-                'table_number' => 'Table ' . $i,
+                'table_number' => 'Table '.$i,
                 'type' => 'dine_in',
                 'customer_name' => 'Spammer Test',
                 'customer_phone' => '091234567',
@@ -85,8 +86,8 @@ class PublicEndpointRateLimitingTest extends TestCase
                     [
                         'product_id' => $this->product->id,
                         'quantity' => 1,
-                    ]
-                ]
+                    ],
+                ],
             ]);
             $response->assertStatus(200);
         }
@@ -100,8 +101,8 @@ class PublicEndpointRateLimitingTest extends TestCase
                 [
                     'product_id' => $this->product->id,
                     'quantity' => 1,
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $response16->assertStatus(429);

@@ -21,13 +21,13 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('vendor.' . $this->order->vendor_id),
-            new Channel('order.' . $this->order->order_number),
+            new PrivateChannel('vendor.'.$this->order->vendor_id),
+            new Channel('order.'.$this->order->order_number),
         ];
     }
 
@@ -61,8 +61,8 @@ class OrderStatusUpdated implements ShouldBroadcastNow
             'id' => $this->order->id,
             'order_number' => $this->order->order_number,
             'status' => $this->order->status,
-            'status_label' => __('menu.status_' . $this->order->status),
-            'status_desc' => __('menu.status_desc_' . $this->order->status),
+            'status_label' => __('menu.status_'.$this->order->status),
+            'status_desc' => __('menu.status_desc_'.$this->order->status),
             'status_step' => $meta['step'],
             'status_percent' => $meta['percent'],
         ];

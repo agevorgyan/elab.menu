@@ -16,8 +16,11 @@ class StorefrontThemeRenderingTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected Location $location;
+
     protected Category $category;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -135,7 +138,7 @@ class StorefrontThemeRenderingTest extends TestCase
 
             $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug]));
             $response->assertStatus(200);
-            $response->assertSee('<style>' . strip_tags($customCss) . '</style>', false);
+            $response->assertSee('<style>'.strip_tags($customCss).'</style>', false);
         }
     }
 }

@@ -18,15 +18,23 @@ class FormRequestValidationTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor1;
+
     protected User $user1;
+
     protected Location $location1;
+
     protected Category $category1;
+
     protected Product $product1;
 
     protected Vendor $vendor2;
+
     protected User $user2;
+
     protected Location $location2;
+
     protected Category $category2;
+
     protected Product $product2;
 
     protected function setUp(): void

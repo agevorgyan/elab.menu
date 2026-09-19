@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\Location;
-use App\Models\WaiterCall;
+use App\Events\OrderStatusUpdated;
 use App\Http\Requests\UpdateOrderStatusRequest;
+use App\Models\Location;
+use App\Models\Order;
+use App\Models\WaiterCall;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -107,7 +108,7 @@ class OrderController extends Controller
         $order->update(['status' => $validated['status']]);
 
         // Broadcast real-time status update for kitchen screens & customer tracker
-        event(new \App\Events\OrderStatusUpdated($order));
+        event(new OrderStatusUpdated($order));
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'status' => $order->status, 'message' => "Order #{$order->order_number} updated to {$order->status}."]);
@@ -121,7 +122,7 @@ class OrderController extends Controller
         abort_if($waiterCall->vendor_id !== auth()->user()->vendor_id, 403);
 
         $status = $request->input('status', 'attended');
-        if (!in_array($status, ['pending', 'attended', 'cancelled'])) {
+        if (! in_array($status, ['pending', 'attended', 'cancelled'])) {
             $status = 'attended';
         }
 

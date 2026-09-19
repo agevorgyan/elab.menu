@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vendor;
+use App\Models\AnalyticsLog;
 use App\Models\Location;
 use App\Models\Order;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
-use App\Models\AnalyticsLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class VendorAdminController extends Controller
 {
@@ -18,8 +19,8 @@ class VendorAdminController extends Controller
     {
         $user = Auth::user();
         $vendor = $user->vendor;
-        
-        if (!$vendor) {
+
+        if (! $vendor) {
             abort(404, 'Vendor not found for user.');
         }
 
@@ -66,6 +67,7 @@ class VendorAdminController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $locations = $vendor->locations;
+
         return view('admin.locations', compact('vendor', 'locations'));
     }
 
@@ -85,7 +87,7 @@ class VendorAdminController extends Controller
         Location::create([
             'vendor_id' => $vendor->id,
             'name' => $validated['name'],
-            'slug' => \Illuminate\Support\Str::slug($validated['name']),
+            'slug' => Str::slug($validated['name']),
             'address' => $validated['address'] ?? null,
             'phone' => $validated['phone'] ?? null,
             'whatsapp_number' => $validated['whatsapp_number'] ?? null,
@@ -102,6 +104,7 @@ class VendorAdminController extends Controller
         $vendor = Auth::user()->vendor;
         $team = User::where('vendor_id', $vendor->id)->get();
         $locations = $vendor->locations;
+
         return view('admin.team', compact('vendor', 'team', 'locations'));
     }
 
@@ -117,9 +120,9 @@ class VendorAdminController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        if (!empty($validated['location_id'])) {
+        if (! empty($validated['location_id'])) {
             $loc = Location::find($validated['location_id']);
-            if (!$loc || $loc->vendor_id !== $vendor->id) {
+            if (! $loc || $loc->vendor_id !== $vendor->id) {
                 abort(403, 'Unauthorized location assignment.');
             }
         }
@@ -140,7 +143,8 @@ class VendorAdminController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $vendor->load('plan', 'payments');
-        $allPlans = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        $allPlans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+
         return view('admin.subscription.index', compact('vendor', 'allPlans'));
     }
 }

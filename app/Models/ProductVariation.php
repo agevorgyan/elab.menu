@@ -27,4 +27,17 @@ class ProductVariation extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Get the translated name of the variation based on the current or specified locale.
+     */
+    public function getTranslatedName(?string $lang = null): string
+    {
+        $lang = $lang ?: app()->getLocale();
+        if ($this->name_translations && isset($this->name_translations[$lang]) && ! empty($this->name_translations[$lang])) {
+            return $this->name_translations[$lang];
+        }
+
+        return $this->name;
+    }
 }

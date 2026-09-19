@@ -9,7 +9,6 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -18,8 +17,11 @@ class CompositeIndexesAndSoftDeletesTest extends TestCase
     use RefreshDatabase;
 
     protected Vendor $vendor;
+
     protected Location $location;
+
     protected Category $category;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -56,7 +58,7 @@ class CompositeIndexesAndSoftDeletesTest extends TestCase
     public function test_composite_indexes_exist_on_orders_and_analytics_logs_tables(): void
     {
         $ordersIndexes = Schema::getIndexes('orders');
-        $ordersIndexColumns = array_map(fn($idx) => $idx['columns'], $ordersIndexes);
+        $ordersIndexColumns = array_map(fn ($idx) => $idx['columns'], $ordersIndexes);
 
         // Check ['vendor_id', 'created_at'] index on orders
         $hasVendorCreatedAt = false;
@@ -80,7 +82,7 @@ class CompositeIndexesAndSoftDeletesTest extends TestCase
 
         // Check ['vendor_id', 'visit_date'] index on analytics_logs
         $analyticsIndexes = Schema::getIndexes('analytics_logs');
-        $analyticsIndexColumns = array_map(fn($idx) => $idx['columns'], $analyticsIndexes);
+        $analyticsIndexColumns = array_map(fn ($idx) => $idx['columns'], $analyticsIndexes);
 
         $hasVendorVisitDate = false;
         foreach ($analyticsIndexColumns as $cols) {

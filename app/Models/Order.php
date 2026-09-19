@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    use HasFactory, BelongsToVendor, SoftDeletes;
+    use BelongsToVendor, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'vendor_id',
@@ -17,6 +17,7 @@ class Order extends Model
         'customer_id',
         'order_number',
         'table_number',
+        'delivery_address',
         'type',
         'total_amount',
         'status',

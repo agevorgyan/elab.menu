@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vendor;
 use App\Models\Location;
-use App\Models\Order;
-use App\Models\User;
 use App\Models\MenuTemplate;
-use App\Models\SubscriptionPlan;
+use App\Models\Order;
 use App\Models\SubscriptionPayment;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Models\Vendor;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class SuperAdminController extends Controller
 {
@@ -22,7 +22,7 @@ class SuperAdminController extends Controller
         $totalLocations = Location::count();
         $totalOrders = Order::count();
         $totalRevenue = Order::sum('total_amount');
-        
+
         $recentVendors = Vendor::withCount('locations')->latest()->take(5)->get();
         $templates = MenuTemplate::withCount('vendors')->get();
         $plans = SubscriptionPlan::withCount('vendors')->get();
@@ -43,6 +43,7 @@ class SuperAdminController extends Controller
         $vendors = Vendor::with('locations', 'menuTemplate', 'plan')->latest()->get();
         $templates = MenuTemplate::all();
         $plans = SubscriptionPlan::where('is_active', true)->get();
+
         return view('superadmin.vendors', compact('vendors', 'templates', 'plans'));
     }
 
@@ -59,12 +60,12 @@ class SuperAdminController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first() 
+        $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first()
             ?? SubscriptionPlan::first();
 
         $vendor = Vendor::create([
             'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']) . '-' . Str::random(4),
+            'slug' => Str::slug($validated['name']).'-'.Str::random(4),
             'type' => $validated['type'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
@@ -104,7 +105,8 @@ class SuperAdminController extends Controller
 
     public function toggleStatus(Vendor $vendor)
     {
-        $vendor->update(['is_active' => !$vendor->is_active]);
+        $vendor->update(['is_active' => ! $vendor->is_active]);
+
         return back()->with('success', 'Vendor status updated successfully.');
     }
 
@@ -112,6 +114,7 @@ class SuperAdminController extends Controller
     public function plansIndex()
     {
         $plans = SubscriptionPlan::withCount('vendors')->orderBy('sort_order', 'asc')->get();
+
         return view('superadmin.plans.index', compact('plans'));
     }
 
@@ -178,7 +181,8 @@ class SuperAdminController extends Controller
 
     public function togglePlan(SubscriptionPlan $plan)
     {
-        $plan->update(['is_active' => !$plan->is_active]);
+        $plan->update(['is_active' => ! $plan->is_active]);
+
         return back()->with('success', 'Փաթեթի կարգավիճակը թարմացվեց։');
     }
 
@@ -188,6 +192,7 @@ class SuperAdminController extends Controller
             return back()->with('error', 'Հնարավոր չէ ջնջել փաթեթը, քանի որ այն կցված է վենդորների։');
         }
         $plan->delete();
+
         return back()->with('success', 'Փաթեթը հաջողությամբ ջնջվեց։');
     }
 
@@ -196,6 +201,7 @@ class SuperAdminController extends Controller
     {
         $vendors = Vendor::with('plan', 'payments')->latest()->get();
         $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+
         return view('superadmin.subscriptions.index', compact('vendors', 'plans'));
     }
 
@@ -240,7 +246,7 @@ class SuperAdminController extends Controller
             'amount' => $validated['amount'],
             'currency' => $vendor->currency ?? 'AMD',
             'payment_method' => $validated['payment_method'],
-            'invoice_number' => $validated['invoice_number'] ?? 'INV-' . strtoupper(Str::random(6)),
+            'invoice_number' => $validated['invoice_number'] ?? 'INV-'.strtoupper(Str::random(6)),
             'period_start' => $validated['period_start'],
             'period_end' => $validated['period_end'],
             'status' => $validated['status'],

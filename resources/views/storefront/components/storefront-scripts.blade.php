@@ -25,6 +25,8 @@
             customerName: '',
             customerPhone: '',
             customerBirthdate: '',
+            orderType: 'dine_in',
+            deliveryAddress: '',
             isTableFixed: {{ !empty($table) ? 'true' : 'false' }},
             tableNumber: customConfig.tableNumber !== undefined ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
             showWaiterModal: false,
@@ -176,68 +178,94 @@
                 return this.cart.reduce((a, b) => a + (b.price * b.qty), 0);
             },
 
-            async submitOrder(type) {
+            async submitOrder(channel) {
                 if (this.cart.length === 0) return;
-                const res = await fetch('{{ route("client.order.submit", ["vendor_slug" => $vendor->slug]) }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({
-                        location_id: {{ $location?->id ?? 1 }},
-                        table_number: this.tableNumber || '{{ $table ?? "Table 4" }}',
-                        type: type,
-                        customer_name: this.customerName || 'Guest',
-                        customer_phone: this.customerPhone || null,
-                        customer_email: this.customerEmail || null,
-                        customer_birthdate: this.customerBirthdate || null,
-                        marketing_opt_in: this.marketingOptIn,
-                        notes: this.orderNotes,
-                        items: this.cart.map(c => ({
-                            product_id: c.id,
-                            variation_id: c.variation_id || null,
-                            variation_name: c.variation_name || null,
-                            quantity: c.qty
-                        }))
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const orderItems = this.cart.map(c => ({
-                        name: c.name,
-                        variation_name: c.variation_name,
-                        quantity: c.qty,
-                        price: c.price,
-                        subtotal: c.price * c.qty
-                    }));
 
-                    this.activeOrder = {
-                        id: data.order_id || null,
-                        order_number: data.order_number,
-                        status: data.status || 'pending',
-                        status_step: 1,
-                        status_percent: 25,
-                        status_label: data.status_label || '{{ __('menu.status_pending') }}',
-                        status_desc: '{{ __('menu.status_desc_pending') }}',
-                        status_icon: 'fa-solid fa-clock',
-                        total_amount: data.total_amount,
-                        table_number: this.tableNumber || '{{ $table ? "Table " . $table : "" }}',
-                        currency: '{{ $vendor->currency }}',
-                        created_at_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        created_at_human: 'հենց նոր',
-                        items: orderItems
-                    };
-                    this.hideTrackerPill = false;
-                    this.saveActiveOrderToStorage();
-                    this.cart = [];
-                    this.showCartModal = false;
-                    this.startOrderPolling();
-
-                    if (data.whatsapp_url && type === 'whatsapp') {
-                        window.location.href = data.whatsapp_url;
-                    } else {
-                        this.showOrderTracker = true;
-                        const successMsg = '{{ __('menu.order_submitted_prefix') }}' + data.order_number + '{{ __('menu.order_submitted_suffix') }}';
-                        this.triggerToast(successMsg, 'success', 'fa-solid fa-circle-check');
+                // Client-side validation for delivery orders
+                if (this.orderType === 'delivery') {
+                    if (!this.deliveryAddress || !this.deliveryAddress.trim()) {
+                        this.triggerToast('{{ __('menu.delivery_address_required') }}', 'remove', 'fa-solid fa-circle-exclamation');
+                        return;
                     }
+                    if (!this.customerPhone || !this.customerPhone.trim()) {
+                        this.triggerToast('{{ __('menu.delivery_phone_required') }}', 'remove', 'fa-solid fa-phone');
+                        return;
+                    }
+                }
+
+                const resolvedType = this.orderType === 'delivery'
+                    ? 'delivery'
+                    : (channel === 'whatsapp' ? 'whatsapp' : 'dine_in');
+
+                try {
+                    const res = await fetch('{{ route("client.order.submit", ["vendor_slug" => $vendor->slug]) }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({
+                            location_id: {{ $location?->id ?? 1 }},
+                            table_number: this.orderType === 'delivery' ? null : (this.tableNumber || '{{ $table ?? "Table 4" }}'),
+                            delivery_address: this.orderType === 'delivery' ? this.deliveryAddress.trim() : null,
+                            type: resolvedType,
+                            customer_name: this.customerName || 'Guest',
+                            customer_phone: this.customerPhone || null,
+                            customer_email: this.customerEmail || null,
+                            customer_birthdate: this.customerBirthdate || null,
+                            marketing_opt_in: this.marketingOptIn,
+                            notes: this.orderNotes,
+                            items: this.cart.map(c => ({
+                                product_id: c.id,
+                                variation_id: c.variation_id || null,
+                                variation_name: c.variation_name || null,
+                                quantity: c.qty
+                            }))
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const orderItems = this.cart.map(c => ({
+                            name: c.name,
+                            variation_name: c.variation_name,
+                            quantity: c.qty,
+                            price: c.price,
+                            subtotal: c.price * c.qty
+                        }));
+
+                        this.activeOrder = {
+                            id: data.order_id || null,
+                            order_number: data.order_number,
+                            status: data.status || 'pending',
+                            status_step: 1,
+                            status_percent: 25,
+                            status_label: data.status_label || '{{ __('menu.status_pending') }}',
+                            status_desc: '{{ __('menu.status_desc_pending') }}',
+                            status_icon: 'fa-solid fa-clock',
+                            total_amount: data.total_amount,
+                            order_type: this.orderType,
+                            delivery_address: this.orderType === 'delivery' ? this.deliveryAddress : null,
+                            table_number: this.orderType === 'delivery' ? '{{ __('menu.delivery') }}' : (this.tableNumber || '{{ $table ? "Table " . $table : "" }}'),
+                            currency: '{{ $vendor->currency }}',
+                            created_at_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            created_at_human: 'հենց նոր',
+                            items: orderItems
+                        };
+                        this.hideTrackerPill = false;
+                        this.saveActiveOrderToStorage();
+                        this.cart = [];
+                        this.showCartModal = false;
+                        this.startOrderPolling();
+
+                        if (data.whatsapp_url && channel === 'whatsapp') {
+                            window.location.href = data.whatsapp_url;
+                        } else {
+                            this.showOrderTracker = true;
+                            const successMsg = '{{ __('menu.order_submitted_prefix') }}' + data.order_number + '{{ __('menu.order_submitted_suffix') }}';
+                            this.triggerToast(successMsg, 'success', 'fa-solid fa-circle-check');
+                        }
+                    } else {
+                        this.triggerToast(data.message || 'Սխալ պատվերն ուղարկելիս', 'remove', 'fa-solid fa-circle-xmark');
+                    }
+                } catch (e) {
+                    this.triggerToast('Ցանցային սխալ', 'remove', 'fa-solid fa-triangle-exclamation');
                 }
             },
 

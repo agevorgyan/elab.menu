@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Category;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,13 +14,13 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        if (!Auth::check() || !Auth::user()->vendor_id) {
+        if (! Auth::check() || ! Auth::user()->vendor_id) {
             return false;
         }
 
         if ($this->filled('category_id')) {
             $category = Category::withoutGlobalScopes()->find($this->input('category_id'));
-            if (!$category || $category->vendor_id !== Auth::user()->vendor_id) {
+            if (! $category || $category->vendor_id !== Auth::user()->vendor_id) {
                 return false;
             }
         }
@@ -30,7 +31,7 @@ class StoreProductRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -53,6 +54,14 @@ class StoreProductRequest extends FormRequest
             'fat_g' => 'nullable|numeric',
             'preparation_time_min' => 'nullable|integer',
             'is_featured' => 'nullable|boolean',
+            'variations' => 'nullable|array',
+            'variations.*.id' => 'nullable|integer',
+            'variations.*.name' => 'nullable|string|max:255',
+            'variations.*.hy_name' => 'nullable|string|max:255',
+            'variations.*.ru_name' => 'nullable|string|max:255',
+            'variations.*.name_translations' => 'nullable|array',
+            'variations.*.price' => 'nullable|numeric|min:0',
+            'variations.*.is_default' => 'nullable',
         ];
     }
 }

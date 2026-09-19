@@ -25,8 +25,8 @@ class CustomerController extends Controller
             session(['active_location_id' => $activeLocationId]);
         }
 
-        $selectedLocation = ($activeLocationId && $activeLocationId !== 'all') 
-            ? $locations->firstWhere('id', $activeLocationId) 
+        $selectedLocation = ($activeLocationId && $activeLocationId !== 'all')
+            ? $locations->firstWhere('id', $activeLocationId)
             : null;
 
         $search = $request->get('search');
@@ -37,17 +37,17 @@ class CustomerController extends Controller
         if ($activeLocationId && $activeLocationId !== 'all') {
             $query->where(function ($q) use ($activeLocationId) {
                 $q->where('location_id', $activeLocationId)
-                  ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
-                      $oq->where('location_id', $activeLocationId);
-                  });
+                    ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
+                        $oq->where('location_id', $activeLocationId);
+                    });
             });
         }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -64,9 +64,9 @@ class CustomerController extends Controller
         if ($activeLocationId && $activeLocationId !== 'all') {
             $statsQuery->where(function ($q) use ($activeLocationId) {
                 $q->where('location_id', $activeLocationId)
-                  ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
-                      $oq->where('location_id', $activeLocationId);
-                  });
+                    ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
+                        $oq->where('location_id', $activeLocationId);
+                    });
             });
         }
 
@@ -118,6 +118,8 @@ class CustomerController extends Controller
             'location_id' => 'nullable|exists:locations,id',
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
+            'birthdate' => 'nullable|date',
+            'address' => 'nullable|string|max:500',
             'notes' => 'nullable|string',
             'marketing_opt_in' => 'nullable|boolean',
         ]);
@@ -143,6 +145,8 @@ class CustomerController extends Controller
             'location_id' => 'nullable|exists:locations,id',
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
+            'birthdate' => 'nullable|date',
+            'address' => 'nullable|string|max:500',
             'notes' => 'nullable|string',
             'marketing_opt_in' => 'nullable|boolean',
         ]);
@@ -160,6 +164,7 @@ class CustomerController extends Controller
         }
 
         $this->customerService->deleteCustomer($customer);
+
         return redirect()->route('admin.customers.index')->with('success', 'Customer record deleted.');
     }
 
@@ -173,22 +178,22 @@ class CustomerController extends Controller
         if ($activeLocationId && $activeLocationId !== 'all') {
             $query->where(function ($q) use ($activeLocationId) {
                 $q->where('location_id', $activeLocationId)
-                  ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
-                      $oq->where('location_id', $activeLocationId);
-                  });
+                    ->orWhereHas('orders', function ($oq) use ($activeLocationId) {
+                        $oq->where('location_id', $activeLocationId);
+                    });
             });
         }
 
         $customers = $query->orderBy('name', 'asc')->get();
 
-        $fileName = 'customers_export_' . date('Y_m_d_His') . '.csv';
+        $fileName = 'customers_export_'.date('Y_m_d_His').'.csv';
 
         $headers = [
-            "Content-type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename={$fileName}",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
+            'Content-type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $callback = function () use ($customers, $vendor) {
@@ -203,12 +208,14 @@ class CustomerController extends Controller
                 'Full Name',
                 'Phone Number',
                 'Email Address',
+                'Birthday',
+                'Address',
                 'Marketing Consent',
                 'Total Orders Count',
                 "Total Spent ({$vendor->currency})",
                 'Last Order Date',
                 'Registration Date',
-                'Notes'
+                'Notes',
             ]);
 
             foreach ($customers as $c) {
@@ -218,12 +225,14 @@ class CustomerController extends Controller
                     $c->name ?? 'Guest',
                     $c->phone ?? '-',
                     $c->email ?? '-',
+                    $c->birthdate ? $c->birthdate->format('Y-m-d') : '-',
+                    $c->address ?? '-',
                     $c->marketing_opt_in ? 'Yes (Opted In)' : 'No',
                     $c->total_orders_count,
                     number_format($c->total_spent, 2, '.', ''),
                     $c->last_order_at ? $c->last_order_at->format('Y-m-d H:i') : '-',
                     $c->created_at->format('Y-m-d H:i'),
-                    $c->notes ?? ''
+                    $c->notes ?? '',
                 ]);
             }
 

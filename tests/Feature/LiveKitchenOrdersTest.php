@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Location;
 use App\Models\Order;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Models\Location;
-use App\Models\SubscriptionPlan;
+use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +18,7 @@ class LiveKitchenOrdersTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\SubscriptionPlanSeeder::class);
+        $this->seed(SubscriptionPlanSeeder::class);
     }
 
     public function test_vendor_can_fetch_live_kitchen_feed(): void

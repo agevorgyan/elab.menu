@@ -108,4 +108,14 @@ return [
     'order_delivery_via_whatsapp' => 'Պատվիրել առաքում WhatsApp-ով',
     'delivery_address_required' => 'Խնդրում ենք լրացնել առաքման հասցեն',
     'delivery_phone_required' => 'Առաքման համար հեռախոսահամարը պարտադիր է',
+
+    // Fees & Delivery Thresholds
+    'service_fee' => 'Սպասարկման վճար',
+    'delivery_fee' => 'Առաքման վճար',
+    'free_delivery' => 'ԱՆՎՃԱՐ',
+    'free_delivery_unlocked' => 'Շնորհավորո՜ւմ ենք, Ձեզ հասանելի է ԱՆՎՃԱՐ ԱՌԱՔՈՒՄ 🎉',
+    'add_more_for_free_delivery' => 'Ավելացրեք ևս',
+    'for_free_delivery' => 'անվճար առաքման համար',
+    'min_delivery_order_warning' => 'Նվազագույն պատվերի գումարը առաքման համար՝',
+    'delivery_disabled_notice' => 'Առաքման ծառայությունը ներկայումս հասանելի չէ',
 ];

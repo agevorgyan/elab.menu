@@ -1,3 +1,15 @@
+@php
+    $displayName = $location?->name ?: $vendor->name;
+    $wifiSsid = $location?->wifi_ssid ?: ($vendor->wifi_ssid ?: ($vendor->name . ' Guest'));
+    $wifiPassword = $location?->wifi_password ?: ($vendor->wifi_password ?: 'guest' . str_pad($vendor->id, 4, '0', STR_PAD_LEFT));
+    $displayAddress = $location?->address ?: ($vendor->operating_address ?: ($vendor->legal_address ?: 'Yerevan, Armenia'));
+    $contactPhone = $location?->phone ?: ($vendor->phone ?: '+374 10 000000');
+    $rawPhone = preg_replace('/[^0-9+]/', '', $contactPhone);
+    $whatsappSource = $location?->whatsapp_number ?: ($vendor->phone ?: '');
+    $whatsappNum = preg_replace('/[^0-9]/', '', $whatsappSource);
+    $displayHours = $location?->working_hours ?: ($vendor->working_hours ?: '10:00 - 23:00 (Ամեն օր / Daily)');
+@endphp
+
 <!-- Restaurant Info & WiFi Modal (Full Screen) -->
 <div x-show="showInfoModal" 
      style="position: fixed; inset: 0; width: 100%; height: 100%; height: 100dvh; background: var(--bg-card); z-index: 200; display: flex; flex-direction: column; overflow: hidden;" 
@@ -22,7 +34,7 @@
                         {{ __('menu.restaurant_info') }}
                     </h3>
                     <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0;">
-                        {{ $vendor->name }} {{ $location ? '• ' . $location->name : '' }}
+                        {{ $displayName }}
                     </p>
                 </div>
             </div>
@@ -50,7 +62,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.65rem 0.85rem; margin-bottom: 0.65rem;">
                     <div>
                         <div style="font-size: 0.72rem; color: var(--text-muted);">SSID (Ցանց)</div>
-                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">{{ $vendor->name }} Guest</div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">{{ $wifiSsid }}</div>
                     </div>
                 </div>
 
@@ -58,11 +70,11 @@
                     <div>
                         <div style="font-size: 0.72rem; color: var(--text-muted);">{{ __('menu.wifi_password') }}</div>
                         <div style="font-weight: 800; font-family: monospace; font-size: 1rem; color: var(--primary); letter-spacing: 0.05em;">
-                            guest{{ str_pad($vendor->id, 4, '0', STR_PAD_LEFT) }}
+                            {{ $wifiPassword }}
                         </div>
                     </div>
                     <button type="button" 
-                            @click="copyWifiPassword('guest{{ str_pad($vendor->id, 4, '0', STR_PAD_LEFT) }}')"
+                            @click="copyWifiPassword('{{ $wifiPassword }}')"
                             style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.45rem 0.85rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
                         <i :class="wifiCopied ? 'fa-solid fa-check text-green-500' : 'fa-regular fa-copy'"></i>
                         <span x-text="wifiCopied ? '{{ __('menu.wifi_copied') }}' : '{{ __('menu.wifi_copy') }}'"></span>
@@ -80,17 +92,12 @@
                     <div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('menu.address') }}</div>
                         <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-top: 0.1rem;">
-                            {{ $location?->address ?? $vendor->operating_address ?? $vendor->legal_address ?? 'Yerevan, Armenia' }}
+                            {{ $displayAddress }}
                         </div>
                     </div>
                 </div>
 
                 <!-- Phone -->
-                @php
-                    $contactPhone = $location?->phone ?? $vendor->phone ?? '+374 10 000000';
-                    $rawPhone = preg_replace('/[^0-9+]/', '', $contactPhone);
-                    $whatsappNum = $location?->whatsapp_number ? preg_replace('/[^0-9]/', '', $location->whatsapp_number) : preg_replace('/[^0-9]/', '', $contactPhone);
-                @endphp
                 <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
                     <div style="width: 34px; height: 34px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; margin-top: 0.1rem;">
                         <i class="fa-solid fa-phone"></i>
@@ -101,9 +108,11 @@
                             {{ $contactPhone }}
                         </div>
                     </div>
-                    <a href="tel:{{ $rawPhone }}" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
-                        <i class="fa-solid fa-phone-flip"></i> {{ __('menu.call_phone') }}
-                    </a>
+                    @if($rawPhone)
+                        <a href="tel:{{ $rawPhone }}" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--primary); padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-phone-flip"></i> {{ __('menu.call_phone') }}
+                        </a>
+                    @endif
                 </div>
 
                 <!-- WhatsApp Direct Chat -->
@@ -132,7 +141,7 @@
                     <div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('menu.working_hours') }}</div>
                         <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-main); margin-top: 0.1rem;">
-                            10:00 - 23:00 (Ամեն օր / Daily)
+                            {{ $displayHours }}
                         </div>
                     </div>
                 </div>

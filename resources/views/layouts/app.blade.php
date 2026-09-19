@@ -485,6 +485,9 @@
                 </a>
 
                 <div class="menu-category">{{ __('Settings & Subscription') }}</div>
+                <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-sliders"></i> {{ __('Կարգավորումներ') }}
+                </a>
                 <a href="{{ route('admin.subscription') }}" class="nav-item {{ request()->routeIs('admin.subscription') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary);"></i> {{ __('Subscription') }}
                 </a>

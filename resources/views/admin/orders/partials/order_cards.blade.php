@@ -96,8 +96,21 @@
                     </div>
                 @endif
 
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: auto;">
                     <div>
+                        @if($order->subtotal > 0 && ($order->service_fee > 0 || $order->delivery_fee > 0 || $order->type === 'delivery'))
+                            <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.15rem; margin-bottom: 0.35rem; line-height: 1.3;">
+                                <div>Ենթագումար՝ <strong>{{ number_format($order->subtotal) }}</strong> {{ $vendor->currency }}</div>
+                                @if($order->service_fee > 0)
+                                    <div style="color: #10b981;">Սպասարկում՝ +{{ number_format($order->service_fee) }} {{ $vendor->currency }}</div>
+                                @endif
+                                @if($order->delivery_fee > 0)
+                                    <div style="color: #3b82f6;">Առաքում՝ +{{ number_format($order->delivery_fee) }} {{ $vendor->currency }}</div>
+                                @elseif($order->type === 'delivery')
+                                    <div style="color: #10b981;">Առաքում՝ ԱՆՎՃԱՐ</div>
+                                @endif
+                            </div>
+                        @endif
                         <div style="font-size: 0.7rem; color: var(--text-muted);">TOTAL AMOUNT</div>
                         <div style="font-size: 1.2rem; font-weight: 800; color: #10b981; font-family: 'Outfit';">
                             {{ number_format($order->total_amount) }} {{ $vendor->currency }}

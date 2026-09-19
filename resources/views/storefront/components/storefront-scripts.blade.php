@@ -25,8 +25,16 @@
             customerName: '',
             customerPhone: '',
             customerBirthdate: '',
-            orderType: 'dine_in',
+            orderType: '{{ $vendor->delivery_enabled ? "dine_in" : "dine_in" }}',
             deliveryAddress: '',
+            serviceFeeEnabled: {{ $vendor->service_fee_enabled ? 'true' : 'false' }},
+            serviceFeeType: '{{ $vendor->service_fee_type ?? "percent" }}',
+            serviceFeeValue: {{ (float) ($vendor->service_fee_value ?? 0) }},
+            serviceFeeMinOrder: {{ (float) ($vendor->service_fee_min_order ?? 0) }},
+            deliveryEnabled: {{ $vendor->delivery_enabled ? 'true' : 'false' }},
+            deliveryFee: {{ (float) ($vendor->delivery_fee ?? 0) }},
+            deliveryMinAmount: {{ (float) ($vendor->delivery_min_amount ?? 0) }},
+            deliveryFreeFrom: {{ $vendor->delivery_free_from !== null ? (float) $vendor->delivery_free_from : 'null' }},
             isTableFixed: {{ !empty($table) ? 'true' : 'false' }},
             tableNumber: customConfig.tableNumber !== undefined ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
             showWaiterModal: false,
@@ -174,8 +182,65 @@
                 return this.cart.reduce((a, b) => a + b.qty, 0);
             },
 
-            get cartTotalPrice() {
+            get cartSubtotal() {
                 return this.cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            },
+
+            get cartTotalPrice() {
+                return this.cartSubtotal;
+            },
+
+            get calculatedServiceFee() {
+                if (this.orderType === 'delivery' || !this.serviceFeeEnabled) {
+                    return 0;
+                }
+                const sub = this.cartSubtotal;
+                if (this.serviceFeeMinOrder > 0 && sub < this.serviceFeeMinOrder) {
+                    return 0;
+                }
+                if (this.serviceFeeType === 'percent') {
+                    return Math.round((sub * this.serviceFeeValue) / 100);
+                }
+                return this.serviceFeeValue;
+            },
+
+            get calculatedDeliveryFee() {
+                if (this.orderType !== 'delivery' || !this.deliveryEnabled) {
+                    return 0;
+                }
+                const sub = this.cartSubtotal;
+                if (this.deliveryFreeFrom !== null && this.deliveryFreeFrom > 0 && sub >= this.deliveryFreeFrom) {
+                    return 0;
+                }
+                return this.deliveryFee;
+            },
+
+            get isDeliveryFree() {
+                return this.orderType === 'delivery' && this.deliveryFreeFrom !== null && this.deliveryFreeFrom > 0 && this.cartSubtotal >= this.deliveryFreeFrom;
+            },
+
+            get freeDeliveryRemaining() {
+                if (this.deliveryFreeFrom === null || this.deliveryFreeFrom <= 0) return 0;
+                return Math.max(0, this.deliveryFreeFrom - this.cartSubtotal);
+            },
+
+            get freeDeliveryProgress() {
+                if (this.deliveryFreeFrom === null || this.deliveryFreeFrom <= 0) return 100;
+                if (this.cartSubtotal >= this.deliveryFreeFrom) return 100;
+                return Math.min(100, Math.round((this.cartSubtotal / this.deliveryFreeFrom) * 100));
+            },
+
+            get isBelowDeliveryMin() {
+                return this.orderType === 'delivery' && this.deliveryMinAmount > 0 && this.cartSubtotal < this.deliveryMinAmount;
+            },
+
+            get deliveryMinRemaining() {
+                if (this.deliveryMinAmount <= 0) return 0;
+                return Math.max(0, this.deliveryMinAmount - this.cartSubtotal);
+            },
+
+            get cartFinalTotal() {
+                return this.cartSubtotal + this.calculatedServiceFee + this.calculatedDeliveryFee;
             },
 
             async submitOrder(channel) {
@@ -183,6 +248,14 @@
 
                 // Client-side validation for delivery orders
                 if (this.orderType === 'delivery') {
+                    if (!this.deliveryEnabled) {
+                        this.triggerToast('{{ __('menu.delivery_disabled_notice') }}', 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (this.isBelowDeliveryMin) {
+                        this.triggerToast('{{ __('menu.min_delivery_order_warning') }} ' + Number(this.deliveryMinAmount).toLocaleString() + ' {{ $vendor->currency }}', 'remove', 'fa-solid fa-triangle-exclamation');
+                        return;
+                    }
                     if (!this.deliveryAddress || !this.deliveryAddress.trim()) {
                         this.triggerToast('{{ __('menu.delivery_address_required') }}', 'remove', 'fa-solid fa-circle-exclamation');
                         return;
@@ -200,7 +273,11 @@
                 try {
                     const res = await fetch('{{ route("client.order.submit", ["vendor_slug" => $vendor->slug]) }}', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
                         body: JSON.stringify({
                             location_id: {{ $location?->id ?? 1 }},
                             table_number: this.orderType === 'delivery' ? null : (this.tableNumber || '{{ $table ?? "Table 4" }}'),
@@ -220,8 +297,8 @@
                             }))
                         })
                     });
-                    const data = await res.json();
-                    if (data.success) {
+                    const data = await res.json().catch(() => ({}));
+                    if (res.ok && data.success) {
                         const orderItems = this.cart.map(c => ({
                             name: c.name,
                             variation_name: c.variation_name,
@@ -262,9 +339,11 @@
                             this.triggerToast(successMsg, 'success', 'fa-solid fa-circle-check');
                         }
                     } else {
-                        this.triggerToast(data.message || 'Սխալ պատվերն ուղարկելիս', 'remove', 'fa-solid fa-circle-xmark');
+                        const errMsg = data.message || (data.errors ? Object.values(data.errors)[0][0] : 'Սխալ պատվերն ուղարկելիս');
+                        this.triggerToast(errMsg, 'remove', 'fa-solid fa-circle-xmark');
                     }
                 } catch (e) {
+                    console.error('Order submit error:', e);
                     this.triggerToast('Ցանցային սխալ', 'remove', 'fa-solid fa-triangle-exclamation');
                 }
             },

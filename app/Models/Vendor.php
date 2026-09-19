@@ -17,8 +17,13 @@ class Vendor extends Model
         'legal_address',
         'tax_id',
         'director_name',
+        'director_phone',
         'contact_person_name',
+        'contact_person_phone',
         'operating_address',
+        'wifi_ssid',
+        'wifi_password',
+        'working_hours',
         'expected_locations_count',
         'logo',
         'cover_image',
@@ -42,12 +47,27 @@ class Vendor extends Model
         'custom_plan_notes',
         'is_active',
         'email_verified_at',
+        'service_fee_enabled',
+        'service_fee_type',
+        'service_fee_value',
+        'service_fee_min_order',
+        'delivery_enabled',
+        'delivery_fee',
+        'delivery_min_amount',
+        'delivery_free_from',
     ];
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
         'subscription_expires_at' => 'datetime',
         'is_active' => 'boolean',
+        'service_fee_enabled' => 'boolean',
+        'service_fee_value' => 'decimal:2',
+        'service_fee_min_order' => 'decimal:2',
+        'delivery_enabled' => 'boolean',
+        'delivery_fee' => 'decimal:2',
+        'delivery_min_amount' => 'decimal:2',
+        'delivery_free_from' => 'decimal:2',
     ];
 
     public function menuTemplate()

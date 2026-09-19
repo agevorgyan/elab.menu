@@ -108,4 +108,14 @@ return [
     'order_delivery_via_whatsapp' => 'Order Delivery via WhatsApp',
     'delivery_address_required' => 'Please provide a delivery address',
     'delivery_phone_required' => 'Phone number is required for delivery',
+
+    // Fees & Delivery Thresholds
+    'service_fee' => 'Service Fee',
+    'delivery_fee' => 'Delivery Fee',
+    'free_delivery' => 'FREE',
+    'free_delivery_unlocked' => 'Congratulations! You unlocked FREE DELIVERY 🎉',
+    'add_more_for_free_delivery' => 'Add',
+    'for_free_delivery' => 'more for free delivery',
+    'min_delivery_order_warning' => 'Minimum order for delivery is',
+    'delivery_disabled_notice' => 'Delivery is currently unavailable',
 ];

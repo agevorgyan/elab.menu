@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\WaiterCall;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -108,7 +109,11 @@ class OrderController extends Controller
         $order->update(['status' => $validated['status']]);
 
         // Broadcast real-time status update for kitchen screens & customer tracker
-        event(new OrderStatusUpdated($order));
+        try {
+            event(new OrderStatusUpdated($order));
+        } catch (\Throwable $e) {
+            Log::warning('OrderStatusUpdated broadcast failed: '.$e->getMessage());
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'status' => $order->status, 'message' => "Order #{$order->order_number} updated to {$order->status}."]);

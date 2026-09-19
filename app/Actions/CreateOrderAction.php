@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Services\CustomerSyncService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -153,7 +154,49 @@ class CreateOrderAction
                 ]);
             }
 
-            $order->update(['total_amount' => $totalAmount]);
+            $itemsSubtotal = $totalAmount;
+            $serviceFee = 0.00;
+            $deliveryFee = 0.00;
+
+            if ($dto->type === 'delivery') {
+                if (! $vendor->delivery_enabled) {
+                    throw ValidationException::withMessages([
+                        'delivery' => 'Առաքման ծառայությունը ներկայումս հասանելի չէ:',
+                    ]);
+                }
+
+                if ((float) $vendor->delivery_min_amount > 0 && $itemsSubtotal < (float) $vendor->delivery_min_amount) {
+                    throw ValidationException::withMessages([
+                        'delivery' => 'Նվազագույն պատվերի գումարը առաքման համար՝ '.number_format((float) $vendor->delivery_min_amount)." {$vendor->currency}:",
+                    ]);
+                }
+
+                if ($vendor->delivery_free_from !== null && (float) $vendor->delivery_free_from > 0 && $itemsSubtotal >= (float) $vendor->delivery_free_from) {
+                    $deliveryFee = 0.00;
+                } else {
+                    $deliveryFee = (float) ($vendor->delivery_fee ?? 0);
+                }
+            } else {
+                if ($vendor->service_fee_enabled) {
+                    $minOrder = $vendor->service_fee_min_order !== null ? (float) $vendor->service_fee_min_order : 0;
+                    if ($minOrder <= 0 || $itemsSubtotal >= $minOrder) {
+                        if ($vendor->service_fee_type === 'percent') {
+                            $serviceFee = round(($itemsSubtotal * (float) $vendor->service_fee_value) / 100, 2);
+                        } else {
+                            $serviceFee = (float) ($vendor->service_fee_value ?? 0);
+                        }
+                    }
+                }
+            }
+
+            $finalTotal = $itemsSubtotal + $serviceFee + $deliveryFee;
+
+            $order->update([
+                'subtotal' => $itemsSubtotal,
+                'service_fee' => $serviceFee,
+                'delivery_fee' => $deliveryFee,
+                'total_amount' => $finalTotal,
+            ]);
 
             if ($customer) {
                 $this->customerSyncService->recalculateStats($customer);
@@ -161,7 +204,11 @@ class CreateOrderAction
         });
 
         // Broadcast real-time OrderCreated event for kitchen & staff display
-        event(new OrderCreated($order));
+        try {
+            event(new OrderCreated($order));
+        } catch (\Throwable $e) {
+            Log::warning('OrderCreated broadcast failed: '.$e->getMessage());
+        }
 
         $whatsappUrl = $this->buildWhatsAppUrl($order, $vendor, $dto->locationId);
 
@@ -214,7 +261,22 @@ class CreateOrderAction
         }
 
         $msg .= "--------------------\n";
-        $msg .= '💰 *Total: '.number_format($order->total_amount)." {$vendor->currency}*";
+        $msg .= '🛒 *Ենթագումար (Subtotal): '.number_format($order->subtotal)." {$vendor->currency}*\n";
+
+        if ($order->service_fee > 0) {
+            $feeLabel = $vendor->service_fee_type === 'percent' ? " ({$vendor->service_fee_value}%)" : '';
+            $msg .= "🛎️ *Սպասարկման վճար{$feeLabel}: ".number_format($order->service_fee)." {$vendor->currency}*\n";
+        }
+
+        if ($order->type === 'delivery') {
+            if ($order->delivery_fee > 0) {
+                $msg .= '🛵 *Առաքման վճար: '.number_format($order->delivery_fee)." {$vendor->currency}*\n";
+            } else {
+                $msg .= "🛵 *Առաքում: ԱՆՎՃԱՐ (Free)*\n";
+            }
+        }
+
+        $msg .= '💰 *Ընդամենը (Total): '.number_format($order->total_amount)." {$vendor->currency}*";
 
         $cleanPhone = preg_replace('/[^0-9]/', '', $location->whatsapp_number);
 

@@ -19,6 +19,9 @@ class Order extends Model
         'table_number',
         'delivery_address',
         'type',
+        'subtotal',
+        'service_fee',
+        'delivery_fee',
         'total_amount',
         'status',
         'customer_name',
@@ -30,6 +33,9 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'subtotal' => 'decimal:2',
+        'service_fee' => 'decimal:2',
+        'delivery_fee' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'marketing_opt_in' => 'boolean',
     ];

@@ -18,6 +18,8 @@ use App\Models\WaiterCall;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ClientStorefrontController extends Controller
 {
@@ -190,9 +192,17 @@ self.addEventListener('fetch', event => {
 
         $dto = CreateOrderDTO::fromArray($validated);
 
-        $result = DB::transaction(function () use ($createOrderAction, $vendor, $dto) {
-            return $createOrderAction->execute($vendor, $dto);
-        });
+        try {
+            $result = DB::transaction(function () use ($createOrderAction, $vendor, $dto) {
+                return $createOrderAction->execute($vendor, $dto);
+            });
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors(),
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
@@ -326,7 +336,11 @@ self.addEventListener('fetch', event => {
         ]);
 
         // Broadcast real-time WaiterCalled event
-        event(new WaiterCalled($call));
+        try {
+            event(new WaiterCalled($call));
+        } catch (\Throwable $e) {
+            Log::warning('WaiterCalled broadcast failed: '.$e->getMessage());
+        }
 
         $message = match ($call->type) {
             'call_waiter' => __('menu.waiter_called_success'),

@@ -12,6 +12,7 @@ use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\VendorAdminController;
+use App\Http\Controllers\VendorSettingsController;
 use Illuminate\Support\Facades\Route;
 
 // 1. Landing & Client Storefront PWA Routes
@@ -132,6 +133,10 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     // Branding & Theme Customizer
     Route::get('/branding', [BrandingController::class, 'index'])->name('branding.index');
     Route::post('/branding', [BrandingController::class, 'update'])->name('branding.update');
+
+    // Restaurant Settings (Service Fee & Delivery)
+    Route::get('/settings', [VendorSettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [VendorSettingsController::class, 'update'])->name('settings.update');
 
     // QR Code Studio
     Route::get('/qr', [QrStudioController::class, 'index'])->name('qr.index');

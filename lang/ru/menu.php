@@ -108,4 +108,14 @@ return [
     'order_delivery_via_whatsapp' => 'Заказать доставку в WhatsApp',
     'delivery_address_required' => 'Пожалуйста, укажите адрес доставки',
     'delivery_phone_required' => 'Номер телефона обязателен для доставки',
+
+    // Fees & Delivery Thresholds
+    'service_fee' => 'Сервисный сбор',
+    'delivery_fee' => 'Плата за доставку',
+    'free_delivery' => 'БЕСПЛАТНО',
+    'free_delivery_unlocked' => 'Поздравляем! Вам доступна БЕСПЛАТНАЯ ДОСТАВКА 🎉',
+    'add_more_for_free_delivery' => 'Добавьте еще',
+    'for_free_delivery' => 'для бесплатной доставки',
+    'min_delivery_order_warning' => 'Минимальная сумма заказа для доставки:',
+    'delivery_disabled_notice' => 'Служба доставки временно недоступна',
 ];

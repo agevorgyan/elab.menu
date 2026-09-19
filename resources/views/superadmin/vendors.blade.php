@@ -81,10 +81,25 @@
                     </td>
                     <td style="padding: 0.75rem; color: var(--text-main);"><span style="text-transform: capitalize;">{{ $v->type }}</span></td>
                     <td style="padding: 0.75rem;">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">{{ $v->legal_name ?? 'N/A' }}</div>
-                        <div style="font-size: 0.75rem; color: var(--primary);">ՀՎՀՀ: {{ $v->tax_id ?? 'N/A' }}</div>
+                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">{{ $v->legal_name ?? $v->name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--primary); font-weight: 600;">ՀՎՀՀ: {{ $v->tax_id ?? 'N/A' }}</div>
+                        @php
+                            $opAddress = $v->operating_address ?? ($v->locations->first()?->address ?? null);
+                        @endphp
+                        @if($opAddress)
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                <i class="fa-solid fa-map-pin" style="font-size: 0.65rem;"></i> {{ Str::limit($opAddress, 35) }}
+                            </div>
+                        @endif
                         @if($v->director_name)
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">Տնօրեն: {{ $v->director_name }}</div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                <strong>Տնօրեն՝</strong> {{ $v->director_name }} @if($v->director_phone) <span style="color: var(--text-main);">({{ $v->director_phone }})</span> @endif
+                            </div>
+                        @endif
+                        @if($v->contact_person_name)
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem;">
+                                <strong>Մենեջեր՝</strong> {{ $v->contact_person_name }} @if($v->contact_person_phone) <span style="color: var(--text-main);">({{ $v->contact_person_phone }})</span> @endif
+                            </div>
                         @endif
                     </td>
                     <td style="padding: 0.75rem; color: var(--text-main);">{{ $v->locations->count() }} Locations</td>
@@ -156,19 +171,26 @@
             </div>
 
             <!-- Legal Info Box -->
-            @if($v->legal_name || $v->tax_id || $v->director_name)
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.65rem 0.85rem; margin-bottom: 0.85rem; font-size: 0.8rem;">
+            @php
+                $mobileOpAddress = $v->operating_address ?? ($v->locations->first()?->address ?? null);
+            @endphp
+            @if($v->legal_name || $v->tax_id || $v->director_name || $v->contact_person_name || $mobileOpAddress)
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.75rem 0.85rem; margin-bottom: 0.85rem; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem;">
                     @if($v->legal_name)
-                        <div style="font-weight: 600; color: var(--text-main);">{{ $v->legal_name }}</div>
+                        <div><strong>Իրավ․ անվանում՝</strong> {{ $v->legal_name }}</div>
                     @endif
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; color: var(--text-muted); font-size: 0.75rem;">
-                        @if($v->tax_id)
-                            <span>ՀՎՀՀ: <strong style="color: var(--primary);">{{ $v->tax_id }}</strong></span>
-                        @endif
-                        @if($v->director_name)
-                            <span>Տնօրեն: <strong style="color: var(--text-main);">{{ $v->director_name }}</strong></span>
-                        @endif
-                    </div>
+                    @if($v->tax_id)
+                        <div><strong>ՀՎՀՀ՝</strong> <span style="color: var(--primary); font-weight: 700;">{{ $v->tax_id }}</span></div>
+                    @endif
+                    @if($mobileOpAddress)
+                        <div><strong>Գործունեության հասցե՝</strong> {{ $mobileOpAddress }}</div>
+                    @endif
+                    @if($v->director_name)
+                        <div><strong>Տնօրեն՝</strong> {{ $v->director_name }} @if($v->director_phone) ({{ $v->director_phone }}) @endif</div>
+                    @endif
+                    @if($v->contact_person_name)
+                        <div><strong>Մենեջեր՝</strong> {{ $v->contact_person_name }} @if($v->contact_person_phone) ({{ $v->contact_person_phone }}) @endif</div>
+                    @endif
                 </div>
             @endif
 

@@ -128,22 +128,67 @@
 
                 <!-- Kitchen Notes Card -->
                 <!-- Order Type Switcher (Dine-In vs Delivery) -->
-                <div class="cart-type-toggle-wrap">
-                    <button type="button" 
-                            @click="orderType = 'dine_in'" 
-                            :class="{ 'is-active': orderType === 'dine_in' }"
-                            class="cart-type-btn">
-                        <i class="fa-solid fa-utensils"></i>
-                        <span>{{ __('menu.dine_in') }}</span>
-                    </button>
-                    <button type="button" 
-                            @click="orderType = 'delivery'" 
-                            :class="{ 'is-active': orderType === 'delivery' }"
-                            class="cart-type-btn">
-                        <i class="fa-solid fa-motorcycle"></i>
-                        <span>{{ __('menu.delivery') }}</span>
-                    </button>
-                </div>
+                <template x-if="deliveryEnabled">
+                    <div class="cart-type-toggle-wrap">
+                        <button type="button" 
+                                @click="orderType = 'dine_in'" 
+                                :class="{ 'is-active': orderType === 'dine_in' }"
+                                class="cart-type-btn">
+                            <i class="fa-solid fa-utensils"></i>
+                            <span>{{ __('menu.dine_in') }}</span>
+                        </button>
+                        <button type="button" 
+                                @click="orderType = 'delivery'" 
+                                :class="{ 'is-active': orderType === 'delivery' }"
+                                class="cart-type-btn">
+                            <i class="fa-solid fa-motorcycle"></i>
+                            <span>{{ __('menu.delivery') }}</span>
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Delivery Notifications & Progress -->
+                <template x-if="orderType === 'delivery'">
+                    <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.75rem;">
+                        <!-- Min Delivery Order Warning Banner -->
+                        <template x-if="isBelowDeliveryMin">
+                            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem; color: #ef4444; font-size: 0.85rem;">
+                                <i class="fa-solid fa-circle-exclamation" style="font-size: 1.1rem; flex-shrink: 0;"></i>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700;">
+                                        {{ __('menu.min_delivery_order_warning') }} <span x-text="Number(deliveryMinAmount).toLocaleString() + ' {{ $vendor->currency }}'"></span>
+                                    </div>
+                                    <div style="font-size: 0.78rem; opacity: 0.9; margin-top: 0.15rem;">
+                                        {{ __('menu.add_more_for_free_delivery') }} <strong x-text="Number(deliveryMinRemaining).toLocaleString() + ' {{ $vendor->currency }}'"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Free Delivery Motivation Threshold Progress Bar -->
+                        <template x-if="deliveryFreeFrom !== null && deliveryFreeFrom > 0">
+                            <div style="background: var(--bg-card, rgba(255,255,255,0.04)); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 14px; padding: 0.85rem 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem; font-size: 0.82rem;">
+                                    <template x-if="isDeliveryFree">
+                                        <span style="font-weight: 800; color: #10b981; display: flex; align-items: center; gap: 0.4rem;">
+                                            <i class="fa-solid fa-gift"></i> {{ __('menu.free_delivery_unlocked') }}
+                                        </span>
+                                    </template>
+                                    <template x-if="!isDeliveryFree">
+                                        <span style="color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
+                                            <i class="fa-solid fa-truck-fast" style="color: #3b82f6;"></i>
+                                            <span>{{ __('menu.add_more_for_free_delivery') }} <strong style="color: var(--text-main);" x-text="Number(freeDeliveryRemaining).toLocaleString() + ' {{ $vendor->currency }}'"></strong> {{ __('menu.for_free_delivery') }}</span>
+                                        </span>
+                                    </template>
+                                    <span style="font-weight: 800; font-size: 0.75rem; color: var(--primary);" x-text="freeDeliveryProgress + '%'"></span>
+                                </div>
+                                <div style="width: 100%; height: 6px; background: rgba(150, 150, 150, 0.2); border-radius: 999px; overflow: hidden;">
+                                    <div :style="'width: ' + freeDeliveryProgress + '%; background: linear-gradient(90deg, var(--primary), #10b981); height: 100%; border-radius: 999px; transition: width 0.4s ease;'"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
 
                 <!-- Kitchen Notes Card -->
                 <div class="cart-card-group">
@@ -256,10 +301,50 @@
                     <div class="cart-summary-row">
                         <span class="cart-summary-label">{{ __('menu.subtotal') }}</span>
                         <span class="cart-summary-val">
-                            <strong x-text="Number(cartTotalPrice).toLocaleString()"></strong>
+                            <strong x-text="Number(cartSubtotal).toLocaleString()"></strong>
                             <span class="cart-summary-curr">{{ $vendor->currency }}</span>
                         </span>
                     </div>
+
+                    <!-- Service Fee Row (Dine-in) -->
+                    <template x-if="orderType === 'dine_in' && calculatedServiceFee > 0">
+                        <div class="cart-summary-row">
+                            <span class="cart-summary-label" style="display: flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-bell-concierge" style="color: var(--primary); font-size: 0.8rem;"></i>
+                                <span>{{ __('menu.service_fee') }}</span>
+                                <template x-if="serviceFeeType === 'percent'">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);" x-text="'(' + serviceFeeValue + '%)'"></span>
+                                </template>
+                            </span>
+                            <span class="cart-summary-val">
+                                <span style="color: #10b981; font-weight: 700;">+<span x-text="Number(calculatedServiceFee).toLocaleString()"></span></span>
+                                <span class="cart-summary-curr">{{ $vendor->currency }}</span>
+                            </span>
+                        </div>
+                    </template>
+
+                    <!-- Delivery Fee Row (Delivery) -->
+                    <template x-if="orderType === 'delivery'">
+                        <div class="cart-summary-row">
+                            <span class="cart-summary-label" style="display: flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-motorcycle" style="color: #3b82f6; font-size: 0.8rem;"></i>
+                                <span>{{ __('menu.delivery_fee') }}</span>
+                            </span>
+                            <span class="cart-summary-val">
+                                <template x-if="calculatedDeliveryFee === 0">
+                                    <span style="color: #10b981; font-weight: 800; font-size: 0.82rem; background: rgba(16, 185, 129, 0.15); padding: 0.15rem 0.5rem; border-radius: 6px;">
+                                        {{ __('menu.free_delivery') }}
+                                    </span>
+                                </template>
+                                <template x-if="calculatedDeliveryFee > 0">
+                                    <span>
+                                        <span style="color: var(--text-main); font-weight: 700;">+<span x-text="Number(calculatedDeliveryFee).toLocaleString()"></span></span>
+                                        <span class="cart-summary-curr">{{ $vendor->currency }}</span>
+                                    </span>
+                                </template>
+                            </span>
+                        </div>
+                    </template>
 
                     <!-- Dine-in Table Row -->
                     <template x-if="orderType === 'dine_in'">
@@ -291,7 +376,7 @@
                     <div class="cart-summary-row cart-total-row">
                         <span class="cart-total-label">{{ __('menu.total_to_pay') }}</span>
                         <div class="cart-total-price-wrap">
-                            <span class="cart-total-number" x-text="Number(cartTotalPrice).toLocaleString()"></span>
+                            <span class="cart-total-number" x-text="Number(cartFinalTotal).toLocaleString()"></span>
                             <span class="cart-total-curr">{{ $vendor->currency }}</span>
                         </div>
                     </div>
@@ -314,6 +399,8 @@
                     <button type="button" 
                             @click="submitOrder(orderType)" 
                             class="cart-submit-btn"
+                            :disabled="orderType === 'delivery' && isBelowDeliveryMin"
+                            :style="orderType === 'delivery' && isBelowDeliveryMin ? 'opacity: 0.55; cursor: not-allowed;' : ''"
                             :class="{ 'is-delivery': orderType === 'delivery' }">
                         <div class="cart-submit-left">
                             <template x-if="orderType === 'delivery'">
@@ -325,7 +412,7 @@
                             <span x-text="orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : '{{ __('menu.checkout') }}'"></span>
                         </div>
                         <div class="cart-submit-price-pill">
-                            <span x-text="Number(cartTotalPrice).toLocaleString()"></span>
+                            <span x-text="Number(cartFinalTotal).toLocaleString()"></span>
                             <span class="cart-submit-curr">{{ $vendor->currency }}</span>
                         </div>
                     </button>
@@ -333,6 +420,8 @@
                     <!-- WhatsApp Order Button -->
                     <button type="button" 
                             @click="submitOrder('whatsapp')" 
+                            :disabled="orderType === 'delivery' && isBelowDeliveryMin"
+                            :style="orderType === 'delivery' && isBelowDeliveryMin ? 'opacity: 0.55; cursor: not-allowed;' : ''"
                             class="cart-whatsapp-btn">
                         <i class="fa-brands fa-whatsapp cart-wa-icon"></i>
                         <span x-text="orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}'"></span>

@@ -304,6 +304,8 @@
 
     <!-- Main Dishes List (Continuous scroll sections) -->
     <div style="padding: 1.25rem;">
+        @include('storefront.components.featured-dish-banner')
+
         @foreach($categories as $cat)
             <div id="cat-{{ $cat->id }}" class="category-section">
                 <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">

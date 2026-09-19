@@ -186,7 +186,128 @@
                 </div>
             </div>
 
-            <!-- 2. LEGAL & CONTACT INFORMATION CARD (SUPERADMIN) -->
+            <!-- 2. FEATURED DISH OF THE DAY BANNER CARD (ՕՐՎԱ ՈՒՏԵՍՏ) -->
+            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                                <span>{{ __('Օրվա Ուտեստի Բաներ') }}</span>
+                                <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; padding: 0.15rem 0.55rem; border-radius: 6px; letter-spacing: 0.03em;">PROMO BANNER</span>
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                                {{ __('Գովազդեք օրվա հատուկ ուտեստը մենյուի ամենասկզբում՝ մեծ և գրավիչ բաներով') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Enable/Disable Switch -->
+                    <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; background: var(--bg-body); padding: 0.5rem 1rem; border-radius: 14px; border: 1px solid var(--border-color);">
+                        <input type="checkbox" name="featured_dish_enabled" value="1" id="featuredDishToggle" {{ old('featured_dish_enabled', $vendor->featured_dish_enabled) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                        <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);">
+                            {{ __('Ակտիվացնել մենյուում') }}
+                        </span>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                    <!-- Ընտրել Ուտեստը -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Ընտրել Օրվա Ուտեստը') }}
+                        </label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <select name="featured_product_id" id="featuredProductSelect" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                                <option value="">-- {{ __('Ընտրեք ուտեստը ցանկից') }} --</option>
+                                @foreach($products as $prod)
+                                    <option value="{{ $prod->id }}"
+                                            data-name="{{ $prod->name }}"
+                                            data-image="{{ $prod->image }}"
+                                            data-price="{{ number_format($prod->price, 0) }}"
+                                            data-desc="{{ $prod->description }}"
+                                            {{ old('featured_product_id', $vendor->featured_product_id) == $prod->id ? 'selected' : '' }}>
+                                        🍽️ {{ $prod->name }} — {{ number_format($prod->price, 0) }} {{ $vendor->currency ?? 'AMD' }} ({{ $prod->category?->name ?? 'Առանց բաժնի' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
+                                <i class="fa-solid fa-utensils"></i>
+                            </span>
+                        </div>
+                        <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Այս ուտեստը կցուցադրվի մեծ բաներով անմիջապես կատեգորիաների ներքևում') }}
+                        </span>
+                    </div>
+
+                    <!-- Կրծքանշանի տեքստ (Badge) -->
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Կրծքանշանի Տեքստ (Badge)') }}
+                        </label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="text" name="featured_dish_badge" id="featuredDishBadgeInput" value="{{ old('featured_dish_badge', $vendor->featured_dish_badge ?? '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ') }}" placeholder="Օրինակ՝ ⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
+                                <i class="fa-solid fa-tag"></i>
+                            </span>
+                        </div>
+                        <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Լռելյայն՝ «⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ» կամ «CHEF\'S SPECIAL»') }}
+                        </span>
+                    </div>
+
+                    <!-- Գովազդային կարճ նկարագրություն -->
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Գովազդային Ենթավերնագիր') }}
+                        </label>
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="text" name="featured_dish_subtitle" id="featuredDishSubtitleInput" value="{{ old('featured_dish_subtitle', $vendor->featured_dish_subtitle) }}" placeholder="Օրինակ՝ Շեֆ խոհարարի հատուկ առաջարկը միայն այսօր" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
+                                <i class="fa-solid fa-comment-dots"></i>
+                            </span>
+                        </div>
+                        <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Եթե դատարկ թողնեք, կօգտագործվի տվյալ ուտեստի հիմնական նկարագրությունը') }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Live Preview in Admin -->
+                <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--border-color);">
+                    <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.45rem;">
+                        <i class="fa-solid fa-eye" style="color: var(--primary);"></i>
+                        <span>{{ __('Նախադիտում (ինչպես կերևա հաճախորդներին մենյուում)') }}</span>
+                    </div>
+
+                    <div id="featuredDishPreviewCard" style="max-width: 480px; border-radius: 16px; overflow: hidden; background: var(--bg-body); border: 2px solid var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+                        <div style="position: relative; height: 140px; background: #000; overflow: hidden;">
+                            <img id="previewDishImg" src="{{ $vendor->featuredProduct?->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);"></div>
+                            <span id="previewDishBadge" style="position: absolute; top: 0.75rem; left: 0.75rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 9999px; text-transform: uppercase;">
+                                {{ $vendor->featured_dish_badge ?: '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ' }}
+                            </span>
+                        </div>
+                        <div style="padding: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                                <h4 id="previewDishName" style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit';">
+                                    {{ $vendor->featuredProduct?->name ?? 'Ընտրեք ուտեստը' }}
+                                </h4>
+                                <span id="previewDishPrice" style="font-size: 1.05rem; font-weight: 800; color: var(--primary);">
+                                    {{ $vendor->featuredProduct ? number_format($vendor->featuredProduct->price, 0) . ' ' . ($vendor->currency ?? 'AMD') : '' }}
+                                </span>
+                            </div>
+                            <p id="previewDishDesc" style="margin: 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                                {{ $vendor->featured_dish_subtitle ?: ($vendor->featuredProduct?->description ?: 'Շեֆ խոհարարի հատուկ ընտրանի') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. LEGAL & CONTACT INFORMATION CARD (SUPERADMIN) -->
             <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
@@ -610,11 +731,61 @@ function updateCalculationsPreview() {
             previewText.textContent = `${minText}Առաքման ֆիքսված վճար՝ ${deliveryFee.toLocaleString()} ${CURRENCY}`;
             previewSubtext.textContent = "{{ __('Առաքումը միշտ վճարովի է') }}";
         }
+    // Featured Dish Preview
+    updateFeaturedDishPreview();
+}
+
+function updateFeaturedDishPreview() {
+    const select = document.getElementById('featuredProductSelect');
+    const badgeInput = document.getElementById('featuredDishBadgeInput');
+    const subtitleInput = document.getElementById('featuredDishSubtitleInput');
+    const toggle = document.getElementById('featuredDishToggle');
+    const previewCard = document.getElementById('featuredDishPreviewCard');
+
+    if (!select || !previewCard) return;
+
+    if (toggle && !toggle.checked) {
+        previewCard.style.opacity = '0.4';
+        previewCard.style.filter = 'grayscale(0.6)';
+    } else {
+        previewCard.style.opacity = '1';
+        previewCard.style.filter = 'none';
+    }
+
+    const opt = select.options[select.selectedIndex];
+    const nameEl = document.getElementById('previewDishName');
+    const priceEl = document.getElementById('previewDishPrice');
+    const imgEl = document.getElementById('previewDishImg');
+    const descEl = document.getElementById('previewDishDesc');
+    const badgeEl = document.getElementById('previewDishBadge');
+
+    if (opt && opt.value) {
+        if (nameEl) nameEl.textContent = opt.dataset.name || opt.text;
+        if (priceEl) priceEl.textContent = (opt.dataset.price || '') + ' ' + '{{ $vendor->currency ?? "AMD" }}';
+        if (imgEl && opt.dataset.image) imgEl.src = opt.dataset.image;
+        if (descEl) descEl.textContent = subtitleInput.value.trim() || opt.dataset.desc || 'Շեֆ խոհարարի հատուկ ընտրանի';
+    } else {
+        if (nameEl) nameEl.textContent = 'Ընտրեք ուտեստը';
+        if (priceEl) priceEl.textContent = '';
+        if (descEl) descEl.textContent = 'Ուտեստ ընտրված չէ';
+    }
+
+    if (badgeEl) {
+        badgeEl.textContent = badgeInput.value.trim() || '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ';
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     updateCalculationsPreview();
+
+    const featSelect = document.getElementById('featuredProductSelect');
+    if (featSelect) featSelect.addEventListener('change', updateFeaturedDishPreview);
+    const featBadge = document.getElementById('featuredDishBadgeInput');
+    if (featBadge) featBadge.addEventListener('input', updateFeaturedDishPreview);
+    const featSub = document.getElementById('featuredDishSubtitleInput');
+    if (featSub) featSub.addEventListener('input', updateFeaturedDishPreview);
+    const featToggle = document.getElementById('featuredDishToggle');
+    if (featToggle) featToggle.addEventListener('change', updateFeaturedDishPreview);
 });
 </script>
 @endsection

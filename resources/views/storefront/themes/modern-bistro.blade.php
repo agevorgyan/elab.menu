@@ -251,6 +251,8 @@
 
     <!-- Main Dishes -->
     <div style="padding: 1.25rem;">
+        @include('storefront.components.featured-dish-banner')
+
         @foreach($categories as $cat)
             <div id="cat-{{ $cat->id }}" class="category-section" style="margin-bottom: 2.5rem;">
                 <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main); padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color);">

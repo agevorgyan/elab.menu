@@ -102,10 +102,21 @@ class ClientStorefrontController extends Controller
             $vendor->custom_css = $request->get('custom_css');
         }
 
+        // Featured Dish / Dish of the Day
+        $featuredDish = null;
+        if ($vendor->featured_dish_enabled && $vendor->featured_product_id) {
+            $featuredDish = Product::where('vendor_id', $vendor->id)
+                ->where('id', $vendor->featured_product_id)
+                ->where('is_available', true)
+                ->with(['variations', 'allergens', 'overrides', 'category'])
+                ->first();
+        }
+
         return view("storefront.themes.{$themeSlug}", compact(
             'vendor',
             'location',
             'categories',
+            'featuredDish',
             'lang',
             'table',
             'channel'

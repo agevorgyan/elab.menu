@@ -69,6 +69,11 @@
                         <div style="flex: 1; min-width: 240px;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                 <strong style="font-size: 1.05rem; color: var(--text-main);">{{ $product->name }}</strong>
+                                @if($vendor->featured_dish_enabled && $vendor->featured_product_id == $product->id)
+                                    <span style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; padding: 0.15rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                        <i class="fa-solid fa-fire-flame-curved"></i> {{ $vendor->featured_dish_badge ?: 'ՕՐՎԱ ՈՒՏԵՍՏ' }}
+                                    </span>
+                                @endif
                                 @if($product->is_featured)
                                     <span style="background: var(--badge-bg); color: var(--badge-text); border: 1px solid var(--border-color); padding: 0.15rem 0.45rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700;">★ FEATURED</span>
                                 @endif

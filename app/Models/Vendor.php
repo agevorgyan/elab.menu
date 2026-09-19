@@ -55,6 +55,10 @@ class Vendor extends Model
         'delivery_fee',
         'delivery_min_amount',
         'delivery_free_from',
+        'featured_product_id',
+        'featured_dish_enabled',
+        'featured_dish_badge',
+        'featured_dish_subtitle',
     ];
 
     protected $casts = [
@@ -68,7 +72,13 @@ class Vendor extends Model
         'delivery_fee' => 'decimal:2',
         'delivery_min_amount' => 'decimal:2',
         'delivery_free_from' => 'decimal:2',
+        'featured_dish_enabled' => 'boolean',
     ];
+
+    public function featuredProduct()
+    {
+        return $this->belongsTo(Product::class, 'featured_product_id');
+    }
 
     public function menuTemplate()
     {

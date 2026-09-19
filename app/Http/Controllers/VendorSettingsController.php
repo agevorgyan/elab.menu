@@ -16,11 +16,18 @@ class VendorSettingsController extends Controller
     public function index(Request $request): View
     {
         $vendor = Auth::user()->vendor;
+        $vendor->load('featuredProduct');
+
+        $products = $vendor->products()
+            ->with(['category'])
+            ->orderBy('category_id')
+            ->orderBy('name')
+            ->get();
 
         $locationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
         $location = $vendor->locations()->find($locationId) ?? $vendor->locations->first();
 
-        return view('admin.settings.index', compact('vendor', 'location'));
+        return view('admin.settings.index', compact('vendor', 'location', 'products'));
     }
 
     /**
@@ -61,10 +68,17 @@ class VendorSettingsController extends Controller
             'delivery_fee' => 'required|numeric|min:0',
             'delivery_min_amount' => 'required|numeric|min:0',
             'delivery_free_from' => 'nullable|numeric|min:0',
+
+            // Featured Dish / Dish of the Day
+            'featured_dish_enabled' => 'nullable|boolean',
+            'featured_product_id' => 'nullable|integer|exists:products,id',
+            'featured_dish_badge' => 'nullable|string|max:100',
+            'featured_dish_subtitle' => 'nullable|string|max:255',
         ]);
 
         $validated['service_fee_enabled'] = $request->boolean('service_fee_enabled');
         $validated['delivery_enabled'] = $request->boolean('delivery_enabled');
+        $validated['featured_dish_enabled'] = $request->boolean('featured_dish_enabled');
 
         $vendorUpdate = [
             'service_fee_enabled' => $validated['service_fee_enabled'],
@@ -75,7 +89,18 @@ class VendorSettingsController extends Controller
             'delivery_fee' => $validated['delivery_fee'],
             'delivery_min_amount' => $validated['delivery_min_amount'],
             'delivery_free_from' => $validated['delivery_free_from'] ?? null,
+            'featured_dish_enabled' => $validated['featured_dish_enabled'],
+            'featured_dish_badge' => $validated['featured_dish_badge'] ?? null,
+            'featured_dish_subtitle' => $validated['featured_dish_subtitle'] ?? null,
         ];
+
+        // Ensure selected featured product belongs to this vendor
+        if (! empty($validated['featured_product_id'])) {
+            $productExists = $vendor->products()->where('id', $validated['featured_product_id'])->exists();
+            $vendorUpdate['featured_product_id'] = $productExists ? $validated['featured_product_id'] : null;
+        } else {
+            $vendorUpdate['featured_product_id'] = null;
+        }
 
         if (! empty($validated['name'])) {
             $vendorUpdate['name'] = $validated['name'];

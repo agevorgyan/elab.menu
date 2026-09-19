@@ -76,8 +76,9 @@
     </div>
 
     <div id="pollInfoContainer" style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
-        <i class="fa-solid fa-rotate text-xs"></i>
-        <span>Ինքնաթարմացում՝ <strong id="pollCounter">4</strong>վ</span>
+        <span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+            <i class="fa-solid fa-bolt text-xs"></i> <span>Իրական ժամանակ (WebSockets)</span>
+        </span>
     </div>
 </div>
 
@@ -114,10 +115,11 @@
 // Sound Settings (Saved in LocalStorage)
 let isSoundEnabled = localStorage.getItem('kitchen_sound_enabled') !== 'false';
 let lastOrderId = {{ $orders->first()?->id ?? 0 }};
-let pollInterval = 4000; // 4 seconds
-let pollSecondsRemaining = 4;
+let isWebSocketConnected = false;
+let pollSecondsRemaining = 6;
 let isPolling = false;
 let audioCtx = null;
+let pollTimer = null;
 
 // Initialize Sound Button
 function updateSoundUI() {
@@ -218,7 +220,7 @@ function dismissNewOrderBanner() {
 }
 
 // Fetch Live Orders via AJAX Feed
-async function fetchKitchenFeed() {
+async function fetchKitchenFeed(silent = false) {
     if (isPolling) return;
     isPolling = true;
 
@@ -244,8 +246,10 @@ async function fetchKitchenFeed() {
                     // Show Banner
                     const banner = document.getElementById('newOrderBanner');
                     const bannerText = document.getElementById('newOrderBannerText');
-                    bannerText.innerText = `Ստացվել է նոր պատվեր (ընդհանուր սպասող՝ ${data.pending_count})։`;
-                    banner.style.display = 'flex';
+                    if (banner && bannerText) {
+                        bannerText.innerText = `Ստացվել է նոր պատվեր (ընդհանուր սպասող՝ ${data.pending_count})։`;
+                        banner.style.display = 'flex';
+                    }
 
                     // Update Title with Alert
                     document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ! - {{ $vendor->name }}`;
@@ -254,23 +258,37 @@ async function fetchKitchenFeed() {
                     }, 8000);
                 }
 
-                // Update container with rendered HTML
-                document.getElementById('ordersContainer').innerHTML = data.html;
-                if (data.waiter_calls_html !== undefined) {
-                    document.getElementById('waiterCallsContainer').innerHTML = data.waiter_calls_html;
+                // Update container with rendered HTML only if changed or has new content
+                const ordersEl = document.getElementById('ordersContainer');
+                if (ordersEl && (data.has_new || ordersEl.innerHTML !== data.html)) {
+                    ordersEl.innerHTML = data.html;
+                }
+                const waiterCallsEl = document.getElementById('waiterCallsContainer');
+                if (waiterCallsEl && data.waiter_calls_html !== undefined && waiterCallsEl.innerHTML !== data.waiter_calls_html) {
+                    waiterCallsEl.innerHTML = data.waiter_calls_html;
                 }
                 lastOrderId = Math.max(lastOrderId, data.latest_order_id);
 
-                // Update Connection Pill
-                document.getElementById('liveStatusText').innerText = `Ուղիղ կապ (թարմացվել է ${new Date().toLocaleTimeString()})`;
+                // Update status text only when in fallback polling mode
+                if (!isWebSocketConnected) {
+                    const statusText = document.getElementById('liveStatusText');
+                    if (statusText) {
+                        statusText.innerText = `Պահուստային կապ (${new Date().toLocaleTimeString()})`;
+                    }
+                }
             }
         }
     } catch (err) {
         console.error('Kitchen live feed error:', err);
-        document.getElementById('liveStatusText').innerText = 'Կապի խնդիր (կրկին փորձ)';
+        if (!isWebSocketConnected) {
+            const statusText = document.getElementById('liveStatusText');
+            if (statusText) {
+                statusText.innerText = 'Կապի խնդիր (կրկին փորձ)';
+            }
+        }
     } finally {
         isPolling = false;
-        pollSecondsRemaining = 4;
+        pollSecondsRemaining = isWebSocketConnected ? 120 : 6;
     }
 }
 
@@ -288,7 +306,7 @@ async function markWaiterCallAttended(callId) {
         });
 
         if (res.ok) {
-            fetchKitchenFeed();
+            fetchKitchenFeed(true);
         }
     } catch (e) {
         console.error('Waiter call update error:', e);
@@ -310,7 +328,7 @@ async function changeOrderStatus(orderId, newStatus) {
 
         if (res.ok) {
             // Silently refresh the list
-            fetchKitchenFeed();
+            fetchKitchenFeed(true);
         } else {
             alert('Չհաջողվեց թարմացնել պատվերի կարգավիճակը:');
         }
@@ -319,30 +337,47 @@ async function changeOrderStatus(orderId, newStatus) {
     }
 }
 
-// 4-second / heartbeat Polling Timer
-setInterval(() => {
-    pollSecondsRemaining--;
-    const counterEl = document.getElementById('pollCounter');
-    if (pollSecondsRemaining <= 0) {
-        if (counterEl) counterEl.innerText = '...';
-        fetchKitchenFeed(isWebSocketConnected);
-    } else {
-        if (counterEl) counterEl.innerText = pollSecondsRemaining;
-    }
-}, 1000);
+// Polling & Heartbeat Timer
+function startPollingTimer() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => {
+        if (isWebSocketConnected) {
+            // While WebSocket is connected, no fast polling and no countdown UI!
+            pollSecondsRemaining--;
+            if (pollSecondsRemaining <= 0) {
+                pollSecondsRemaining = 120; // 2 minutes background safety check
+                fetchKitchenFeed(true);
+            }
+            return;
+        }
+
+        // Only run countdown and 6-second polling if WebSocket is NOT connected
+        pollSecondsRemaining--;
+        const counterEl = document.getElementById('pollCounter');
+        if (pollSecondsRemaining <= 0) {
+            if (counterEl) counterEl.innerText = '...';
+            pollSecondsRemaining = 6;
+            fetchKitchenFeed(false);
+        } else {
+            if (counterEl) counterEl.innerText = pollSecondsRemaining;
+        }
+    }, 1000);
+}
 
 // Initialize Reverb WebSockets with Echo
-let isWebSocketConnected = false;
-let fallbackPollInterval = 4;
-
 function initEcho() {
     try {
-        if (typeof Echo === 'undefined') return;
+        if (typeof Echo === 'undefined') {
+            console.warn('Echo library not found, activating fallback polling.');
+            updateConnectionStatus(false);
+            return;
+        }
 
         const reverbKey = '{{ config("broadcasting.connections.reverb.key") ?? env("REVERB_APP_KEY", "") }}';
-        const reverbHost = '{{ config("broadcasting.connections.reverb.options.host") ?? env("REVERB_HOST", request()->getHost()) }}';
+        // Auto-match browser hostname (handles localhost, 127.0.0.1, or remote domain seamlessly)
+        const reverbHost = window.location.hostname || '{{ config("broadcasting.connections.reverb.options.host") ?? env("REVERB_HOST", "localhost") }}';
         const reverbPort = {{ config("broadcasting.connections.reverb.options.port") ?? env("REVERB_PORT", 8080) }};
-        const reverbScheme = '{{ config("broadcasting.connections.reverb.options.scheme") ?? env("REVERB_SCHEME", "http") }}';
+        const reverbScheme = window.location.protocol === 'https:' ? 'https' : '{{ config("broadcasting.connections.reverb.options.scheme") ?? env("REVERB_SCHEME", "http") }}';
 
         window.Echo = new Echo({
             broadcaster: 'reverb',
@@ -384,22 +419,25 @@ function initEcho() {
 
         if (window.Echo.connector && window.Echo.connector.pusher) {
             window.Echo.connector.pusher.connection.bind('connected', () => {
-                isWebSocketConnected = true;
                 updateConnectionStatus(true);
             });
 
+            window.Echo.connector.pusher.connection.bind('connecting', () => {
+                const text = document.getElementById('liveStatusText');
+                if (text && !isWebSocketConnected) {
+                    text.innerText = '⚡ WebSockets Միացում...';
+                }
+            });
+
             window.Echo.connector.pusher.connection.bind('disconnected', () => {
-                isWebSocketConnected = false;
                 updateConnectionStatus(false);
             });
 
             window.Echo.connector.pusher.connection.bind('unavailable', () => {
-                isWebSocketConnected = false;
                 updateConnectionStatus(false);
             });
 
             window.Echo.connector.pusher.connection.bind('failed', () => {
-                isWebSocketConnected = false;
                 updateConnectionStatus(false);
             });
         }
@@ -410,8 +448,10 @@ function initEcho() {
 }
 
 function updateConnectionStatus(connected) {
+    isWebSocketConnected = connected;
     const pill = document.getElementById('liveStatusPill');
     const text = document.getElementById('liveStatusText');
+    const dot = pill ? pill.querySelector('.pulse-dot') : null;
     const pollInfo = document.getElementById('pollInfoContainer');
 
     if (connected) {
@@ -420,20 +460,30 @@ function updateConnectionStatus(connected) {
             pill.style.color = '#10b981';
             pill.style.borderColor = 'rgba(16, 185, 129, 0.3)';
         }
+        if (dot) {
+            dot.style.background = '#10b981';
+            dot.className = 'pulse-dot';
+        }
         if (text) text.innerHTML = '⚡ WebSockets (Reverb) Ակտիվ է';
-        if (pollInfo) pollInfo.innerHTML = '<i class="fa-solid fa-bolt text-xs" style="color: #10b981;"></i> <span>Իրական ժամանակ (WebSockets)</span>';
-        fallbackPollInterval = 60; // idle heartbeat
-        pollSecondsRemaining = 60;
+        if (pollInfo) {
+            pollInfo.innerHTML = '<span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-bolt text-xs"></i> <span>Իրական ժամանակ (WebSockets)</span></span>';
+        }
+        pollSecondsRemaining = 120;
     } else {
         if (pill) {
             pill.style.background = 'rgba(245, 158, 11, 0.15)';
             pill.style.color = '#f59e0b';
             pill.style.borderColor = 'rgba(245, 158, 11, 0.3)';
         }
-        if (text) text.innerHTML = 'Հարցումների ռեժիմ (Polling 4վ)';
-        if (pollInfo) pollInfo.innerHTML = '<i class="fa-solid fa-rotate text-xs"></i> <span>Ինքնաթարմացում՝ <strong id="pollCounter">4</strong>վ</span>';
-        fallbackPollInterval = 4; // fast fallback polling
-        pollSecondsRemaining = 4;
+        if (dot) {
+            dot.style.background = '#f59e0b';
+            dot.className = '';
+        }
+        if (text) text.innerHTML = '⚠️ Պահուստային ռեժիմ (Polling)';
+        if (pollInfo) {
+            pollInfo.innerHTML = '<span style="color: #f59e0b; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-rotate text-xs"></i> <span>Պահուստային թարմացում՝ <strong id="pollCounter">' + pollSecondsRemaining + '</strong>վ</span></span>';
+        }
+        pollSecondsRemaining = 6;
     }
 }
 
@@ -465,6 +515,7 @@ function handleWebSocketWaiterCalled(data) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initEcho();
+    startPollingTimer();
 });
 </script>
 @endsection

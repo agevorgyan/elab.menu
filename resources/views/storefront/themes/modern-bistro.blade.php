@@ -344,6 +344,10 @@
     <!-- Modern Cart & Checkout Modal -->
     @include('storefront.components.cart-modal')
 
+    <!-- AI Waiter Components -->
+    @include('storefront.components.welcome-ai-waiter-modal')
+    @include('storefront.components.fullscreen-ai-waiter')
+
     @include('storefront.components.bottom-nav')
     @include('storefront.components.info-modal')
     @include('storefront.components.order-tracker-modal')

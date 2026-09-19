@@ -43,6 +43,19 @@
             isCallingService: false,
             marketingOptIn: true,
             orderNotes: '',
+            selectedLang: '{{ $lang ?? "hy" }}',
+            showWelcomeModal: false,
+            showAiWaiter: false,
+            aiPreferences: {
+                craving: null,
+                occasion: null,
+                drink_preference: null,
+                dietary: []
+            },
+            aiPromptInput: '',
+            aiLoading: false,
+            aiCommentary: '',
+            aiRecommendations: [],
             toast: {
                 show: false,
                 message: '',
@@ -53,6 +66,7 @@
             
             init() {
                 this.restoreActiveOrderFromStorage();
+                this.initAiWaiterWelcome();
                 this.$nextTick(() => {
                     this.initScrollSpy();
                 });
@@ -533,6 +547,109 @@
                     this.submitServiceCall();
                 } else {
                     this.openWaiterModal(targetType);
+                }
+            },
+
+            // AI Waiter Advisor Methods
+            selectLanguage(locale) {
+                this.selectedLang = locale;
+                localStorage.setItem('qrmenu_locale_{{ $vendor->slug }}', locale);
+                const url = new URL(window.location.href);
+                if (url.searchParams.get('lang') !== locale) {
+                    url.searchParams.set('lang', locale);
+                    window.location.href = url.toString();
+                }
+            },
+
+            initAiWaiterWelcome() {
+                @if($vendor->ai_waiter_enabled)
+                const welcomed = localStorage.getItem('ai_waiter_welcomed_{{ $vendor->slug }}');
+                if (!welcomed) {
+                    this.showWelcomeModal = true;
+                }
+                @endif
+            },
+
+            startAiWaiter() {
+                localStorage.setItem('ai_waiter_welcomed_{{ $vendor->slug }}', 'true');
+                this.showWelcomeModal = false;
+                this.openAiWaiter();
+            },
+
+            skipToMenu() {
+                localStorage.setItem('ai_waiter_welcomed_{{ $vendor->slug }}', 'true');
+                this.showWelcomeModal = false;
+            },
+
+            openAiWaiter() {
+                this.showAiWaiter = true;
+                if (this.aiRecommendations.length === 0 && !this.aiLoading) {
+                    this.fetchAiRecommendations();
+                }
+            },
+
+            closeAiWaiter() {
+                this.showAiWaiter = false;
+            },
+
+            resetAiQuiz() {
+                this.aiPreferences = {
+                    craving: null,
+                    occasion: null,
+                    drink_preference: null,
+                    dietary: []
+                };
+                this.aiPromptInput = '';
+                this.fetchAiRecommendations();
+            },
+
+            selectQuizOption(category, value) {
+                if (this.aiPreferences[category] === value) {
+                    this.aiPreferences[category] = null;
+                } else {
+                    this.aiPreferences[category] = value;
+                }
+                this.fetchAiRecommendations();
+            },
+
+            setPromptPreset(text) {
+                this.aiPromptInput = text;
+                this.submitAiPrompt();
+            },
+
+            submitAiPrompt() {
+                this.fetchAiRecommendations();
+            },
+
+            async fetchAiRecommendations() {
+                this.aiLoading = true;
+                try {
+                    const res = await fetch('{{ route("client.ai_waiter.recommend", ["vendor_slug" => $vendor->slug]) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            craving: this.aiPreferences.craving,
+                            occasion: this.aiPreferences.occasion,
+                            drink_preference: this.aiPreferences.drink_preference,
+                            dietary: this.aiPreferences.dietary,
+                            prompt: this.aiPromptInput,
+                            lang: this.selectedLang,
+                            location_id: {{ $location?->id ?? 'null' }}
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.aiCommentary = data.commentary || '';
+                        this.aiRecommendations = data.recommendations || [];
+                    }
+                } catch (e) {
+                    console.error('AI Waiter recommendation error:', e);
+                } finally {
+                    this.aiLoading = false;
                 }
             }
         };

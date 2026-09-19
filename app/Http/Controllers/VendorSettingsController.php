@@ -74,11 +74,18 @@ class VendorSettingsController extends Controller
             'featured_product_id' => 'nullable|integer|exists:products,id',
             'featured_dish_badge' => 'nullable|string|max:100',
             'featured_dish_subtitle' => 'nullable|string|max:255',
+
+            // AI Waiter Advisor
+            'ai_waiter_enabled' => 'nullable|boolean',
+            'ai_waiter_name' => 'nullable|string|max:100',
+            'ai_waiter_priority_ingredients' => 'nullable|string|max:2000',
+            'ai_waiter_welcome_text' => 'nullable|string|max:1000',
         ]);
 
         $validated['service_fee_enabled'] = $request->boolean('service_fee_enabled');
         $validated['delivery_enabled'] = $request->boolean('delivery_enabled');
         $validated['featured_dish_enabled'] = $request->boolean('featured_dish_enabled');
+        $validated['ai_waiter_enabled'] = $request->boolean('ai_waiter_enabled');
 
         $vendorUpdate = [
             'service_fee_enabled' => $validated['service_fee_enabled'],
@@ -92,7 +99,18 @@ class VendorSettingsController extends Controller
             'featured_dish_enabled' => $validated['featured_dish_enabled'],
             'featured_dish_badge' => $validated['featured_dish_badge'] ?? null,
             'featured_dish_subtitle' => $validated['featured_dish_subtitle'] ?? null,
+            'ai_waiter_enabled' => $validated['ai_waiter_enabled'],
         ];
+
+        if (array_key_exists('ai_waiter_name', $validated)) {
+            $vendorUpdate['ai_waiter_name'] = ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Մատուցող';
+        }
+        if (array_key_exists('ai_waiter_priority_ingredients', $validated)) {
+            $vendorUpdate['ai_waiter_priority_ingredients'] = $validated['ai_waiter_priority_ingredients'];
+        }
+        if (array_key_exists('ai_waiter_welcome_text', $validated)) {
+            $vendorUpdate['ai_waiter_welcome_text'] = $validated['ai_waiter_welcome_text'];
+        }
 
         // Ensure selected featured product belongs to this vendor
         if (! empty($validated['featured_product_id'])) {

@@ -22,12 +22,34 @@
         </div>
     </template>
 
+    @if($vendor->ai_waiter_enabled)
+    <!-- AI Waiter Floating Launcher Bubble -->
+    <div class="ai-waiter-floating-bubble" 
+         x-show="!showAiWaiter && !showWelcomeModal && !showCartModal" 
+         @click="openAiWaiter()"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-90"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-90"
+         title="{{ $vendor->getAiWaiterName() }}">
+        <div class="ai-bubble-avatar">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="ai-bubble-content">
+            <span class="ai-bubble-title">{{ $vendor->getAiWaiterName() }}</span>
+            <span class="ai-bubble-desc">✨ Օգնե՞մ ընտրել</span>
+        </div>
+    </div>
+    @endif
+
     <!-- Bottom Navigation Bar -->
     <nav class="storefront-bottom-nav" aria-label="Storefront Mobile Navigation">
         <!-- 1. Home / Menu -->
         <button type="button" 
                 class="bottom-nav-item" 
-                :class="{ 'active': currentTab === 'menu' && !showCartModal && !showInfoModal && !showOrderTracker }"
+                :class="{ 'active': currentTab === 'menu' && !showCartModal && !showInfoModal && !showOrderTracker && !showAiWaiter }"
                 @click="goToMenu()">
             <div class="nav-icon-wrapper">
                 <i class="fa-solid fa-utensils"></i>
@@ -35,7 +57,21 @@
             <span class="nav-label">{{ __('menu.nav_home') }}</span>
         </button>
 
-        <!-- 2. Call Waiter -->
+        @if($vendor->ai_waiter_enabled)
+        <!-- 2. AI Waiter Advisor -->
+        <button type="button" 
+                class="bottom-nav-item bottom-nav-ai" 
+                :class="{ 'active': showAiWaiter }"
+                @click="openAiWaiter()"
+                title="{{ $vendor->getAiWaiterName() }}">
+            <div class="nav-icon-wrapper" style="position: relative;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: #8b5cf6;"></i>
+            </div>
+            <span class="nav-label" style="font-weight: 700; color: #8b5cf6;">{{ __('AI Մատուցող') }}</span>
+        </button>
+        @endif
+
+        <!-- 3. Call Waiter -->
         <button type="button" 
                 class="bottom-nav-item"
                 :class="{ 'active': showWaiterModal }"
@@ -309,5 +345,62 @@
     @keyframes slideUpFade {
         from { opacity: 0; transform: translateY(12px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* AI Waiter Floating Bubble */
+    .ai-waiter-floating-bubble {
+        pointer-events: auto;
+        position: fixed;
+        bottom: calc(72px + max(0.5rem, env(safe-area-inset-bottom)));
+        right: 1.25rem;
+        z-index: 75;
+        background: linear-gradient(135deg, #8b5cf6, #d946ef);
+        color: #ffffff;
+        border-radius: 9999px;
+        padding: 0.45rem 0.9rem 0.45rem 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.45), 0 0 15px rgba(217, 70, 239, 0.3);
+        cursor: pointer;
+        animation: aiBubbleFloat 3s ease-in-out infinite;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .ai-waiter-floating-bubble:hover {
+        transform: scale(1.05);
+    }
+    .ai-waiter-floating-bubble:active {
+        transform: scale(0.95);
+    }
+    .ai-bubble-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #8b5cf6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.88rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .ai-bubble-content {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+    }
+    .ai-bubble-title {
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+    .ai-bubble-desc {
+        font-size: 0.66rem;
+        font-weight: 600;
+        opacity: 0.9;
+    }
+    @keyframes aiBubbleFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
     }
 </style>

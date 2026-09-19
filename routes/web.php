@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AiMenuController;
+use App\Http\Controllers\AiWaiterController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandingController;
@@ -32,6 +33,12 @@ Route::middleware('throttle:15,1')->group(function () {
 Route::get('/api/m/{vendor_slug}/order/{order_number}/status', [ClientStorefrontController::class, 'orderStatus'])
     ->middleware('throttle:60,1')
     ->name('client.order.status');
+
+// AI Waiter Advisor Endpoints
+Route::prefix('/api/m/{vendor_slug}/ai-waiter')->group(function () {
+    Route::post('/recommend', [AiWaiterController::class, 'recommend'])->name('client.ai_waiter.recommend');
+    Route::get('/pairings/{product_id}', [AiWaiterController::class, 'pairings'])->name('client.ai_waiter.pairings');
+});
 
 // Admin Language Switcher
 Route::get('/lang/{locale}', function (string $locale) {

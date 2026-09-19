@@ -59,6 +59,12 @@ class Vendor extends Model
         'featured_dish_enabled',
         'featured_dish_badge',
         'featured_dish_subtitle',
+        'ai_waiter_enabled',
+        'ai_waiter_name',
+        'ai_waiter_avatar',
+        'ai_waiter_priority_ingredients',
+        'ai_waiter_welcome_text',
+        'ai_waiter_featured_product_ids',
     ];
 
     protected $casts = [
@@ -73,7 +79,35 @@ class Vendor extends Model
         'delivery_min_amount' => 'decimal:2',
         'delivery_free_from' => 'decimal:2',
         'featured_dish_enabled' => 'boolean',
+        'ai_waiter_enabled' => 'boolean',
+        'ai_waiter_featured_product_ids' => 'array',
     ];
+
+    /**
+     * Get list of priority ingredients configured by the vendor for AI waiter recommendations.
+     *
+     * @return array<int, string>
+     */
+    public function getAiWaiterPriorityIngredientsList(): array
+    {
+        if (empty($this->ai_waiter_priority_ingredients)) {
+            return [];
+        }
+
+        $items = preg_split('/[,\n\r]+/', (string) $this->ai_waiter_priority_ingredients);
+
+        return array_values(array_filter(array_map(function ($item) {
+            return trim($item);
+        }, $items ?: [])));
+    }
+
+    /**
+     * Get AI Waiter display name.
+     */
+    public function getAiWaiterName(): string
+    {
+        return ! empty($this->ai_waiter_name) ? $this->ai_waiter_name : 'AI Մատուցող';
+    }
 
     public function featuredProduct()
     {

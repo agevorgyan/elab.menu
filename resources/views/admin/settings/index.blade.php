@@ -307,7 +307,114 @@
                 </div>
             </div>
 
-            <!-- 3. LEGAL & CONTACT INFORMATION CARD (SUPERADMIN) -->
+            <!-- 3. AI WAITER ADVISOR SETTINGS CARD -->
+            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);"></div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                                {{ __('AI Մատուցող Խորհրդատու') }}
+                                <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff; padding: 0.15rem 0.5rem; border-radius: 6px;">AI SOMMELIER</span>
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                                {{ __('Անհատական խոհարարական առաջարկություններ, համահունչ խմիչքների զուգորդում և ինտերակտիվ ընտրություն հաճախորդի համար') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.55rem 0.95rem; border-radius: 12px;">
+                        <input type="checkbox" name="ai_waiter_enabled" value="1" id="aiWaiterToggle" {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
+                        <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">
+                            {{ __('Միացնել AI Մատուցողը') }}
+                        </span>
+                    </label>
+                </div>
+
+                <div id="aiWaiterOptionsBlock" style="display: {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'block' : 'none' }};">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                        <!-- AI Մատուցողի անվանումը -->
+                        <div class="form-group">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('AI Մատուցողի Անունը / Կերպարը') }}
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="text" name="ai_waiter_name" value="{{ old('ai_waiter_name', $vendor->ai_waiter_name ?? 'AI Մատուցող') }}" placeholder="Օրինակ՝ Ալեքս կամ Շեֆ Խորհրդատու" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
+                                    <i class="fa-solid fa-user-tie"></i>
+                                </span>
+                            </div>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                                {{ __('Այս անունով AI-ն կներկայանա հաճախորդին ողջույնի և խորհրդատվության ժամանակ') }}
+                            </span>
+                        </div>
+
+                        <!-- Ողջույնի տեքստ -->
+                        <div class="form-group">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Ողջույնի Հատուկ Ուղերձ (ոչ պարտադիր)') }}
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="text" name="ai_waiter_welcome_text" value="{{ old('ai_waiter_welcome_text', $vendor->ai_waiter_welcome_text) }}" placeholder="Օրինակ՝ Բարի գալուստ, ուրախ ենք Ձեզ տեսնել: Կօգնե՞մ ընտրել լավագույն ուտեստը:" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
+                                    <i class="fa-solid fa-comment-dots"></i>
+                                </span>
+                            </div>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                                {{ __('Եթե դատարկ է, կօգտագործվի ստանդարտ ջերմ ողջույնը') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Առաջնահերթ Ինգրիդիենտներ (Priority Ingredients) -->
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+                            <span>
+                                <i class="fa-solid fa-pepper-hot" style="color: #ef4444; margin-right: 0.35rem;"></i>
+                                {{ __('Առաջնահերթ Ինգրիդիենտներ (Բաղադրիչներ)') }}
+                            </span>
+                            <span style="font-size: 0.76rem; font-weight: 600; color: #8b5cf6; background: rgba(139, 92, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                {{ __('Խթանում AI Առաջարկներում') }}
+                            </span>
+                        </label>
+                        <textarea name="ai_waiter_priority_ingredients" rows="3" class="form-control" placeholder="Օրինակ՝ Սաղմոն, Տրյուֆել, Black Angus, Ծովախեցգետին, Պիստակ, Ավոկադո" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.92rem; font-weight: 500; resize: vertical;">{{ old('ai_waiter_priority_ingredients', $vendor->ai_waiter_priority_ingredients) }}</textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                <i class="fa-solid fa-circle-info" style="color: #8b5cf6;"></i>
+                                {{ __('Մուտքագրեք ստորակետով անջատված: Այս բաղադրիչներով պատրաստված ուտեստներին AI-ն կտա բարձր առաջնահերթություն:') }}
+                            </span>
+                            @if(!empty($vendor->getAiWaiterPriorityIngredientsList()))
+                                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                                    @foreach($vendor->getAiWaiterPriorityIngredientsList() as $ing)
+                                        <span style="font-size: 0.72rem; font-weight: 700; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; padding: 0.15rem 0.45rem;">
+                                            #{{ $ing }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- AI Sommelier Feature Highlights Notice -->
+                    <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.05)); border: 1px dashed rgba(139, 92, 246, 0.3); border-radius: 14px; padding: 1rem 1.25rem;">
+                        <div style="display: flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.35rem;">
+                            <i class="fa-solid fa-sparkles" style="color: #8b5cf6;"></i>
+                            {{ __('Ինչպե՞ս է աշխատում AI Խորհրդատուն մենյուում') }}
+                        </div>
+                        <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                            {{ __('1. Մենյուն բացելիս հաճախորդին առաջարկվում է ընտրել լեզուն (🇦🇲, 🇬🇧, 🇷🇺) և միանալ AI խորհրդատվությանը:') }}<br>
+                            {{ __('2. Ամբողջ էկրանով բացվող պատուհանում հաճախորդը կարող է ընտրել նախասիրությունները կարճ կոճակներով կամ գրել ազատ հարցում:') }}<br>
+                            {{ __('3. AI-ն ինքնաշխատորեն վերլուծում է ուտեստները, առաջնահերթություն տալիս Ձեր նշած ինգրիդիենտներին և առաջարկում համահունչ խմիչքներ ու խավարտներ:') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. LEGAL & CONTACT INFORMATION CARD (SUPERADMIN) -->
             <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
@@ -786,6 +893,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (featSub) featSub.addEventListener('input', updateFeaturedDishPreview);
     const featToggle = document.getElementById('featuredDishToggle');
     if (featToggle) featToggle.addEventListener('change', updateFeaturedDishPreview);
+
+    const aiWaiterToggle = document.getElementById('aiWaiterToggle');
+    const aiWaiterOptionsBlock = document.getElementById('aiWaiterOptionsBlock');
+    if (aiWaiterToggle && aiWaiterOptionsBlock) {
+        aiWaiterToggle.addEventListener('change', () => {
+            aiWaiterOptionsBlock.style.display = aiWaiterToggle.checked ? 'block' : 'none';
+        });
+    }
 });
 </script>
 @endsection

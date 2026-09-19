@@ -303,6 +303,7 @@
                             customer_birthdate: this.customerBirthdate || null,
                             marketing_opt_in: this.marketingOptIn,
                             notes: this.orderNotes,
+                            active_order_number: (this.activeOrder && !['completed', 'cancelled'].includes(this.activeOrder.status)) ? this.activeOrder.order_number : null,
                             items: this.cart.map(c => ({
                                 product_id: c.id,
                                 variation_id: c.variation_id || null,
@@ -313,35 +314,52 @@
                     });
                     const data = await res.json().catch(() => ({}));
                     if (res.ok && data.success) {
-                        const orderItems = this.cart.map(c => ({
-                            name: c.name,
-                            variation_name: c.variation_name,
-                            quantity: c.qty,
-                            price: c.price,
-                            subtotal: c.price * c.qty
-                        }));
+                        const isAppended = !!data.is_appended;
+                        const orderItems = (data.items && data.items.length > 0)
+                            ? data.items
+                            : this.cart.map(c => ({
+                                name: c.name,
+                                variation_name: c.variation_name,
+                                quantity: c.qty,
+                                price: c.price,
+                                subtotal: c.price * c.qty
+                            }));
 
-                        this.activeOrder = {
-                            id: data.order_id || null,
-                            order_number: data.order_number,
-                            status: data.status || 'pending',
-                            status_step: 1,
-                            status_percent: 25,
-                            status_label: data.status_label || '{{ __('menu.status_pending') }}',
-                            status_desc: '{{ __('menu.status_desc_pending') }}',
-                            status_icon: 'fa-solid fa-clock',
-                            total_amount: data.total_amount,
-                            order_type: this.orderType,
-                            delivery_address: this.orderType === 'delivery' ? this.deliveryAddress : null,
-                            table_number: this.orderType === 'delivery' ? '{{ __('menu.delivery') }}' : (this.tableNumber || '{{ $table ? "Table " . $table : "" }}'),
-                            currency: '{{ $vendor->currency }}',
-                            created_at_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            created_at_human: 'հենց նոր',
-                            items: orderItems
-                        };
+                        if (isAppended && this.activeOrder) {
+                            this.activeOrder = {
+                                ...this.activeOrder,
+                                id: data.order_id || this.activeOrder.id,
+                                order_number: data.order_number,
+                                status: data.status || this.activeOrder.status,
+                                status_label: data.status_label || this.activeOrder.status_label,
+                                total_amount: data.total_amount,
+                                items: orderItems
+                            };
+                        } else {
+                            this.activeOrder = {
+                                id: data.order_id || null,
+                                order_number: data.order_number,
+                                status: data.status || 'pending',
+                                status_step: 1,
+                                status_percent: 25,
+                                status_label: data.status_label || '{{ __('menu.status_pending') }}',
+                                status_desc: '{{ __('menu.status_desc_pending') }}',
+                                status_icon: 'fa-solid fa-clock',
+                                total_amount: data.total_amount,
+                                order_type: this.orderType,
+                                delivery_address: this.orderType === 'delivery' ? this.deliveryAddress : null,
+                                table_number: this.orderType === 'delivery' ? '{{ __('menu.delivery') }}' : (this.tableNumber || '{{ $table ? "Table " . $table : "" }}'),
+                                currency: '{{ $vendor->currency }}',
+                                created_at_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                created_at_human: 'հենց նոր',
+                                items: orderItems
+                            };
+                        }
+
                         this.hideTrackerPill = false;
                         this.saveActiveOrderToStorage();
                         this.cart = [];
+                        this.orderNotes = '';
                         this.showCartModal = false;
                         this.startOrderPolling();
 
@@ -349,8 +367,12 @@
                             window.location.href = data.whatsapp_url;
                         } else {
                             this.showOrderTracker = true;
-                            const successMsg = '{{ __('menu.order_submitted_prefix') }}' + data.order_number + '{{ __('menu.order_submitted_suffix') }}';
-                            this.triggerToast(successMsg, 'success', 'fa-solid fa-circle-check');
+                            if (isAppended) {
+                                this.triggerToast('{{ __('menu.items_appended_toast') }} (' + data.order_number + ')', 'success', 'fa-solid fa-circle-plus');
+                            } else {
+                                const successMsg = '{{ __('menu.order_submitted_prefix') }}' + data.order_number + '{{ __('menu.order_submitted_suffix') }}';
+                                this.triggerToast(successMsg, 'success', 'fa-solid fa-circle-check');
+                            }
                         }
                     } else {
                         const errMsg = data.message || (data.errors ? Object.values(data.errors)[0][0] : 'Սխալ պատվերն ուղարկելիս');
@@ -480,12 +502,16 @@
             },
 
             dismissTrackerPill() {
-                this.hideTrackerPill = true;
+                if (['completed', 'cancelled'].includes(this.activeOrder?.status)) {
+                    this.hideTrackerPill = true;
+                } else {
+                    this.triggerToast('{{ __('menu.order_number_label') }}' + (this.activeOrder?.order_number || '') + ' - ' + (this.activeOrder?.status_label || ''), 'info', 'fa-solid fa-clock');
+                }
             },
 
             closeOrderTracker(hidePill = false) {
                 this.showOrderTracker = false;
-                if (hidePill) {
+                if (hidePill && ['completed', 'cancelled'].includes(this.activeOrder?.status)) {
                     this.hideTrackerPill = true;
                 }
             },

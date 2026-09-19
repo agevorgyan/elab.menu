@@ -1,7 +1,7 @@
 <!-- Mobile Bottom Navigation Bar & Persistent Trackers -->
 <div class="storefront-bottom-nav-container">
     <!-- Active Order Tracker Floating Pill (Shown when customer has an active order) -->
-    <template x-if="activeOrder && !showOrderTracker && !hideTrackerPill">
+    <template x-if="activeOrder && !showOrderTracker && (!['completed', 'cancelled'].includes(activeOrder.status) || !hideTrackerPill)">
         <div class="active-order-floating-pill" @click="showOrderTracker = true">
             <div class="order-pill-left">
                 <span class="live-pulse-dot"></span>
@@ -11,16 +11,23 @@
                         <span>{{ __('menu.order_number_label') }}<strong x-text="activeOrder.order_number"></strong></span>
                         <span class="order-pill-badge" x-text="activeOrder.status_label"></span>
                     </div>
-                    <div class="order-pill-desc" x-text="activeOrder.status_desc"></div>
+                    <div class="order-pill-desc" style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span x-text="activeOrder.status_desc"></span>
+                        <template x-if="activeOrder.total_amount">
+                            <span style="font-weight: 700; color: var(--text-main);" x-text="'• ' + Number(activeOrder.total_amount).toLocaleString() + ' ' + (activeOrder.currency || '{{ $vendor->currency }}')"></span>
+                        </template>
+                    </div>
                 </div>
             </div>
             <div class="order-pill-actions" style="display: flex; align-items: center; gap: 0.4rem;">
                 <button type="button" class="order-pill-open-btn" title="{{ __('menu.track_order_btn') }}" @click.stop="showOrderTracker = true">
                     <i class="fa-solid fa-chevron-up"></i>
                 </button>
-                <button type="button" class="order-pill-close-btn" @click.stop="dismissTrackerPill()" title="{{ __('menu.close') }}" aria-label="{{ __('menu.close') }}">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <template x-if="['completed', 'cancelled'].includes(activeOrder.status)">
+                    <button type="button" class="order-pill-close-btn" @click.stop="dismissTrackerPill()" title="{{ __('menu.close') }}" aria-label="{{ __('menu.close') }}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </template>
             </div>
         </div>
     </template>

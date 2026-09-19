@@ -121,6 +121,10 @@ return [
     'free_delivery_unlocked' => 'Congratulations! You unlocked FREE DELIVERY 🎉',
     'add_more_for_free_delivery' => 'Add',
     'for_free_delivery' => 'more for free delivery',
-    'min_delivery_order_warning' => 'Minimum order for delivery is',
     'delivery_disabled_notice' => 'Delivery is currently unavailable',
+    'append_to_active_order' => 'Add to Active Order',
+    'append_to_active_order_wa' => 'Add to Active Order via WhatsApp',
+    'active_order_notice_title' => 'Adding to Current Order',
+    'active_order_notice_desc' => 'These items will be added to your current open order, and total will be recalculated.',
+    'items_appended_toast' => 'Additional items have been added to your order',
 ];

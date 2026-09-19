@@ -121,6 +121,10 @@ return [
     'free_delivery_unlocked' => 'Շնորհավորո՜ւմ ենք, Ձեզ հասանելի է ԱՆՎՃԱՐ ԱՌԱՔՈՒՄ 🎉',
     'add_more_for_free_delivery' => 'Ավելացրեք ևս',
     'for_free_delivery' => 'անվճար առաքման համար',
-    'min_delivery_order_warning' => 'Նվազագույն պատվերի գումարը առաքման համար՝',
     'delivery_disabled_notice' => 'Առաքման ծառայությունը ներկայումս հասանելի չէ',
+    'append_to_active_order' => 'Ավելացնել ակտիվ պատվերին',
+    'append_to_active_order_wa' => 'Ավելացնել ակտիվ պատվերին WhatsApp-ով',
+    'active_order_notice_title' => 'Ավելացում ընթացիկ պատվերին',
+    'active_order_notice_desc' => 'Այս ուտեստները կավելացվեն Ձեր ընթացիկ բաց պատվերին, և գումարը կվերահաշվարկվի։',
+    'items_appended_toast' => 'Հավելյալ ուտեստներն ավելացվեցին Ձեր պատվերին',
 ];

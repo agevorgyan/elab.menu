@@ -121,6 +121,10 @@ return [
     'free_delivery_unlocked' => 'Поздравляем! Вам доступна БЕСПЛАТНАЯ ДОСТАВКА 🎉',
     'add_more_for_free_delivery' => 'Добавьте еще',
     'for_free_delivery' => 'для бесплатной доставки',
-    'min_delivery_order_warning' => 'Минимальная сумма заказа для доставки:',
     'delivery_disabled_notice' => 'Служба доставки временно недоступна',
+    'append_to_active_order' => 'Добавить к активному заказу',
+    'append_to_active_order_wa' => 'Добавить к активному заказу в WhatsApp',
+    'active_order_notice_title' => 'Добавление к текущему заказу',
+    'active_order_notice_desc' => 'Эти блюда будут добавлены к вашему открытому заказу, и сумма будет пересчитана.',
+    'items_appended_toast' => 'Дополнительные блюда добавлены к вашему заказу',
 ];

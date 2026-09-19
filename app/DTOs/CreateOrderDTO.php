@@ -22,6 +22,7 @@ class CreateOrderDTO
         public readonly bool $marketingOptIn = true,
         public readonly ?string $notes = null,
         public readonly ?string $paymentMethod = null,
+        public readonly ?string $activeOrderNumber = null,
     ) {}
 
     /**
@@ -53,6 +54,7 @@ class CreateOrderDTO
             marketingOptIn: filter_var($data['marketing_opt_in'] ?? true, FILTER_VALIDATE_BOOLEAN),
             notes: ! empty($data['notes']) ? trim((string) $data['notes']) : null,
             paymentMethod: ! empty($data['payment_method']) ? trim((string) $data['payment_method']) : null,
+            activeOrderNumber: ! empty($data['active_order_number']) ? trim((string) $data['active_order_number']) : null,
         );
     }
 
@@ -74,6 +76,7 @@ class CreateOrderDTO
             'marketing_opt_in' => $this->marketingOptIn,
             'notes' => $this->notes,
             'payment_method' => $this->paymentMethod,
+            'active_order_number' => $this->activeOrderNumber,
         ];
     }
 

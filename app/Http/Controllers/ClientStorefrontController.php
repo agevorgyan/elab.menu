@@ -217,12 +217,26 @@ self.addEventListener('fetch', event => {
 
         return response()->json([
             'success' => true,
+            'is_appended' => $result['is_appended'] ?? false,
             'order_number' => $result['order']->order_number,
             'order_id' => $result['order']->id,
             'status' => $result['order']->status,
             'status_label' => __('menu.status_'.$result['order']->status),
-            'total_amount' => $result['order']->total_amount,
+            'total_amount' => (float) $result['order']->total_amount,
             'whatsapp_url' => $result['whatsapp_url'],
+            'items' => $result['order']->items->map(function ($item) {
+                $unitPrice = (float) ($item->unit_price ?? $item->price ?? 0);
+                $subtotal = (float) ($item->subtotal ?? ($unitPrice * $item->quantity));
+
+                return [
+                    'id' => $item->id,
+                    'name' => $item->product_name ?? $item->product?->name ?? 'Dish #'.$item->product_id,
+                    'variation_name' => $item->variation_name,
+                    'quantity' => $item->quantity,
+                    'price' => $unitPrice,
+                    'subtotal' => $subtotal,
+                ];
+            }),
         ]);
     }
 

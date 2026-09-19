@@ -27,7 +27,7 @@
                     {{ __('menu.order_number_label') }}<span x-text="activeOrder?.order_number"></span>
                 </h2>
             </div>
-            <button type="button" @click="closeOrderTracker(true)" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
+            <button type="button" @click="closeOrderTracker(false)" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; flex-shrink: 0;">
                 ✕
             </button>
         </div>
@@ -150,18 +150,20 @@
 
             <!-- Close and keep tracking -->
             <button type="button" 
-                    @click="closeOrderTracker(true)" 
+                    @click="closeOrderTracker(false)" 
                     style="width: 100%; padding: 0.85rem; background: var(--primary); color: #ffffff; border: none; border-radius: 14px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(var(--primary-rgb, 225, 29, 72), 0.35);">
                 {{ __('menu.close') }} (Շարունակել դիտել մենյուն)
             </button>
 
-            <!-- Dismiss / Clear tracking -->
-            <button type="button" 
-                    @click="clearActiveOrder()" 
-                    style="width: 100%; padding: 0.7rem; background: transparent; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 14px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.45rem; transition: all 0.2s;">
-                <i class="fa-solid fa-xmark" style="font-size: 0.85rem;"></i>
-                <span>Փակել ծանուցումը / Ավարտել հետևումը</span>
-            </button>
+            <!-- Dismiss / Clear tracking (Shown only when order completed or cancelled) -->
+            <template x-if="['completed', 'cancelled'].includes(activeOrder?.status)">
+                <button type="button" 
+                        @click="clearActiveOrder()" 
+                        style="width: 100%; padding: 0.7rem; background: transparent; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 14px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.45rem; transition: all 0.2s;">
+                    <i class="fa-solid fa-xmark" style="font-size: 0.85rem;"></i>
+                    <span>Փակել ծանուցումը / Ավարտել հետևումը</span>
+                </button>
+            </template>
         </div>
     </div>
 </div>

@@ -64,6 +64,27 @@
             <!-- Active Cart Items and Checkout Form -->
             <div x-show="cart.length > 0" class="cart-content-stack">
                 
+                <!-- Active Order Appending Notice -->
+                <template x-if="activeOrder && !['completed', 'cancelled'].includes(activeOrder.status)">
+                    <div class="cart-active-order-notice" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(16, 185, 129, 0.05)); border: 1.5px solid #10b981; border-radius: 16px; padding: 0.85rem 1rem; display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.12);">
+                        <div style="width: 34px; height: 34px; border-radius: 50%; background: #10b981; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">
+                            <i class="fa-solid fa-circle-plus"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                <span style="font-weight: 800; font-size: 0.88rem; color: var(--text-main);">
+                                    {{ __('menu.active_order_notice_title') }}
+                                </span>
+                                <span style="background: #10b981; color: #ffffff; font-size: 0.72rem; font-weight: 800; padding: 0.1rem 0.45rem; border-radius: 6px;" x-text="activeOrder.order_number"></span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #10b981;" x-text="'(' + activeOrder.status_label + ')'"></span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                                {{ __('menu.active_order_notice_desc') }}
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
                 <!-- Items List Stack -->
                 <div class="cart-items-container">
                     <div class="cart-section-badge">
@@ -403,13 +424,22 @@
                             :style="orderType === 'delivery' && isBelowDeliveryMin ? 'opacity: 0.55; cursor: not-allowed;' : ''"
                             :class="{ 'is-delivery': orderType === 'delivery' }">
                         <div class="cart-submit-left">
-                            <template x-if="orderType === 'delivery'">
-                                <i class="fa-solid fa-motorcycle"></i>
+                            <template x-if="activeOrder && !['completed', 'cancelled'].includes(activeOrder.status)">
+                                <i class="fa-solid fa-circle-plus" style="color: #10b981;"></i>
                             </template>
-                            <template x-if="orderType !== 'delivery'">
-                                <i class="fa-solid fa-bell-concierge"></i>
+                            <template x-if="!activeOrder || ['completed', 'cancelled'].includes(activeOrder.status)">
+                                <span>
+                                    <template x-if="orderType === 'delivery'">
+                                        <i class="fa-solid fa-motorcycle"></i>
+                                    </template>
+                                    <template x-if="orderType !== 'delivery'">
+                                        <i class="fa-solid fa-bell-concierge"></i>
+                                    </template>
+                                </span>
                             </template>
-                            <span x-text="orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : '{{ __('menu.checkout') }}'"></span>
+                            <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
+                                ? ('{{ __('menu.append_to_active_order') }} (' + activeOrder.order_number + ')')
+                                : (orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : '{{ __('menu.checkout') }}')"></span>
                         </div>
                         <div class="cart-submit-price-pill">
                             <span x-text="Number(cartFinalTotal).toLocaleString()"></span>
@@ -424,7 +454,9 @@
                             :style="orderType === 'delivery' && isBelowDeliveryMin ? 'opacity: 0.55; cursor: not-allowed;' : ''"
                             class="cart-whatsapp-btn">
                         <i class="fa-brands fa-whatsapp cart-wa-icon"></i>
-                        <span x-text="orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}'"></span>
+                        <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
+                            ? '{{ __('menu.append_to_active_order_wa') }}'
+                            : (orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}')"></span>
                     </button>
                 </div>
             </div>

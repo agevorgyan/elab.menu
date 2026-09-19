@@ -134,6 +134,9 @@ class AiWaiterService
                 'category_name' => $prod->category?->getTranslatedName($lang) ?? '',
                 'description' => $prod->getTranslatedDescription($lang),
                 'price' => (float) $prod->getEffectivePrice($locationId),
+                'regular_price' => (float) $prod->getRegularPrice($locationId),
+                'is_discount_active' => $prod->isDiscountActive(),
+                'discount_percentage' => $prod->getDiscountPercentage(),
                 'formatted_price' => number_format($prod->getEffectivePrice($locationId)).' '.$vendor->currency,
                 'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
                 'dietary_tags' => $prod->dietary_tags ?? [],
@@ -147,11 +150,15 @@ class AiWaiterService
                     'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
                     'description' => $prod->getTranslatedDescription($lang),
                     'base_price' => (float) $prod->getEffectivePrice($locationId),
+                    'regular_price' => (float) $prod->getRegularPrice($locationId),
+                    'is_discount_active' => $prod->isDiscountActive(),
+                    'discount_percentage' => $prod->getDiscountPercentage(),
                     'variations' => $prod->variations->map(function ($v) use ($lang) {
                         return [
                             'id' => $v->id,
                             'name' => $v->getTranslatedName($lang),
-                            'price' => (float) $v->price,
+                            'price' => (float) $v->getEffectivePrice(),
+                            'regular_price' => (float) $v->price,
                             'is_default' => (bool) $v->is_default,
                         ];
                     })->values(),
@@ -280,6 +287,9 @@ class AiWaiterService
                 'id' => $pairedDrink->id,
                 'name' => $pairedDrink->getTranslatedName($lang),
                 'price' => (float) $pairedDrink->getEffectivePrice($locationId),
+                'regular_price' => (float) $pairedDrink->getRegularPrice($locationId),
+                'is_discount_active' => $pairedDrink->isDiscountActive(),
+                'discount_percentage' => $pairedDrink->getDiscountPercentage(),
                 'formatted_price' => number_format($pairedDrink->getEffectivePrice($locationId)).' '.$vendor->currency,
                 'image' => $pairedDrink->image ?? 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=300&q=80',
                 'payload' => [
@@ -288,11 +298,15 @@ class AiWaiterService
                     'image' => $pairedDrink->image,
                     'description' => $pairedDrink->getTranslatedDescription($lang),
                     'base_price' => (float) $pairedDrink->getEffectivePrice($locationId),
+                    'regular_price' => (float) $pairedDrink->getRegularPrice($locationId),
+                    'is_discount_active' => $pairedDrink->isDiscountActive(),
+                    'discount_percentage' => $pairedDrink->getDiscountPercentage(),
                     'variations' => $pairedDrink->variations->map(function ($v) use ($lang) {
                         return [
                             'id' => $v->id,
                             'name' => $v->getTranslatedName($lang),
-                            'price' => (float) $v->price,
+                            'price' => (float) $v->getEffectivePrice(),
+                            'regular_price' => (float) $v->price,
                             'is_default' => (bool) $v->is_default,
                         ];
                     })->values(),
@@ -302,6 +316,9 @@ class AiWaiterService
                 'id' => $pairedSide->id,
                 'name' => $pairedSide->getTranslatedName($lang),
                 'price' => (float) $pairedSide->getEffectivePrice($locationId),
+                'regular_price' => (float) $pairedSide->getRegularPrice($locationId),
+                'is_discount_active' => $pairedSide->isDiscountActive(),
+                'discount_percentage' => $pairedSide->getDiscountPercentage(),
                 'formatted_price' => number_format($pairedSide->getEffectivePrice($locationId)).' '.$vendor->currency,
                 'image' => $pairedSide->image ?? 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&q=80',
                 'payload' => [
@@ -310,11 +327,15 @@ class AiWaiterService
                     'image' => $pairedSide->image,
                     'description' => $pairedSide->getTranslatedDescription($lang),
                     'base_price' => (float) $pairedSide->getEffectivePrice($locationId),
+                    'regular_price' => (float) $pairedSide->getRegularPrice($locationId),
+                    'is_discount_active' => $pairedSide->isDiscountActive(),
+                    'discount_percentage' => $pairedSide->getDiscountPercentage(),
                     'variations' => $pairedSide->variations->map(function ($v) use ($lang) {
                         return [
                             'id' => $v->id,
                             'name' => $v->getTranslatedName($lang),
-                            'price' => (float) $v->price,
+                            'price' => (float) $v->getEffectivePrice(),
+                            'regular_price' => (float) $v->price,
                             'is_default' => (bool) $v->is_default,
                         ];
                     })->values(),

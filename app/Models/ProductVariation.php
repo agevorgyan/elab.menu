@@ -40,4 +40,19 @@ class ProductVariation extends Model
 
         return $this->name;
     }
+
+    /**
+     * Get effective price taking into account parent product discount if active.
+     */
+    public function getEffectivePrice(): float
+    {
+        $product = $this->product;
+        if ($product && $product->isDiscountActive() && (float) $product->price > 0) {
+            $ratio = (float) $product->discount_price / (float) $product->price;
+
+            return round((float) $this->price * $ratio, 2);
+        }
+
+        return (float) $this->price;
+    }
 }

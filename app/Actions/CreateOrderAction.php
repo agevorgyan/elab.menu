@@ -126,13 +126,18 @@ class CreateOrderAction
                     $variation = $product->variations()->first();
                 }
 
-                // 5. Determine unit price strictly from variation or location override
+                // 5. Determine unit price strictly from variation, location override, or scheduled discount
                 if ($variation) {
                     $override = $product->overrides->firstWhere('location_id', $dto->locationId);
                     if ($variationsCount === 1 && $override && $override->override_price !== null) {
-                        $unitPrice = (float) $override->override_price;
+                        if ($product->isDiscountActive() && (float) $product->price > 0) {
+                            $ratio = (float) $product->discount_price / (float) $product->price;
+                            $unitPrice = round((float) $override->override_price * $ratio, 2);
+                        } else {
+                            $unitPrice = (float) $override->override_price;
+                        }
                     } else {
-                        $unitPrice = (float) $variation->price;
+                        $unitPrice = (float) $variation->getEffectivePrice();
                     }
                     $variationName = $variation->name;
                 } else {

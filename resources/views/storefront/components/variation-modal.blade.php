@@ -67,8 +67,11 @@
                         <span class="variation-name-text" x-text="v.name"></span>
                     </div>
                     <div class="variation-price-display">
-                        <span class="variation-price-num" x-text="Number(v.price).toLocaleString()"></span>
-                        <span class="variation-price-currency">{{ $vendor->currency }}</span>
+                        <template x-if="v.regular_price && v.regular_price > v.price">
+                            <span style="font-size: 0.8rem; text-decoration: line-through; color: var(--text-muted); margin-right: 0.35rem; font-weight: 500;" x-text="Number(v.regular_price).toLocaleString()"></span>
+                        </template>
+                        <span class="variation-price-num" :style="v.regular_price && v.regular_price > v.price ? 'color: #ef4444;' : ''" x-text="Number(v.price).toLocaleString()"></span>
+                        <span class="variation-price-currency" :style="v.regular_price && v.regular_price > v.price ? 'color: #ef4444;' : ''">{{ $vendor->currency }}</span>
                     </div>
                 </div>
             </template>

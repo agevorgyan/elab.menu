@@ -144,14 +144,42 @@
                             </div>
                         </div>
 
-                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;">
                             <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary); font-family: 'Outfit';">
-                                @if($product->variations->count() > 1)
+                                @if($product->isDiscountActive())
+                                    <div style="display: flex; align-items: baseline; gap: 0.45rem; justify-content: flex-end;">
+                                        <span style="color: #ef4444;">{{ number_format($product->discount_price) }} {{ $vendor->currency }}</span>
+                                        <del style="color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">{{ number_format($product->price) }}</del>
+                                    </div>
+                                @elseif($product->discount_price)
+                                    <div>
+                                        <span>{{ number_format($product->price) }} {{ $vendor->currency }}</span>
+                                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+                                            (Զեղչ՝ {{ number_format($product->discount_price) }} {{ $vendor->currency }})
+                                        </div>
+                                    </div>
+                                @elseif($product->variations->count() > 1)
                                     {{ number_format($product->variations->min('price')) }} - {{ number_format($product->variations->max('price')) }} {{ $vendor->currency }}
                                 @else
                                     {{ number_format($product->price) }} {{ $vendor->currency }}
                                 @endif
                             </div>
+
+                            @if($product->isDiscountActive())
+                                <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-end;">
+                                    <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                        <i class="fa-solid fa-tag"></i> -{{ $product->getDiscountPercentage() }}% Զեղչ
+                                    </span>
+                                    <span style="font-size: 0.7rem; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 0.15rem 0.45rem; border-radius: 6px;">
+                                        <i class="fa-regular fa-clock"></i> {{ $product->getDiscountScheduleSummary() }}
+                                    </span>
+                                </div>
+                            @elseif($product->discount_price)
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                    <i class="fa-regular fa-clock"></i> {{ $product->getDiscountScheduleSummary() }} <span style="opacity: 0.7;">(ժամից դուրս)</span>
+                                </div>
+                            @endif
+
                             @if($product->variations->count() > 1)
                                 <span style="font-size: 0.72rem; color: var(--primary); background: rgba(245, 158, 11, 0.12); border: 1px solid var(--border-color); padding: 0.15rem 0.55rem; border-radius: 9999px; font-weight: 700;">
                                     {{ $product->variations->count() }} options
@@ -277,7 +305,7 @@
                 </select>
             </div>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div>
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Dish Name (English)</label>
                     <input type="text" name="name" required style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
@@ -286,6 +314,75 @@
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Price ({{ $vendor->currency }})</label>
                     <input type="number" name="price" step="100" required style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
                 </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: #ef4444; font-weight: 700; margin-bottom: 0.35rem;">
+                        <i class="fa-solid fa-tag"></i> Զեղչված գին
+                    </label>
+                    <input type="number" name="discount_price" step="100" placeholder="Օրինակ՝ 2500" style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
+                </div>
+            </div>
+
+            <!-- Happy Hour & Discount Schedule Section (New) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="width: 26px; height: 26px; border-radius: 8px; background: rgba(239, 68, 68, 0.15); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                            <i class="fa-solid fa-clock"></i>
+                        </span>
+                        <div>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Զեղչի Ժամանակացույց (Happy Hour)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Սահմանեք օրերը և ժամերը, երբ կգործի զեղչը</small>
+                        </div>
+                    </div>
+                    <label style="font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="checkbox" name="is_discount_active" value="1" checked> Ակտիվացնել զեղչը
+                    </label>
+                </div>
+
+                <!-- Day Selector Chips -->
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Շաբաթվա օրեր</label>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'all')">Բոլորը</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'weekdays')">Երկ-Ուրբ</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'weekends')">Հանգստյան</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        @php
+                            $weekDays = [
+                                'mon' => 'Երկ',
+                                'tue' => 'Երք',
+                                'wed' => 'Չոր',
+                                'thu' => 'Հնգ',
+                                'fri' => 'Ուրբ',
+                                'sat' => 'Շաբ',
+                                'sun' => 'Կիր'
+                            ];
+                        @endphp
+                        @foreach($weekDays as $key => $lbl)
+                            <label style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.55rem; border-radius: 6px; cursor: pointer; color: var(--text-main);">
+                                <input type="checkbox" class="new-discount-day-checkbox" name="discount_days[]" value="{{ $key }}" checked> {{ $lbl }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Time Window -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Սկիզբ (Start Time)</label>
+                        <input type="time" name="discount_start_time" style="width: 100%; padding: 0.5rem 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Ավարտ (End Time)</label>
+                        <input type="time" name="discount_end_time" style="width: 100%; padding: 0.5rem 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                    </div>
+                </div>
+                <small style="display: block; color: var(--text-muted); font-size: 0.7rem; margin-top: 0.35rem;">
+                    💡 Եթե ժամերը նշված չեն, զեղչը կգործի ընտրված օրերի ամբողջ ընթացքում:
+                </small>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
@@ -402,7 +499,7 @@
                 </select>
             </div>
 
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <div>
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Dish Name (English)</label>
                     <input type="text" id="edit_prod_name" name="name" required style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
@@ -411,6 +508,64 @@
                     <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Price ({{ $vendor->currency }})</label>
                     <input type="number" id="edit_prod_price" name="price" step="100" required style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
                 </div>
+                <div>
+                    <label style="display: block; font-size: 0.8rem; color: #ef4444; font-weight: 700; margin-bottom: 0.35rem;">
+                        <i class="fa-solid fa-tag"></i> Զեղչված գին
+                    </label>
+                    <input type="number" id="edit_prod_discount_price" name="discount_price" step="100" placeholder="Օրինակ՝ 2500" style="width: 100%; padding: 0.65rem 0.9rem; background: var(--input-bg); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 10px; color: var(--text-main); font-size: 0.9rem; outline: none;">
+                </div>
+            </div>
+
+            <!-- Happy Hour & Discount Schedule Section (Edit) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="width: 26px; height: 26px; border-radius: 8px; background: rgba(239, 68, 68, 0.15); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                            <i class="fa-solid fa-clock"></i>
+                        </span>
+                        <div>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Զեղչի Ժամանակացույց (Happy Hour)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Սահմանեք օրերը և ժամերը, երբ կգործի զեղչը</small>
+                        </div>
+                    </div>
+                    <label style="font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="checkbox" id="edit_prod_is_discount_active" name="is_discount_active" value="1"> Ակտիվացնել զեղչը
+                    </label>
+                </div>
+
+                <!-- Day Selector Chips -->
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Շաբաթվա օրեր</label>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'all')">Բոլորը</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'weekdays')">Երկ-Ուրբ</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'weekends')">Հանգստյան</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        @foreach($weekDays as $key => $lbl)
+                            <label style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.55rem; border-radius: 6px; cursor: pointer; color: var(--text-main);">
+                                <input type="checkbox" class="edit-discount-day-checkbox" name="discount_days[]" value="{{ $key }}"> {{ $lbl }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Time Window -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Սկիզբ (Start Time)</label>
+                        <input type="time" id="edit_prod_discount_start_time" name="discount_start_time" style="width: 100%; padding: 0.5rem 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Ավարտ (End Time)</label>
+                        <input type="time" id="edit_prod_discount_end_time" name="discount_end_time" style="width: 100%; padding: 0.5rem 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                    </div>
+                </div>
+                <small style="display: block; color: var(--text-muted); font-size: 0.7rem; margin-top: 0.35rem;">
+                    💡 Եթե ժամերը նշված չեն, զեղչը կգործի ընտրված օրերի ամբողջ ընթացքում:
+                </small>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
@@ -525,6 +680,21 @@
 </div>
 
 <script>
+    function setDiscountDaysPreset(prefix, preset) {
+        const checkboxes = document.querySelectorAll('.' + prefix + '-discount-day-checkbox');
+        checkboxes.forEach(cb => {
+            if (preset === 'all') {
+                cb.checked = true;
+            } else if (preset === 'weekdays') {
+                cb.checked = ['mon', 'tue', 'wed', 'thu', 'fri'].includes(cb.value);
+            } else if (preset === 'weekends') {
+                cb.checked = ['sat', 'sun'].includes(cb.value);
+            } else if (preset === 'none') {
+                cb.checked = false;
+            }
+        });
+    }
+
     function editCategory(cat) {
         document.getElementById('editCategoryForm').action = "/admin/menu/categories/" + cat.id;
         document.getElementById('edit_cat_name').value = cat.name || '';
@@ -565,6 +735,17 @@
         document.getElementById('edit_prod_preparation_time_min').value = prod.preparation_time_min || '';
         document.getElementById('edit_prod_is_featured').checked = !!prod.is_featured;
         document.getElementById('edit_prod_is_available').checked = !!prod.is_available;
+
+        // Discount & Happy Hour fields
+        document.getElementById('edit_prod_discount_price').value = prod.discount_price || '';
+        document.getElementById('edit_prod_discount_start_time').value = prod.discount_start_time ? prod.discount_start_time.substring(0, 5) : '';
+        document.getElementById('edit_prod_discount_end_time').value = prod.discount_end_time ? prod.discount_end_time.substring(0, 5) : '';
+        document.getElementById('edit_prod_is_discount_active').checked = prod.is_discount_active !== false && prod.is_discount_active !== 0;
+
+        const discountDays = prod.discount_days || [];
+        document.querySelectorAll('.edit-discount-day-checkbox').forEach(cb => {
+            cb.checked = discountDays.length === 0 || discountDays.includes(cb.value);
+        });
         
         // Populate Variations
         const editContainer = document.getElementById('edit_variations_container');

@@ -6,6 +6,7 @@ use App\Models\Traits\BelongsToVendor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
@@ -40,6 +41,11 @@ class Product extends Model
         'description',
         'description_translations',
         'price',
+        'discount_price',
+        'discount_days',
+        'discount_start_time',
+        'discount_end_time',
+        'is_discount_active',
         'image',
         'gallery',
         'dietary_tags',
@@ -58,7 +64,10 @@ class Product extends Model
         'description_translations' => 'array',
         'gallery' => 'array',
         'dietary_tags' => 'array',
+        'discount_days' => 'array',
         'price' => 'decimal:2',
+        'discount_price' => 'decimal:2',
+        'is_discount_active' => 'boolean',
         'protein_g' => 'decimal:1',
         'carbs_g' => 'decimal:1',
         'fat_g' => 'decimal:1',
@@ -111,7 +120,97 @@ class Product extends Model
         return $this->description ?? '';
     }
 
+    /**
+     * Check if product discount is currently active based on configured schedule (days & hours).
+     */
+    public function isDiscountActive(?string $timezone = null): bool
+    {
+        if ($this->discount_price === null || (float) $this->discount_price <= 0) {
+            return false;
+        }
+
+        if ((float) $this->discount_price >= (float) $this->price) {
+            return false;
+        }
+
+        if ($this->is_discount_active === false) {
+            return false;
+        }
+
+        $tz = $timezone ?: ($this->vendor?->timezone ?? 'Asia/Yerevan');
+        $now = Carbon::now($tz);
+
+        // 1. Check days of week if specified (e.g. ['mon', 'tue', 'wed', 'thu', 'fri'] or ['monday', ...])
+        if (! empty($this->discount_days) && is_array($this->discount_days)) {
+            $currentDayShort = strtolower($now->format('D')); // 'mon', 'tue', etc.
+            $currentDayFull = strtolower($now->format('l')); // 'monday', 'tuesday', etc.
+            $currentDayPrefix = substr($currentDayShort, 0, 3);
+
+            $allowedDays = array_map('strtolower', $this->discount_days);
+            $allowedPrefixes = array_map(fn ($d) => substr(strtolower($d), 0, 3), $this->discount_days);
+
+            $dayMatches = in_array($currentDayShort, $allowedDays, true)
+                || in_array($currentDayFull, $allowedDays, true)
+                || in_array($currentDayPrefix, $allowedPrefixes, true);
+
+            if (! $dayMatches) {
+                return false;
+            }
+        }
+
+        // 2. Check time window if start/end times specified
+        if ($this->discount_start_time && $this->discount_end_time) {
+            $currentTime = $now->format('H:i:s');
+            $startTime = Carbon::parse($this->discount_start_time, $tz)->format('H:i:s');
+            $endTime = Carbon::parse($this->discount_end_time, $tz)->format('H:i:s');
+
+            if ($startTime <= $endTime) {
+                // Regular daytime window (e.g. 12:00:00 to 16:00:00)
+                if ($currentTime < $startTime || $currentTime > $endTime) {
+                    return false;
+                }
+            } else {
+                // Overnight window (e.g. 22:00:00 to 02:00:00)
+                if ($currentTime < $startTime && $currentTime > $endTime) {
+                    return false;
+                }
+            }
+        } elseif ($this->discount_start_time && ! $this->discount_end_time) {
+            $currentTime = $now->format('H:i:s');
+            $startTime = Carbon::parse($this->discount_start_time, $tz)->format('H:i:s');
+            if ($currentTime < $startTime) {
+                return false;
+            }
+        } elseif (! $this->discount_start_time && $this->discount_end_time) {
+            $currentTime = $now->format('H:i:s');
+            $endTime = Carbon::parse($this->discount_end_time, $tz)->format('H:i:s');
+            if ($currentTime > $endTime) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function getEffectivePrice(?int $locationId = null): float
+    {
+        $basePrice = (float) $this->price;
+
+        if ($locationId) {
+            $override = $this->overrides->firstWhere('location_id', $locationId);
+            if ($override && $override->override_price !== null) {
+                $basePrice = (float) $override->override_price;
+            }
+        }
+
+        if ($this->isDiscountActive()) {
+            return (float) $this->discount_price;
+        }
+
+        return $basePrice;
+    }
+
+    public function getRegularPrice(?int $locationId = null): float
     {
         if ($locationId) {
             $override = $this->overrides->firstWhere('location_id', $locationId);
@@ -121,6 +220,72 @@ class Product extends Model
         }
 
         return (float) $this->price;
+    }
+
+    public function getDiscountPercentage(): ?int
+    {
+        $regular = $this->getRegularPrice();
+        if ($regular <= 0 || ! $this->isDiscountActive()) {
+            return null;
+        }
+
+        $effective = $this->getEffectivePrice();
+        $diff = $regular - $effective;
+        if ($diff <= 0) {
+            return null;
+        }
+
+        return (int) round(($diff / $regular) * 100);
+    }
+
+    public function getDiscountScheduleSummary(?string $locale = 'hy'): string
+    {
+        if (! $this->discount_price) {
+            return '';
+        }
+
+        $dayMap = [
+            'hy' => ['mon' => 'Երկ', 'tue' => 'Երք', 'wed' => 'Չոր', 'thu' => 'Հնգ', 'fri' => 'Ուրբ', 'sat' => 'Շաբ', 'sun' => 'Կիր'],
+            'en' => ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'],
+            'ru' => ['mon' => 'Пн', 'tue' => 'Вт', 'wed' => 'Ср', 'thu' => 'Чт', 'fri' => 'Пт', 'sat' => 'Сб', 'sun' => 'Вс'],
+        ];
+
+        $labels = $dayMap[$locale] ?? $dayMap['hy'];
+
+        $daysText = '';
+        if (empty($this->discount_days) || count($this->discount_days) >= 7) {
+            $daysText = $locale === 'en' ? 'Every day' : ($locale === 'ru' ? 'Каждый день' : 'Ամեն օր');
+        } else {
+            $prefixes = array_values(array_unique(array_map(fn ($d) => substr(strtolower($d), 0, 3), $this->discount_days)));
+            sort($prefixes);
+
+            $weekdays = ['fri', 'mon', 'thu', 'tue', 'wed'];
+            $weekends = ['sat', 'sun'];
+
+            if ($prefixes === $weekdays) {
+                $daysText = $locale === 'en' ? 'Mon-Fri' : ($locale === 'ru' ? 'Пн-Пт' : 'Երկ-Ուրբ');
+            } elseif ($prefixes === $weekends) {
+                $daysText = $locale === 'en' ? 'Weekends' : ($locale === 'ru' ? 'Выходные' : 'Հանգստյան օրեր');
+            } else {
+                $daysText = implode(', ', array_map(fn ($p) => $labels[$p] ?? $p, $prefixes));
+            }
+        }
+
+        $timeText = '';
+        if ($this->discount_start_time && $this->discount_end_time) {
+            $s = substr($this->discount_start_time, 0, 5);
+            $e = substr($this->discount_end_time, 0, 5);
+            $timeText = "{$s} - {$e}";
+        } elseif ($this->discount_start_time) {
+            $s = substr($this->discount_start_time, 0, 5);
+            $timeText = "սկսած {$s}-ից";
+        }
+
+        if ($timeText) {
+            return "{$daysText}, {$timeText}";
+        }
+
+        return $daysText;
     }
 
     public function isAvailableAtLocation(?int $locationId = null): bool

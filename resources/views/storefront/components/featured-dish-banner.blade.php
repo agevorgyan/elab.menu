@@ -6,10 +6,14 @@
             'image' => $featuredDish->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
             'description' => $featuredDish->getTranslatedDescription($lang),
             'base_price' => (float)$featuredDish->getEffectivePrice($location?->id),
+            'regular_price' => (float)$featuredDish->getRegularPrice($location?->id),
+            'is_discount_active' => $featuredDish->isDiscountActive(),
+            'discount_percentage' => $featuredDish->getDiscountPercentage(),
             'variations' => $featuredDish->variations->map(fn($v) => [
                 'id' => $v->id,
                 'name' => $v->getTranslatedName($lang),
-                'price' => (float)$v->price,
+                'price' => (float)$v->getEffectivePrice(),
+                'regular_price' => (float)$v->price,
                 'is_default' => (bool)$v->is_default
             ])->values(),
         ];
@@ -47,6 +51,12 @@
                             <i class="fa-solid fa-fire-flame-curved" style="color: #fff;"></i>
                             <span>{{ $badgeText }}</span>
                         </span>
+
+                        @if($featuredDish->isDiscountActive())
+                            <span style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; font-size: 0.78rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 9999px; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45); display: inline-flex; align-items: center; gap: 0.3rem;">
+                                <i class="fa-solid fa-tag"></i> -{{ $featuredDish->getDiscountPercentage() }}%
+                            </span>
+                        @endif
                         
                         @if($featuredDish->category)
                             <span style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); color: #e2e8f0; font-size: 0.72rem; font-weight: 700; padding: 0.3rem 0.65rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.15);">
@@ -104,10 +114,22 @@
                             <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">
                                 {{ __('menu.price') }}
                             </span>
-                            <div style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-main); display: flex; align-items: baseline; gap: 0.25rem;">
-                                <span>{{ number_format($featuredDish->getEffectivePrice($location?->id), 0, '.', ',') }}</span>
-                                <span style="font-size: 0.85rem; color: var(--primary); font-weight: 700;">{{ $vendor->currency ?? 'AMD' }}</span>
-                            </div>
+                            @if($featuredDish->isDiscountActive())
+                                <div style="display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap;">
+                                    <div style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: #ef4444; display: flex; align-items: baseline; gap: 0.25rem;">
+                                        <span>{{ number_format($featuredDish->getEffectivePrice($location?->id), 0, '.', ',') }}</span>
+                                        <span style="font-size: 0.85rem; color: #ef4444; font-weight: 700;">{{ $vendor->currency ?? 'AMD' }}</span>
+                                    </div>
+                                    <span style="font-size: 0.85rem; text-decoration: line-through; color: var(--text-muted); font-weight: 600;">
+                                        {{ number_format($featuredDish->getRegularPrice($location?->id), 0, '.', ',') }}
+                                    </span>
+                                </div>
+                            @else
+                                <div style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-main); display: flex; align-items: baseline; gap: 0.25rem;">
+                                    <span>{{ number_format($featuredDish->getEffectivePrice($location?->id), 0, '.', ',') }}</span>
+                                    <span style="font-size: 0.85rem; color: var(--primary); font-weight: 700;">{{ $vendor->currency ?? 'AMD' }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         <button type="button"

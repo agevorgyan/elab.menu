@@ -280,10 +280,14 @@
                                 'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
                                 'description' => $prod->getTranslatedDescription($lang),
                                 'base_price' => (float)$prod->getEffectivePrice($location?->id),
+                                'regular_price' => (float)$prod->getRegularPrice($location?->id),
+                                'is_discount_active' => $prod->isDiscountActive(),
+                                'discount_percentage' => $prod->getDiscountPercentage(),
                                 'variations' => $prod->variations->map(fn($v) => [
                                     'id' => $v->id,
                                     'name' => $v->getTranslatedName($lang),
-                                    'price' => (float)$v->price,
+                                    'price' => (float)$v->getEffectivePrice(),
+                                    'regular_price' => (float)$v->price,
                                     'is_default' => (bool)$v->is_default
                                 ])->values(),
                             ];
@@ -294,6 +298,11 @@
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
                                         <div style="font-weight: 700; font-size: 1.05rem; color: var(--text-main);">{{ $prod->getTranslatedName($lang) }}</div>
+                                        @if($prod->isDiscountActive())
+                                            <span style="background: linear-gradient(135deg, #ef4444, #f43f5e); color: #ffffff; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.1rem 0.45rem; border-radius: 6px; font-size: 0.65rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                                <i class="fa-solid fa-tag"></i> -{{ $prod->getDiscountPercentage() }}%
+                                            </span>
+                                        @endif
                                         @if($prod->is_featured)
                                             <span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.1rem 0.4rem; border-radius: 6px; font-size: 0.65rem; font-weight: 700;">★ FEATURED</span>
                                         @endif
@@ -326,7 +335,14 @@
 
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.5rem;">
                                     <div style="font-weight: 800; color: var(--accent); font-size: 1.15rem;">
-                                        @if($prod->variations->count() > 1)
+                                        @if($prod->isDiscountActive())
+                                            <div style="display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap;">
+                                                <span style="color: #ef4444;">{{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}</span>
+                                                <span style="font-size: 0.8rem; text-decoration: line-through; color: var(--text-muted); font-weight: 500;">
+                                                    {{ number_format($prod->getRegularPrice($location?->id)) }}
+                                                </span>
+                                            </div>
+                                        @elseif($prod->variations->count() > 1)
                                             <small style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">{{ __('menu.starting_from') }}</small>
                                             {{ number_format($prod->variations->min('price')) }} {{ $vendor->currency }}
                                         @else

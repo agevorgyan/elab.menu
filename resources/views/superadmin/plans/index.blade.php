@@ -1,74 +1,150 @@
 @extends('layouts.app')
 
+@section('title', 'Subscription Plans - SuperAdmin')
+
+@section('styles')
+<style>
+    .plan-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: var(--shadow-card);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .plan-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+    }
+    .plan-card-basic { border-top: 5px solid #64748b; }
+    .plan-card-pro { border-top: 5px solid #f59e0b; }
+    .plan-card-business { border-top: 5px solid #06b6d4; }
+    .plan-card-custom { border-top: 5px solid #a855f7; }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-bottom: 0.45rem;
+    }
+    .feature-icon-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        flex-shrink: 0;
+    }
+</style>
+@endsection
+
 @section('content')
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
-            <i class="fa-solid fa-box-archive" style="color: var(--primary);"></i> Բաժանորդագրությունների Փաթեթներ (Subscription Plans)
-        </h2>
-        <p style="color: var(--text-muted); font-size: 0.88rem;">Կառավարեք 4 հիմնական (Basic, Pro, Business, Custom) և անհատական բաժանորդագրությունների փաթեթները, գները և հնարավորությունները։</p>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span class="badge badge-amber">
+                <i class="fa-solid fa-box-archive"></i> Փաթեթների Կառավարում
+            </span>
+            <span style="font-size: 0.78rem; color: var(--text-muted);">Ընդհանուր՝ {{ $plans->count() }} փաթեթ</span>
+        </div>
+        <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
+            Բաժանորդագրությունների Փաթեթներ (Subscription Plans)
+        </h1>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('createPlanModal').style.display='flex'">
+    <button class="btn btn-primary" onclick="document.getElementById('createPlanModal').style.display='flex'" style="border-radius: 12px; font-size: 0.88rem; padding: 0.65rem 1.25rem;">
         <i class="fa-solid fa-plus"></i> Ավելացնել Նոր Փաթեթ
     </button>
 </div>
 
 <!-- Plans Grid -->
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
     @foreach($plans as $plan)
-        <div class="glass-card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid {{ $plan->slug == 'basic' ? '#64748b' : ($plan->slug == 'pro' ? '#f59e0b' : ($plan->slug == 'business' ? '#06b6d4' : '#a855f7')) }};">
+        @php
+            $slugLower = strtolower($plan->slug);
+            $cardClass = in_array($slugLower, ['basic', 'pro', 'business', 'custom']) ? 'plan-card-'.$slugLower : 'plan-card-pro';
+        @endphp
+        <div class="plan-card {{ $cardClass }}">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <!-- Plan Top Bar -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem;">
                     <div>
-                        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ $plan->name }}</h3>
-                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">{{ $plan->slug }}</span>
+                        <h3 style="font-size: 1.3rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-bottom: 0.15rem;">
+                            {{ $plan->name }}
+                        </h3>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
+                            SLUG: {{ $plan->slug }}
+                        </span>
                     </div>
-                    <form action="{{ route('superadmin.plans.toggle', $plan->id) }}" method="POST">
+
+                    <form action="{{ route('superadmin.plans.toggle', $plan->id) }}" method="POST" style="margin: 0;">
                         @csrf
-                        <button type="submit" class="btn" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; background: {{ $plan->is_active ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)' }}; color: {{ $plan->is_active ? '#22c55e' : '#ef4444' }}; border: 1px solid {{ $plan->is_active ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)' }};">
-                            {{ $plan->is_active ? 'Ակտիվ' : 'Անջատված' }}
+                        <button type="submit" class="badge {{ $plan->is_active ? 'badge-emerald' : 'badge-rose' }}" style="cursor: pointer; border-radius: 8px;">
+                            <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ $plan->is_active ? 'Ակտիվ' : 'Անջատված' }}
                         </button>
                     </form>
                 </div>
 
-                <div style="margin-bottom: 1rem;">
-                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">
+                <!-- Price & Duration -->
+                <div style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem;">
+                    <div style="font-size: 1.65rem; font-weight: 800; font-family: 'Outfit'; color: var(--primary);">
                         {{ $plan->formatted_price }}
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
-                        ⏱ Տևողություն՝ {{ $plan->duration_days }} օր | Փորձնական՝ {{ $plan->trial_days }} օր
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <span><i class="fa-solid fa-calendar-days"></i> {{ $plan->duration_days }} օր</span>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-clock"></i> Փորձնական՝ {{ $plan->trial_days }} օր</span>
                     </div>
                 </div>
 
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
-                    {{ $plan->description }}
+                <!-- Description -->
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.45; min-height: 2.5rem;">
+                    {{ $plan->description ?: 'Ստանդարտ սակագնային փաթեթ QRMenu համակարգի բոլոր հիմնական գործիքներով։' }}
                 </p>
 
-                <hr style="border-color: var(--border-color); margin: 1rem 0;">
-
-                <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Ներառված ֆունկցիաներ (`{{ count($plan->features ?? []) }}`)</h4>
-                <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; font-size: 0.82rem; color: var(--text-muted);">
-                    @foreach($plan->features ?? [] as $feat)
-                        <li style="margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
-                            <i class="fa-solid fa-check" style="color: #22c55e; font-size: 0.75rem;"></i> {{ $feat }}
-                        </li>
-                    @endforeach
-                </ul>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1.25rem;">
+                    <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
+                        Ներառված ֆունկցիաներ ({{ count($plan->features ?? []) }})
+                    </h4>
+                    <div style="display: flex; flex-direction: column;">
+                        @forelse($plan->features ?? [] as $feat)
+                            <div class="feature-item">
+                                <div class="feature-icon-check"><i class="fa-solid fa-check"></i></div>
+                                <span>{{ $feat }}</span>
+                            </div>
+                        @empty
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">Ֆունկցիաներ չեն նշված</div>
+                        @endforelse
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                    🏢 Օգտագործող վենդորներ՝ <strong>{{ $plan->vendors_count }}</strong>
+            <!-- Card Bottom Bar -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>🏢 Օգտագործող վենդորներ</span>
+                    <strong style="color: var(--text-main); font-family: 'Outfit'; font-size: 0.95rem;">{{ $plan->vendors_count }}</strong>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-secondary" style="flex: 1; font-size: 0.8rem;" onclick="openEditModal({{ json_encode($plan) }})">
+                    <button class="btn btn-secondary" style="flex: 1; font-size: 0.82rem; justify-content: center; border-radius: 10px;" onclick="openEditModal({{ json_encode($plan) }})">
                         <i class="fa-solid fa-pen-to-square"></i> Խմբագրել
                     </button>
                     @if($plan->vendors_count == 0)
-                        <form action="{{ route('superadmin.plans.destroy', $plan->id) }}" method="POST" onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս փաթեթը։');">
+                        <form action="{{ route('superadmin.plans.destroy', $plan->id) }}" method="POST" onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս փաթեթը։');" style="margin: 0;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem;">
+                            <button type="submit" class="btn btn-secondary" style="color: #ef4444; border-radius: 10px; padding: 0.55rem 0.75rem;" title="Ջնջել">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </form>
@@ -79,12 +155,19 @@
     @endforeach
 </div>
 
-<!-- Create Plan Modal -->
-<div id="createPlanModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 600px; padding: 1.75rem; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-weight: 800; font-size: 1.2rem; color: var(--text-main);">Ավելացնել Նոր Փաթեթ</h3>
-            <button onclick="document.getElementById('createPlanModal').style.display='none'" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem;">✕</button>
+<!-- Modern Create Plan Modal -->
+<div id="createPlanModal" class="modern-modal-overlay" style="display: none;">
+    <div class="modern-modal-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;">
+                    Ավելացնել Նոր Փաթեթ
+                </h3>
+            </div>
+            <button onclick="document.getElementById('createPlanModal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.25rem;">✕</button>
         </div>
 
         <form action="{{ route('superadmin.plans.store') }}" method="POST">
@@ -124,12 +207,12 @@
                 <input type="text" name="description" class="form-input" placeholder="Փաթեթի համառոտ նկարագրություն...">
             </div>
 
-            <div style="margin-bottom: 1.25rem;">
+            <div style="margin-bottom: 1.5rem;">
                 <label class="form-label">Ֆունկցիոնալության ցանկ (յուրաքանչյուրը նոր տողում)</label>
                 <textarea name="features" rows="5" class="form-textarea" placeholder="QR մենյու&#10;Օնլայն պատվերներ&#10;Սեղանի համարով պատվիրում"></textarea>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('createPlanModal').style.display='none'">Չեղարկել</button>
                 <button type="submit" class="btn btn-primary">Պահպանել Փաթեթը</button>
             </div>
@@ -137,12 +220,19 @@
     </div>
 </div>
 
-<!-- Edit Plan Modal -->
-<div id="editPlanModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 600px; padding: 1.75rem; border-radius: 20px; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-weight: 800; font-size: 1.2rem; color: var(--text-main);">Խմբագրել Փաթեթը</h3>
-            <button onclick="document.getElementById('editPlanModal').style.display='none'" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem;">✕</button>
+<!-- Modern Edit Plan Modal -->
+<div id="editPlanModal" class="modern-modal-overlay" style="display: none;">
+    <div class="modern-modal-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </div>
+                <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;">
+                    Խմբագրել Փաթեթը
+                </h3>
+            </div>
+            <button onclick="document.getElementById('editPlanModal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.25rem;">✕</button>
         </div>
 
         <form id="editPlanForm" method="POST">
@@ -187,14 +277,14 @@
                 <textarea id="edit_features" name="features" rows="5" class="form-textarea"></textarea>
             </div>
 
-            <div style="margin-bottom: 1.25rem;">
+            <div style="margin-bottom: 1.5rem;">
                 <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
                     <input type="checkbox" id="edit_is_active" name="is_active" value="1">
                     <span>Ակտիվ փաթեթ (հասանելի է գրանցումների համար)</span>
                 </label>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('editPlanModal').style.display='none'">Չեղարկել</button>
                 <button type="submit" class="btn btn-primary">Թարմացնել Փաթեթը</button>
             </div>

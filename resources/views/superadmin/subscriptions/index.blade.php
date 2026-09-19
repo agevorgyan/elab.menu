@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Vendor Subscriptions & Billing - SuperAdmin')
+
 @section('styles')
 <style>
     .subs-desktop-table {
@@ -9,7 +11,38 @@
         display: none;
     }
 
-    @media (max-width: 768px) {
+    .filter-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-card);
+    }
+
+    .sub-filter-pill {
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-muted);
+        transition: all 0.2s ease;
+    }
+    .sub-filter-pill:hover {
+        color: var(--text-main);
+        background: var(--nav-hover);
+    }
+    .sub-filter-pill.active {
+        background: var(--nav-active);
+        border-color: var(--nav-active-border);
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    @media (max-width: 992px) {
         .subs-desktop-table {
             display: none !important;
         }
@@ -21,323 +54,396 @@
         .sub-mobile-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.15rem;
+            border-radius: 18px;
+            padding: 1.25rem;
             box-shadow: var(--shadow-card);
-        }
-        .modal-grid {
-            grid-template-columns: 1fr !important;
-        }
-        .page-header {
-            flex-direction: column;
-            align-items: stretch !important;
-            gap: 1rem;
         }
     }
 </style>
 @endsection
 
 @section('content')
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <div>
-        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
-            <i class="fa-solid fa-credit-card" style="color: var(--primary);"></i> Վենդորների Բաժանորդագրություններ & Վճարումներ
-        </h2>
-        <p style="color: var(--text-muted); font-size: 0.88rem;">Վերահսկեք վենդորների բաժանորդագրության կարգավիճակները, վերջնաժամկետները, երկարաձգումները և վճարումների պատմությունը։</p>
+<div x-data="{
+    search: '',
+    statusFilter: 'all',
+    planFilter: 'all',
+    matches(name, email, status, plan) {
+        const q = this.search.toLowerCase().trim();
+        const matchesSearch = !q || 
+            (name && name.toLowerCase().includes(q)) || 
+            (email && email.toLowerCase().includes(q));
+        const matchesStatus = this.statusFilter === 'all' || status === this.statusFilter;
+        const matchesPlan = this.planFilter === 'all' || plan.toLowerCase() === this.planFilter.toLowerCase();
+        return matchesSearch && matchesStatus && matchesPlan;
+    }
+}">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="badge badge-purple">
+                    <i class="fa-solid fa-credit-card"></i> Բիլինգ և Վճարումներ
+                </span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Բաժանորդագրությունների կառավարում</span>
+            </div>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                Վենդորների Բաժանորդագրություններ & Վճարումներ
+            </h1>
+        </div>
     </div>
-</div>
 
-<!-- Desktop Table View -->
-<div class="glass-card subs-desktop-table" style="padding: 1.25rem;">
-    <div style="overflow-x: auto;">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Վենդոր</th>
-                    <th>Փաթեթ</th>
-                    <th>Կարգավիճակ</th>
-                    <th>Փորձնական / Վերջնաժամկետ</th>
-                    <th>Մնացած օրեր</th>
-                    <th>Վերջին Վճարում</th>
-                    <th style="text-align: right;">Գործողություններ</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($vendors as $v)
-                    <tr>
-                        <td>
-                            <div style="font-weight: 700; color: var(--text-main);">{{ $v->name }}</div>
-                            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ $v->email }} | {{ $v->phone ?? 'Հեռ․ չկա' }}</div>
-                        </td>
-                        <td>
-                            <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
-                                {{ $v->plan?->name ?? strtoupper($v->subscription_plan ?? 'PRO') }}
-                            </span>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-                                {{ $v->plan?->formatted_price ?? '—' }}
-                            </div>
-                        </td>
-                        <td>
-                            @if($v->isExpired())
-                                <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
-                                    🔴 Ավարտված (Անջատված)
-                                </span>
-                            @elseif($v->isTrialing())
-                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
-                                    ⏳ Փորձնական (14 օր)
-                                </span>
-                            @else
-                                <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">
-                                    🟢 Ակտիվ
-                                </span>
-                            @endif
-                        </td>
-                        <td style="font-size: 0.85rem; color: var(--text-main);">
-                            @if($v->isTrialing())
-                                <div>Trial ավարտ՝ <strong>{{ $v->trial_ends_at ? $v->trial_ends_at->format('d.m.Y H:i') : '—' }}</strong></div>
-                            @else
-                                <div>Ավարտ՝ <strong>{{ $v->subscription_expires_at ? $v->subscription_expires_at->format('d.m.Y') : 'Անսահմանափակ' }}</strong></div>
-                            @endif
-                        </td>
-                        <td>
-                            @if($v->isExpired())
-                                <span style="color: #ef4444; font-weight: 700;">0 օր</span>
-                            @else
-                                <span style="color: {{ $v->daysLeft() <= 3 ? '#f59e0b' : '#22c55e' }}; font-weight: 700;">
-                                    {{ $v->daysLeft() }} օր
-                                </span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($v->payments->first())
-                                <div style="font-weight: 700; color: #22c55e; font-size: 0.85rem;">
-                                    {{ number_format($v->payments->first()->amount, 0, '.', ' ') }} {{ $v->payments->first()->currency }}
-                                </div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                    {{ $v->payments->first()->created_at->format('d.m.Y') }} ({{ $v->payments->first()->payment_method }})
-                                </div>
-                            @else
-                                <span style="font-size: 0.8rem; color: var(--text-muted);">Վճարում չկա</span>
-                            @endif
-                        </td>
-                        <td style="text-align: right;">
-                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
-                                <button class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.6rem;" title="Կարգավորել բաժանորդագրությունը" onclick="openSubModal({{ json_encode($v) }})">
-                                    <i class="fa-solid fa-pen-to-square"></i> Փոխել
-                                </button>
-                                <button class="btn btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.6rem;" title="Գրանցել Վճարում" onclick="openPaymentModal({{ json_encode($v) }})">
-                                    <i class="fa-solid fa-receipt"></i> + Վճարում
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Mobile Cards View -->
-<div class="subs-mobile-cards">
-    @foreach($vendors as $v)
-        <div class="sub-mobile-card">
-            <!-- Vendor Name & Status -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem;">
-                <div>
-                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">{{ $v->name }}</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
-                        <a href="mailto:{{ $v->email }}" style="color: inherit; text-decoration: none;">{{ $v->email }}</a>
-                        @if($v->phone)
-                            • <a href="tel:{{ $v->phone }}" style="color: var(--primary); text-decoration: none;">{{ $v->phone }}</a>
-                        @endif
-                    </div>
-                </div>
-                <div>
-                    @if($v->isExpired())
-                        <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
-                            🔴 Ավարտված
-                        </span>
-                    @elseif($v->isTrialing())
-                        <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
-                            ⏳ Trial
-                        </span>
-                    @else
-                        <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3);">
-                            🟢 Ակտիվ
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Plan & Days Left Bar -->
-            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 0.9rem; margin-bottom: 0.85rem;">
-                <div>
-                    <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">
-                        {{ $v->plan?->name ?? strtoupper($v->subscription_plan ?? 'PRO') }}
-                    </span>
-                    <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 0.4rem;">
-                        {{ $v->plan?->formatted_price ?? '—' }}
-                    </span>
-                </div>
-                <div style="text-align: right;">
-                    @if($v->isExpired())
-                        <span style="color: #ef4444; font-weight: 800; font-size: 0.9rem;">0 օր</span>
-                    @else
-                        <span style="color: {{ $v->daysLeft() <= 3 ? '#f59e0b' : '#22c55e' }}; font-weight: 800; font-size: 0.9rem;">
-                            {{ $v->daysLeft() }} օր մնաց
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Expiration & Last Payment details -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.78rem; margin-bottom: 1rem; color: var(--text-muted);">
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.65rem;">
-                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;">Ավարտ՝</div>
-                    <div style="font-weight: 700; color: var(--text-main); margin-top: 0.15rem;">
-                        @if($v->isTrialing())
-                            {{ $v->trial_ends_at ? $v->trial_ends_at->format('d.m.Y H:i') : '—' }}
-                        @else
-                            {{ $v->subscription_expires_at ? $v->subscription_expires_at->format('d.m.Y') : 'Անսահմանափակ' }}
-                        @endif
-                    </div>
-                </div>
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0.65rem;">
-                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;">Վերջին վճարում՝</div>
-                    @if($v->payments->first())
-                        <div style="font-weight: 700; color: #22c55e; margin-top: 0.15rem;">
-                            {{ number_format($v->payments->first()->amount, 0, '.', ' ') }} {{ $v->payments->first()->currency }}
-                        </div>
-                    @else
-                        <div style="color: var(--text-muted); margin-top: 0.15rem;">Չկա</div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
-                <button class="btn btn-secondary" style="justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.75rem;" onclick="openSubModal({{ json_encode($v) }})">
-                    <i class="fa-solid fa-pen-to-square"></i> Փոխել
-                </button>
-                <button class="btn btn-primary" style="justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.75rem;" onclick="openPaymentModal({{ json_encode($v) }})">
-                    <i class="fa-solid fa-receipt"></i> + Վճարում
-                </button>
+    <!-- Stats KPI Row -->
+    <div class="grid-4" style="gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Ընդհանուր Հաշիվներ</div>
+            <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-top: 0.2rem;">
+                {{ $vendors->count() }}
             </div>
         </div>
-    @endforeach
-</div>
-
-<!-- Edit Subscription Modal -->
-<div id="subModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 500px; padding: 1.75rem; border-radius: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-weight: 800; font-size: 1.2rem; color: var(--text-main);" id="subModalTitle">Կարգավորել Բաժանորդագրությունը</h3>
-            <button onclick="document.getElementById('subModal').style.display='none'" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem;">✕</button>
+        <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Ակտիվ Բաժանորդներ</div>
+            <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: #10b981; margin-top: 0.2rem;">
+                {{ $vendors->filter(fn($v) => !$v->isExpired() && !$v->isTrialing())->count() }}
+            </div>
         </div>
+        <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Փորձնական (Trial)</div>
+            <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: #f59e0b; margin-top: 0.2rem;">
+                {{ $vendors->filter(fn($v) => $v->isTrialing())->count() }}
+            </div>
+        </div>
+        <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Ժամկետանց / Կասեցված</div>
+            <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: #ef4444; margin-top: 0.2rem;">
+                {{ $vendors->filter(fn($v) => $v->isExpired())->count() }}
+            </div>
+        </div>
+    </div>
 
-        <form id="subForm" method="POST">
-            @csrf
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Բաժանորդագրության Փաթեթ *</label>
-                <select id="sub_plan_id" name="subscription_plan_id" class="form-select" required>
+    <!-- Search & Filter Panel -->
+    <div class="filter-panel">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            <!-- Search -->
+            <div style="flex: 1; min-width: 250px; position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+                <input type="text" x-model="search" placeholder="Որոնել ըստ վենդորի անվան կամ էլ․ փոստի..." class="form-input" style="padding-left: 2.5rem; padding-right: 2rem; border-radius: 12px;">
+                <button x-show="search.length > 0" @click="search = ''" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Status Pills -->
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+                <span class="sub-filter-pill" :class="{ 'active': statusFilter === 'all' }" @click="statusFilter = 'all'">Բոլորը</span>
+                <span class="sub-filter-pill" :class="{ 'active': statusFilter === 'active' }" @click="statusFilter = 'active'">🟢 Ակտիվ</span>
+                <span class="sub-filter-pill" :class="{ 'active': statusFilter === 'trialing' }" @click="statusFilter = 'trialing'">⏳ Trial</span>
+                <span class="sub-filter-pill" :class="{ 'active': statusFilter === 'expired' }" @click="statusFilter = 'expired'">🔴 Ավարտված</span>
+            </div>
+
+            <!-- Plan Selector -->
+            <div>
+                <select x-model="planFilter" class="form-select" style="width: auto; padding: 0.5rem 0.85rem; border-radius: 10px; font-size: 0.8rem;">
+                    <option value="all">Բոլոր փաթեթները</option>
                     @foreach($plans as $p)
-                        <option value="{{ $p->id }}">{{ $p->name }} — {{ $p->formatted_price }}</option>
+                        <option value="{{ $p->slug }}">{{ $p->name }}</option>
                     @endforeach
                 </select>
             </div>
-
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Կարգավիճակ (Status) *</label>
-                <select id="sub_status" name="subscription_status" class="form-select" required>
-                    <option value="trialing">Փորձնական (14 օր Trial)</option>
-                    <option value="active">Ակտիվ (Active)</option>
-                    <option value="expired">Ավարտված / Անջատված (Expired)</option>
-                    <option value="cancelled">Չեղարկված (Cancelled)</option>
-                </select>
-            </div>
-
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Վերջնաժամկետ (Expires At)</label>
-                <input type="date" id="sub_expires_at" name="subscription_expires_at" class="form-input">
-            </div>
-
-            <div style="margin-bottom: 1.25rem;">
-                <label class="form-label">Անհատական Նշումներ (Custom Plan Notes)</label>
-                <textarea id="sub_custom_notes" name="custom_plan_notes" rows="3" class="form-textarea" placeholder="օր․ Անհատական պայմանավորվածություն..."></textarea>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('subModal').style.display='none'">Չեղարկել</button>
-                <button type="submit" class="btn btn-primary">Պահպանել Փոփոխությունները</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Record Payment Modal -->
-<div id="paymentModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 25px 60px rgba(0,0,0,0.6); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 1.75rem; border-radius: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-weight: 800; font-size: 1.2rem; color: var(--text-main);" id="payModalTitle">Գրանցել Վճարում</h3>
-            <button onclick="document.getElementById('paymentModal').style.display='none'" style="background:none; border:none; color:var(--text-main); cursor:pointer; font-size:1.2rem;">✕</button>
         </div>
+    </div>
 
-        <form id="payForm" method="POST">
-            @csrf
-            <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div>
-                    <label class="form-label">Գումար (AMD) *</label>
-                    <input type="number" id="pay_amount" name="amount" step="100" min="0" class="form-input" required placeholder="19900">
+    <!-- Desktop Table View -->
+    <div class="glass-card subs-desktop-table" style="overflow: hidden; margin-bottom: 2.5rem;">
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Վենդոր</th>
+                        <th>Փաթեթ</th>
+                        <th>Կարգավիճակ</th>
+                        <th>Փորձնական / Վերջնաժամկետ</th>
+                        <th>Մնացած Օրեր</th>
+                        <th>Վերջին Վճարում</th>
+                        <th style="text-align: right; min-width: 170px;">Գործողություններ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($vendors as $v)
+                        @php
+                            $statusKey = $v->isExpired() ? 'expired' : ($v->isTrialing() ? 'trialing' : 'active');
+                            $planSlug = strtolower($v->plan?->slug ?? ($v->subscription_plan ?? 'pro'));
+                        @endphp
+                        <tr x-show="matches('{{ addslashes($v->name) }}', '{{ addslashes($v->email) }}', '{{ $statusKey }}', '{{ $planSlug }}')">
+                            <!-- Vendor -->
+                            <td>
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 0.92rem;">{{ $v->name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                    {{ $v->email }} @if($v->phone) • {{ $v->phone }} @endif
+                                </div>
+                            </td>
+
+                            <!-- Plan -->
+                            <td>
+                                <span class="badge badge-indigo">
+                                    {{ $v->plan?->name ?? strtoupper($v->subscription_plan ?? 'PRO') }}
+                                </span>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; font-weight: 600;">
+                                    {{ $v->plan?->formatted_price ?? '—' }}
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                @if($v->isExpired())
+                                    <span class="badge badge-rose">
+                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Ավարտված
+                                    </span>
+                                @elseif($v->isTrialing())
+                                    <span class="badge badge-amber">
+                                        <i class="fa-solid fa-clock" style="font-size: 0.65rem;"></i> Փորձնական (Trial)
+                                    </span>
+                                @else
+                                    <span class="badge badge-emerald">
+                                        <i class="fa-solid fa-circle-check" style="font-size: 0.65rem;"></i> Ակտիվ
+                                    </span>
+                                @endif
+                            </td>
+
+                            <!-- Expires At -->
+                            <td>
+                                @if($v->isTrialing())
+                                    <div style="font-size: 0.82rem; color: var(--text-main);">
+                                        Trial ավարտ՝ <strong>{{ $v->trial_ends_at ? $v->trial_ends_at->format('d.m.Y') : '—' }}</strong>
+                                    </div>
+                                @else
+                                    <div style="font-size: 0.82rem; color: var(--text-main);">
+                                        Ավարտ՝ <strong>{{ $v->subscription_expires_at ? $v->subscription_expires_at->format('d.m.Y') : 'Անսահմանափակ' }}</strong>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- Days Left -->
+                            <td>
+                                @if($v->isExpired())
+                                    <span style="color: #ef4444; font-weight: 800; font-size: 0.85rem;">0 օր</span>
+                                @else
+                                    <span style="color: {{ $v->daysLeft() <= 3 ? '#f59e0b' : '#10b981' }}; font-weight: 800; font-size: 0.85rem;">
+                                        {{ $v->daysLeft() }} օր
+                                    </span>
+                                @endif
+                            </td>
+
+                            <!-- Last Payment -->
+                            <td>
+                                @if($v->payments->first())
+                                    <div style="font-weight: 800; color: #10b981; font-size: 0.88rem;">
+                                        {{ number_format($v->payments->first()->amount, 0, '.', ' ') }} {{ $v->payments->first()->currency }}
+                                    </div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem;">
+                                        {{ $v->payments->first()->created_at->format('d.m.Y') }} ({{ $v->payments->first()->payment_method }})
+                                    </div>
+                                @else
+                                    <span style="font-size: 0.78rem; color: var(--text-muted);">Վճարում չկա</span>
+                                @endif
+                            </td>
+
+                            <!-- Actions -->
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 0.4rem; justify-content: flex-end;">
+                                    <button class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.4rem 0.65rem; border-radius: 8px;" title="Կարգավորել բաժանորդագրությունը" onclick="openSubModal({{ json_encode($v) }})">
+                                        <i class="fa-solid fa-pen-to-square"></i> Փոխել
+                                    </button>
+                                    <button class="btn btn-primary" style="font-size: 0.78rem; padding: 0.4rem 0.75rem; border-radius: 8px;" title="Գրանցել Վճարում" onclick="openPaymentModal({{ json_encode($v) }})">
+                                        <i class="fa-solid fa-receipt"></i> + Վճարում
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile Cards View -->
+    <div class="subs-mobile-cards">
+        @foreach($vendors as $v)
+            @php
+                $statusKey = $v->isExpired() ? 'expired' : ($v->isTrialing() ? 'trialing' : 'active');
+                $planSlug = strtolower($v->plan?->slug ?? ($v->subscription_plan ?? 'pro'));
+            @endphp
+            <div class="sub-mobile-card" x-show="matches('{{ addslashes($v->name) }}', '{{ addslashes($v->email) }}', '{{ $statusKey }}', '{{ $planSlug }}')">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <div style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">{{ $v->name }}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+                            {{ $v->email }} @if($v->phone) • {{ $v->phone }} @endif
+                        </div>
+                    </div>
+                    <div>
+                        @if($v->isExpired())
+                            <span class="badge badge-rose">🔴 Ավարտված</span>
+                        @elseif($v->isTrialing())
+                            <span class="badge badge-amber">⏳ Trial</span>
+                        @else
+                            <span class="badge badge-emerald">🟢 Ակտիվ</span>
+                        @endif
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label">Վճարման եղանակ</label>
-                    <select name="payment_method" class="form-select">
-                        <option value="bank_transfer">Բանկային Փոխանցում</option>
-                        <option value="card">Բանկային Քարտ</option>
-                        <option value="cash">Կանխիկ</option>
-                        <option value="custom">Այլ / Պայմանագրային</option>
+
+                <div style="background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 0.9rem; margin-bottom: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="badge badge-indigo">{{ $v->plan?->name ?? strtoupper($v->subscription_plan ?? 'PRO') }}</span>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            {{ $v->plan?->formatted_price ?? '—' }}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.72rem; color: var(--text-muted);">Մնացել է՝</div>
+                        <div style="font-size: 1.05rem; font-weight: 800; font-family: 'Outfit'; color: {{ $v->isExpired() ? '#ef4444' : ($v->daysLeft() <= 3 ? '#f59e0b' : '#10b981') }};">
+                            {{ $v->isExpired() ? '0 օր' : $v->daysLeft() . ' օր' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                    <button class="btn btn-secondary" style="justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.75rem;" onclick="openSubModal({{ json_encode($v) }})">
+                        <i class="fa-solid fa-pen-to-square"></i> Փոխել
+                    </button>
+                    <button class="btn btn-primary" style="justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.75rem;" onclick="openPaymentModal({{ json_encode($v) }})">
+                        <i class="fa-solid fa-receipt"></i> + Վճարում
+                    </button>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <!-- Modern Edit Subscription Modal -->
+    <div id="subModal" class="modern-modal-overlay" style="display: none;">
+        <div class="modern-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;" id="subModalTitle">
+                        Կարգավորել Բաժանորդագրությունը
+                    </h3>
+                </div>
+                <button onclick="document.getElementById('subModal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.25rem;">✕</button>
+            </div>
+
+            <form id="subForm" method="POST">
+                @csrf
+                <div style="margin-bottom: 1rem;">
+                    <label class="form-label">Բաժանորդագրության Փաթեթ *</label>
+                    <select id="sub_plan_id" name="subscription_plan_id" class="form-select" required>
+                        @foreach($plans as $p)
+                            <option value="{{ $p->id }}">{{ $p->name }} — {{ $p->formatted_price }}</option>
+                        @endforeach
                     </select>
                 </div>
-            </div>
 
-            <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div>
-                    <label class="form-label">Ժամանակահատված Սկիզբ *</label>
-                    <input type="date" name="period_start" class="form-input" required value="{{ date('Y-m-d') }}">
-                </div>
-                <div>
-                    <label class="form-label">Ժամանակահատված Ավարտ *</label>
-                    <input type="date" name="period_end" class="form-input" required value="{{ date('Y-m-d', strtotime('+30 days')) }}">
-                </div>
-            </div>
-
-            <div class="modal-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div>
-                    <label class="form-label">Հաշիվ-Ապրանքագիր #</label>
-                    <input type="text" name="invoice_number" class="form-input" placeholder="INV-10045">
-                </div>
-                <div>
-                    <label class="form-label">Վճարման Կարգավիճակ</label>
-                    <select name="status" class="form-select">
-                        <option value="paid">Վճարված (Paid)</option>
-                        <option value="pending">Սպասման մեջ (Pending)</option>
-                        <option value="failed">Չհաջողված (Failed)</option>
+                <div style="margin-bottom: 1rem;">
+                    <label class="form-label">Կարգավիճակ (Status) *</label>
+                    <select id="sub_status" name="subscription_status" class="form-select" required>
+                        <option value="trialing">Փորձնական (14 օր Trial)</option>
+                        <option value="active">Ակտիվ (Active)</option>
+                        <option value="expired">Ավարտված / Անջատված (Expired)</option>
+                        <option value="cancelled">Չեղարկված (Cancelled)</option>
                     </select>
                 </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label class="form-label">Վերջնաժամկետ (Expires At)</label>
+                    <input type="date" id="sub_expires_at" name="subscription_expires_at" class="form-input">
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Անհատական Նշումներ (Custom Plan Notes)</label>
+                    <textarea id="sub_custom_notes" name="custom_plan_notes" rows="3" class="form-textarea" placeholder="օր․ Անհատական պայմանավորվածություն..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('subModal').style.display='none'">Չեղարկել</button>
+                    <button type="submit" class="btn btn-primary">Պահպանել Փոփոխությունները</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modern Record Payment Modal -->
+    <div id="paymentModal" class="modern-modal-overlay" style="display: none;">
+        <div class="modern-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <h3 style="font-family: 'Outfit'; font-weight: 800; font-size: 1.25rem; color: var(--text-main); margin: 0;" id="payModalTitle">
+                        Գրանցել Վճարում
+                    </h3>
+                </div>
+                <button onclick="document.getElementById('paymentModal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.25rem;">✕</button>
             </div>
 
-            <div style="margin-bottom: 1.25rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
-                    <input type="checkbox" name="extend_subscription" value="1" checked>
-                    <span>Ավտոմատ երկարաձգել վենդորի բաժանորդագրությունը մինչև Ավարտի ամսաթիվը</span>
-                </label>
-            </div>
+            <form id="payForm" method="POST">
+                @csrf
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="form-label">Գումար (AMD) *</label>
+                        <input type="number" id="pay_amount" name="amount" step="100" min="0" class="form-input" required placeholder="19900">
+                    </div>
+                    <div>
+                        <label class="form-label">Վճարման եղանակ</label>
+                        <select name="payment_method" class="form-select">
+                            <option value="bank_transfer">Բանկային Փոխանցում</option>
+                            <option value="card">Բանկային Քարտ</option>
+                            <option value="cash">Կանխիկ</option>
+                            <option value="custom">Այլ / Պայմանագրային</option>
+                        </select>
+                    </div>
+                </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('paymentModal').style.display='none'">Չեղարկել</button>
-                <button type="submit" class="btn btn-primary">Գրանցել Վճարումը</button>
-            </div>
-        </form>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="form-label">Ժամանակահատված Սկիզբ *</label>
+                        <input type="date" name="period_start" class="form-input" required value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="form-label">Ժամանակահատված Ավարտ *</label>
+                        <input type="date" name="period_end" class="form-input" required value="{{ date('Y-m-d', strtotime('+30 days')) }}">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label class="form-label">Հաշիվ-Ապրանքագիր #</label>
+                        <input type="text" name="invoice_number" class="form-input" placeholder="INV-10045">
+                    </div>
+                    <div>
+                        <label class="form-label">Վճարման Կարգավիճակ</label>
+                        <select name="status" class="form-select">
+                            <option value="paid">Վճարված (Paid)</option>
+                            <option value="pending">Սպասման մեջ (Pending)</option>
+                            <option value="failed">Չհաջողված (Failed)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
+                        <input type="checkbox" name="extend_subscription" value="1" checked>
+                        <span>Ավտոմատ երկարաձգել վենդորի բաժանորդագրությունը մինչև Ավարտի ամսաթիվը</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('paymentModal').style.display='none'">Չեղարկել</button>
+                    <button type="submit" class="btn btn-primary">Գրանցել Վճարումը</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

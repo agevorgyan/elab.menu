@@ -30,7 +30,7 @@
             --bg-card: #151c2c;
             --bg-card-hover: #1e293b;
             --bg-sidebar: #0f172a;
-            --bg-header: rgba(15, 23, 42, 0.85);
+            --bg-header: rgba(15, 23, 42, 0.88);
             --border-color: rgba(255, 255, 255, 0.08);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -39,11 +39,15 @@
             --nav-active-border: #f59e0b;
             --primary: #f59e0b;
             --primary-hover: #d97706;
-            --table-row-border: rgba(255, 255, 255, 0.04);
-            --input-bg: rgba(15, 23, 42, 0.8);
+            --primary-glow: rgba(245, 158, 11, 0.25);
+            --table-row-border: rgba(255, 255, 255, 0.05);
+            --input-bg: rgba(15, 23, 42, 0.85);
             --badge-bg: rgba(245, 158, 11, 0.15);
             --badge-text: #fbbf24;
-            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+            --glass-bg: rgba(21, 28, 44, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --modal-overlay: rgba(11, 15, 25, 0.78);
         }
 
         /* Theme Variables - Light Mode (Minimalist White & Slate) */
@@ -52,7 +56,7 @@
             --bg-card: #ffffff;
             --bg-card-hover: #f1f5f9;
             --bg-sidebar: #ffffff;
-            --bg-header: rgba(255, 255, 255, 0.9);
+            --bg-header: rgba(255, 255, 255, 0.94);
             --border-color: #e2e8f0;
             --text-main: #0f172a;
             --text-muted: #64748b;
@@ -61,11 +65,15 @@
             --nav-active-border: #2563eb;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
+            --primary-glow: rgba(37, 99, 235, 0.2);
             --table-row-border: #f1f5f9;
             --input-bg: #ffffff;
             --badge-bg: #dbeafe;
             --badge-text: #1d4ed8;
-            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: #e2e8f0;
+            --modal-overlay: rgba(15, 23, 42, 0.5);
         }
 
         * {
@@ -362,7 +370,7 @@
 
         .form-input:focus, .form-select:focus, .form-textarea:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 0 3px var(--primary-glow);
         }
 
         .form-select option {
@@ -394,15 +402,97 @@
             vertical-align: middle;
         }
 
-        /* Badges */
+        /* Modern KPI & Stat Tiles */
+        .stat-kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .stat-kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.35);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+        }
+        .kpi-icon-badge {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            flex-shrink: 0;
+        }
+
+        /* Modern Badges */
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
             padding: 0.25rem 0.65rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 700;
+            line-height: 1.2;
+        }
+        .badge-emerald {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.28);
+        }
+        .badge-amber {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.28);
+        }
+        .badge-rose {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.28);
+        }
+        .badge-indigo {
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+            border: 1px solid rgba(99, 102, 241, 0.28);
+        }
+        .badge-cyan {
+            background: rgba(6, 182, 212, 0.12);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.28);
+        }
+        .badge-purple {
+            background: rgba(168, 85, 247, 0.12);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.28);
         }
 
+        /* Modern Modal System */
+        .modern-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+        }
+        .modern-modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 620px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.75rem 2rem;
         @media (max-width: 992px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.mobile-open { transform: translateX(0); }
@@ -423,28 +513,44 @@
 
     <!-- Sidebar Navigation -->
     <aside class="sidebar" :class="{ 'mobile-open': mobileOpen }">
-        <div class="sidebar-brand">
-            <i class="fa-solid fa-qrcode text-2xl" style="color: var(--primary);"></i>
-            <div>
-                <h1>QR Menu SaaS</h1>
-                <small style="color: var(--text-muted); font-size: 0.7rem;">Minimalist Platform</small>
-            </div>
+        <div class="sidebar-brand" style="{{ Auth::user()?->isSuperAdmin() ? 'flex-direction: column; align-items: flex-start; gap: 0.65rem; padding: 1.25rem 1.35rem;' : '' }}">
+            @if(Auth::user()?->isSuperAdmin())
+                <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%;">
+                    <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 1.15rem; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); flex-shrink: 0;">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <h1 style="font-size: 1.15rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">QRMenu HQ</h1>
+                        <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">SuperAdmin Console</div>
+                    </div>
+                </div>
+                <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem; border-radius: 9999px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.7rem; font-weight: 700; color: #10b981;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+                    <span>System: Live Multi-tenant</span>
+                </div>
+            @else
+                <i class="fa-solid fa-qrcode text-2xl" style="color: var(--primary);"></i>
+                <div>
+                    <h1>QR Menu SaaS</h1>
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">Minimalist Platform</small>
+                </div>
+            @endif
         </div>
 
         <nav class="sidebar-menu">
             @if(Auth::user()?->isSuperAdmin())
                 <div class="menu-category">{{ __('Super Admin') }}</div>
                 <a href="{{ route('superadmin.dashboard') }}" class="nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-chart-line"></i> {{ __('Dashboard') }}
+                    <i class="fa-solid fa-chart-line" style="color: #6366f1;"></i> {{ __('Dashboard') }}
                 </a>
                 <a href="{{ route('superadmin.vendors.index') }}" class="nav-item {{ request()->routeIs('superadmin.vendors.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-store"></i> {{ __('Vendor Directory') }}
+                    <i class="fa-solid fa-store" style="color: #10b981;"></i> {{ __('Vendor Directory') }}
                 </a>
                 <a href="{{ route('superadmin.plans.index') }}" class="nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-box-archive"></i> {{ __('Plans') }}
+                    <i class="fa-solid fa-box-archive" style="color: #f59e0b;"></i> {{ __('Plans') }}
                 </a>
                 <a href="{{ route('superadmin.subscriptions.index') }}" class="nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-credit-card"></i> {{ __('Vendor Subscriptions') }}
+                    <i class="fa-solid fa-credit-card" style="color: #ec4899;"></i> {{ __('Vendor Subscriptions') }}
                 </a>
             @else
                 @php $v = Auth::user()?->vendor; @endphp
@@ -514,13 +620,26 @@
             @endif
         </nav>
 
-        <!-- Sidebar Help Widget -->
-        <div class="sidebar-widget">
-            <p>{{ __('Need help or custom menu translation?') }}</p>
-            <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
-                <i class="fa-solid fa-headset"></i> {{ __('Get Support') }}
-            </a>
-        </div>
+        <!-- Sidebar Help / Status Widget -->
+        @if(Auth::user()?->isSuperAdmin())
+            <div class="sidebar-widget" style="text-align: left; padding: 0.85rem 1rem; margin: 1rem 0.85rem 1.25rem;">
+                <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa-solid fa-server" style="color: #6366f1;"></i> Core Platform
+                </div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">Laravel 13 & Reverb</div>
+                <div style="font-size: 0.72rem; color: #10b981; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.35rem;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                    <span>WebSocket: Port 8080 Active</span>
+                </div>
+            </div>
+        @else
+            <div class="sidebar-widget">
+                <p>{{ __('Need help or custom menu translation?') }}</p>
+                <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
+                    <i class="fa-solid fa-headset"></i> {{ __('Get Support') }}
+                </a>
+            </div>
+        @endif
     </aside>
 
     <!-- Main Wrapper -->

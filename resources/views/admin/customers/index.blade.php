@@ -4,77 +4,82 @@
 
 @section('content')
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 700;">
-                <i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> Customer Database & CRM
+    <div style="min-width: 0; flex: 1;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(245, 158, 11, 0.15); color: var(--primary); width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-users-gear"></i>
+                </span>
+                <span>{{ __('Հաճախորդների Բազա & CRM') }}</span>
             </h1>
             @if($selectedLocation)
-                <span style="background: rgba(79, 70, 229, 0.15); color: #4f46e5; border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span style="background: rgba(79, 70, 229, 0.15); color: #4f46e5; border: 1px solid rgba(79, 70, 229, 0.3); border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa-solid fa-location-dot"></i> {{ $selectedLocation->name }}
                 </span>
             @else
-                <span style="background: rgba(107, 114, 128, 0.15); color: var(--text-muted); border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-layer-group"></i> All Branches
+                <span style="background: rgba(107, 114, 128, 0.15); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    <i class="fa-solid fa-layer-group"></i> {{ __('Բոլոր մասնաճյուղերը') }}
                 </span>
             @endif
         </div>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage client directory by branch, track order history, consent status, and export customer database.</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0; word-break: break-word;">
+            {{ __('Կառավարեք հաճախորդների ցանկը, դիտեք պատվերների պատմությունը, համաձայնությունները և արտահանեք տվյալները') }}
+        </p>
     </div>
-    <div style="display: flex; gap: 0.75rem;">
-        <a href="{{ route('admin.customers.export') }}" class="btn btn-secondary" style="font-size: 0.85rem;">
-            <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> Export to Excel / CSV
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ route('admin.customers.export') }}" class="btn btn-secondary" style="font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; border-radius: 12px;">
+            <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> {{ __('Export CSV / Excel') }}
         </a>
-        <button class="btn btn-primary" onclick="document.getElementById('addCustomerModal').style.display='flex'" style="font-size: 0.85rem;">
-            <i class="fa-solid fa-user-plus"></i> + Add Customer
+        <button class="btn btn-primary" onclick="document.getElementById('addCustomerModal').style.display='flex'" style="font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
+            <i class="fa-solid fa-user-plus"></i> + {{ __('Ավելացնել Հաճախորդ') }}
         </button>
     </div>
 </div>
 
 <!-- Metrics Overview Cards -->
-<div class="grid-4" style="margin-bottom: 1.5rem;">
-    <div class="card" style="display: flex; align-items: center; gap: 1.25rem;">
-        <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(79, 70, 229, 0.15); color: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+<div class="grid-3" style="margin-bottom: 1.75rem;">
+    <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.35rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(79, 70, 229, 0.15); color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
             <i class="fa-solid fa-users"></i>
         </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Branch Customers</div>
-            <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">{{ number_format($totalCustomers) }}</div>
+        <div style="min-width: 0; flex: 1;">
+            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Ընդհանուր Հաճախորդներ') }}</div>
+            <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: var(--text-main); margin-top: 0.15rem; line-height: 1.2;">{{ number_format($totalCustomers) }}</div>
         </div>
     </div>
 
-    <div class="card" style="display: flex; align-items: center; gap: 1.25rem;">
-        <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+    <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.35rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
             <i class="fa-solid fa-bullhorn"></i>
         </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Marketing Consented</div>
-            <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: #10b981;">{{ number_format($optedInCustomers) }}</div>
+        <div style="min-width: 0; flex: 1;">
+            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Մարքեթինգային Համաձայնություն') }}</div>
+            <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #10b981; margin-top: 0.15rem; line-height: 1.2;">{{ number_format($optedInCustomers) }}</div>
         </div>
     </div>
 
-    <div class="card" style="display: flex; align-items: center; gap: 1.25rem;">
-        <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+    <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.35rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
+        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;">
             <i class="fa-solid fa-coins"></i>
         </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Branch Customer Revenue</div>
-            <div style="font-family: 'Outfit'; font-size: 1.5rem; font-weight: 800; color: #f59e0b;">{{ number_format($totalRevenue) }} {{ $vendor->currency }}</div>
+        <div style="min-width: 0; flex: 1;">
+            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Հաճախորդների Հասույթ') }}</div>
+            <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #f59e0b; margin-top: 0.15rem; line-height: 1.2; word-break: break-word;">{{ number_format($totalRevenue) }} {{ $vendor->currency }}</div>
         </div>
     </div>
 </div>
 
 <!-- Search & Filters -->
-<div class="card" style="padding: 1rem; margin-bottom: 1.5rem;">
-    <form method="GET" action="{{ route('admin.customers.index') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <div style="flex: 1; position: relative; min-width: 220px;">
-            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
-            <input type="text" name="search" value="{{ $search }}" placeholder="Search by Name, Phone or Email..." style="width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); outline: none;">
+<div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card);">
+    <form method="GET" action="{{ route('admin.customers.index') }}" style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; position: relative; min-width: min(100%, 240px);">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
+            <input type="text" name="search" value="{{ $search }}" placeholder="{{ __('Որոնել անունով, հեռախոսով կամ էլ. փոստով...') }}" style="width: 100%; box-sizing: border-box; padding: 0.65rem 1rem 0.65rem 2.6rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.9rem; outline: none;">
         </div>
 
-        <div style="min-width: 200px;">
-            <select name="location_id" onchange="this.form.submit()" style="width: 100%; padding: 0.6rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
-                <option value="all" {{ $activeLocationId === 'all' ? 'selected' : '' }}>🏢 All Branches (Բոլոր մասնաճյուղերը)</option>
+        <div style="min-width: min(100%, 200px); flex-shrink: 0;">
+            <select name="location_id" onchange="this.form.submit()" style="width: 100%; box-sizing: border-box; padding: 0.65rem 0.9rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.88rem; outline: none; font-weight: 600;">
+                <option value="all" {{ $activeLocationId === 'all' ? 'selected' : '' }}>🏢 {{ __('Բոլոր մասնաճյուղերը') }}</option>
                 @foreach($locations as $loc)
                     <option value="{{ $loc->id }}" {{ $activeLocationId == $loc->id ? 'selected' : '' }}>
                         📍 {{ $loc->name }}
@@ -83,46 +88,53 @@
             </select>
         </div>
 
-        <div>
-            <select name="marketing" onchange="this.form.submit()" style="padding: 0.6rem 0.9rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-main); font-size: 0.85rem; outline: none;">
-                <option value="">All Marketing Preferences</option>
-                <option value="yes" {{ $consentFilter == 'yes' ? 'selected' : '' }}>Opted-In Only</option>
-                <option value="no" {{ $consentFilter == 'no' ? 'selected' : '' }}>Opted-Out Only</option>
+        <div style="min-width: min(100%, 180px); flex-shrink: 0;">
+            <select name="marketing" onchange="this.form.submit()" style="width: 100%; box-sizing: border-box; padding: 0.65rem 0.9rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.88rem; outline: none; font-weight: 600;">
+                <option value="">{{ __('Բոլոր կարգավիճակները') }}</option>
+                <option value="yes" {{ $consentFilter == 'yes' ? 'selected' : '' }}>✅ {{ __('Միայն համաձայնված') }}</option>
+                <option value="no" {{ $consentFilter == 'no' ? 'selected' : '' }}>❌ {{ __('Անջատված') }}</option>
             </select>
         </div>
 
-        <button type="submit" class="btn btn-secondary" style="font-size: 0.85rem;">
-            <i class="fa-solid fa-filter"></i> Filter
-        </button>
-        @if($search || $consentFilter || ($activeLocationId && $activeLocationId !== 'all'))
-            <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary" style="font-size: 0.85rem;">Clear</a>
-        @endif
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-secondary" style="font-size: 0.88rem; font-weight: 600; padding: 0.65rem 1.1rem; border-radius: 12px;">
+                <i class="fa-solid fa-filter"></i> {{ __('Ֆիլտրել') }}
+            </button>
+            @if($search || $consentFilter || ($activeLocationId && $activeLocationId !== 'all'))
+                <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary" style="font-size: 0.88rem; padding: 0.65rem 1rem; border-radius: 12px; color: var(--text-muted);">
+                    <i class="fa-solid fa-xmark"></i> {{ __('Մաքրել') }}
+                </a>
+            @endif
+        </div>
     </form>
 </div>
 
-<!-- Customer Directory Table -->
-<div class="card" style="padding: 0; overflow: hidden;">
-    <div style="overflow-x: auto;">
+<!-- Customer Directory Table Card -->
+<div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 0; overflow: hidden; box-shadow: var(--shadow-card);">
+    <div class="responsive-table-wrapper">
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>
-                <tr style="background: var(--input-bg); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">
-                    <th style="padding: 1rem;">Customer Name</th>
-                    <th style="padding: 1rem;">Branch / Location</th>
-                    <th style="padding: 1rem;">Phone</th>
-                    <th style="padding: 1rem;">Email</th>
-                    <th style="padding: 1rem;">Orders</th>
-                    <th style="padding: 1rem;">Total Spent</th>
-                    <th style="padding: 1rem;">Marketing Consent</th>
-                    <th style="padding: 1rem;">Last Order</th>
-                    <th style="padding: 1rem; text-align: right;">Actions</th>
+                <tr style="background: var(--bg-body); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <th style="padding: 1rem 1.25rem;">{{ __('Հաճախորդ') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Մասնաճյուղ') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Հեռախոս') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Էլ. Փոստ') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Պատվերներ') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Ընդհանուր Ծախս') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Մարքեթինգ') }}</th>
+                    <th style="padding: 1rem 1.25rem;">{{ __('Վերջին Պատվեր') }}</th>
+                    <th style="padding: 1rem 1.25rem; text-align: right;">{{ __('Գործողություն') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($customers as $c)
-                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-main);">
-                        <td style="padding: 1rem; font-weight: 700;">
-                            <a href="{{ route('admin.customers.show', $c->id) }}" style="color: var(--text-main); text-decoration: none;">
-                                <i class="fa-solid fa-user-circle" style="color: var(--primary); margin-right: 0.35rem;"></i> {{ $c->name ?? 'Guest' }}
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-main); transition: background 0.15s ease;">
+                        <td style="padding: 1rem 1.25rem; font-weight: 700; max-width: 220px;">
+                            <a href="{{ route('admin.customers.show', $c->id) }}" style="color: var(--text-main); text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem; font-weight: 700;">
+                                <span style="width: 32px; height: 32px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                                <span class="truncate-text" style="max-width: 160px;">{{ $c->name ?? __('Հյուր') }}</span>
                             </a>
                             @if($c->birthdate)
                                 <div style="font-size: 0.75rem; color: #ec4899; font-weight: 600; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.35rem;">
@@ -130,56 +142,56 @@
                                 </div>
                             @endif
                             @if($c->address)
-                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; display: flex; align-items: center; gap: 0.35rem; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    <i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> {{ $c->address }}
+                                <div class="truncate-text" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; max-width: 180px;" title="{{ $c->address }}">
+                                    <i class="fa-solid fa-map-pin" style="color: #f59e0b; margin-right: 0.25rem;"></i>{{ $c->address }}
                                 </div>
                             @endif
                         </td>
-                        <td style="padding: 1rem;">
-                            <span style="background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> {{ $c->location?->name ?? 'All Branches' }}
+                        <td style="padding: 1rem 1.25rem; white-space: nowrap;">
+                            <span style="background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> {{ $c->location?->name ?? __('Բոլորը') }}
                             </span>
                         </td>
-                        <td style="padding: 1rem; color: var(--text-muted);">
-                            {{ $c->phone ?? '-' }}
+                        <td style="padding: 1rem 1.25rem; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; white-space: nowrap;">
+                            {{ $c->phone ?? '—' }}
                         </td>
-                        <td style="padding: 1rem; color: var(--text-muted);">
-                            {{ $c->email ?? '-' }}
+                        <td style="padding: 1rem 1.25rem; color: var(--text-muted); font-size: 0.88rem; max-width: 180px;">
+                            <span class="truncate-text" style="max-width: 170px;" title="{{ $c->email }}">{{ $c->email ?? '—' }}</span>
                         </td>
-                        <td style="padding: 1rem;">
-                            <span style="background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 700;">
-                                {{ $c->total_orders_count }} orders
+                        <td style="padding: 1rem 1.25rem; white-space: nowrap;">
+                            <span style="background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.25rem 0.65rem; border-radius: 8px; font-weight: 700; font-size: 0.85rem;">
+                                {{ $c->total_orders_count }} {{ __('պատվեր') }}
                             </span>
                         </td>
-                        <td style="padding: 1rem; font-weight: 800; color: #10b981; font-family: 'Outfit';">
+                        <td style="padding: 1rem 1.25rem; font-weight: 800; color: #10b981; font-family: 'Outfit', sans-serif; font-size: 1rem; white-space: nowrap;">
                             {{ number_format($c->total_spent) }} {{ $vendor->currency }}
                         </td>
-                        <td style="padding: 1rem;">
+                        <td style="padding: 1rem 1.25rem; white-space: nowrap;">
                             @if($c->marketing_opt_in)
-                                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
-                                    <i class="fa-solid fa-check"></i> Opted-In
+                                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-check"></i> {{ __('Ակտիվ') }}
                                 </span>
                             @else
-                                <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">
-                                    <i class="fa-solid fa-xmark"></i> Opted-Out
+                                <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-xmark"></i> {{ __('Անջատված') }}
                                 </span>
                             @endif
                         </td>
-                        <td style="padding: 1rem; font-size: 0.8rem; color: var(--text-muted);">
-                            {{ $c->last_order_at ? $c->last_order_at->diffForHumans() : '-' }}
+                        <td style="padding: 1rem 1.25rem; font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+                            {{ $c->last_order_at ? $c->last_order_at->diffForHumans() : '—' }}
                         </td>
-                        <td style="padding: 1rem; text-align: right;">
-                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
-                                <a href="{{ route('admin.customers.show', $c->id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" title="View Timeline">
-                                    <i class="fa-solid fa-timeline"></i> Timeline
+                        <td style="padding: 1rem 1.25rem; text-align: right; white-space: nowrap;">
+                            <div style="display: inline-flex; gap: 0.4rem; justify-content: flex-end;">
+                                <a href="{{ route('admin.customers.show', $c->id) }}" class="btn btn-secondary" style="padding: 0.4rem 0.7rem; font-size: 0.78rem; border-radius: 8px;" title="{{ __('Պատմություն') }}">
+                                    <i class="fa-solid fa-timeline"></i>
                                 </a>
-                                <button class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;" onclick="editCustomer({{ json_encode($c) }})">
-                                    <i class="fa-solid fa-pen"></i> Edit
+                                <button class="btn btn-secondary" style="padding: 0.4rem 0.7rem; font-size: 0.78rem; border-radius: 8px;" onclick="editCustomer({{ json_encode($c) }})" title="{{ __('Խմբագրել') }}">
+                                    <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <form action="{{ route('admin.customers.destroy', $c->id) }}" method="POST" onsubmit="return confirm('Delete customer record?')">
+                                <form action="{{ route('admin.customers.destroy', $c->id) }}" method="POST" onsubmit="return confirm('{{ __('Հեռացնե՞լ այս հաճախորդի տվյալները:') }}')" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-danger" style="padding: 0.35rem 0.65rem; font-size: 0.75rem;">
+                                    <button class="btn btn-danger" style="padding: 0.4rem 0.7rem; font-size: 0.78rem; border-radius: 8px;" title="{{ __('Հեռացնել') }}">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </form>
@@ -188,9 +200,14 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-                            <i class="fa-solid fa-users" style="font-size: 2.5rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
-                            No customer records found for this branch selection. Customers will automatically accumulate as orders are placed.
+                        <td colspan="9" style="text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted);">
+                            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(245, 158, 11, 0.1); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 1rem;">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">{{ __('Հաճախորդներ չեն գտնվել') }}</div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 420px; margin: 0 auto;">
+                                {{ __('Տվյալները կավելանան ավտոմատ կերպով, երբ հաճախորդները պատվերներ գրանցեն մենյուի միջոցով:') }}
+                            </p>
                         </td>
                     </tr>
                 @endforelse
@@ -204,23 +221,26 @@
 </div>
 
 <!-- Add Customer Modal -->
-<div id="addCustomerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
-    <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: var(--text-main);"><i class="fa-solid fa-user-plus" style="color: var(--primary);"></i> Add New Customer</h3>
-            <button onclick="document.getElementById('addCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
+<div id="addCustomerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="card modal-box-responsive" style="width: 100%; max-width: min(520px, 94vw); max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: clamp(1.25rem, 3vw, 1.85rem); position: relative; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.35rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.6rem;">
+                <span style="color: var(--primary);"><i class="fa-solid fa-user-plus"></i></span>
+                <span>{{ __('Ավելացնել Նոր Հաճախորդ') }}</span>
+            </h3>
+            <button onclick="document.getElementById('addCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; padding: 0.25rem;">✕</button>
         </div>
 
         <form action="{{ route('admin.customers.store') }}" method="POST">
             @csrf
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Full Name</label>
-                <input type="text" name="name" required placeholder="Armen Sargsyan" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Ամբողջական Անուն') }} <span style="color: #ef4444;">*</span></label>
+                <input type="text" name="name" required placeholder="Օրինակ՝ Արմեն Սարգսյան" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Branch / Location</label>
-                <select name="location_id" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Մասնաճյուղ') }}</label>
+                <select name="location_id" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
                     @foreach($locations as $loc)
                         <option value="{{ $loc->id }}" {{ $activeLocationId == $loc->id ? 'selected' : '' }}>
                             📍 {{ $loc->name }}
@@ -229,65 +249,73 @@
                 </select>
             </div>
 
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Phone Number</label>
-                <input type="tel" name="phone" placeholder="094112233" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
-            </div>
-
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Email Address</label>
-                <input type="email" name="email" placeholder="armen@example.com" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 0.85rem; margin-bottom: 1rem;">
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i> Birthday</label>
-                    <input type="date" name="birthdate" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Հեռախոսահամար') }}</label>
+                    <input type="tel" name="phone" placeholder="094 112233" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> Address</label>
-                    <input type="text" name="address" placeholder="Tumanyan 12, apt 5" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Էլ. Փոստ') }}</label>
+                    <input type="email" name="email" placeholder="armen@example.com" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
                 </div>
             </div>
 
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Customer Notes</label>
-                <textarea name="notes" rows="2" placeholder="VIP Client, prefers window seat..." style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;"></textarea>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 0.85rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        <i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i> {{ __('Ծննդյան Օր') }}
+                    </label>
+                    <input type="date" name="birthdate" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        <i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> {{ __('Հասցե') }}
+                    </label>
+                    <input type="text" name="address" placeholder="Օրինակ՝ Թումանյան 12, բն. 5" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none;">
+                </div>
             </div>
 
-            <div style="margin-bottom: 1.25rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
-                    <input type="checkbox" name="marketing_opt_in" value="1" checked>
-                    <span>Consented to marketing communications</span>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Նշումներ հաճախորդի մասին') }}</label>
+                <textarea name="notes" rows="2" placeholder="Օրինակ՝ VIP հաճախորդ, նախընտրում է պատուհանի մոտ..." style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none; font-size: 0.9rem; resize: vertical;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; background: var(--bg-body); padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                <label style="display: flex; align-items: center; gap: 0.65rem; font-size: 0.88rem; font-weight: 600; color: var(--text-main); cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="marketing_opt_in" value="1" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+                    <span>{{ __('Համաձայն է ստանալ մարքեթինգային առաջարկներ') }}</span>
                 </label>
             </div>
 
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('addCustomerModal').style.display='none'">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Customer</button>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('addCustomerModal').style.display='none'" style="border-radius: 12px; font-weight: 600;">{{ __('Չեղարկել') }}</button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.7rem 1.6rem;">{{ __('Պահպանել') }}</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Edit Customer Modal -->
-<div id="editCustomerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
-    <div class="card" style="width: 100%; max-width: 480px; padding: 1.5rem; position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: var(--text-main);"><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Edit Customer</h3>
-            <button onclick="document.getElementById('editCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-main); font-size: 1.25rem; cursor: pointer;">✕</button>
+<div id="editCustomerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="card modal-box-responsive" style="width: 100%; max-width: min(520px, 94vw); max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: clamp(1.25rem, 3vw, 1.85rem); position: relative; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.35rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.85rem;">
+            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.6rem;">
+                <span style="color: var(--primary);"><i class="fa-solid fa-pen-to-square"></i></span>
+                <span>{{ __('Խմբագրել Հաճախորդին') }}</span>
+            </h3>
+            <button onclick="document.getElementById('editCustomerModal').style.display='none'" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer; padding: 0.25rem;">✕</button>
         </div>
 
         <form id="editCustomerForm" method="POST">
             @csrf
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Full Name</label>
-                <input type="text" id="edit_name" name="name" required style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Ամբողջական Անուն') }} <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="edit_name" name="name" required style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Branch / Location</label>
-                <select id="edit_location_id" name="location_id" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Մասնաճյուղ') }}</label>
+                <select id="edit_location_id" name="location_id" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
                     @foreach($locations as $loc)
                         <option value="{{ $loc->id }}">
                             📍 {{ $loc->name }}
@@ -296,42 +324,47 @@
                 </select>
             </div>
 
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Phone Number</label>
-                <input type="tel" id="edit_phone" name="phone" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
-            </div>
-
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Email Address</label>
-                <input type="email" id="edit_email" name="email" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 0.85rem; margin-bottom: 1rem;">
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i> Birthday</label>
-                    <input type="date" id="edit_birthdate" name="birthdate" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Հեռախոսահամար') }}</label>
+                    <input type="tel" id="edit_phone" name="phone" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;"><i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> Address</label>
-                    <input type="text" id="edit_address" name="address" placeholder="Tumanyan 12, apt 5" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;">
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Էլ. Փոստ') }}</label>
+                    <input type="email" id="edit_email" name="email" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
                 </div>
             </div>
 
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem;">Customer Notes</label>
-                <textarea id="edit_notes" name="notes" rows="2" style="width: 100%; padding: 0.65rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none;"></textarea>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 0.85rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        <i class="fa-solid fa-cake-candles" style="color: #ec4899;"></i> {{ __('Ծննդյան Օր') }}
+                    </label>
+                    <input type="date" id="edit_birthdate" name="birthdate" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">
+                        <i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> {{ __('Հասցե') }}
+                    </label>
+                    <input type="text" id="edit_address" name="address" placeholder="Օրինակ՝ Թումանյան 12, բն. 5" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none;">
+                </div>
             </div>
 
-            <div style="margin-bottom: 1.25rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
-                    <input type="checkbox" id="edit_marketing_opt_in" name="marketing_opt_in" value="1">
-                    <span>Consented to marketing communications</span>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Նշումներ հաճախորդի մասին') }}</label>
+                <textarea id="edit_notes" name="notes" rows="2" style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none; font-size: 0.9rem; resize: vertical;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; background: var(--bg-body); padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                <label style="display: flex; align-items: center; gap: 0.65rem; font-size: 0.88rem; font-weight: 600; color: var(--text-main); cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="edit_marketing_opt_in" name="marketing_opt_in" value="1" style="width: 18px; height: 18px; accent-color: var(--primary);">
+                    <span>{{ __('Համաձայն է ստանալ մարքեթինգային առաջարկներ') }}</span>
                 </label>
             </div>
 
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('editCustomerModal').style.display='none'">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update Details</button>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('editCustomerModal').style.display='none'" style="border-radius: 12px; font-weight: 600;">{{ __('Չեղարկել') }}</button>
+                <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.7rem 1.6rem;">{{ __('Թարմացնել Տվյալները') }}</button>
             </div>
         </form>
     </div>

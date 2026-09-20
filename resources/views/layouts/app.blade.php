@@ -9,11 +9,11 @@
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Alpine.js & FontAwesome Icons -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
 
     <!-- Prevent FOUC Theme Script -->
     <script>
@@ -24,71 +24,145 @@
     </script>
 
     <style>
-        /* Theme Variables - Dark Mode (Default) */
+        /* Theme Variables - Dark Mode (Default Obsidian Slate) */
         html[data-theme="dark"] {
-            --bg-body: #0b0f19;
-            --bg-card: #151c2c;
-            --bg-card-hover: #1e293b;
-            --bg-sidebar: #0f172a;
-            --bg-header: rgba(15, 23, 42, 0.88);
+            --bg-body: #0a0e1a;
+            --bg-card: #12192c;
+            --bg-card-hover: #18223c;
+            --bg-sidebar: #0e1424;
+            --bg-header: rgba(14, 20, 36, 0.88);
             --border-color: rgba(255, 255, 255, 0.08);
+            --border-color-light: rgba(255, 255, 255, 0.04);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --nav-hover: rgba(245, 158, 11, 0.08);
-            --nav-active: rgba(245, 158, 11, 0.15);
-            --nav-active-border: #f59e0b;
+            --text-subtle: #64748b;
             --primary: #f59e0b;
             --primary-hover: #d97706;
             --primary-glow: rgba(245, 158, 11, 0.25);
+            --primary-gradient: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            --nav-hover: rgba(245, 158, 11, 0.08);
+            --nav-active: rgba(245, 158, 11, 0.14);
+            --nav-active-border: #f59e0b;
             --table-row-border: rgba(255, 255, 255, 0.05);
-            --input-bg: rgba(15, 23, 42, 0.85);
+            --input-bg: rgba(10, 14, 26, 0.7);
             --badge-bg: rgba(245, 158, 11, 0.15);
             --badge-text: #fbbf24;
-            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
-            --glass-bg: rgba(21, 28, 44, 0.75);
+            --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(0, 0, 0, 0.25);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --glass-bg: rgba(18, 25, 44, 0.75);
             --glass-border: rgba(255, 255, 255, 0.08);
-            --modal-overlay: rgba(11, 15, 25, 0.78);
+            --modal-overlay: rgba(5, 8, 15, 0.82);
+            --scrollbar-thumb: rgba(255, 255, 255, 0.16);
+            --scrollbar-track: rgba(0, 0, 0, 0.2);
         }
 
         /* Theme Variables - Light Mode (Minimalist White & Slate) */
         html[data-theme="light"] {
-            --bg-body: #f8fafc;
+            --bg-body: #f4f6f9;
             --bg-card: #ffffff;
-            --bg-card-hover: #f1f5f9;
+            --bg-card-hover: #f8fafc;
             --bg-sidebar: #ffffff;
-            --bg-header: rgba(255, 255, 255, 0.94);
+            --bg-header: rgba(255, 255, 255, 0.92);
             --border-color: #e2e8f0;
+            --border-color-light: #f1f5f9;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --nav-hover: #f1f5f9;
-            --nav-active: #e2e8f0;
-            --nav-active-border: #2563eb;
+            --text-subtle: #94a3b8;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --primary-glow: rgba(37, 99, 235, 0.2);
+            --primary-glow: rgba(37, 99, 235, 0.18);
+            --primary-gradient: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            --nav-hover: #f1f5f9;
+            --nav-active: rgba(37, 99, 235, 0.08);
+            --nav-active-border: #2563eb;
             --table-row-border: #f1f5f9;
-            --input-bg: #ffffff;
-            --badge-bg: #dbeafe;
-            --badge-text: #1d4ed8;
-            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
-            --glass-bg: rgba(255, 255, 255, 0.9);
+            --input-bg: #f8fafc;
+            --badge-bg: #eff6ff;
+            --badge-text: #2563eb;
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.88);
             --glass-border: #e2e8f0;
-            --modal-overlay: rgba(15, 23, 42, 0.5);
+            --modal-overlay: rgba(15, 23, 42, 0.55);
+            --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+            --scrollbar-track: rgba(0, 0, 0, 0.03);
         }
 
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            height: 100%;
+            -webkit-text-size-adjust: 100%;
         }
 
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             display: flex;
             min-height: 100vh;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, input, select, textarea {
+            font-family: inherit;
+        }
+
+        /* Modern Font Awesome Icon Shield - Protects icons from font inheritance conflicts */
+        .fa, .fas, .far, .fal, .fad, .fab, .fa-solid, .fa-regular, .fa-brands, [class*="fa-"] {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+        }
+        .fa-brands, .fab, [class*="fa-brands"] {
+            font-family: "Font Awesome 6 Brands" !important;
+        }
+        .fa-solid, .fas {
+            font-weight: 900 !important;
+        }
+        .fa-regular, .far {
+            font-weight: 400 !important;
+        }
+        [class*="fa-"]::before, [class*="fa-"]::after {
+            font-family: inherit !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.015em;
+        }
+
+        img, video, svg {
+            max-width: 100%;
+            height: auto;
+            vertical-align: middle;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
         }
 
         /* Sidebar Styling */
@@ -103,75 +177,73 @@
             bottom: 0;
             left: 0;
             z-index: 50;
-            transition: transform 0.3s ease, background-color 0.25s ease;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
         }
 
         .sidebar-brand {
-            padding: 1.5rem;
+            padding: 1.25rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.85rem;
             border-bottom: 1px solid var(--border-color);
-        }
-
-        .sidebar-brand h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary) 0%, #ef4444 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            min-height: 72px;
         }
 
         .sidebar-menu {
-            padding: 1rem 0;
+            padding: 1rem 0.5rem;
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .menu-category {
-            padding: 0.75rem 1.5rem 0.35rem;
-            font-size: 0.7rem;
+            padding: 0.85rem 0.85rem 0.35rem;
+            font-size: 0.68rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            font-weight: 700;
+            letter-spacing: 0.07em;
+            color: var(--text-subtle);
+            font-weight: 800;
         }
 
         .nav-item {
             display: flex;
             align-items: center;
             gap: 0.85rem;
-            padding: 0.7rem 1.25rem;
-            margin: 0.2rem 0.75rem;
+            padding: 0.65rem 0.85rem;
+            margin: 0.15rem 0.35rem;
             border-radius: 12px;
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
         .nav-item:hover {
             color: var(--text-main);
             background: var(--nav-hover);
+            transform: translateX(2px);
         }
 
         .nav-item.active {
             color: var(--text-main);
             background: var(--nav-active);
             font-weight: 700;
+            border-left: 3px solid var(--nav-active-border);
         }
 
         .nav-item i {
             width: 20px;
             text-align: center;
             font-size: 1rem;
+            flex-shrink: 0;
         }
 
         /* Sidebar Help Banner Widget */
         .sidebar-widget {
-            margin: 1rem 1rem 1.5rem;
+            margin: 0.75rem 0.85rem 1rem;
             padding: 1rem;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
@@ -182,7 +254,8 @@
         .sidebar-widget p {
             font-size: 0.78rem;
             color: var(--text-muted);
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.65rem;
+            line-height: 1.4;
         }
 
         /* Main Container */
@@ -192,51 +265,62 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
-            transition: margin-left 0.3s ease;
+            width: calc(100% - 260px);
+            max-width: 100%;
+            transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* Top Header Navbar */
         .header-navbar {
-            height: 70px;
+            height: 72px;
             background: var(--bg-header);
             backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 2rem;
+            padding: 0 1.75rem;
             position: sticky;
             top: 0;
             z-index: 40;
+            gap: 1rem;
         }
 
         .mobile-toggle {
             display: none;
-            background: none;
-            border: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             color: var(--text-main);
-            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 1.15rem;
             cursor: pointer;
-            padding: 0.5rem;
+            align-items: center;
+            justify-content: center;
             margin-right: 0.5rem;
+            flex-shrink: 0;
         }
 
         .location-switcher select {
             background: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
+            padding: 0.45rem 0.85rem;
             border-radius: 10px;
             outline: none;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             cursor: pointer;
             font-weight: 600;
+            max-width: 220px;
         }
 
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
+            flex-shrink: 0;
         }
 
         /* Minimal Theme Toggle Switcher */
@@ -252,20 +336,22 @@
             font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-main);
-            box-shadow: var(--shadow-card);
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
         }
 
-        .theme-toggle-btn i {
-            font-size: 0.95rem;
-            color: var(--primary);
+        .theme-toggle-btn:hover {
+            border-color: var(--primary);
         }
 
         .badge-role {
             padding: 0.25rem 0.65rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
         }
 
         .badge-superadmin { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
@@ -275,83 +361,114 @@
         .content-body {
             padding: 2rem;
             flex: 1;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
-        /* Minimalist Modern Cards */
+        /* Cards System */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 18px;
             padding: 1.5rem;
             box-shadow: var(--shadow-card);
             margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            max-width: 100%;
         }
 
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            box-shadow: var(--shadow-card);
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            border-radius: 10px;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
             font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            border: none;
-            transition: all 0.2s;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             text-decoration: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1.25;
+        }
+        .btn:active {
+            transform: scale(0.98);
         }
 
         .btn-primary {
             background: var(--primary);
             color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 14px var(--primary-glow);
         }
         html[data-theme="dark"] .btn-primary {
-            color: #000000;
+            color: #0b0f19;
+            font-weight: 700;
         }
         .btn-primary:hover {
             background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background: var(--bg-body);
+            background: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--border-color);
         }
         .btn-secondary:hover {
             background: var(--bg-card-hover);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
         }
 
-        .btn-success { background: #10b981; color: #fff; }
-        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-success { background: #10b981; color: #fff; border-color: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: #fff; border-color: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
 
         /* Alert Notifications */
         .alert {
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
+            border-radius: 14px;
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            font-size: 0.88rem;
+            gap: 1rem;
         }
         .alert-success {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.28);
             color: #10b981;
         }
 
-        /* Cards & Glass Containers */
-        .glass-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: var(--shadow-card);
-        }
-
-        /* Form Controls & Inputs */
+        /* Form Controls */
         .form-label {
             display: block;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-muted);
             margin-bottom: 0.4rem;
         }
@@ -362,10 +479,11 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             padding: 0.65rem 0.9rem;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 0.875rem;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-sizing: border-box;
         }
 
         .form-input:focus, .form-select:focus, .form-textarea:focus {
@@ -378,11 +496,20 @@
             color: var(--text-main);
         }
 
-        /* Data Tables */
+        /* Responsive Data Tables */
+        .responsive-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.875rem;
+            white-space: nowrap;
         }
 
         .data-table th {
@@ -392,14 +519,49 @@
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            background: var(--input-bg);
             border-bottom: 1px solid var(--border-color);
             font-weight: 700;
         }
 
         .data-table td {
-            padding: 1rem;
+            padding: 0.9rem 1rem;
             border-bottom: 1px solid var(--table-row-border);
             vertical-align: middle;
+        }
+
+        /* Fluid Grid System */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+        @media (max-width: 1024px) {
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+        @media (max-width: 900px) {
+            .grid-2 { grid-template-columns: 1fr; }
         }
 
         /* Modern KPI & Stat Tiles */
@@ -415,8 +577,8 @@
         }
         .stat-kpi-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(99, 102, 241, 0.35);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+            border-color: rgba(245, 158, 11, 0.35);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
         }
         .kpi-icon-badge {
             width: 46px;
@@ -429,7 +591,7 @@
             flex-shrink: 0;
         }
 
-        /* Modern Badges */
+        /* Badges */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -439,36 +601,25 @@
             font-size: 0.75rem;
             font-weight: 700;
             line-height: 1.2;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
-        .badge-emerald {
-            background: rgba(16, 185, 129, 0.12);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.28);
+        .badge-emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.28); }
+        .badge-amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.28); }
+        .badge-rose { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.28); }
+        .badge-indigo { background: rgba(99, 102, 241, 0.12); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.28); }
+        .badge-cyan { background: rgba(6, 182, 212, 0.12); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.28); }
+        .badge-purple { background: rgba(168, 85, 247, 0.12); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.28); }
+
+        /* Text Utilities */
+        .truncate-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .badge-amber {
-            background: rgba(245, 158, 11, 0.12);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.28);
-        }
-        .badge-rose {
-            background: rgba(239, 68, 68, 0.12);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.28);
-        }
-        .badge-indigo {
-            background: rgba(99, 102, 241, 0.12);
-            color: #6366f1;
-            border: 1px solid rgba(99, 102, 241, 0.28);
-        }
-        .badge-cyan {
-            background: rgba(6, 182, 212, 0.12);
-            color: #06b6d4;
-            border: 1px solid rgba(6, 182, 212, 0.28);
-        }
-        .badge-purple {
-            background: rgba(168, 85, 247, 0.12);
-            color: #a855f7;
-            border: 1px solid rgba(168, 85, 247, 0.28);
+        .break-word {
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         /* Modern Modal System */
@@ -477,46 +628,87 @@
             inset: 0;
             background: var(--modal-overlay);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1.25rem;
+            box-sizing: border-box;
         }
         .modern-modal-box {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
             border-radius: 20px;
             width: 100%;
             max-width: 620px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 1.75rem 2rem;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Mobile Sidebar Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 45;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.mobile-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            display: block;
+        }
+
+        /* Responsive Breakpoints */
         @media (max-width: 992px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.mobile-open { transform: translateX(0); }
-            .sidebar-overlay.mobile-open { display: block; }
-            .main-wrapper { margin-left: 0; }
-            .mobile-toggle { display: block; }
-            .grid-2 { grid-template-columns: 1fr; }
-            .header-navbar { padding: 0 1rem; }
-            .content-body { padding: 1.25rem; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .main-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+            .mobile-toggle {
+                display: inline-flex;
+            }
+            .header-navbar {
+                padding: 0 1rem;
+            }
+            .content-body {
+                padding: 1.25rem 1rem;
+            }
+            .hide-on-mobile {
+                display: none !important;
+            }
         }
     </style>
     @yield('styles')
 </head>
 <body x-data="themeApp()">
 
-    <!-- Mobile Overlay -->
+    <!-- Mobile Overlay Backdrop -->
     <div class="sidebar-overlay" :class="{ 'mobile-open': mobileOpen }" @click="mobileOpen = false"></div>
 
     <!-- Sidebar Navigation -->
     <aside class="sidebar" :class="{ 'mobile-open': mobileOpen }">
-        <div class="sidebar-brand" style="{{ Auth::user()?->isSuperAdmin() ? 'flex-direction: column; align-items: flex-start; gap: 0.65rem; padding: 1.25rem 1.35rem;' : '' }}">
+        <div class="sidebar-brand">
             @if(Auth::user()?->isSuperAdmin())
                 <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%;">
-                    <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 1.15rem; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); flex-shrink: 0;">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 1.2rem; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); flex-shrink: 0;">
                         <i class="fa-solid fa-crown"></i>
                     </div>
                     <div style="flex: 1; min-width: 0;">
@@ -524,15 +716,32 @@
                         <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">SuperAdmin Console</div>
                     </div>
                 </div>
-                <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem; border-radius: 9999px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.7rem; font-weight: 700; color: #10b981;">
-                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
-                    <span>System: Live Multi-tenant</span>
-                </div>
             @else
-                <i class="fa-solid fa-qrcode text-2xl" style="color: var(--primary);"></i>
-                <div>
-                    <h1>QR Menu SaaS</h1>
-                    <small style="color: var(--text-muted); font-size: 0.7rem;">Minimalist Platform</small>
+                @php 
+                    $currVendor = Auth::user()?->vendor;
+                    $activeLocation = session('active_location_id') 
+                        ? $currVendor?->locations->firstWhere('id', session('active_location_id')) 
+                        : $currVendor?->locations->first();
+                @endphp
+                <div style="display: flex; align-items: center; gap: 0.85rem; width: 100%; min-width: 0;">
+                    @if($currVendor?->logo)
+                        <img src="{{ $currVendor->logo }}" alt="{{ $currVendor->name }}" style="width: 42px; height: 42px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border-color); flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    @else
+                        <div style="width: 42px; height: 42px; border-radius: 12px; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 1.2rem; font-weight: 800; flex-shrink: 0; box-shadow: 0 4px 14px var(--primary-glow);">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
+                    @endif
+                    <div style="flex: 1; min-width: 0;">
+                        <h1 style="font-size: 1.05rem; font-weight: 800; margin: 0; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $currVendor?->name ?? 'QRMenu Admin' }}">
+                            {{ $currVendor?->name ?? 'QRMenu Admin' }}
+                        </h1>
+                        <div style="display: flex; align-items: center; gap: 0.35rem; margin-top: 0.15rem;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981; flex-shrink: 0;"></span>
+                            <span style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ $activeLocation?->name ?? 'Live Multi-Branch' }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>
@@ -541,92 +750,101 @@
             @if(Auth::user()?->isSuperAdmin())
                 <div class="menu-category">{{ __('Super Admin') }}</div>
                 <a href="{{ route('superadmin.dashboard') }}" class="nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-chart-line" style="color: #6366f1;"></i> {{ __('Dashboard') }}
+                    <i class="fa-solid fa-chart-line" style="color: #6366f1;"></i> <span>{{ __('Dashboard') }}</span>
                 </a>
                 <a href="{{ route('superadmin.vendors.index') }}" class="nav-item {{ request()->routeIs('superadmin.vendors.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-store" style="color: #10b981;"></i> {{ __('Vendor Directory') }}
+                    <i class="fa-solid fa-store" style="color: #10b981;"></i> <span>{{ __('Vendor Directory') }}</span>
                 </a>
                 <a href="{{ route('superadmin.plans.index') }}" class="nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-box-archive" style="color: #f59e0b;"></i> {{ __('Plans') }}
+                    <i class="fa-solid fa-box-archive" style="color: #f59e0b;"></i> <span>{{ __('Plans') }}</span>
                 </a>
                 <a href="{{ route('superadmin.subscriptions.index') }}" class="nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-credit-card" style="color: #ec4899;"></i> {{ __('Vendor Subscriptions') }}
+                    <i class="fa-solid fa-credit-card" style="color: #ec4899;"></i> <span>{{ __('Vendor Subscriptions') }}</span>
                 </a>
             @else
                 @php $v = Auth::user()?->vendor; @endphp
+                
                 <div class="menu-category">{{ __('Vendor Operations') }}</div>
                 <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-gauge-high"></i> {{ __('Dashboard') }}
+                    <i class="fa-solid fa-gauge-high" style="color: #f59e0b;"></i> <span>{{ __('Dashboard') }}</span>
                 </a>
                 <a href="{{ route('admin.orders.index') }}" class="nav-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" style="justify-content: space-between;">
-                    <span><i class="fa-solid fa-bell-concierge"></i> {{ __('Live Kitchen Orders') }}</span>
+                    <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa-solid fa-bell-concierge" style="color: #ef4444;"></i> <span>{{ __('Kitchen Orders') }}</span>
+                    </span>
                     @if($v && !$v->hasFeature('orders'))
-                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 PRO</span>
+                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
                     @endif
                 </a>
 
                 <div class="menu-category">{{ __('Menu & Content') }}</div>
                 <a href="{{ route('admin.menu.index') }}" class="nav-item {{ request()->routeIs('admin.menu.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-utensils"></i> {{ __('Menu Builder') }}
+                    <i class="fa-solid fa-utensils" style="color: #10b981;"></i> <span>{{ __('Menu Builder') }}</span>
                 </a>
                 <a href="{{ route('admin.ai.import') }}" class="nav-item {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> {{ __('AI Menu & Translate') }}
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #8b5cf6;"></i> <span>{{ __('AI Menu & Translate') }}</span>
                 </a>
 
-                <div class="menu-category">{{ __('Storefront & Marketing') }}</div>
+                <div class="menu-category">{{ __('Storefront & Growth') }}</div>
                 <a href="{{ route('admin.branding.index') }}" class="nav-item {{ request()->routeIs('admin.branding.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-palette"></i> {{ __('Theme Customizer') }}
+                    <i class="fa-solid fa-palette" style="color: #ec4899;"></i> <span>{{ __('Theme Customizer') }}</span>
                 </a>
                 <a href="{{ route('admin.qr.index') }}" class="nav-item {{ request()->routeIs('admin.qr.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-qrcode"></i> {{ __('Table QR Studio') }}
+                    <i class="fa-solid fa-qrcode" style="color: #06b6d4;"></i> <span>{{ __('Table QR Studio') }}</span>
                 </a>
                 <a href="{{ route('admin.customers.index') }}" class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" style="justify-content: space-between;">
-                    <span><i class="fa-solid fa-users-gear" style="color: var(--primary);"></i> {{ __('Customers & CRM') }}</span>
+                    <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa-solid fa-users-gear" style="color: #3b82f6;"></i> <span>{{ __('Customers & CRM') }}</span>
+                    </span>
                     @if($v && !$v->hasFeature('customers'))
-                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 PRO</span>
+                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
                     @endif
                 </a>
                 <a href="{{ route('admin.analytics.index') }}" class="nav-item {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-chart-pie"></i> {{ __('Analytics & Traffic') }}
+                    <i class="fa-solid fa-chart-pie" style="color: #f97316;"></i> <span>{{ __('Analytics & Traffic') }}</span>
                 </a>
 
-                <div class="menu-category">{{ __('Settings & Subscription') }}</div>
+                <div class="menu-category">{{ __('Settings & Administration') }}</div>
                 <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-sliders"></i> {{ __('Կարգավորումներ') }}
+                    <i class="fa-solid fa-sliders" style="color: #64748b;"></i> <span>{{ __('Կարգավորումներ') }}</span>
                 </a>
                 <a href="{{ route('admin.subscription') }}" class="nav-item {{ request()->routeIs('admin.subscription') ? 'active' : '' }}">
-                    <i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary);"></i> {{ __('Subscription') }}
+                    <i class="fa-solid fa-file-invoice-dollar" style="color: #f59e0b;"></i> <span>{{ __('Subscription') }}</span>
                 </a>
                 <a href="{{ route('admin.locations.index') }}" class="nav-item {{ request()->routeIs('admin.locations.*') ? 'active' : '' }}" style="justify-content: space-between;">
-                    <span><i class="fa-solid fa-location-dot"></i> {{ __('Multi-Locations') }}</span>
+                    <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa-solid fa-location-dot" style="color: #14b8a6;"></i> <span>{{ __('Multi-Locations') }}</span>
+                    </span>
                     @if($v && !$v->hasFeature('locations'))
-                        <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 BIZ</span>
+                        <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 BIZ</span>
                     @endif
                 </a>
                 <a href="{{ route('admin.team.index') }}" class="nav-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}" style="justify-content: space-between;">
-                    <span><i class="fa-solid fa-users"></i> {{ __('Team & Staff') }}</span>
+                    <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa-solid fa-users" style="color: #0ea5e9;"></i> <span>{{ __('Team & Staff') }}</span>
+                    </span>
                     @if($v && !$v->hasFeature('team'))
-                        <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700;">🔒 BIZ</span>
+                        <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 BIZ</span>
                     @endif
                 </a>
 
                 @if(Auth::user()?->vendor)
-                    <div style="padding: 0.5rem 1rem;">
-                        <a href="{{ route('client.menu', ['vendor_slug' => Auth::user()->vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; border-radius: 12px;">
-                            <i class="fa-solid fa-external-link"></i> {{ __('Live Storefront') }}
+                    <div style="padding: 0.75rem 0.65rem 0.25rem;">
+                        <a href="{{ route('client.menu', ['vendor_slug' => Auth::user()->vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; border-radius: 12px; gap: 0.5rem; border-color: rgba(245, 158, 11, 0.3);">
+                            <i class="fa-solid fa-arrow-up-right-from-square" style="color: var(--primary);"></i> <span>{{ __('Live Storefront') }}</span>
                         </a>
                     </div>
                 @endif
             @endif
         </nav>
 
-        <!-- Sidebar Help / Status Widget -->
+        <!-- Sidebar Help / Support Widget -->
         @if(Auth::user()?->isSuperAdmin())
-            <div class="sidebar-widget" style="text-align: left; padding: 0.85rem 1rem; margin: 1rem 0.85rem 1.25rem;">
+            <div class="sidebar-widget" style="text-align: left; padding: 0.85rem 1rem; margin: 0.75rem 0.85rem 1.25rem;">
                 <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
                     <i class="fa-solid fa-server" style="color: #6366f1;"></i> Core Platform
                 </div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">Laravel 13 & Reverb</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Laravel 13 & Reverb</div>
                 <div style="font-size: 0.72rem; color: #10b981; margin-top: 0.25rem; display: flex; align-items: center; gap: 0.35rem;">
                     <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
                     <span>WebSocket: Port 8080 Active</span>
@@ -634,27 +852,30 @@
             </div>
         @else
             <div class="sidebar-widget">
+                <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-main); margin-bottom: 0.25rem;">
+                    <i class="fa-solid fa-headset" style="color: var(--primary);"></i> Support Desk
+                </div>
                 <p>{{ __('Need help or custom menu translation?') }}</p>
-                <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
-                    <i class="fa-solid fa-headset"></i> {{ __('Get Support') }}
+                <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px; width: 100%;">
+                    {{ __('Get Support') }}
                 </a>
             </div>
         @endif
     </aside>
 
-    <!-- Main Wrapper -->
+    <!-- Main Content Shell -->
     <div class="main-wrapper">
         <header class="header-navbar">
-            <div style="display: flex; align-items: center;">
-                <button class="mobile-toggle" @click="mobileOpen = !mobileOpen">
+            <div style="display: flex; align-items: center; min-width: 0;">
+                <button class="mobile-toggle" @click="mobileOpen = !mobileOpen" aria-label="Toggle navigation menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
 
                 <div class="location-switcher">
                     @if(Auth::user()?->vendor && Auth::user()->vendor->locations->count() > 0)
-                        <form action="{{ route('admin.dashboard') }}" method="GET" id="locationSwitchForm">
-                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;" class="hidden sm:inline">
-                                <i class="fa-solid fa-location-arrow"></i> {{ __('Location:') }}
+                        <form action="{{ route('admin.dashboard') }}" method="GET" id="locationSwitchForm" style="display: flex; align-items: center;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem; white-space: nowrap;" class="hide-on-mobile">
+                                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> {{ __('Location:') }}
                             </label>
                             <select name="location_id" onchange="document.getElementById('locationSwitchForm').submit();">
                                 @foreach(Auth::user()->vendor->locations as $loc)
@@ -680,7 +901,7 @@
                         </span>
                         <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem; color: var(--text-muted);"></i>
                     </button>
-                    <div x-show="openLang" @click.outside="openLang = false" x-transition style="position: absolute; right: 0; top: 110%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-card); min-width: 140px; z-index: 100; overflow: hidden; padding: 0.25rem 0;">
+                    <div x-show="openLang" @click.outside="openLang = false" x-transition style="position: absolute; right: 0; top: 115%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-card); min-width: 140px; z-index: 100; overflow: hidden; padding: 0.25rem 0;">
                         <a href="{{ route('lang.switch', 'hy') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'hy' ? '700' : '400' }}; background: {{ app()->getLocale() == 'hy' ? 'var(--nav-hover)' : 'transparent' }};">
                             🇦🇲 Հայերեն
                         </a>
@@ -695,18 +916,20 @@
 
                 <!-- Light / Dark Theme Switcher Button -->
                 <button class="theme-toggle-btn" @click="toggleTheme()" title="Toggle Light / Dark Mode">
-                    <i class="fa-solid" :class="currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
-                    <span x-text="currentTheme === 'dark' ? '{{ __('Light Mode') }}' : '{{ __('Dark Mode') }}'"></span>
+                    <i class="fa-solid" :class="currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'" style="color: var(--primary);"></i>
+                    <span class="hide-on-mobile" x-text="currentTheme === 'dark' ? '{{ __('Light') }}' : '{{ __('Dark') }}'"></span>
                 </button>
 
-                <span class="badge-role {{ Auth::user()?->isSuperAdmin() ? 'badge-superadmin' : (Auth::user()?->isVendorOwner() ? 'badge-owner' : 'badge-manager') }}">
+                <!-- User Role Badge -->
+                <span class="badge-role hide-on-mobile {{ Auth::user()?->isSuperAdmin() ? 'badge-superadmin' : (Auth::user()?->isVendorOwner() ? 'badge-owner' : 'badge-manager') }}">
                     {{ str_replace('_', ' ', Auth::user()?->role ?? 'staff') }}
                 </span>
 
-                <form action="{{ route('logout') }}" method="POST" style="margin-left: 0.25rem;">
+                <!-- Logout Button -->
+                <form action="{{ route('logout') }}" method="POST" style="margin-left: 0.15rem;">
                     @csrf
-                    <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.75rem;" title="Logout">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.45rem 0.75rem; border-radius: 10px;" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket" style="font-size: 0.9rem;"></i>
                     </button>
                 </form>
             </div>
@@ -715,30 +938,30 @@
         <main class="content-body">
             @if(session('success'))
                 <div class="alert alert-success">
-                    <span><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</span>
+                    <span style="display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</span>
                     <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             @endif
 
             @if(session('warning'))
-                <div class="alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-                    <span><i class="fa-solid fa-triangle-exclamation"></i> {{ session('warning') }}</span>
+                <div class="alert" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> {{ session('warning') }}</span>
                     <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-                    <span><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</span>
+                <div class="alert" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</span>
                     <button onclick="this.parentElement.remove()" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             @endif
 
             @if(Auth::user()?->vendor && !Auth::user()?->isSuperAdmin() && Auth::user()->vendor->daysLeft() <= 3 && !request()->routeIs('admin.subscription'))
-                <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
+                <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 0.85rem 1.25rem; border-radius: 14px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-clock"></i>
-                        <strong>Բաժանորդագրության հիշեցում․</strong> Ձեր փաթեթի/փորձնական շրջանին մնացել է <strong>{{ Auth::user()->vendor->daysLeft() }} օր</strong> ({{ Auth::user()->vendor->subscription_status_label }})։
+                        <span><strong>Բաժանորդագրության հիշեցում․</strong> Ձեր փաթեթին մնացել է <strong>{{ Auth::user()->vendor->daysLeft() }} օր</strong> ({{ Auth::user()->vendor->subscription_status_label }})։</span>
                     </div>
                     <a href="{{ route('admin.subscription') }}" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
                         Մանրամասներ / Երկարաձգել

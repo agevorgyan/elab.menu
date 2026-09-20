@@ -305,14 +305,17 @@
 <style>
     .customizer-split-grid {
         display: grid;
-        grid-template-columns: minmax(380px, 1.15fr) minmax(360px, 0.95fr);
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
         gap: 2rem;
         align-items: start;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     @media (max-width: 1080px) {
         .customizer-split-grid {
             grid-template-columns: 1fr;
+            gap: 1.5rem;
         }
     }
 
@@ -526,7 +529,7 @@
 
     .preview-toolbar {
         width: 100%;
-        max-width: 440px;
+        max-width: min(375px, 100%);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -535,6 +538,7 @@
         border-radius: 12px;
         padding: 0.4rem 0.6rem;
         margin-bottom: 0.85rem;
+        box-sizing: border-box;
     }
 
     .toolbar-btn {
@@ -561,8 +565,10 @@
 
     /* Smartphone Mockup Frame */
     .phone-mockup-frame {
-        width: 375px;
+        width: 100%;
+        max-width: 375px;
         height: 720px;
+        max-height: 85vh;
         background: #0b0f19;
         border: 10px solid #1e293b;
         border-radius: 46px;
@@ -571,6 +577,8 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        margin: 0 auto;
+        box-sizing: border-box;
         transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 

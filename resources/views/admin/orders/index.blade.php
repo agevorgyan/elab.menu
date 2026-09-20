@@ -7,71 +7,76 @@
 <script src="https://cdn.jsdelivr.net/npm/pusher-js@8.3.0/dist/web/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem;">
-            <i class="fa-solid fa-bell-concierge" style="color: var(--primary);"></i> Խոհանոցի Պատվերների Վահանակ
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">
-            Իրական ժամանակի պատվերներ սեղաններից և օնլայն <strong>{{ $location?->name ?? 'Բոլոր մասնաճյուղեր' }}</strong>-ի համար։
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="width: 40px; height: 40px; border-radius: 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fa-solid fa-bell-concierge"></i>
+            </span>
+            <h1 style="font-size: 1.75rem; font-weight: 800; margin: 0; color: var(--text-main);">
+                Խոհանոցի Պատվերների Վահանակ
+            </h1>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">
+            Իրական ժամանակի պատվերներ սեղաններից և առաքումից <strong style="color: var(--primary);">{{ $location?->name ?? 'Բոլոր մասնաճյուղեր' }}</strong>-ի համար։
         </p>
     </div>
 
     <!-- Live Controls: Connection Status & Sound Toggle -->
-    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+    <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
         <!-- Live Status Pill -->
-        <div id="liveStatusPill" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+        <div id="liveStatusPill" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(16, 185, 129, 0.12); color: #10b981; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.28); transition: all 0.3s ease;">
             <span class="pulse-dot" style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
             <span id="liveStatusText">⚡ WebSockets Կապ</span>
         </div>
 
         <!-- Audio Toggle Button -->
-        <button id="soundToggleBtn" onclick="toggleKitchenSound()" class="btn btn-secondary" style="padding: 0.5rem 0.9rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.45rem;">
+        <button id="soundToggleBtn" onclick="toggleKitchenSound()" class="btn btn-secondary" style="padding: 0.5rem 0.9rem; font-size: 0.82rem; display: flex; align-items: center; gap: 0.45rem; border-radius: 12px;">
             <i id="soundIcon" class="fa-solid fa-volume-high" style="color: var(--primary);"></i>
             <span id="soundText">Ձայնը միացված է</span>
         </button>
 
         <!-- Test Sound Button -->
-        <button onclick="playKitchenChime(true)" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;" title="Ստուգել ծանուցման ձայնը">
+        <button onclick="playKitchenChime(true)" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.82rem; border-radius: 12px;" title="Ստուգել ծանուցման ձայնը">
             <i class="fa-solid fa-bell" style="color: #f59e0b;"></i>
         </button>
     </div>
 </div>
 
 <!-- New Order Alert Banner (Hidden by default, flashes when new order arrives) -->
-<div id="newOrderBanner" style="display: none; background: linear-gradient(135deg, #ef4444, #f97316); color: #ffffff; padding: 0.9rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); align-items: center; justify-content: space-between; animation: slideDown 0.4s ease;">
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
+<div id="newOrderBanner" style="display: none; background: linear-gradient(135deg, #ef4444, #f97316); color: #ffffff; padding: 0.9rem 1.25rem; border-radius: 14px; margin-bottom: 1.5rem; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); align-items: center; justify-content: space-between; animation: slideDown 0.4s ease; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0;">
         <span style="font-size: 1.5rem; animation: ringBell 0.8s infinite alternate;">🔔</span>
-        <div>
+        <div style="min-width: 0;">
             <strong style="font-size: 1.05rem; font-family: 'Outfit';">ՆՈՐ ՊԱՏՎԵՐ ՍՏԱՑՎԵՑ!</strong>
-            <div style="font-size: 0.85rem; opacity: 0.95;" id="newOrderBannerText">Ստացվել է նոր պատվեր սեղանից։</div>
+            <div style="font-size: 0.82rem; opacity: 0.95;" id="newOrderBannerText">Ստացվել է նոր պատվեր սեղանից։</div>
         </div>
     </div>
-    <button onclick="dismissNewOrderBanner()" style="background: rgba(255,255,255,0.25); border: none; color: #fff; padding: 0.35rem 0.75rem; border-radius: 8px; font-weight: 700; cursor: pointer;">
+    <button onclick="dismissNewOrderBanner()" style="background: rgba(255,255,255,0.25); border: none; color: #fff; padding: 0.4rem 0.9rem; border-radius: 10px; font-weight: 700; cursor: pointer;">
         Լավ
     </button>
 </div>
 
 <!-- Filters Bar -->
-<div class="card" style="padding: 0.75rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="?status=all" class="btn {{ request('status', 'all') == 'all' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+<div class="card" style="padding: 0.85rem 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+        <a href="?status=all" class="btn {{ request('status', 'all') == 'all' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
             Բոլորը (All)
         </a>
-        <a href="?status=pending" class="btn {{ request('status') == 'pending' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+        <a href="?status=pending" class="btn {{ request('status') == 'pending' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
             ⏳ Սպասող (Pending)
             @if(isset($pendingCount) && $pendingCount > 0)
-                <span style="background: #ef4444; color: #fff; padding: 0.1rem 0.4rem; border-radius: 9999px; font-size: 0.7rem; margin-left: 0.2rem;">{{ $pendingCount }}</span>
+                <span style="background: #ef4444; color: #fff; padding: 0.1rem 0.45rem; border-radius: 9999px; font-size: 0.7rem; margin-left: 0.35rem; font-weight: 800;">{{ $pendingCount }}</span>
             @endif
         </a>
-        <a href="?status=preparing" class="btn {{ request('status') == 'preparing' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-            🔥 Պատրաստվում է (Preparing)
+        <a href="?status=preparing" class="btn {{ request('status') == 'preparing' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
+            🔥 Պատրաստվում է
         </a>
-        <a href="?status=ready" class="btn {{ request('status') == 'ready' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-            🔔 Պատրաստ է (Ready)
+        <a href="?status=ready" class="btn {{ request('status') == 'ready' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
+            🔔 Պատրաստ է
         </a>
-        <a href="?status=completed" class="btn {{ request('status') == 'completed' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-            ✅ Ավարտված (Completed)
+        <a href="?status=completed" class="btn {{ request('status') == 'completed' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
+            ✅ Ավարտված
         </a>
     </div>
 

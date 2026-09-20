@@ -3,26 +3,26 @@
 @section('title', __('Ռեստորանի Կարգավորումներ') . ' - ' . $vendor->name)
 
 @section('content')
-<div style="max-width: 1050px; margin: 0 auto;">
+<div style="max-width: 1050px; margin: 0 auto; width: 100%; box-sizing: border-box;">
     <!-- Page Header -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.85rem; font-weight: 800; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.75rem;">
-                <span style="background: rgba(245, 158, 11, 0.15); color: var(--primary); width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+        <div style="min-width: 0; flex: 1;">
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <span style="background: rgba(245, 158, 11, 0.15); color: var(--primary); width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
                     <i class="fa-solid fa-sliders"></i>
                 </span>
-                {{ __('Կարգավորումներ') }}
+                <span>{{ __('Կարգավորումներ') }}</span>
             </h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0 0;">
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0 0; word-break: break-word;">
                 {{ __('Կառավարեք մասնաճյուղի հանրային տվյալները, իրավաբանական տեղեկությունները, սպասարկման վճարը և առաքման պարամետրերը') }}
             </p>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <a href="{{ route('client.menu', ['vendor_slug' => $vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600;">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <a href="{{ route('client.menu', ['vendor_slug' => $vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem;">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('Դիտել մենյուն') }}
             </a>
-            <button type="submit" form="vendorSettingsForm" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem;">
+            <button type="submit" form="vendorSettingsForm" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
                 <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել') }}
             </button>
         </div>
@@ -50,17 +50,17 @@
         <div style="display: grid; grid-template-columns: 1fr; gap: 1.75rem;">
 
             <!-- 1. BRANCH & STOREFRONT PUBLIC INFO CARD -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                             <i class="fa-solid fa-store"></i>
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
                                 {{ __('Մասնաճյուղի և Մենյուի Տեղեկություն') }}
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Այս տվյալները հասանելի են հաճախորդներին մենյույի «Տեղեկություն» բաժնում') }}
                             </p>
                         </div>
@@ -71,14 +71,14 @@
                     </span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
                     <!-- Ֆիրմային անվանում -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                             {{ __('Ֆիրմային անվանում') }} <span style="color: #ef4444;">*</span>
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="name" value="{{ old('name', $location?->name ?? $vendor->name) }}" required class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="name" value="{{ old('name', $location?->name ?? $vendor->name) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-utensils"></i>
                             </span>
@@ -187,18 +187,18 @@
             </div>
 
             <!-- 2. FEATURED DISH OF THE DAY BANNER CARD (ՕՐՎԱ ՈՒՏԵՍՏ) -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                             <i class="fa-solid fa-fire-flame-curved"></i>
                         </span>
                         <div>
-                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                 <span>{{ __('Օրվա Ուտեստի Բաներ') }}</span>
                                 <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; padding: 0.15rem 0.55rem; border-radius: 6px; letter-spacing: 0.03em;">PROMO BANNER</span>
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Գովազդեք օրվա հատուկ ուտեստը մենյուի ամենասկզբում՝ մեծ և գրավիչ բաներով') }}
                             </p>
                         </div>
@@ -213,7 +213,7 @@
                     </label>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
                     <!-- Ընտրել Ուտեստը -->
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
@@ -308,20 +308,20 @@
             </div>
 
             <!-- 3. AI WAITER ADVISOR SETTINGS CARD -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);"></div>
 
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                        <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                         </span>
                         <div>
-                            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
-                                {{ __('AI Մատուցող Խորհրդատու') }}
+                            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span>{{ __('AI Մատուցող Խորհրդատու') }}</span>
                                 <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff; padding: 0.15rem 0.5rem; border-radius: 6px;">AI SOMMELIER</span>
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Անհատական խոհարարական առաջարկություններ, համահունչ խմիչքների զուգորդում և ինտերակտիվ ընտրություն հաճախորդի համար') }}
                             </p>
                         </div>
@@ -336,7 +336,7 @@
                 </div>
 
                 <div id="aiWaiterOptionsBlock" style="display: {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'block' : 'none' }};">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
                         <!-- AI Մատուցողի անվանումը -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
@@ -415,17 +415,17 @@
             </div>
 
             <!-- 4. LEGAL & CONTACT INFORMATION CARD (SUPERADMIN) -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                             <i class="fa-solid fa-scale-balanced"></i>
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
                                 {{ __('Իրավաբանական և Կոնտակտային Տվյալներ') }}
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Տվյալները հասանելի են հարթակի գլխավոր ադմինիստրատորին (SuperAdmin)') }}
                             </p>
                         </div>
@@ -436,14 +436,14 @@
                     </span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
                     <!-- Իրավաբանական անվանում -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                             {{ __('Իրավաբանական անվանում') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="legal_name" value="{{ old('legal_name', $vendor->legal_name) }}" class="form-control" placeholder="Օրինակ՝ «Բիստրո Գրուպ» ՍՊԸ" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="legal_name" value="{{ old('legal_name', $vendor->legal_name) }}" class="form-control" placeholder="Օրինակ՝ «Բիստրո Գրուպ» ՍՊԸ" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-building"></i>
                             </span>
@@ -456,7 +456,7 @@
                             {{ __('ՀՎՀՀ (Tax ID)') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="tax_id" value="{{ old('tax_id', $vendor->tax_id) }}" class="form-control" placeholder="02589412" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="tax_id" value="{{ old('tax_id', $vendor->tax_id) }}" class="form-control" placeholder="02589412" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-receipt"></i>
                             </span>
@@ -469,7 +469,7 @@
                             {{ __('Գործունեության հասցեն') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="operating_address" value="{{ old('operating_address', $vendor->operating_address ?? ($location?->address ?? $vendor->legal_address)) }}" class="form-control" placeholder="Փաստացի գործունեության հասցե" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="operating_address" value="{{ old('operating_address', $vendor->operating_address ?? ($location?->address ?? $vendor->legal_address)) }}" class="form-control" placeholder="Փաստացի գործունեության հասցե" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-map-pin"></i>
                             </span>
@@ -482,7 +482,7 @@
                             {{ __('Տնօրեն (Անուն, Ազգանուն)') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="director_name" value="{{ old('director_name', $vendor->director_name) }}" class="form-control" placeholder="Տնօրենի Անուն" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="director_name" value="{{ old('director_name', $vendor->director_name) }}" class="form-control" placeholder="Տնօրենի Անուն" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-user-tie"></i>
                             </span>
@@ -494,7 +494,7 @@
                             {{ __('Տնօրենի հեռախոսահամար') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="director_phone" value="{{ old('director_phone', $vendor->director_phone) }}" class="form-control" placeholder="+374 91 000000" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="director_phone" value="{{ old('director_phone', $vendor->director_phone) }}" class="form-control" placeholder="+374 91 000000" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-mobile-screen"></i>
                             </span>
@@ -507,7 +507,7 @@
                             {{ __('Մենեջեր / Կոնտակտային անձ') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="contact_person_name" value="{{ old('contact_person_name', $vendor->contact_person_name) }}" class="form-control" placeholder="Մենեջերի Անուն" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="contact_person_name" value="{{ old('contact_person_name', $vendor->contact_person_name) }}" class="form-control" placeholder="Մենեջերի Անուն" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-user-gear"></i>
                             </span>
@@ -519,7 +519,7 @@
                             {{ __('Մենեջերի հեռախոսահամար') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="contact_person_phone" value="{{ old('contact_person_phone', $vendor->contact_person_phone) }}" class="form-control" placeholder="+374 93 000000" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="contact_person_phone" value="{{ old('contact_person_phone', $vendor->contact_person_phone) }}" class="form-control" placeholder="+374 93 000000" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-mobile-screen"></i>
                             </span>
@@ -528,18 +528,18 @@
                 </div>
             </div>
 
-            <!-- 3. SERVICE FEE CARD -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+            <!-- 5. SERVICE FEE CARD -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                             <i class="fa-solid fa-bell-concierge"></i>
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
                                 {{ __('Սպասարկման Վճար (Ռեստորանում)') }}
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Գանձվում է ռեստորանում (Dine-in / Սեղանի մոտ) գտնվող հյուրերի պատվերներից') }}
                             </p>
                         </div>
@@ -555,7 +555,7 @@
                 </div>
 
                 <div id="serviceFeeContainer" style="{{ old('service_fee_enabled', $vendor->service_fee_enabled) ? '' : 'opacity: 0.55; pointer-events: none;' }}; transition: opacity 0.2s ease;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
                         <!-- Fee Type -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
@@ -579,7 +579,7 @@
                                 {{ __('Սպասարկման վճարի չափը') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="service_fee_value" id="serviceFeeValue" value="{{ old('service_fee_value', $vendor->service_fee_value ?? 10) }}" required class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="service_fee_value" id="serviceFeeValue" value="{{ old('service_fee_value', $vendor->service_fee_value ?? 10) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span id="serviceFeeSuffix" style="position: absolute; right: 1rem; font-weight: 800; color: var(--primary); font-size: 0.95rem;">
                                     {{ old('service_fee_type', $vendor->service_fee_type ?? 'percent') === 'percent' ? '%' : $vendor->currency }}
                                 </span>
@@ -595,7 +595,7 @@
                                 {{ __('Նվազագույն պատվերի գումար') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="service_fee_min_order" id="serviceFeeMinOrder" value="{{ old('service_fee_min_order', $vendor->service_fee_min_order) }}" placeholder="0" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="service_fee_min_order" id="serviceFeeMinOrder" value="{{ old('service_fee_min_order', $vendor->service_fee_min_order) }}" placeholder="0" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
@@ -621,18 +621,18 @@
                 </div>
             </div>
 
-            <!-- 4. DELIVERY SETTINGS CARD -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+            <!-- 6. DELIVERY SETTINGS CARD -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                             <i class="fa-solid fa-motorcycle"></i>
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
                                 {{ __('Առաքման Ծառայության Կարգավորումներ') }}
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Սահմանեք առաքման վճարը, նվազագույն պատվերը և անվճար առաքման շեմը') }}
                             </p>
                         </div>
@@ -648,14 +648,14 @@
                 </div>
 
                 <div id="deliveryContainer" style="{{ old('delivery_enabled', $vendor->delivery_enabled) ? '' : 'opacity: 0.55; pointer-events: none;' }}; transition: opacity 0.2s ease;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
                         <!-- Delivery Fee -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('Առաքման Վճար') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="delivery_fee" id="deliveryFeeInput" value="{{ old('delivery_fee', $vendor->delivery_fee ?? 0) }}" required class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="delivery_fee" id="deliveryFeeInput" value="{{ old('delivery_fee', $vendor->delivery_fee ?? 0) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span style="position: absolute; right: 1rem; font-weight: 800; color: #3b82f6; font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
@@ -671,7 +671,7 @@
                                 {{ __('Նվազագույն պատվերի գումար') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="delivery_min_amount" id="deliveryMinAmount" value="{{ old('delivery_min_amount', $vendor->delivery_min_amount ?? 0) }}" required class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="delivery_min_amount" id="deliveryMinAmount" value="{{ old('delivery_min_amount', $vendor->delivery_min_amount ?? 0) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
@@ -687,7 +687,7 @@
                                 {{ __('Անվճար առաքում սկսած') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="delivery_free_from" id="deliveryFreeFrom" value="{{ old('delivery_free_from', $vendor->delivery_free_from) }}" placeholder="Առանց անվճարի" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="delivery_free_from" id="deliveryFreeFrom" value="{{ old('delivery_free_from', $vendor->delivery_free_from) }}" placeholder="Առանց անվճարի" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span style="position: absolute; right: 1rem; font-weight: 800; color: #10b981; font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
@@ -701,7 +701,7 @@
                     <!-- Storefront Motivation Banner Preview -->
                     <div style="margin-top: 1.25rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                            <span style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
                                 <i class="fa-solid fa-gift"></i>
                             </span>
                             <div>
@@ -720,18 +720,18 @@
                 </div>
             </div>
 
-            <!-- 5. TAKEAWAY SETTINGS CARD -->
-            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+            <!-- 7. TAKEAWAY SETTINGS CARD -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
                             <i class="fa-solid fa-bag-shopping"></i>
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
                                 {{ __('Տեղում Վերցնելու (Takeaway) Ծառայության Կարգավորումներ') }}
                             </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
                                 {{ __('Հնարավորություն տվեք հաճախորդներին նախապես պատվիրել և վերցնել տեղում') }}
                             </p>
                         </div>
@@ -747,14 +747,14 @@
                 </div>
 
                 <div id="takeawayContainer" style="{{ old('takeaway_enabled', $vendor->takeaway_enabled) ? '' : 'opacity: 0.55; pointer-events: none;' }}; transition: opacity 0.2s ease;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
                         <!-- Minimum Order for Takeaway -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('Նվազագույն պատվերի գումար') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="takeaway_min_amount" id="takeawayMinAmount" value="{{ old('takeaway_min_amount', $vendor->takeaway_min_amount ?? 0) }}" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="takeaway_min_amount" id="takeawayMinAmount" value="{{ old('takeaway_min_amount', $vendor->takeaway_min_amount ?? 0) }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
@@ -768,7 +768,7 @@
                     <!-- Storefront Takeaway Banner Preview -->
                     <div style="margin-top: 1.25rem; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <span style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.2); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                            <span style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.2); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0;">
                                 <i class="fa-solid fa-bag-shopping"></i>
                             </span>
                             <div>
@@ -787,9 +787,13 @@
                 </div>
             </div>
 
-            <!-- Bottom Save Bar -->
-            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem; margin-bottom: 3rem;">
-                <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.6rem; border-radius: 14px; font-weight: 700; padding: 0.85rem 2.2rem; font-size: 1rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
+            <!-- Sticky Bottom Save Bar -->
+            <div class="sticky-save-bar" style="position: sticky; bottom: 1.5rem; z-index: 30; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 0.85rem 1.25rem; box-shadow: 0 12px 30px rgba(0,0,0,0.25); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--text-muted); font-size: 0.85rem;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary);"></i>
+                    <span>{{ __('Բոլոր փոփոխությունները կպահպանվեն ընթացիկ մասնաճյուղի համար') }}</span>
+                </div>
+                <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.6rem; border-radius: 14px; font-weight: 700; padding: 0.75rem 2rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);">
                     <i class="fa-solid fa-check"></i> {{ __('Պահպանել Բոլոր Կարգավորումները') }}
                 </button>
             </div>
@@ -798,6 +802,17 @@
 </div>
 
 <style>
+.settings-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.settings-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+.form-control:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
+    outline: none;
+}
 .type-pill:hover {
     border-color: var(--primary) !important;
 }

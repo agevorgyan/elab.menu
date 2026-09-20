@@ -81,9 +81,10 @@
         </button>
         @endif
 
-        <!-- 3. Call Waiter -->
+        @if(!empty($table))
+        <!-- 3. Call Waiter (Only displayed when scanned from a table QR) -->
         <button type="button" 
-                class="bottom-nav-item"
+                class="bottom-nav-item bottom-nav-waiter"
                 :class="{ 'active': showWaiterModal }"
                 @click="openWaiterModal('call_waiter')">
             <div class="nav-icon-wrapper">
@@ -91,6 +92,7 @@
             </div>
             <span class="nav-label">{{ __('menu.nav_waiter') }}</span>
         </button>
+        @endif
 
         <!-- 3. Cart -->
         <button type="button" 

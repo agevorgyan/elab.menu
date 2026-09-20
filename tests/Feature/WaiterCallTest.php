@@ -156,6 +156,59 @@ class WaiterCallTest extends TestCase
         ]);
     }
 
+    public function test_storefront_hides_waiter_button_when_no_table_qr_scanned(): void
+    {
+        $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor1->slug]));
+        $response->assertStatus(200);
+        $response->assertDontSee('bottom-nav-waiter');
+        $response->assertSee('isTableFixed: false', false);
+    }
+
+    public function test_storefront_shows_waiter_button_when_table_qr_scanned(): void
+    {
+        $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor1->slug, 'table' => '7']));
+        $response->assertStatus(200);
+        $response->assertSee('bottom-nav-waiter');
+        $response->assertSee('isTableFixed: true', false);
+    }
+
+    public function test_cannot_call_waiter_for_another_table_than_scanned(): void
+    {
+        // Visit table 5 QR
+        $this->get(route('client.menu', ['vendor_slug' => $this->vendor1->slug, 'table' => '5']));
+
+        // Attempt to call waiter for Table 9
+        $response = $this->postJson(route('client.waiter.call', ['vendor_slug' => $this->vendor1->slug]), [
+            'location_id' => $this->location1->id,
+            'table_number' => 'Table 9',
+            'type' => 'call_waiter',
+        ]);
+
+        $response->assertStatus(403);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Դուք չեք կարող կանչել մատուցող այլ սեղանի համար։',
+        ]);
+    }
+
+    public function test_can_call_waiter_for_same_scanned_table(): void
+    {
+        // Visit table 5 QR
+        $this->get(route('client.menu', ['vendor_slug' => $this->vendor1->slug, 'table' => '5']));
+
+        // Call waiter for Table 5
+        $response = $this->postJson(route('client.waiter.call', ['vendor_slug' => $this->vendor1->slug]), [
+            'location_id' => $this->location1->id,
+            'table_number' => 'Table 5',
+            'type' => 'call_waiter',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+        ]);
+    }
+
     public function test_call_waiter_validates_required_fields(): void
     {
         $response = $this->postJson(route('client.waiter.call', ['vendor_slug' => $this->vendor1->slug]), [

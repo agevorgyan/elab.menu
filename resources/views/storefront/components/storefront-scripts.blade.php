@@ -528,16 +528,20 @@
             },
 
             openWaiterModal(type = 'call_waiter') {
+                if (!this.isTableFixed) {
+                    this.triggerToast('Մատուցողի կանչը հասանելի է միայն սեղանի QR կոդը սկանավորելուց հետո', 'remove', 'fa-solid fa-qrcode');
+                    return;
+                }
                 this.serviceType = type;
-                if (!this.serviceTable && this.tableNumber) {
+                if (this.tableNumber) {
                     this.serviceTable = this.tableNumber;
                 }
                 this.showWaiterModal = true;
             },
 
             async submitServiceCall() {
-                if (!this.serviceTable || this.serviceTable.toString().trim() === '') {
-                    this.triggerToast('{{ __('menu.table_number_prompt') }}', 'remove', 'fa-solid fa-chair');
+                if (!this.isTableFixed || !this.serviceTable || this.serviceTable.toString().trim() === '') {
+                    this.triggerToast('Մատուցողի կանչը հասանելի է միայն սեղանի QR կոդը սկանավորելուց հետո', 'remove', 'fa-solid fa-qrcode');
                     return;
                 }
 

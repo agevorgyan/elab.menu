@@ -140,13 +140,15 @@
 
         <!-- Actions -->
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <!-- Call Waiter from Tracker -->
+            @if(!empty($table))
+            <!-- Call Waiter from Tracker (Only when at table) -->
             <button type="button" 
                     @click="closeOrderTracker(false); openWaiterModal('call_waiter')" 
                     style="width: 100%; padding: 0.85rem; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 14px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                 <i class="fa-solid fa-bell" style="color: var(--primary);"></i>
                 <span>{{ __('menu.call_waiter') }}</span>
             </button>
+            @endif
 
             <!-- Close and keep tracking -->
             <button type="button" 

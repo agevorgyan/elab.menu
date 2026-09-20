@@ -42,6 +42,11 @@ class ClientStorefrontController extends Controller
         session(['app_locale' => $lang, 'locale' => $lang]);
         App::setLocale($lang);
         $table = $request->get('table', null);
+        if ($request->has('table') && $request->filled('table')) {
+            session(['storefront_table_'.$vendor->slug => $request->get('table')]);
+        } elseif (session()->has('storefront_table_'.$vendor->slug)) {
+            $table = session('storefront_table_'.$vendor->slug);
+        }
         $channel = $request->get('mode', 'dine_in'); // dine_in vs ordering
 
         // Dispatch analytics visit asynchronously to background queue
@@ -348,6 +353,23 @@ self.addEventListener('fetch', event => {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
 
         $validated = $request->validated();
+
+        $sessionTable = session('storefront_table_'.$vendor->slug);
+        if ($sessionTable) {
+            $normalizedSession = strtolower(trim((string) $sessionTable));
+            $normalizedTable = strtolower(trim((string) $validated['table_number']));
+            $matches = ($normalizedTable === $normalizedSession)
+                || ($normalizedTable === 'table '.$normalizedSession)
+                || ($normalizedTable === 'սեղան '.$normalizedSession)
+                || ('table '.$normalizedTable === $normalizedSession);
+
+            if (! $matches) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Դուք չեք կարող կանչել մատուցող այլ սեղանի համար։',
+                ], 403);
+            }
+        }
 
         $locationId = $validated['location_id'] ?? $vendor->locations->first()?->id;
 

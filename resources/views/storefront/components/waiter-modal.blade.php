@@ -123,48 +123,36 @@
                 </div>
             </div>
 
-            <!-- Table Number Card Section -->
+            <!-- Table Number Card Section (Locked to Scanned QR Table) -->
             <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.15rem; margin: 1.25rem 0 1.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
                     <label style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem;">
                         <i class="fa-solid fa-chair" style="color: var(--primary);"></i>
                         <span>{{ __('menu.specify_table') }}</span>
                     </label>
-                    <template x-if="isTableFixed">
-                        <span style="font-size: 0.72rem; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-lock"></i> Ֆիքսված է (Սեղանի QR)
-                        </span>
-                    </template>
+                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i class="fa-solid fa-lock"></i> Ֆիքսված է (Սեղանի QR)
+                    </span>
                 </div>
                 
                 <div style="position: relative;">
                     <input type="text" 
                            x-model="serviceTable" 
-                           :readonly="isTableFixed"
-                           :class="{ 'is-locked': isTableFixed }"
-                           placeholder="{{ __('menu.table') }} {{ $table ?? '4' }}"
-                           class="service-table-input"
-                           style="width: 100%; padding: 0.85rem 2.5rem 0.85rem 2.5rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 1rem; font-weight: 700; outline: none; transition: all 0.2s ease; box-sizing: border-box;">
+                           readonly
+                           disabled
+                           class="service-table-input is-locked"
+                           style="width: 100%; padding: 0.85rem 2.5rem 0.85rem 2.5rem; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 1rem; font-weight: 700; outline: none; transition: all 0.2s ease; box-sizing: border-box; cursor: not-allowed; pointer-events: none; opacity: 0.95;">
                     <div style="position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.95rem; pointer-events: none;">
                         #
                     </div>
-                    <template x-if="isTableFixed">
-                        <div style="position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); color: #10b981; font-size: 0.95rem; pointer-events: none;" title="Ֆիքսված է QR-ով">
-                            <i class="fa-solid fa-lock"></i>
-                        </div>
-                    </template>
+                    <div style="position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); color: #10b981; font-size: 0.95rem; pointer-events: none;" title="Ֆիքսված է QR-ով">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
                 </div>
-                <template x-if="isTableFixed">
-                    <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.45rem; line-height: 1.35; display: flex; align-items: center; gap: 0.35rem;">
-                        <i class="fa-solid fa-qrcode"></i>
-                        <span>Սեղանի համարն ավտոմատ ամրագրված է QR կոդով և ենթակա չէ փոփոխման։</span>
-                    </div>
-                </template>
-                <template x-if="!isTableFixed">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.35;">
-                        Մատուցողը կմոտենա նշված սեղանին։ Սեղանի համարը կարող եք տեսնել սեղանի անկյունում տեղադրված QR կոդի վրա։
-                    </div>
-                </template>
+                <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.45rem; line-height: 1.35; display: flex; align-items: center; gap: 0.35rem;">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>Սեղանի համարն ավտոմատ ամրագրված է Ձեր սկանավորած QR կոդով և ենթակա չէ փոփոխման։</span>
+                </div>
             </div>
 
             <!-- Action Buttons (Submit & Cancel) -->

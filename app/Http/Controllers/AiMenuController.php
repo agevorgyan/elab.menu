@@ -110,7 +110,7 @@ class AiMenuController extends Controller
 
                     $image = ! empty($prodData['image'])
                         ? trim((string) $prodData['image'])
-                        : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
+                        : null;
 
                     Product::create([
                         'vendor_id' => $vendor->id,

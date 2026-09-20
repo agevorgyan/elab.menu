@@ -3,7 +3,7 @@
         $dishPayload = [
             'id' => $featuredDish->id,
             'name' => $featuredDish->getTranslatedName($lang),
-            'image' => $featuredDish->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
+            'image' => $featuredDish->image ?: asset('images/default-dish.png'),
             'description' => $featuredDish->getTranslatedDescription($lang),
             'base_price' => (float)$featuredDish->getEffectivePrice($location?->id),
             'regular_price' => (float)$featuredDish->getRegularPrice($location?->id),
@@ -36,7 +36,8 @@
                 
                 <!-- Hero Image Area with Badges -->
                 <div style="position: relative; height: 210px; overflow: hidden; background: #000;">
-                    <img src="{{ $featuredDish->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80' }}"
+                    <img src="{{ $featuredDish->image }}"
+                         onerror="this.onerror=null;this.src='{{ asset('images/default-dish.png') }}';"
                          alt="{{ $featuredDish->getTranslatedName($lang) }}"
                          style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;"
                          onmouseover="this.style.transform='scale(1.05)'"

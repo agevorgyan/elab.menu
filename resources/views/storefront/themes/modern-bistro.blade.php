@@ -266,7 +266,7 @@
                             $prodPayload = [
                                 'id' => $prod->id,
                                 'name' => $prod->getTranslatedName($lang),
-                                'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                                'image' => $prod->image ?: asset('images/default-dish.png'),
                                 'description' => $prod->getTranslatedDescription($lang),
                                 'base_price' => (float)$prod->getEffectivePrice($location?->id),
                                 'regular_price' => (float)$prod->getRegularPrice($location?->id),
@@ -282,7 +282,7 @@
                             ];
                         @endphp
                         <div class="dish-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})'>
-                            <img src="{{ $prod->image }}" class="dish-img">
+                            <img src="{{ $prod->image }}" onerror="this.onerror=null;this.src='{{ asset('images/default-dish.png') }}';" class="dish-img" alt="{{ $prod->getTranslatedName($lang) }}">
                             <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.25rem;">

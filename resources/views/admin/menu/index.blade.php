@@ -190,7 +190,7 @@
                     <div class="menu-dish-row">
                         <!-- Left/Desktop Content: Thumbnail + Info -->
                         <div class="dish-main-mobile" style="flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 1rem;">
-                            <img src="{{ $product->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&q=80' }}" class="dish-thumb" alt="{{ $product->name }}">
+                            <img src="{{ $product->image }}" onerror="this.onerror=null;this.src='{{ asset('images/default-dish.png') }}';" class="dish-thumb" alt="{{ $product->name }}">
                             
                             <div class="dish-content">
                                 <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
@@ -827,7 +827,7 @@
         document.getElementById('edit_prod_hy_name').value = (prod.name_translations && prod.name_translations.hy) ? prod.name_translations.hy : '';
         document.getElementById('edit_prod_ru_name').value = (prod.name_translations && prod.name_translations.ru) ? prod.name_translations.ru : '';
         
-        document.getElementById('edit_prod_image').value = prod.image || '';
+        document.getElementById('edit_prod_image').value = (prod.image && !prod.image.includes('default-dish')) ? prod.image : '';
         document.getElementById('edit_prod_description').value = prod.description || '';
         
         document.getElementById('edit_prod_hy_description').value = (prod.description_translations && prod.description_translations.hy) ? prod.description_translations.hy : '';

@@ -69,7 +69,7 @@ class MenuManagementService
         $imageUrl = $this->resolveProductImage(
             imageFile: $imageFile,
             fallbackUrl: $data['image'] ?? null,
-            defaultUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80'
+            defaultUrl: Product::DEFAULT_IMAGE
         );
 
         $name = $data['name'];
@@ -166,7 +166,7 @@ class MenuManagementService
         $imageUrl = $this->resolveProductImage(
             imageFile: $imageFile,
             fallbackUrl: $data['image'] ?? null,
-            defaultUrl: $product->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80'
+            defaultUrl: $product->image ?: Product::DEFAULT_IMAGE
         );
 
         // If a new image was set and the old image was stored locally, purge the old file

@@ -141,4 +141,24 @@ class StorefrontThemeRenderingTest extends TestCase
             $response->assertSee('<style>'.strip_tags($customCss).'</style>', false);
         }
     }
+
+    public function test_product_without_image_renders_default_dish_placeholder_in_storefront(): void
+    {
+        $this->assertNull($this->product->getRawOriginal('image'));
+        $this->assertEquals('/images/default-dish.png', $this->product->image);
+        $this->assertFalse($this->product->hasCustomImage());
+
+        $themes = ['modern-bistro', 'luxury-dark', 'vibrant-glass'];
+        foreach ($themes as $themeSlug) {
+            $tmpl = MenuTemplate::firstOrCreate(['slug' => $themeSlug], [
+                'name' => ucfirst(str_replace('-', ' ', $themeSlug)),
+                'is_active' => true,
+            ]);
+            $this->vendor->update(['menu_template_id' => $tmpl->id]);
+
+            $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug]));
+            $response->assertStatus(200);
+            $response->assertSee('/images/default-dish.png', false);
+        }
+    }
 }

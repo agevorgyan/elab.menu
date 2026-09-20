@@ -25,7 +25,8 @@
         <!-- Header: Dish Information & Close Action -->
         <div class="variation-header-row">
             <div class="variation-dish-info">
-                <img :src="selectedDish?.image || 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80'" 
+                <img :src="selectedDish?.image || '{{ asset('images/default-dish.png') }}'" 
+                     x-on:error="$event.target.src = '{{ asset('images/default-dish.png') }}'"
                      class="variation-dish-thumb" 
                      :alt="selectedDish?.name || 'Dish'">
                 <div class="variation-dish-meta">

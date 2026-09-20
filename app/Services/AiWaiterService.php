@@ -137,7 +137,7 @@ class AiWaiterService
                 'is_discount_active' => $prod->isDiscountActive(),
                 'discount_percentage' => $prod->getDiscountPercentage(),
                 'formatted_price' => number_format($prod->getEffectivePrice($locationId)).' '.$vendor->currency,
-                'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
+                'image' => $prod->image ?: Product::DEFAULT_IMAGE,
                 'dietary_tags' => $prod->dietary_tags ?? [],
                 'calories' => $prod->calories,
                 'preparation_time_min' => $prod->preparation_time_min,
@@ -146,7 +146,7 @@ class AiWaiterService
                 'payload' => [
                     'id' => $prod->id,
                     'name' => $prod->getTranslatedName($lang),
-                    'image' => $prod->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                    'image' => $prod->image ?: Product::DEFAULT_IMAGE,
                     'description' => $prod->getTranslatedDescription($lang),
                     'base_price' => (float) $prod->getEffectivePrice($locationId),
                     'regular_price' => (float) $prod->getRegularPrice($locationId),
@@ -290,7 +290,7 @@ class AiWaiterService
                 'is_discount_active' => $pairedDrink->isDiscountActive(),
                 'discount_percentage' => $pairedDrink->getDiscountPercentage(),
                 'formatted_price' => number_format($pairedDrink->getEffectivePrice($locationId)).' '.$vendor->currency,
-                'image' => $pairedDrink->image ?? 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=300&q=80',
+                'image' => $pairedDrink->image ?: Product::DEFAULT_IMAGE,
                 'payload' => [
                     'id' => $pairedDrink->id,
                     'name' => $pairedDrink->getTranslatedName($lang),
@@ -319,7 +319,7 @@ class AiWaiterService
                 'is_discount_active' => $pairedSide->isDiscountActive(),
                 'discount_percentage' => $pairedSide->getDiscountPercentage(),
                 'formatted_price' => number_format($pairedSide->getEffectivePrice($locationId)).' '.$vendor->currency,
-                'image' => $pairedSide->image ?? 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=300&q=80',
+                'image' => $pairedSide->image ?: Product::DEFAULT_IMAGE,
                 'payload' => [
                     'id' => $pairedSide->id,
                     'name' => $pairedSide->getTranslatedName($lang),

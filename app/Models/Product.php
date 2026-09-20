@@ -13,6 +13,8 @@ class Product extends Model
 {
     use BelongsToVendor, HasFactory, SoftDeletes;
 
+    public const DEFAULT_IMAGE = '/images/default-dish.png';
+
     protected static function booted(): void
     {
         static::deleting(function (Product $product) {
@@ -25,12 +27,35 @@ class Product extends Model
      */
     public function deleteImageFile(): void
     {
-        if (! empty($this->image) && ! str_starts_with($this->image, 'http://') && ! str_starts_with($this->image, 'https://')) {
-            $path = ltrim(str_replace('/storage/', '', $this->image), '/');
+        $raw = $this->getRawOriginal('image');
+        if (! empty($raw) && ! str_contains($raw, 'default-dish') && ! str_starts_with($raw, 'http://') && ! str_starts_with($raw, 'https://')) {
+            $path = ltrim(str_replace('/storage/', '', $raw), '/');
             if (! empty($path) && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }
         }
+    }
+
+    /**
+     * Get the product image URL or the default dish/drink placeholder.
+     */
+    public function getImageAttribute(?string $value): string
+    {
+        if (empty($value) || trim($value) === '' || str_contains($value, 'photo-1546069901-ba9599a7e63c') || str_contains($value, 'photo-1544025162-d76694265947')) {
+            return self::DEFAULT_IMAGE;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Check if product has a genuine custom image uploaded or specified.
+     */
+    public function hasCustomImage(): bool
+    {
+        $raw = $this->getRawOriginal('image');
+
+        return ! empty($raw) && trim($raw) !== '' && ! str_contains($raw, 'default-dish') && ! str_contains($raw, 'photo-1546069901-ba9599a7e63c');
     }
 
     protected $fillable = [

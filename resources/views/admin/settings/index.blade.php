@@ -284,7 +284,7 @@
 
                     <div id="featuredDishPreviewCard" style="max-width: 480px; border-radius: 16px; overflow: hidden; background: var(--bg-body); border: 2px solid var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
                         <div style="position: relative; height: 140px; background: #000; overflow: hidden;">
-                            <img id="previewDishImg" src="{{ $vendor->featuredProduct?->image ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <img id="previewDishImg" src="{{ $vendor->featuredProduct?->image ?: asset('images/default-dish.png') }}" onerror="this.onerror=null;this.src='{{ asset('images/default-dish.png') }}';" style="width: 100%; height: 100%; object-fit: cover;">
                             <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);"></div>
                             <span id="previewDishBadge" style="position: absolute; top: 0.75rem; left: 0.75rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 9999px; text-transform: uppercase;">
                                 {{ $vendor->featured_dish_badge ?: '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ' }}

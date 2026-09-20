@@ -324,7 +324,10 @@
                         
                         <!-- Top Dish Info -->
                         <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                            <img :src="rec.image" :alt="rec.name" style="width: 95px; height: 95px; border-radius: 16px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <img :src="rec.image || '{{ asset('images/default-dish.png') }}'" 
+                                 x-on:error="$event.target.src = '{{ asset('images/default-dish.png') }}'" 
+                                 :alt="rec.name" 
+                                 style="width: 95px; height: 95px; border-radius: 16px; object-fit: cover; flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
 
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
@@ -388,7 +391,9 @@
                                     <template x-if="rec.pairings.drink">
                                         <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 0.65rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;">
                                             <div style="display: flex; align-items: center; gap: 0.55rem; min-width: 0;">
-                                                <img :src="rec.pairings.drink.image" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
+                                                <img :src="rec.pairings.drink.image || '{{ asset('images/default-dish.png') }}'" 
+                                                     x-on:error="$event.target.src = '{{ asset('images/default-dish.png') }}'" 
+                                                     style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
                                                 <div style="min-width: 0;">
                                                     <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="rec.pairings.drink.name"></div>
                                                     <div style="font-size: 0.78rem; font-weight: 800; color: var(--accent);" x-text="rec.pairings.drink.formatted_price"></div>
@@ -408,7 +413,9 @@
                                     <template x-if="rec.pairings.side">
                                         <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 0.65rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;">
                                             <div style="display: flex; align-items: center; gap: 0.55rem; min-width: 0;">
-                                                <img :src="rec.pairings.side.image" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
+                                                <img :src="rec.pairings.side.image || '{{ asset('images/default-dish.png') }}'" 
+                                                     x-on:error="$event.target.src = '{{ asset('images/default-dish.png') }}'" 
+                                                     style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0;">
                                                 <div style="min-width: 0;">
                                                     <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="rec.pairings.side.name"></div>
                                                     <div style="font-size: 0.78rem; font-weight: 800; color: var(--accent);" x-text="rec.pairings.side.formatted_price"></div>

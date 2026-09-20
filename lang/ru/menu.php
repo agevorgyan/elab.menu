@@ -103,16 +103,24 @@ return [
     'open_now' => 'Открыто',
     'fast_wifi' => 'Быстрый Wi-Fi',
 
-    // Delivery & Order Types
+    // Delivery, Takeaway & Order Types
     'order_type' => 'Тип заказа',
     'dine_in' => 'В зале',
+    'takeaway' => 'С собой',
     'delivery' => 'Доставка',
     'delivery_address' => 'Адрес доставки',
     'delivery_address_placeholder' => 'Город, улица, дом, квартира...',
     'order_delivery' => 'Заказать доставку',
     'order_delivery_via_whatsapp' => 'Заказать доставку в WhatsApp',
+    'order_takeaway' => 'Заказать с собой (Takeaway)',
+    'order_takeaway_via_whatsapp' => 'Заказать с собой в WhatsApp',
     'delivery_address_required' => 'Пожалуйста, укажите адрес доставки',
     'delivery_phone_required' => 'Номер телефона обязателен для доставки',
+    'takeaway_phone_required' => 'Номер телефона обязателен для заказа с собой',
+    'takeaway_disabled_notice' => 'Заказ с собой временно недоступен',
+    'min_takeaway_order_warning' => 'Минимальная сумма для заказа с собой:',
+    'dine_in_requires_table_qr' => 'Для заказа в зале необходимо отсканировать QR-код стола',
+    'takeaway_ready_notice' => 'Заказ будет приготовлен для самовывоза в филиале',
 
     // Fees & Delivery Thresholds
     'service_fee' => 'Сервисный сбор',

@@ -9,6 +9,11 @@ class Vendor extends Model
 {
     use HasFactory;
 
+    protected $attributes = [
+        'takeaway_enabled' => true,
+        'delivery_enabled' => true,
+    ];
+
     protected $fillable = [
         'name',
         'slug',
@@ -55,6 +60,8 @@ class Vendor extends Model
         'delivery_fee',
         'delivery_min_amount',
         'delivery_free_from',
+        'takeaway_enabled',
+        'takeaway_min_amount',
         'featured_product_id',
         'featured_dish_enabled',
         'featured_dish_badge',
@@ -78,6 +85,8 @@ class Vendor extends Model
         'delivery_fee' => 'decimal:2',
         'delivery_min_amount' => 'decimal:2',
         'delivery_free_from' => 'decimal:2',
+        'takeaway_enabled' => 'boolean',
+        'takeaway_min_amount' => 'decimal:2',
         'featured_dish_enabled' => 'boolean',
         'ai_waiter_enabled' => 'boolean',
         'ai_waiter_featured_product_ids' => 'array',

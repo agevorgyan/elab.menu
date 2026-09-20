@@ -25,7 +25,7 @@
             customerName: '',
             customerPhone: '',
             customerBirthdate: '',
-            orderType: '{{ $vendor->delivery_enabled ? "dine_in" : "dine_in" }}',
+            orderType: '{{ !empty($table) ? "dine_in" : ($vendor->takeaway_enabled ? "takeaway" : ($vendor->delivery_enabled ? "delivery" : "takeaway")) }}',
             deliveryAddress: '',
             serviceFeeEnabled: {{ $vendor->service_fee_enabled ? 'true' : 'false' }},
             serviceFeeType: '{{ $vendor->service_fee_type ?? "percent" }}',
@@ -35,6 +35,8 @@
             deliveryFee: {{ (float) ($vendor->delivery_fee ?? 0) }},
             deliveryMinAmount: {{ (float) ($vendor->delivery_min_amount ?? 0) }},
             deliveryFreeFrom: {{ $vendor->delivery_free_from !== null ? (float) $vendor->delivery_free_from : 'null' }},
+            takeawayEnabled: {{ $vendor->takeaway_enabled ? 'true' : 'false' }},
+            takeawayMinAmount: {{ (float) ($vendor->takeaway_min_amount ?? 0) }},
             isTableFixed: {{ !empty($table) ? 'true' : 'false' }},
             tableNumber: customConfig.tableNumber !== undefined ? customConfig.tableNumber : '{{ $table ? "Table " . $table : "" }}',
             showWaiterModal: false,
@@ -205,7 +207,7 @@
             },
 
             get calculatedServiceFee() {
-                if (this.orderType === 'delivery' || !this.serviceFeeEnabled) {
+                if (this.orderType !== 'dine_in' || !this.serviceFeeEnabled) {
                     return 0;
                 }
                 const sub = this.cartSubtotal;
@@ -253,12 +255,45 @@
                 return Math.max(0, this.deliveryMinAmount - this.cartSubtotal);
             },
 
+            get isBelowTakeawayMin() {
+                return this.orderType === 'takeaway' && this.takeawayMinAmount > 0 && this.cartSubtotal < this.takeawayMinAmount;
+            },
+
+            get takeawayMinRemaining() {
+                if (this.takeawayMinAmount <= 0) return 0;
+                return Math.max(0, this.takeawayMinAmount - this.cartSubtotal);
+            },
+
             get cartFinalTotal() {
                 return this.cartSubtotal + this.calculatedServiceFee + this.calculatedDeliveryFee;
             },
 
             async submitOrder(channel) {
                 if (this.cart.length === 0) return;
+
+                // Client-side validation for dine-in orders
+                if (this.orderType === 'dine_in') {
+                    if (!this.isTableFixed && (!this.tableNumber || !this.tableNumber.trim())) {
+                        this.triggerToast('{{ __('menu.dine_in_requires_table_qr') }}', 'remove', 'fa-solid fa-qrcode');
+                        return;
+                    }
+                }
+
+                // Client-side validation for takeaway orders
+                if (this.orderType === 'takeaway') {
+                    if (!this.takeawayEnabled) {
+                        this.triggerToast('{{ __('menu.takeaway_disabled_notice') }}', 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (this.isBelowTakeawayMin) {
+                        this.triggerToast('{{ __('menu.min_takeaway_order_warning') }} ' + Number(this.takeawayMinAmount).toLocaleString() + ' {{ $vendor->currency }}', 'remove', 'fa-solid fa-triangle-exclamation');
+                        return;
+                    }
+                    if (!this.customerPhone || !this.customerPhone.trim()) {
+                        this.triggerToast('{{ __('menu.takeaway_phone_required') }}', 'remove', 'fa-solid fa-phone');
+                        return;
+                    }
+                }
 
                 // Client-side validation for delivery orders
                 if (this.orderType === 'delivery') {
@@ -280,9 +315,7 @@
                     }
                 }
 
-                const resolvedType = this.orderType === 'delivery'
-                    ? 'delivery'
-                    : (channel === 'whatsapp' ? 'whatsapp' : 'dine_in');
+                const resolvedType = this.orderType;
 
                 try {
                     const res = await fetch('{{ route("client.order.submit", ["vendor_slug" => $vendor->slug]) }}', {
@@ -294,7 +327,7 @@
                         },
                         body: JSON.stringify({
                             location_id: {{ $location?->id ?? 1 }},
-                            table_number: this.orderType === 'delivery' ? null : (this.tableNumber || '{{ $table ?? "Table 4" }}'),
+                            table_number: (this.orderType === 'delivery' || this.orderType === 'takeaway') ? null : (this.tableNumber || null),
                             delivery_address: this.orderType === 'delivery' ? this.deliveryAddress.trim() : null,
                             type: resolvedType,
                             customer_name: this.customerName || 'Guest',
@@ -348,7 +381,7 @@
                                 total_amount: data.total_amount,
                                 order_type: this.orderType,
                                 delivery_address: this.orderType === 'delivery' ? this.deliveryAddress : null,
-                                table_number: this.orderType === 'delivery' ? '{{ __('menu.delivery') }}' : (this.tableNumber || '{{ $table ? "Table " . $table : "" }}'),
+                                table_number: this.orderType === 'delivery' ? '{{ __('menu.delivery') }}' : (this.orderType === 'takeaway' ? '{{ __('menu.takeaway') }}' : (this.tableNumber || '{{ $table ? "Table " . $table : "" }}')),
                                 currency: '{{ $vendor->currency }}',
                                 created_at_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                                 created_at_human: 'հենց նոր',

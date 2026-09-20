@@ -148,9 +148,9 @@
                 </div>
 
                 <!-- Kitchen Notes Card -->
-                <!-- Order Type Switcher (Dine-In vs Delivery) -->
-                <template x-if="deliveryEnabled">
-                    <div class="cart-type-toggle-wrap">
+                <!-- Order Type Switcher (Dine-In vs Takeaway vs Delivery) -->
+                <div class="cart-type-toggle-wrap" x-show="isTableFixed || takeawayEnabled || deliveryEnabled">
+                    <template x-if="isTableFixed">
                         <button type="button" 
                                 @click="orderType = 'dine_in'" 
                                 :class="{ 'is-active': orderType === 'dine_in' }"
@@ -158,6 +158,17 @@
                             <i class="fa-solid fa-utensils"></i>
                             <span>{{ __('menu.dine_in') }}</span>
                         </button>
+                    </template>
+                    <template x-if="takeawayEnabled">
+                        <button type="button" 
+                                @click="orderType = 'takeaway'" 
+                                :class="{ 'is-active': orderType === 'takeaway' }"
+                                class="cart-type-btn">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                            <span>{{ __('menu.takeaway') }}</span>
+                        </button>
+                    </template>
+                    <template x-if="deliveryEnabled">
                         <button type="button" 
                                 @click="orderType = 'delivery'" 
                                 :class="{ 'is-active': orderType === 'delivery' }"
@@ -165,6 +176,34 @@
                             <i class="fa-solid fa-motorcycle"></i>
                             <span>{{ __('menu.delivery') }}</span>
                         </button>
+                    </template>
+                </div>
+
+                <!-- Takeaway Notifications & Min Order Warning -->
+                <template x-if="orderType === 'takeaway'">
+                    <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.75rem;">
+                        <!-- Min Takeaway Order Warning Banner -->
+                        <template x-if="isBelowTakeawayMin">
+                            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem; color: #ef4444; font-size: 0.85rem;">
+                                <i class="fa-solid fa-circle-exclamation" style="font-size: 1.1rem; flex-shrink: 0;"></i>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700;">
+                                        {{ __('menu.min_takeaway_order_warning') }} <span x-text="Number(takeawayMinAmount).toLocaleString() + ' {{ $vendor->currency }}'"></span>
+                                    </div>
+                                    <div style="font-size: 0.78rem; opacity: 0.9; margin-top: 0.15rem;">
+                                        {{ __('menu.add_more_for_free_delivery') }} <strong x-text="Number(takeawayMinRemaining).toLocaleString() + ' {{ $vendor->currency }}'"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Takeaway Pickup Branch Notice -->
+                        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.65rem; font-size: 0.82rem; color: var(--text-main);">
+                            <i class="fa-solid fa-store" style="color: #8b5cf6; font-size: 1rem; flex-shrink: 0;"></i>
+                            <div>
+                                <span style="font-weight: 700;">{{ $location->name ?? 'Մասնաճյուղ' }}</span> — {{ __('menu.takeaway_ready_notice') }}
+                            </div>
+                        </div>
                     </div>
                 </template>
 
@@ -243,12 +282,12 @@
                         </div>
 
                         <div class="cart-input-field-wrap">
-                            <i class="fa-solid fa-phone cart-input-prefix-icon" :style="orderType === 'delivery' ? 'color: #f59e0b;' : ''"></i>
+                            <i class="fa-solid fa-phone cart-input-prefix-icon" :style="(orderType === 'delivery' || orderType === 'takeaway') ? 'color: #f59e0b;' : ''"></i>
                             <input type="tel" 
                                    x-model="customerPhone" 
                                    class="cart-input" 
-                                   :required="orderType === 'delivery'"
-                                   :placeholder="orderType === 'delivery' ? '* ' + '{{ __('menu.phone_placeholder') }}' : '{{ __('menu.phone_placeholder') }}'">
+                                   :required="orderType === 'delivery' || orderType === 'takeaway'"
+                                   :placeholder="(orderType === 'delivery' || orderType === 'takeaway') ? '* ' + '{{ __('menu.phone_placeholder') }}' : '{{ __('menu.phone_placeholder') }}'">
                         </div>
 
                         <!-- Email & Birthdate -->
@@ -375,6 +414,16 @@
                         </div>
                     </template>
 
+                    <!-- Takeaway Row -->
+                    <template x-if="orderType === 'takeaway'">
+                        <div class="cart-summary-row">
+                            <span class="cart-summary-label">{{ __('menu.order_type') }}</span>
+                            <span class="cart-summary-val" style="color: #8b5cf6; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-bag-shopping"></i> {{ __('menu.takeaway') }}
+                            </span>
+                        </div>
+                    </template>
+
                     <!-- Delivery Type & Address Row -->
                     <template x-if="orderType === 'delivery'">
                         <div>
@@ -420,9 +469,9 @@
                     <button type="button" 
                             @click="submitOrder(orderType)" 
                             class="cart-submit-btn"
-                            :disabled="orderType === 'delivery' && isBelowDeliveryMin"
-                            :style="orderType === 'delivery' && isBelowDeliveryMin ? 'opacity: 0.55; cursor: not-allowed;' : ''"
-                            :class="{ 'is-delivery': orderType === 'delivery' }">
+                            :disabled="(orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
+                            :style="((orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
+                            :class="{ 'is-delivery': orderType === 'delivery', 'is-takeaway': orderType === 'takeaway' }">
                         <div class="cart-submit-left">
                             <template x-if="activeOrder && !['completed', 'cancelled'].includes(activeOrder.status)">
                                 <i class="fa-solid fa-circle-plus" style="color: #10b981;"></i>
@@ -432,14 +481,17 @@
                                     <template x-if="orderType === 'delivery'">
                                         <i class="fa-solid fa-motorcycle"></i>
                                     </template>
-                                    <template x-if="orderType !== 'delivery'">
+                                    <template x-if="orderType === 'takeaway'">
+                                        <i class="fa-solid fa-bag-shopping"></i>
+                                    </template>
+                                    <template x-if="orderType === 'dine_in'">
                                         <i class="fa-solid fa-bell-concierge"></i>
                                     </template>
                                 </span>
                             </template>
                             <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
                                 ? ('{{ __('menu.append_to_active_order') }} (' + activeOrder.order_number + ')')
-                                : (orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : '{{ __('menu.checkout') }}')"></span>
+                                : (orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway') }}' : '{{ __('menu.checkout') }}'))"></span>
                         </div>
                         <div class="cart-submit-price-pill">
                             <span x-text="Number(cartFinalTotal).toLocaleString()"></span>
@@ -450,13 +502,13 @@
                     <!-- WhatsApp Order Button -->
                     <button type="button" 
                             @click="submitOrder('whatsapp')" 
-                            :disabled="orderType === 'delivery' && isBelowDeliveryMin"
-                            :style="orderType === 'delivery' && isBelowDeliveryMin ? 'opacity: 0.55; cursor: not-allowed;' : ''"
+                            :disabled="(orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
+                            :style="((orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
                             class="cart-whatsapp-btn">
                         <i class="fa-brands fa-whatsapp cart-wa-icon"></i>
                         <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
                             ? '{{ __('menu.append_to_active_order_wa') }}'
-                            : (orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}')"></span>
+                            : (orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}'))"></span>
                     </button>
                 </div>
             </div>
@@ -878,10 +930,10 @@
         color: var(--text-muted);
     }
 
-    /* Order Type Toggle (Dine-in vs Delivery) */
+    /* Order Type Toggle (Dine-in vs Takeaway vs Delivery) */
     .cart-type-toggle-wrap {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 0.4rem;
         background: var(--bg-main);
         border: 1px solid var(--border-color);
@@ -955,6 +1007,14 @@
     }
     .cart-submit-btn.is-delivery:hover {
         box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+    }
+
+    .cart-submit-btn.is-takeaway {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+    }
+    .cart-submit-btn.is-takeaway:hover {
+        box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
     }
 
     /* Section Cards (Notes & Customer Info) */

@@ -720,6 +720,73 @@
                 </div>
             </div>
 
+            <!-- 5. TAKEAWAY SETTINGS CARD -->
+            <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('Տեղում Վերցնելու (Takeaway) Ծառայության Կարգավորումներ') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                                {{ __('Հնարավորություն տվեք հաճախորդներին նախապես պատվիրել և վերցնել տեղում') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Enable Switch -->
+                    <label class="modern-switch-wrapper" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none;">
+                        <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);" id="takeawayStatusLabel">
+                            {{ old('takeaway_enabled', $vendor->takeaway_enabled) ? __('Ակտիվ է') : __('Անջատված է') }}
+                        </span>
+                        <input type="checkbox" name="takeaway_enabled" value="1" id="takeawayToggle" {{ old('takeaway_enabled', $vendor->takeaway_enabled) ? 'checked' : '' }} onchange="toggleTakeawayFields()" style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;">
+                    </label>
+                </div>
+
+                <div id="takeawayContainer" style="{{ old('takeaway_enabled', $vendor->takeaway_enabled) ? '' : 'opacity: 0.55; pointer-events: none;' }}; transition: opacity 0.2s ease;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+                        <!-- Minimum Order for Takeaway -->
+                        <div class="form-group">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Նվազագույն պատվերի գումար') }}
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="number" step="any" min="0" name="takeaway_min_amount" id="takeawayMinAmount" value="{{ old('takeaway_min_amount', $vendor->takeaway_min_amount ?? 0) }}" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
+                                    {{ $vendor->currency }}
+                                </span>
+                            </div>
+                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                                {{ __('Տեղում վերցնելու նվազագույն շեմ (0 = առանց սահմանափակման)') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Storefront Takeaway Banner Preview -->
+                    <div style="margin-top: 1.25rem; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.2); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                            </span>
+                            <div>
+                                <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);" id="takeawayPreviewText">
+                                    {{ __('Տեղում վերցնել (Takeaway) տարբերակը հասանելի է') }}
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);" id="takeawayPreviewSubtext">
+                                    {{ __('Հաճախորդները կարող են նախապես պատվիրել առանց սեղանի QR-ի') }}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; font-weight: 800; border-radius: 8px; padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                            <i class="fa-solid fa-store"></i> {{ __('Takeaway Ռեժիմ') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Bottom Save Bar -->
             <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem; margin-bottom: 3rem;">
                 <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.6rem; border-radius: 14px; font-weight: 700; padding: 0.85rem 2.2rem; font-size: 1rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
@@ -764,6 +831,22 @@ function toggleDeliveryFields() {
     const isChecked = document.getElementById('deliveryToggle').checked;
     const container = document.getElementById('deliveryContainer');
     const label = document.getElementById('deliveryStatusLabel');
+    if (isChecked) {
+        container.style.opacity = '1';
+        container.style.pointerEvents = 'auto';
+        label.textContent = "{{ __('Ակտիվ է') }}";
+    } else {
+        container.style.opacity = '0.55';
+        container.style.pointerEvents = 'none';
+        label.textContent = "{{ __('Անջատված է') }}";
+    }
+    updateCalculationsPreview();
+}
+
+function toggleTakeawayFields() {
+    const isChecked = document.getElementById('takeawayToggle').checked;
+    const container = document.getElementById('takeawayContainer');
+    const label = document.getElementById('takeawayStatusLabel');
     if (isChecked) {
         container.style.opacity = '1';
         container.style.pointerEvents = 'auto';
@@ -838,6 +921,25 @@ function updateCalculationsPreview() {
             previewText.textContent = `${minText}Առաքման ֆիքսված վճար՝ ${deliveryFee.toLocaleString()} ${CURRENCY}`;
             previewSubtext.textContent = "{{ __('Առաքումը միշտ վճարովի է') }}";
         }
+    }
+
+    // Takeaway preview
+    const isTakeawayEnabled = document.getElementById('takeawayToggle')?.checked;
+    const takeawayMin = parseFloat(document.getElementById('takeawayMinAmount')?.value) || 0;
+    const takeawayPreviewText = document.getElementById('takeawayPreviewText');
+    const takeawayPreviewSubtext = document.getElementById('takeawayPreviewSubtext');
+
+    if (takeawayPreviewText && takeawayPreviewSubtext) {
+        if (!isTakeawayEnabled) {
+            takeawayPreviewText.textContent = "{{ __('Տեղում վերցնելու (Takeaway) ծառայությունը ներկայումս անջատված է') }}";
+            takeawayPreviewSubtext.textContent = "{{ __('Հաճախորդները չեն կարողանա ընտրել Takeaway տարբերակը') }}";
+        } else {
+            let minText = takeawayMin > 0 ? `Նվազագույն պատվեր՝ ${takeawayMin.toLocaleString()} ${CURRENCY}: ` : '';
+            takeawayPreviewText.textContent = `${minText}Տեղում վերցնելու (Takeaway) պատվերները ակտիվ են`;
+            takeawayPreviewSubtext.textContent = "{{ __('Հաճախորդները կարող են պատվիրել առանց ռեստորանում/սեղանի մոտ գտնվելու') }}";
+        }
+    }
+
     // Featured Dish Preview
     updateFeaturedDishPreview();
 }

@@ -193,6 +193,13 @@ class CreateOrderAction
         $order = null;
 
         DB::transaction(function () use ($vendor, $dto, &$order) {
+            // Dine-in orders require a table number (scanned from table QR)
+            if ($dto->type === 'dine_in' && empty($dto->tableNumber)) {
+                throw ValidationException::withMessages([
+                    'table_number' => 'Ռեստորանում պատվիրելու համար անհրաժեշտ է սկանավորել սեղանի QR կոդը:',
+                ]);
+            }
+
             // Synchronize or create customer profile
             $customer = $this->customerSyncService->syncCustomerFromOrder(
                 vendor: $vendor,
@@ -211,7 +218,7 @@ class CreateOrderAction
                 'location_id' => $dto->locationId,
                 'customer_id' => $customer?->id,
                 'order_number' => 'ORD-'.strtoupper(Str::random(6)),
-                'table_number' => $dto->type === 'delivery' ? null : ($dto->tableNumber ?? 'Counter'),
+                'table_number' => in_array($dto->type, ['delivery', 'takeaway']) ? null : ($dto->tableNumber ?? 'Counter'),
                 'delivery_address' => $dto->deliveryAddress,
                 'type' => $dto->type,
                 'total_amount' => 0,
@@ -261,6 +268,18 @@ class CreateOrderAction
                 if ((float) $vendor->delivery_min_amount > 0 && $itemsSubtotal < (float) $vendor->delivery_min_amount) {
                     throw ValidationException::withMessages([
                         'delivery' => 'Նվազագույն պատվերի գումարը առաքման համար՝ '.number_format((float) $vendor->delivery_min_amount)." {$vendor->currency}:",
+                    ]);
+                }
+            } elseif ($dto->type === 'takeaway') {
+                if (! ($vendor->takeaway_enabled ?? true)) {
+                    throw ValidationException::withMessages([
+                        'takeaway' => 'Տեղում վերցնելու (Takeaway) ծառայությունը ներկայումս հասանելի չէ:',
+                    ]);
+                }
+
+                if ((float) $vendor->takeaway_min_amount > 0 && $itemsSubtotal < (float) $vendor->takeaway_min_amount) {
+                    throw ValidationException::withMessages([
+                        'takeaway' => 'Նվազագույն պատվերի գումարը տեղում վերցնելու համար՝ '.number_format((float) $vendor->takeaway_min_amount)." {$vendor->currency}:",
                     ]);
                 }
             }
@@ -392,7 +411,7 @@ class CreateOrderAction
             } else {
                 $deliveryFee = (float) ($vendor->delivery_fee ?? 0);
             }
-        } else {
+        } elseif ($orderType === 'dine_in') {
             if ($vendor->service_fee_enabled) {
                 $minOrder = $vendor->service_fee_min_order !== null ? (float) $vendor->service_fee_min_order : 0;
                 if ($minOrder <= 0 || $itemsSubtotal >= $minOrder) {
@@ -432,6 +451,9 @@ class CreateOrderAction
         if ($order->type === 'delivery') {
             $msg .= "🛵 *Տեսակը՝ ԱՌԱՔՈՒՄ (Delivery)*\n";
             $msg .= "📍 *Առաքման հասցե՝* {$order->delivery_address}\n";
+        } elseif ($order->type === 'takeaway') {
+            $msg .= "🛍️ *Տեսակը՝ ՏԵՂՈՒՄ ՎԵՐՑՆԵԼ (Takeaway)*\n";
+            $msg .= "📍 *Մասնաճյուղ՝ {$location->name}*\n";
         } else {
             $msg .= "🍽️ *Տեսակը՝ ՌԵՍՏՈՐԱՆՈՒՄ (Dine-in)*\n";
             $msg .= "📍 *{$location->name}* ".($order->table_number ? "({$order->table_number})" : '')."\n";

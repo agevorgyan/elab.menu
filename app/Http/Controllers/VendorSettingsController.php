@@ -69,6 +69,10 @@ class VendorSettingsController extends Controller
             'delivery_min_amount' => 'required|numeric|min:0',
             'delivery_free_from' => 'nullable|numeric|min:0',
 
+            // Takeaway
+            'takeaway_enabled' => 'nullable|boolean',
+            'takeaway_min_amount' => 'nullable|numeric|min:0',
+
             // Featured Dish / Dish of the Day
             'featured_dish_enabled' => 'nullable|boolean',
             'featured_product_id' => 'nullable|integer|exists:products,id',
@@ -84,6 +88,7 @@ class VendorSettingsController extends Controller
 
         $validated['service_fee_enabled'] = $request->boolean('service_fee_enabled');
         $validated['delivery_enabled'] = $request->boolean('delivery_enabled');
+        $validated['takeaway_enabled'] = $request->boolean('takeaway_enabled');
         $validated['featured_dish_enabled'] = $request->boolean('featured_dish_enabled');
         $validated['ai_waiter_enabled'] = $request->boolean('ai_waiter_enabled');
 
@@ -96,6 +101,8 @@ class VendorSettingsController extends Controller
             'delivery_fee' => $validated['delivery_fee'],
             'delivery_min_amount' => $validated['delivery_min_amount'],
             'delivery_free_from' => $validated['delivery_free_from'] ?? null,
+            'takeaway_enabled' => $validated['takeaway_enabled'],
+            'takeaway_min_amount' => $validated['takeaway_min_amount'] ?? 0,
             'featured_dish_enabled' => $validated['featured_dish_enabled'],
             'featured_dish_badge' => $validated['featured_dish_badge'] ?? null,
             'featured_dish_subtitle' => $validated['featured_dish_subtitle'] ?? null,

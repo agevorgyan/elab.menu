@@ -113,6 +113,7 @@ class PricingBypassProtectionTest extends TestCase
         $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
             'type' => 'dine_in',
+            'table_number' => 'Table 7',
             'customer_name' => 'Cheater',
             'items' => [
                 [
@@ -154,6 +155,7 @@ class PricingBypassProtectionTest extends TestCase
         $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
             'type' => 'dine_in',
+            'table_number' => 'Table 7',
             'customer_name' => 'Attacker',
             'items' => [
                 [
@@ -179,6 +181,7 @@ class PricingBypassProtectionTest extends TestCase
         $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
             'type' => 'dine_in',
+            'table_number' => 'Table 7',
             'customer_name' => 'Attacker',
             'items' => [
                 [
@@ -203,6 +206,7 @@ class PricingBypassProtectionTest extends TestCase
         $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
             'type' => 'dine_in',
+            'table_number' => 'Table 7',
             'customer_name' => 'Name Selector',
             'items' => [
                 [
@@ -226,6 +230,7 @@ class PricingBypassProtectionTest extends TestCase
         $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
             'type' => 'dine_in',
+            'table_number' => 'Table 7',
             'customer_name' => 'Table Party',
             'items' => [
                 [
@@ -276,6 +281,7 @@ class PricingBypassProtectionTest extends TestCase
         $response = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
             'type' => 'dine_in',
+            'table_number' => 'Table 7',
             'customer_name' => 'Soup Eater',
             'items' => [
                 [

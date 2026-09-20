@@ -103,16 +103,24 @@ return [
     'open_now' => 'Բաց է',
     'fast_wifi' => 'Գերարագ Wi-Fi',
 
-    // Delivery & Order Types
+    // Delivery, Takeaway & Order Types
     'order_type' => 'Պատվերի տեսակը',
     'dine_in' => 'Ռեստորանում',
+    'takeaway' => 'Տեղում վերցնել',
     'delivery' => 'Առաքում',
     'delivery_address' => 'Առաքման հասցե',
     'delivery_address_placeholder' => 'Քաղաք, փողոց, շենք, բնակարան...',
     'order_delivery' => 'Պատվիրել առաքում',
     'order_delivery_via_whatsapp' => 'Պատվիրել առաքում WhatsApp-ով',
+    'order_takeaway' => 'Պատվիրել (Takeaway)',
+    'order_takeaway_via_whatsapp' => 'Պատվիրել Takeaway WhatsApp-ով',
     'delivery_address_required' => 'Խնդրում ենք լրացնել առաքման հասցեն',
     'delivery_phone_required' => 'Առաքման համար հեռախոսահամարը պարտադիր է',
+    'takeaway_phone_required' => 'Տեղում վերցնելու համար հեռախոսահամարը պարտադիր է',
+    'takeaway_disabled_notice' => 'Տեղում վերցնելու ծառայությունը ներկայումս հասանելի չէ',
+    'min_takeaway_order_warning' => 'Նվազագույն պատվերի գումարը տեղում վերցնելու համար՝',
+    'dine_in_requires_table_qr' => 'Ռեստորանում պատվիրելու համար անհրաժեշտ է սկանավորել սեղանի QR կոդը',
+    'takeaway_ready_notice' => 'Պատվերը կպատրաստվի մասնաճյուղում տեղում վերցնելու համար',
 
     // Fees & Delivery Thresholds
     'service_fee' => 'Սպասարկման վճար',

@@ -103,16 +103,24 @@ return [
     'open_now' => 'Open Now',
     'fast_wifi' => 'Fast Wi-Fi',
 
-    // Delivery & Order Types
+    // Delivery, Takeaway & Order Types
     'order_type' => 'Order Type',
     'dine_in' => 'Dine-in',
+    'takeaway' => 'Takeaway',
     'delivery' => 'Delivery',
     'delivery_address' => 'Delivery Address',
     'delivery_address_placeholder' => 'City, street, building, apt...',
     'order_delivery' => 'Order Delivery',
     'order_delivery_via_whatsapp' => 'Order Delivery via WhatsApp',
+    'order_takeaway' => 'Order Takeaway',
+    'order_takeaway_via_whatsapp' => 'Order Takeaway via WhatsApp',
     'delivery_address_required' => 'Please provide a delivery address',
     'delivery_phone_required' => 'Phone number is required for delivery',
+    'takeaway_phone_required' => 'Phone number is required for takeaway',
+    'takeaway_disabled_notice' => 'Takeaway service is currently unavailable',
+    'min_takeaway_order_warning' => 'Minimum order for takeaway:',
+    'dine_in_requires_table_qr' => 'Please scan a table QR code to order for dine-in',
+    'takeaway_ready_notice' => 'Your order will be prepared for pickup at the branch',
 
     // Fees & Delivery Thresholds
     'service_fee' => 'Service Fee',

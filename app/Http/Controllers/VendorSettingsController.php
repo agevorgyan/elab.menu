@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
+use App\Services\AiGatewayService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -202,5 +204,101 @@ class VendorSettingsController extends Controller
         }
 
         return back()->with('success', 'Կարգավորումները հաջողությամբ պահպանվեցին:');
+    }
+
+    /**
+     * Display the vendor AI configuration and AI Waiter settings.
+     */
+    public function aiIndex(Request $request): View
+    {
+        $vendor = Auth::user()->vendor;
+        $providers = AiGatewayService::PROVIDERS;
+
+        return view('admin.settings.ai', compact('vendor', 'providers'));
+    }
+
+    /**
+     * Update AI service provider settings and AI Waiter configuration.
+     */
+    public function aiUpdate(Request $request): RedirectResponse
+    {
+        $vendor = Auth::user()->vendor;
+
+        $validated = $request->validate([
+            // AI Waiter Configuration
+            'ai_waiter_enabled' => 'nullable|boolean',
+            'ai_waiter_name' => 'nullable|string|max:100',
+            'ai_waiter_priority_ingredients' => 'nullable|string|max:2000',
+            'ai_waiter_welcome_text' => 'nullable|string|max:1000',
+
+            // AI Provider Configuration
+            'ai_provider' => 'required|string|in:gemini,openai,claude,deepseek,groq,openrouter,custom',
+            'ai_model' => 'nullable|string|max:100',
+            'custom_model' => 'nullable|string|max:100',
+            'ai_api_key' => 'nullable|string|max:255',
+            'ai_base_url' => 'nullable|string|max:500',
+        ]);
+
+        $aiModel = $validated['ai_model'] ?? null;
+        if ($aiModel === 'custom' || empty($aiModel)) {
+            $aiModel = ! empty($validated['custom_model']) ? trim((string) $validated['custom_model']) : ($aiModel ?: null);
+        }
+
+        $currentSettings = $vendor->ai_settings ?? [];
+        $apiKey = $request->filled('ai_api_key')
+            ? trim((string) $validated['ai_api_key'])
+            : ($currentSettings['api_key'] ?? null);
+
+        // If user explicitly checked to clear API key (or if passed empty while custom provider requires none)
+        if ($request->has('clear_api_key') && $request->boolean('clear_api_key')) {
+            $apiKey = null;
+        }
+
+        $newAiSettings = [
+            'provider' => $validated['ai_provider'] ?? 'gemini',
+            'model' => $aiModel,
+            'api_key' => $apiKey,
+            'base_url' => ! empty($validated['ai_base_url']) ? trim((string) $validated['ai_base_url']) : null,
+        ];
+
+        $vendor->update([
+            'ai_waiter_enabled' => $request->boolean('ai_waiter_enabled'),
+            'ai_waiter_name' => ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Մատուցող',
+            'ai_waiter_priority_ingredients' => $validated['ai_waiter_priority_ingredients'] ?? null,
+            'ai_waiter_welcome_text' => $validated['ai_waiter_welcome_text'] ?? null,
+            'ai_settings' => $newAiSettings,
+        ]);
+
+        return redirect()->route('admin.settings.ai')->with('success', '✨ AI կարգավորումները հաջողությամբ պահպանվեցին:');
+    }
+
+    /**
+     * Test connection to the chosen AI provider.
+     */
+    public function testAiConnection(Request $request, AiGatewayService $gateway): JsonResponse
+    {
+        $vendor = Auth::user()->vendor;
+
+        $provider = $request->input('ai_provider', 'gemini');
+        $model = $request->input('ai_model');
+        if ($model === 'custom' || empty($model)) {
+            $model = $request->input('custom_model') ?: ($model ?: null);
+        }
+
+        $apiKey = $request->input('ai_api_key');
+        if (empty($apiKey)) {
+            $apiKey = $vendor->ai_settings['api_key'] ?? null;
+        }
+
+        $baseUrl = $request->input('ai_base_url') ?: ($vendor->ai_settings['base_url'] ?? null);
+
+        $result = $gateway->testConnection(
+            provider: $provider,
+            apiKey: $apiKey,
+            model: $model,
+            baseUrl: $baseUrl
+        );
+
+        return response()->json($result);
     }
 }

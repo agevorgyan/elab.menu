@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Category;
+use App\Models\Vendor;
 use App\Services\AiMenuService;
 use App\Services\TenantContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,7 +51,8 @@ class TranslateMenuJob implements ShouldQueue
                 return;
             }
 
-            $translated = $aiService->translateMenuBatch($itemsToTranslate, $this->targetLang);
+            $vendor = Vendor::find($this->vendorId);
+            $translated = $aiService->translateMenuBatch($itemsToTranslate, $this->targetLang, $vendor);
 
             foreach ($categories as $cat) {
                 $cTrans = $cat->name_translations ?? [];

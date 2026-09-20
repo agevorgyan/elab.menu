@@ -372,7 +372,7 @@
                 {{ __('Ակնթարթորեն թարգմանեք Ձեր առկա ուտեստների անվանումները, նկարագրությունները և կատեգորիաները ընտրված լեզվով, որպեսզի օտարերկրյա հյուրերը վստահորեն պատվիրեն:') }}
             </p>
 
-            <form action="{{ route('admin.ai.translate') }}" method="POST">
+            <form id="translateMenuForm" action="{{ route('admin.ai.translate') }}" method="POST">
                 @csrf
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
@@ -390,15 +390,41 @@
 
                 <div class="ai-info-banner" style="background: rgba(59, 130, 246, 0.08); border: 1px dashed rgba(59, 130, 246, 0.25); color: var(--text-muted); margin-bottom: 1.5rem;">
                     <i class="fa-solid fa-circle-info" style="color: #3b82f6; margin-top: 0.15rem; flex-shrink: 0;"></i>
-                    <span>{{ __('Թարգմանության ավարտից հետո բոլոր ուտեստները կստանան թարգմանված տարբերակները մենյուի համապատասխան լեզվի համար:') }}</span>
+                    <span>{{ __('Թարգմանության ավարտից հետո բոլոր ուտեստները, նկարագրությունները և կատեգորիաները կստանան թարգմանված տարբերակները մենյուի համապատասխան լեզվի համար:') }}</span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; box-sizing: border-box; justify-content: center; background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: #2563eb; color: #fff; border-radius: 12px; font-weight: 800; padding: 0.85rem 1.5rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35); gap: 0.5rem;">
+                <button type="submit" id="btnTranslateMenu" class="btn btn-primary" style="width: 100%; box-sizing: border-box; justify-content: center; background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: #2563eb; color: #fff; border-radius: 12px; font-weight: 800; padding: 0.85rem 1.5rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35); gap: 0.5rem; transition: all 0.2s ease;">
                     <i class="fa-solid fa-language"></i>
                     <span>{{ __('Թարգմանել Ամբողջ Մենյուն Հիմա') }}</span>
                 </button>
+
+                <div id="translateStatusBox" style="display: none; align-items: center; gap: 0.85rem; margin-top: 1.25rem; padding: 1rem 1.2rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 14px; color: var(--text-main); font-size: 0.88rem; font-weight: 600; line-height: 1.4;">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="color: #3b82f6; font-size: 1.35rem; flex-shrink: 0;"></i>
+                    <span>{{ __('AI-ը խորությամբ թարգմանում է մենյուի ուտեստները, կատեգորիաները և նկարագրությունները։ Խնդրում ենք սպասել և չփակել էջը...') }}</span>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('translateMenuForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const btn = document.getElementById('btnTranslateMenu');
+            const statusBox = document.getElementById('translateStatusBox');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.75';
+                btn.style.cursor = 'not-allowed';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>{{ __("Թարգմանվում է AI-ի կողմից (խնդրում ենք սպասել)...") }}</span>';
+            }
+            if (statusBox) {
+                statusBox.style.display = 'flex';
+            }
+        });
+    }
+});
+</script>
 @endsection

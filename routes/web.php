@@ -144,6 +144,9 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     // Restaurant Settings (Service Fee & Delivery)
     Route::get('/settings', [VendorSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [VendorSettingsController::class, 'update'])->name('settings.update');
+    Route::get('/settings/ai', [VendorSettingsController::class, 'aiIndex'])->name('settings.ai');
+    Route::post('/settings/ai', [VendorSettingsController::class, 'aiUpdate'])->name('settings.ai.update');
+    Route::post('/settings/ai/test', [VendorSettingsController::class, 'testAiConnection'])->name('settings.ai.test');
 
     // QR Code Studio
     Route::get('/qr', [QrStudioController::class, 'index'])->name('qr.index');

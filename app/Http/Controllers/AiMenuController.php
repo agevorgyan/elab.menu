@@ -9,6 +9,7 @@ use App\Services\AiMenuService;
 use App\Services\MenuExtractorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AiMenuController extends Controller
 {
@@ -38,24 +39,29 @@ class AiMenuController extends Controller
         }
 
         try {
+            $vendor = Auth::user()->vendor;
             if ($request->filled('website_url')) {
-                $rawText = $this->extractorService->extractFromUrl($request->input('website_url'));
-                $parsedMenu = $this->aiService->parseMenuFromText($rawText);
+                $extraction = $this->extractorService->extractStructuredOrTextFromUrl($request->input('website_url'));
+                if ($extraction['type'] === 'structured' && ! empty($extraction['categories'])) {
+                    $parsedMenu = ['categories' => $extraction['categories']];
+                } else {
+                    $parsedMenu = $this->aiService->parseMenuFromText($extraction['text'] ?? '', $vendor);
+                }
             } elseif ($request->hasFile('menu_file')) {
                 $file = $request->file('menu_file');
                 $extraction = $this->extractorService->extractFromFile($file);
 
                 if ($extraction['type'] === 'image') {
-                    $parsedMenu = $this->aiService->parseMenuFromImage($extraction['base64'], $extraction['mime']);
+                    $parsedMenu = $this->aiService->parseMenuFromImage($extraction['base64'], $extraction['mime'], $vendor);
                 } elseif ($extraction['type'] === 'pdf') {
-                    $parsedMenu = $this->aiService->parseMenuFromPdf($extraction['base64'], $extraction['text'] ?? null);
+                    $parsedMenu = $this->aiService->parseMenuFromPdf($extraction['base64'], $extraction['text'] ?? null, $vendor);
                 } elseif ($extraction['type'] === 'structured' && ! empty($extraction['categories'])) {
                     $parsedMenu = ['categories' => $extraction['categories']];
                 } else {
-                    $parsedMenu = $this->aiService->parseMenuFromText($extraction['text'] ?? '');
+                    $parsedMenu = $this->aiService->parseMenuFromText($extraction['text'] ?? '', $vendor);
                 }
             } else {
-                $parsedMenu = $this->aiService->parseMenuFromText($request->input('menu_text', ''));
+                $parsedMenu = $this->aiService->parseMenuFromText($request->input('menu_text', ''), $vendor);
             }
         } catch (\Throwable $e) {
             return back()->withInput()->with('error', 'Մենյուի արտածումը ձախողվեց: '.$e->getMessage());
@@ -131,8 +137,29 @@ class AiMenuController extends Controller
         $vendor = Auth::user()->vendor;
         $targetLang = $request->validate(['target_language' => 'required|string|in:hy,en,ru,fr,de,es'])['target_language'];
 
-        TranslateMenuJob::dispatch($vendor->id, $targetLang);
+        // Allow sufficient execution time for LLM multi-batch translation
+        @set_time_limit(300);
+        @ini_set('max_execution_time', '300');
 
-        return back()->with('success', "✨ Մենյուի թարգմանությունը դեպի [{$targetLang}] մեկնարկեց ֆոնային ռեժիմում։ Խնդրում ենք թարմացնել էջը մի քանի վայրկյանից։");
+        try {
+            // Execute synchronously so that menu items, categories, and descriptions are translated immediately
+            TranslateMenuJob::dispatchSync($vendor->id, $targetLang);
+
+            $langLabels = [
+                'hy' => '🇦🇲 Հայերեն',
+                'en' => '🇬🇧 English',
+                'ru' => '🇷🇺 Русский',
+                'fr' => '🇫🇷 Français',
+                'de' => '🇩🇪 Deutsch',
+                'es' => '🇪🇸 Español',
+            ];
+            $selectedLabel = $langLabels[$targetLang] ?? strtoupper($targetLang);
+
+            return back()->with('success', "✨ Մենյուի բոլոր ուտեստները, նկարագրությունները և կատեգորիաները հաջողությամբ թարգմանվեցին դեպի [{$selectedLabel}] AI-ի միջոցով։");
+        } catch (\Throwable $e) {
+            Log::error('AI Menu Translation failed: '.$e->getMessage());
+
+            return back()->with('error', 'Թարգմանության ընթացքում առաջացավ խնդիր: '.$e->getMessage());
+        }
     }
 }

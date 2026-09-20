@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Vendor;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -10,13 +11,9 @@ class AiMenuService
     /**
      * Parse text/PDF raw text content into categories, products, prices, descriptions, images, and dietary tags.
      */
-    public function parseMenuFromText(string $rawText): array
+    public function parseMenuFromText(string $rawText, ?Vendor $vendor = null): array
     {
-        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
-
-        if (! empty($geminiApiKey)) {
-            try {
-                $prompt = 'You are a professional restaurant menu extraction AI. Extract menu categories, products, prices, descriptions, images, dietary tags (vegan, vegetarian, gluten_free, chef_special), and calories from the provided menu data.
+        $prompt = 'You are a professional restaurant menu extraction AI. Extract menu categories, products, prices, descriptions, images, dietary tags (vegan, vegetarian, gluten_free, chef_special), and calories from the provided menu data.
 
 IMPORTANT INSTRUCTION FOR TABULAR / SPREADSHEET / CSV DATA:
 Columns may appear in ANY order. Carefully read the header row to detect which column contains what data:
@@ -47,23 +44,38 @@ Output strictly valid JSON matching this structure:
 Menu text:
 '.$rawText;
 
-                $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
-                        'contents' => [['parts' => [['text' => $prompt]]]],
-                    ]);
-
-                if ($response->successful()) {
-                    $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
-                    preg_match('/\{.*\}/s', $jsonText, $matches);
-                    if (! empty($matches[0])) {
-                        $decoded = json_decode($matches[0], true);
-                        if (isset($decoded['categories'])) {
-                            return $decoded;
-                        }
-                    }
+        if ($vendor) {
+            try {
+                $gateway = app(AiGatewayService::class);
+                $decoded = $gateway->generateStructuredJson($vendor, $prompt, ['timeout' => 30]);
+                if ($decoded && ! empty($decoded['categories'])) {
+                    return $decoded;
                 }
             } catch (\Throwable $e) {
-                Log::warning('Gemini AI parse failed, using fallback parser: '.$e->getMessage());
+                Log::warning('AI Gateway parseMenuFromText failed: '.$e->getMessage());
+            }
+        } else {
+            $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
+            if (! empty($geminiApiKey)) {
+                try {
+                    $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                        ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={$geminiApiKey}", [
+                            'contents' => [['parts' => [['text' => $prompt]]]],
+                        ]);
+
+                    if ($response->successful()) {
+                        $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
+                        preg_match('/\{.*\}/s', $jsonText, $matches);
+                        if (! empty($matches[0])) {
+                            $decoded = json_decode($matches[0], true);
+                            if (isset($decoded['categories'])) {
+                                return $decoded;
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Gemini AI parse failed, using fallback parser: '.$e->getMessage());
+                }
             }
         }
 
@@ -74,23 +86,97 @@ Menu text:
     /**
      * Translate categories & dishes into target languages (hy, en, ru, fr, de, es).
      */
-    public function translateMenuBatch(array $items, string $targetLang): array
+    public function translateMenuBatch(array $items, string $targetLang, ?Vendor $vendor = null): array
     {
-        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
+        if (empty($items)) {
+            return [];
+        }
 
+        // Deduplicate strings to optimize AI throughput, eliminate redundant tokens and speed up translation
+        $uniqueTexts = array_values(array_unique(array_filter(array_map('trim', $items))));
+        if (empty($uniqueTexts)) {
+            return [];
+        }
+
+        $indexedToTranslate = [];
+        $textToKey = [];
+        foreach ($uniqueTexts as $idx => $text) {
+            $key = "s_{$idx}";
+            $indexedToTranslate[$key] = $text;
+            $textToKey[$text] = $key;
+        }
+
+        // Chunk translation payloads into batches of 35 items
+        $chunks = array_chunk($indexedToTranslate, 35, true);
+        $translatedUnique = [];
+
+        foreach ($chunks as $chunk) {
+            $chunkResult = $this->translateChunk($chunk, $targetLang, $vendor);
+            $translatedUnique = array_replace($translatedUnique, $chunkResult);
+        }
+
+        // Remap back to original keys
+        $allTranslated = [];
+        foreach ($items as $itemKey => $origText) {
+            $trimmed = trim((string) $origText);
+            if (isset($textToKey[$trimmed], $translatedUnique[$textToKey[$trimmed]])) {
+                $allTranslated[$itemKey] = $translatedUnique[$textToKey[$trimmed]];
+            } elseif (isset($translatedUnique[$itemKey])) {
+                $allTranslated[$itemKey] = $translatedUnique[$itemKey];
+            } else {
+                $allTranslated[$itemKey] = $origText;
+            }
+        }
+
+        return $allTranslated;
+    }
+
+    /**
+     * Translate a single chunk of menu items.
+     */
+    protected function translateChunk(array $items, string $targetLang, ?Vendor $vendor = null): array
+    {
+        $prompt = "You are a professional culinary menu translator. Translate the following menu strings to target language '{$targetLang}'. Maintain food culinary accuracy, gastronomic elegance and exact ingredients. Input JSON:\n".json_encode($items, JSON_UNESCAPED_UNICODE)."\nOutput strictly valid JSON format matching input keys with translated values.";
+
+        if ($vendor) {
+            try {
+                $gateway = app(AiGatewayService::class);
+                $decoded = $gateway->generateStructuredJson($vendor, $prompt, ['timeout' => 45]);
+                if (is_array($decoded) && ! empty($decoded)) {
+                    return $decoded;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('AI Gateway translateChunk failed: '.$e->getMessage());
+            }
+        }
+
+        // Fallback to system-level Gemini API if vendor key failed or was unset
+        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
         if (! empty($geminiApiKey)) {
             try {
-                $prompt = "Translate the following menu strings to target language '{$targetLang}'. Maintain food culinary accuracy. Input JSON: ".json_encode($items).'. Output JSON format strictly as key-value pairs matching input keys.';
-
-                $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
+                $response = Http::timeout(45)->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={$geminiApiKey}", [
                     'contents' => [['parts' => [['text' => $prompt]]]],
                 ]);
 
+                if (! $response->successful() && in_array($response->status(), [404, 429, 503])) {
+                    $response = Http::timeout(45)->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={$geminiApiKey}", [
+                        'contents' => [['parts' => [['text' => $prompt]]]],
+                    ]);
+                }
+
                 if ($response->successful()) {
-                    $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
-                    preg_match('/\{.*\}/s', $jsonText, $matches);
-                    if (! empty($matches[0])) {
-                        $decoded = json_decode($matches[0], true);
+                    $parts = $response->json('candidates.0.content.parts') ?? [];
+                    $jsonText = '';
+                    foreach ($parts as $part) {
+                        if (! empty($part['text'])) {
+                            $jsonText .= $part['text'];
+                        }
+                    }
+
+                    $firstBrace = strpos($jsonText, '{');
+                    $lastBrace = strrpos($jsonText, '}');
+                    if ($firstBrace !== false && $lastBrace !== false && $lastBrace > $firstBrace) {
+                        $decoded = json_decode(substr($jsonText, $firstBrace, $lastBrace - $firstBrace + 1), true);
                         if (is_array($decoded)) {
                             return $decoded;
                         }
@@ -106,15 +192,11 @@ Menu text:
     }
 
     /**
-     * Parse an image (JPG, PNG, WEBP) directly using Gemini Multimodal Vision API.
+     * Parse an image (JPG, PNG, WEBP) directly using Vision-capable AI API.
      */
-    public function parseMenuFromImage(string $base64Data, string $mimeType): array
+    public function parseMenuFromImage(string $base64Data, string $mimeType, ?Vendor $vendor = null): array
     {
-        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
-
-        if (! empty($geminiApiKey)) {
-            try {
-                $prompt = 'You are a professional restaurant menu OCR and extraction AI. Carefully read the menu visible in this image. Extract all categories, dishes, prices (numerical), descriptions, dietary tags (vegan, vegetarian, gluten_free, spicy), and estimated calories. Output strictly valid JSON matching:
+        $prompt = 'You are a professional restaurant menu OCR and extraction AI. Carefully read the menu visible in this image. Extract all categories, dishes, prices (numerical), descriptions, dietary tags (vegan, vegetarian, gluten_free, spicy), and estimated calories. Output strictly valid JSON matching:
 {
   "categories": [
     {
@@ -132,9 +214,24 @@ Menu text:
   ]
 }';
 
+        if ($vendor) {
+            try {
+                $gateway = app(AiGatewayService::class);
+                $decoded = $gateway->analyzeImage($vendor, $prompt, $base64Data, $mimeType);
+                if ($decoded && ! empty($decoded['categories'])) {
+                    return $decoded;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('AI Gateway analyzeImage failed: '.$e->getMessage());
+            }
+        }
+
+        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
+        if (! empty($geminiApiKey)) {
+            try {
                 $response = Http::withHeaders(['Content-Type' => 'application/json'])
                     ->timeout(35)
-                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
+                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={$geminiApiKey}", [
                         'contents' => [
                             [
                                 'parts' => [
@@ -219,7 +316,7 @@ Menu text:
 
                 $response = Http::withHeaders(['Content-Type' => 'application/json'])
                     ->timeout(35)
-                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
+                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={$geminiApiKey}", [
                         'contents' => [
                             [
                                 'parts' => [
@@ -389,13 +486,14 @@ Menu text:
                 }
             }
 
-            // Extract price using pattern (e.g. 3500 AMD, 3500 դր, $12.50, 4500)
-            if (preg_match('/^(.*?)(?:[\-—:\t]|\s{2,}|\s+)([0-9]+(?:[\.,][0-9]{2})?)\s*(?:AMD|դր|դրամ|\$|€|руб|RUB)?(?:\s*[\-—:]\s*(.*))?$/iu', $line, $matches)) {
+            // Case A: Single line with Name + Price (e.g. "Amaretto sour - 3 000 AMD" or "Bruschetta 3500 դր")
+            if (preg_match('/^(.*?)(?:[\-—:\t]|\s{2,}|\s+)([0-9]{1,3}(?:[\s\xc2\xa0,][0-9]{3})*|[0-9]+)(?:[\.,][0-9]{2})?\s*(?:AMD|֏|դր|դրամ|USD|\$|€|руб|RUB)?(?:\s*[\-—:]\s*(.*))?$/iu', $line, $matches)) {
                 $productName = trim($matches[1], " -:•*\t");
-                $price = (float) str_replace(',', '.', $matches[2]);
+                $priceStr = preg_replace('/[^\d.]/', '', str_replace(',', '.', $matches[2]));
+                $price = (float) $priceStr;
                 $desc = isset($matches[3]) ? trim($matches[3]) : 'Delicious freshly prepared dish.';
 
-                if (! empty($productName) && mb_strlen($productName) >= 2 && $price > 0) {
+                if (! empty($productName) && mb_strlen($productName) >= 2 && $price > 0 && ! in_array($productName, ['Menu', 'Filter', 'Skip to content'], true)) {
                     $currentCategory['products'][] = [
                         'name' => $productName,
                         'description' => $desc,
@@ -403,6 +501,36 @@ Menu text:
                         'dietary_tags' => [],
                         'calories' => rand(250, 750),
                     ];
+
+                    continue;
+                }
+            }
+
+            // Case B: Multi-line sequence where current line is purely price (e.g. "3 000 AMD" or "18 000 դր")
+            if (preg_match('/^([0-9]{1,3}(?:[\s\xc2\xa0,][0-9]{3})*|[0-9]+)(?:[\.,][0-9]{2})?\s*(?:AMD|֏|դր|դրամ|USD|\$|€|руб|RUB)$/iu', $line, $pMatches)) {
+                $priceVal = (float) preg_replace('/[^\d.]/', '', str_replace(',', '.', $pMatches[1]));
+                $prevLine = isset($lines[$i - 1]) ? trim($lines[$i - 1]) : '';
+                $prevPrevLine = isset($lines[$i - 2]) ? trim($lines[$i - 2]) : '';
+
+                if (! empty($prevLine) && mb_strlen($prevLine) >= 2 && ! in_array($prevLine, ['Menu', 'Filter', 'Skip to content'], true)) {
+                    if (! empty($prevPrevLine) && mb_strlen($prevPrevLine) < 35 && ! preg_match('/[0-9]/', $prevPrevLine)) {
+                        if ($currentCategory['name'] !== $prevPrevLine && ! in_array($prevPrevLine, ['Skip to content', 'Menu', 'Filter'], true)) {
+                            if (! empty($currentCategory['products'])) {
+                                $categories[] = $currentCategory;
+                            }
+                            $currentCategory = ['name' => $prevPrevLine, 'products' => []];
+                        }
+                    }
+
+                    $currentCategory['products'][] = [
+                        'name' => $prevLine,
+                        'description' => 'Delicious freshly prepared dish.',
+                        'price' => $priceVal,
+                        'dietary_tags' => [],
+                        'calories' => rand(250, 750),
+                    ];
+
+                    continue;
                 }
             }
         }

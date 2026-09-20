@@ -805,8 +805,14 @@
                 </a>
 
                 <div class="menu-category">{{ __('Settings & Administration') }}</div>
-                <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders" style="color: #64748b;"></i> <span>{{ __('Կարգավորումներ') }}</span>
+                </a>
+                <a href="{{ route('admin.settings.ai') }}" class="nav-item {{ request()->routeIs('admin.settings.ai*') ? 'active' : '' }}" style="justify-content: space-between;">
+                    <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa-solid fa-robot" style="color: #8b5cf6;"></i> <span>{{ __('AI Կարգավորումներ') }}</span>
+                    </span>
+                    <span style="font-size: 0.65rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); color: #8b5cf6; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">AI</span>
                 </a>
                 <a href="{{ route('admin.subscription') }}" class="nav-item {{ request()->routeIs('admin.subscription') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-invoice-dollar" style="color: #f59e0b;"></i> <span>{{ __('Subscription') }}</span>

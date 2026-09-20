@@ -72,6 +72,7 @@ class Vendor extends Model
         'ai_waiter_priority_ingredients',
         'ai_waiter_welcome_text',
         'ai_waiter_featured_product_ids',
+        'ai_settings',
     ];
 
     protected $casts = [
@@ -90,7 +91,69 @@ class Vendor extends Model
         'featured_dish_enabled' => 'boolean',
         'ai_waiter_enabled' => 'boolean',
         'ai_waiter_featured_product_ids' => 'array',
+        'ai_settings' => 'array',
     ];
+
+    /**
+     * Get configured AI Provider (gemini, openai, claude, deepseek, groq, openrouter, custom).
+     */
+    public function getAiProvider(): string
+    {
+        return $this->ai_settings['provider'] ?? 'gemini';
+    }
+
+    /**
+     * Get configured AI Model for this vendor.
+     */
+    public function getAiModel(): string
+    {
+        if (! empty($this->ai_settings['model'])) {
+            return $this->ai_settings['model'];
+        }
+
+        return match ($this->getAiProvider()) {
+            'openai' => 'gpt-4o-mini',
+            'claude' => 'claude-3-5-haiku-20241022',
+            'deepseek' => 'deepseek-chat',
+            'groq' => 'llama-3.3-70b-versatile',
+            'openrouter' => 'openai/gpt-4o-mini',
+            'custom' => 'custom-model',
+            default => 'gemini-1.5-flash',
+        };
+    }
+
+    /**
+     * Get configured vendor AI API Key or fallback to system key.
+     */
+    public function getAiApiKey(): ?string
+    {
+        if (! empty($this->ai_settings['api_key'])) {
+            return $this->ai_settings['api_key'];
+        }
+
+        // Fallback to system key for gemini
+        if ($this->getAiProvider() === 'gemini') {
+            return config('services.gemini.key') ?? env('GEMINI_API_KEY');
+        }
+
+        return null;
+    }
+
+    /**
+     * Get custom base URL if configured.
+     */
+    public function getAiBaseUrl(): ?string
+    {
+        return $this->ai_settings['base_url'] ?? null;
+    }
+
+    /**
+     * Check if vendor configured their own custom AI credentials.
+     */
+    public function hasCustomAiConfig(): bool
+    {
+        return ! empty($this->ai_settings['api_key']) || ! empty($this->ai_settings['provider']);
+    }
 
     /**
      * Get list of priority ingredients configured by the vendor for AI waiter recommendations.

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -258,6 +260,53 @@ class AiMenuImportTest extends TestCase
         $response->assertSee('4200');
     }
 
+    public function test_website_url_import_fetches_woocommerce_multi_page_catalog(): void
+    {
+        $page1Html = '<html><body>'
+            .'<div class="product-small col product type-product">'
+            .'  <div class="box-image"><img src="data:image/svg+xml,%3Csvg" data-src="https://example.com/amaretto.jpg" /></div>'
+            .'  <div class="box-text">'
+            .'    <p class="category product-cat">Կոկտեյլներ</p>'
+            .'    <p class="name product-title"><a href="https://example.com/product/amaretto/">Amaretto sour</a></p>'
+            .'    <span class="price"><span class="amount"><bdi>3 000&nbsp;AMD</bdi></span></span>'
+            .'  </div>'
+            .'</div>'
+            .'<nav class="woocommerce-pagination"><a class="page-number" href="https://example.com/products/page/2/">2</a></nav>'
+            .'</body></html>';
+
+        $page2Html = '<html><body>'
+            .'<div class="product-small col product type-product">'
+            .'  <div class="box-image"><img src="data:image/svg+xml,%3Csvg" data-src="https://example.com/breakfast.jpg" /></div>'
+            .'  <div class="box-text">'
+            .'    <p class="category product-cat">Նախաճաշ</p>'
+            .'    <p class="name product-title"><a href="https://example.com/product/breakfast/">Անգլիական Նախաճաշ</a></p>'
+            .'    <span class="price"><span class="amount"><bdi>3 200&nbsp;AMD</bdi></span></span>'
+            .'  </div>'
+            .'</div>'
+            .'</body></html>';
+
+        Http::fake([
+            'https://example.com/products/' => Http::response($page1Html, 200),
+            'https://example.com/products/page/2/' => Http::response($page2Html, 200),
+        ]);
+
+        $response = $this->actingAs($this->user)->post(route('admin.ai.import.process'), [
+            'import_source' => 'url',
+            'website_url' => 'https://example.com/products/',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertViewIs('admin.ai.preview_import');
+        $response->assertSee('Կոկտեյլներ');
+        $response->assertSee('Amaretto sour');
+        $response->assertSee('3000');
+        $response->assertSee('https://example.com/amaretto.jpg');
+        $response->assertSee('Նախաճաշ');
+        $response->assertSee('Անգլիական Նախաճաշ');
+        $response->assertSee('3200');
+        $response->assertSee('https://example.com/breakfast.jpg');
+    }
+
     public function test_confirm_import_persists_categories_and_products_to_database(): void
     {
         $payload = [
@@ -486,5 +535,67 @@ class AiMenuImportTest extends TestCase
         // Check images
         $response->assertSee('breakfast.jpg');
         $response->assertSee('salad.jpg');
+    }
+
+    public function test_one_click_menu_translation_executes_and_updates_translations(): void
+    {
+        $category = Category::create([
+            'vendor_id' => $this->vendor->id,
+            'name' => 'Նախուտեստներ',
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $product = Product::create([
+            'vendor_id' => $this->vendor->id,
+            'category_id' => $category->id,
+            'name' => 'Խորոված խոզի',
+            'description' => 'Համեղ միս',
+            'price' => 3500,
+            'is_available' => true,
+            'sort_order' => 1,
+        ]);
+
+        $this->vendor->update([
+            'ai_settings' => [
+                'provider' => 'gemini',
+                'model' => 'gemini-3.6-flash',
+                'api_key' => 'fake-gemini-key',
+            ],
+        ]);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                [
+                                    'text' => json_encode([
+                                        's_0' => 'Appetizers',
+                                        's_1' => 'Pork BBQ',
+                                        's_2' => 'Delicious meat',
+                                    ]),
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->actingAs($this->user)->post(route('admin.ai.translate'), [
+            'target_language' => 'en',
+        ]);
+
+        $response->assertSessionHas('success');
+        $response->assertRedirect();
+
+        $category->refresh();
+        $product->refresh();
+
+        $this->assertEquals('Appetizers', $category->name_translations['en'] ?? null);
+        $this->assertEquals('Pork BBQ', $product->name_translations['en'] ?? null);
+        $this->assertEquals('Delicious meat', $product->description_translations['en'] ?? null);
     }
 }

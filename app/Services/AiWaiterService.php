@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Vendor;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AiWaiterService
@@ -481,34 +480,19 @@ class AiWaiterService
     ): string {
         $waiterName = $vendor->getAiWaiterName();
 
-        // Check if Gemini API key exists for live generation
-        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
-        if (! empty($geminiApiKey) && ! empty($recommendations)) {
+        // Check if AI generation is enabled via vendor configured provider
+        if (! empty($recommendations)) {
             try {
                 $dishNames = implode(', ', array_column($recommendations, 'name'));
-                $userContext = json_encode([
-                    'craving' => $preferences['craving'] ?? 'general',
-                    'occasion' => $preferences['occasion'] ?? 'general',
-                    'freeform_prompt' => $prompt,
-                    'dishes' => $dishNames,
-                    'lang' => $lang,
-                ]);
-
                 $promptText = "You are {$waiterName}, a friendly and ultra-sophisticated AI waiter & sommelier at '{$vendor->name}'. Write a short (2-3 sentences), warm, appetizing and enthusiastic recommendation directly to the guest in the requested language ({$lang}). Explain why the selected dishes ({$dishNames}) are the perfect choice for their taste and occasion. Keep it elegant, concise, and without any markdown bullet points.";
 
-                $response = Http::timeout(4)->withHeaders(['Content-Type' => 'application/json'])
-                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
-                        'contents' => [['parts' => [['text' => $promptText]]]],
-                    ]);
-
-                if ($response->successful()) {
-                    $aiText = trim($response->json('candidates.0.content.parts.0.text') ?? '');
-                    if (! empty($aiText)) {
-                        return $aiText;
-                    }
+                $gateway = app(AiGatewayService::class);
+                $aiText = $gateway->generateText($vendor, $promptText, ['timeout' => 5]);
+                if (! empty($aiText)) {
+                    return $aiText;
                 }
             } catch (\Throwable $e) {
-                Log::info('Gemini AI waiter commentary skipped, using expert template: '.$e->getMessage());
+                Log::info('AI waiter commentary skipped, using expert template: '.$e->getMessage());
             }
         }
 

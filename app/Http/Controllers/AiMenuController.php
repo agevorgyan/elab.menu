@@ -6,17 +6,16 @@ use App\Jobs\TranslateMenuJob;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\AiMenuService;
+use App\Services\MenuExtractorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AiMenuController extends Controller
 {
-    protected $aiService;
-
-    public function __construct(AiMenuService $aiService)
-    {
-        $this->aiService = $aiService;
-    }
+    public function __construct(
+        public AiMenuService $aiService,
+        public MenuExtractorService $extractorService
+    ) {}
 
     public function showImportForm()
     {
@@ -28,23 +27,48 @@ class AiMenuController extends Controller
     public function processImport(Request $request)
     {
         $request->validate([
-            'menu_text' => 'required_without:menu_file|nullable|string',
-            'menu_file' => 'nullable|file|mimes:pdf,doc,docx,txt|max:10240',
+            'import_source' => 'nullable|string|in:file,url,text',
+            'website_url' => 'nullable|url|max:1000',
+            'menu_file' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,csv,txt,json,jpg,jpeg,png,webp|max:20480',
+            'menu_text' => 'nullable|string',
         ]);
 
-        $rawText = $request->input('menu_text');
-
-        if ($request->hasFile('menu_file')) {
-            $file = $request->file('menu_file');
-            // Extract text from file (txt or mock parser fallback)
-            if ($file->getClientOriginalExtension() === 'txt') {
-                $rawText = file_get_contents($file->getRealPath());
-            } else {
-                $rawText = "STARTERS & APPETIZERS\n# Truffle Hummus 3500 AMD\nDelicious hummus with pita\n# Calamari Rings 4500 AMD\nCrispy calamari\n\nMAIN COURSES\n# Angus Ribeye Steak 12500 AMD\n350g tender aged steak\n# Salmon Grill 8900 AMD";
-            }
+        if (! $request->hasFile('menu_file') && ! $request->filled('website_url') && ! $request->filled('menu_text')) {
+            return back()->withInput()->with('error', 'Խնդրում ենք վերբեռնել ֆայլ, նշել կայքի հղում կամ տեղադրել մենյուի տեքստը:');
         }
 
-        $parsedMenu = $this->aiService->parseMenuFromText($rawText ?? '');
+        try {
+            if ($request->filled('website_url')) {
+                $rawText = $this->extractorService->extractFromUrl($request->input('website_url'));
+                $parsedMenu = $this->aiService->parseMenuFromText($rawText);
+            } elseif ($request->hasFile('menu_file')) {
+                $file = $request->file('menu_file');
+                $extraction = $this->extractorService->extractFromFile($file);
+
+                if ($extraction['type'] === 'image') {
+                    $parsedMenu = $this->aiService->parseMenuFromImage($extraction['base64'], $extraction['mime']);
+                } elseif ($extraction['type'] === 'pdf') {
+                    $parsedMenu = $this->aiService->parseMenuFromPdf($extraction['base64'], $extraction['text'] ?? null);
+                } else {
+                    $parsedMenu = $this->aiService->parseMenuFromText($extraction['text'] ?? '');
+                }
+            } else {
+                $parsedMenu = $this->aiService->parseMenuFromText($request->input('menu_text', ''));
+            }
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', 'Մենյուի արտածումը ձախողվեց: '.$e->getMessage());
+        }
+
+        if (empty($parsedMenu['categories'])) {
+            $parsedMenu = [
+                'categories' => [
+                    [
+                        'name' => 'Imported Category',
+                        'products' => [],
+                    ],
+                ],
+            ];
+        }
 
         return view('admin.ai.preview_import', [
             'vendor' => Auth::user()->vendor,

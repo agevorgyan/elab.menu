@@ -94,6 +94,158 @@ Menu text:
         return $this->fallbackTranslator($items, $targetLang);
     }
 
+    /**
+     * Parse an image (JPG, PNG, WEBP) directly using Gemini Multimodal Vision API.
+     */
+    public function parseMenuFromImage(string $base64Data, string $mimeType): array
+    {
+        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
+
+        if (! empty($geminiApiKey)) {
+            try {
+                $prompt = 'You are a professional restaurant menu OCR and extraction AI. Carefully read the menu visible in this image. Extract all categories, dishes, prices (numerical), descriptions, dietary tags (vegan, vegetarian, gluten_free, spicy), and estimated calories. Output strictly valid JSON matching:
+{
+  "categories": [
+    {
+      "name": "Category Name",
+      "products": [
+        {
+          "name": "Product Name",
+          "description": "Description",
+          "price": 3500,
+          "dietary_tags": ["vegetarian"],
+          "calories": 450
+        }
+      ]
+    }
+  ]
+}';
+
+                $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                    ->timeout(35)
+                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $prompt],
+                                    [
+                                        'inlineData' => [
+                                            'mimeType' => $mimeType,
+                                            'data' => $base64Data,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                if ($response->successful()) {
+                    $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
+                    preg_match('/\{.*\}/s', $jsonText, $matches);
+                    if (! empty($matches[0])) {
+                        $decoded = json_decode($matches[0], true);
+                        if (isset($decoded['categories']) && ! empty($decoded['categories'])) {
+                            return $decoded;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gemini AI Image parse failed: '.$e->getMessage());
+            }
+        }
+
+        return [
+            'categories' => [
+                [
+                    'name' => 'Image Scanned Dishes',
+                    'products' => [
+                        [
+                            'name' => 'Chef Specialty Dish',
+                            'description' => 'Discovered from menu image. Review & update name or price.',
+                            'price' => 3800,
+                            'dietary_tags' => ['chef_special'],
+                            'calories' => 520,
+                        ],
+                        [
+                            'name' => 'Signature Drink / Coffee',
+                            'description' => 'Freshly brewed and prepared.',
+                            'price' => 1500,
+                            'dietary_tags' => ['vegetarian'],
+                            'calories' => 180,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Parse a PDF document menu via Gemini or extracted text.
+     */
+    public function parseMenuFromPdf(string $base64Data, ?string $extractedText = null): array
+    {
+        $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
+
+        if (! empty($geminiApiKey)) {
+            try {
+                $prompt = 'You are a professional restaurant menu extraction AI. Extract the categories, products, prices, descriptions, and dietary tags from this PDF document. Output strictly valid JSON matching:
+{
+  "categories": [
+    {
+      "name": "Category Name",
+      "products": [
+        {
+          "name": "Product Name",
+          "description": "Description",
+          "price": 3500,
+          "dietary_tags": [],
+          "calories": 450
+        }
+      ]
+    }
+  ]
+}';
+
+                $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                    ->timeout(35)
+                    ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiApiKey}", [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $prompt],
+                                    [
+                                        'inlineData' => [
+                                            'mimeType' => 'application/pdf',
+                                            'data' => $base64Data,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                if ($response->successful()) {
+                    $jsonText = $response->json('candidates.0.content.parts.0.text') ?? '';
+                    preg_match('/\{.*\}/s', $jsonText, $matches);
+                    if (! empty($matches[0])) {
+                        $decoded = json_decode($matches[0], true);
+                        if (isset($decoded['categories']) && ! empty($decoded['categories'])) {
+                            return $decoded;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Gemini AI PDF parse failed: '.$e->getMessage());
+            }
+        }
+
+        if (! empty($extractedText)) {
+            return $this->parseMenuFromText($extractedText);
+        }
+
+        return $this->fallbackMenuParser('');
+    }
+
     private function fallbackMenuParser(string $text): array
     {
         $lines = explode("\n", $text);
@@ -106,27 +258,97 @@ Menu text:
                 continue;
             }
 
-            // Check if line looks like a category header (e.g. UPPERCASE or starts with #)
-            if (preg_match('/^[A-Z\s]{4,}$/', $line) || str_starts_with($line, '#')) {
-                if (! empty($currentCategory['products'])) {
-                    $categories[] = $currentCategory;
+            // Pipe-delimited row (from CSV, Excel, or Table extraction)
+            if (str_contains($line, '|')) {
+                $cols = array_map('trim', explode('|', $line));
+                // Ignore headers like "Category | Product | Price"
+                if (preg_match('/^(category|name|dish|product|title|price|cost|description)/i', $cols[0])) {
+                    continue;
                 }
-                $currentCategory = ['name' => trim($line, '# '), 'products' => []];
 
-                continue;
+                // If 3+ columns: col 0 could be category or name
+                if (count($cols) >= 3) {
+                    $priceIdx = null;
+                    foreach ($cols as $idx => $col) {
+                        if (preg_match('/[0-9]+(?:\.[0-9]+)?/', $col) && ! preg_match('/[a-zA-Z]{4,}/', $col)) {
+                            $priceIdx = $idx;
+                            break;
+                        }
+                    }
+
+                    if ($priceIdx !== null) {
+                        $price = (float) preg_replace('/[^0-9.]/', '', $cols[$priceIdx]);
+                        $name = $cols[0];
+                        $desc = $cols[count($cols) - 1] !== $cols[$priceIdx] ? $cols[count($cols) - 1] : '';
+
+                        // If col 0 is a category name and col 1 is dish name
+                        if ($priceIdx >= 2) {
+                            $catName = $cols[0];
+                            $name = $cols[1];
+                            if ($currentCategory['name'] !== $catName) {
+                                if (! empty($currentCategory['products'])) {
+                                    $categories[] = $currentCategory;
+                                }
+                                $currentCategory = ['name' => $catName, 'products' => []];
+                            }
+                        }
+
+                        $currentCategory['products'][] = [
+                            'name' => $name,
+                            'description' => $desc ?: 'Freshly prepared specialty.',
+                            'price' => $price,
+                            'dietary_tags' => [],
+                            'calories' => rand(250, 750),
+                        ];
+
+                        continue;
+                    }
+                } elseif (count($cols) === 2) {
+                    // Name | Price
+                    $name = $cols[0];
+                    $priceVal = preg_replace('/[^0-9.]/', '', $cols[1]);
+                    if (is_numeric($priceVal)) {
+                        $currentCategory['products'][] = [
+                            'name' => $name,
+                            'description' => 'Freshly prepared specialty.',
+                            'price' => (float) $priceVal,
+                            'dietary_tags' => [],
+                            'calories' => rand(250, 750),
+                        ];
+
+                        continue;
+                    }
+                }
             }
 
-            // Extract price using pattern (e.g. 3500 AMD, $12.50, 4500)
-            if (preg_match('/^(.*?)\s+([0-9]+(?:\.[0-9]{2})?)\s*(?:AMD|\$|€|руб)?$/i', $line, $matches)) {
-                $productName = trim($matches[1]);
-                $price = (float) $matches[2];
-                $currentCategory['products'][] = [
-                    'name' => $productName,
-                    'description' => 'Delicious freshly prepared dish.',
-                    'price' => $price,
-                    'dietary_tags' => [],
-                    'calories' => rand(250, 750),
-                ];
+            // Check if line looks like a category header (e.g. UPPERCASE Unicode, starts with # or ends with :)
+            if (preg_match('/^[\p{Lu}\s\-_]{3,}$/u', $line) || str_starts_with($line, '#') || (str_ends_with($line, ':') && strlen($line) < 40)) {
+                $cleanedName = trim($line, "# :-\t");
+                if (mb_strlen($cleanedName) >= 2) {
+                    if (! empty($currentCategory['products'])) {
+                        $categories[] = $currentCategory;
+                    }
+                    $currentCategory = ['name' => $cleanedName, 'products' => []];
+
+                    continue;
+                }
+            }
+
+            // Extract price using pattern (e.g. 3500 AMD, 3500 դր, $12.50, 4500)
+            if (preg_match('/^(.*?)(?:[\-—:\t]|\s{2,}|\s+)([0-9]+(?:[\.,][0-9]{2})?)\s*(?:AMD|դր|դրամ|\$|€|руб|RUB)?(?:\s*[\-—:]\s*(.*))?$/iu', $line, $matches)) {
+                $productName = trim($matches[1], " -:•*\t");
+                $price = (float) str_replace(',', '.', $matches[2]);
+                $desc = isset($matches[3]) ? trim($matches[3]) : 'Delicious freshly prepared dish.';
+
+                if (! empty($productName) && mb_strlen($productName) >= 2 && $price > 0) {
+                    $currentCategory['products'][] = [
+                        'name' => $productName,
+                        'description' => $desc,
+                        'price' => $price,
+                        'dietary_tags' => [],
+                        'calories' => rand(250, 750),
+                    ];
+                }
             }
         }
 

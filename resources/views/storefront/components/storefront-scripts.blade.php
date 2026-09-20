@@ -21,6 +21,7 @@
             hideTrackerPill: false,
             activeOrder: null,
             orderPollInterval: null,
+            orderDismissTimeout: null,
             wifiCopied: false,
             customerName: '',
             customerPhone: '',
@@ -365,6 +366,9 @@
                                 order_number: data.order_number,
                                 status: data.status || this.activeOrder.status,
                                 status_label: data.status_label || this.activeOrder.status_label,
+                                subtotal: data.subtotal !== undefined ? Number(data.subtotal) : this.activeOrder.subtotal,
+                                service_fee: data.service_fee !== undefined ? Number(data.service_fee) : this.activeOrder.service_fee,
+                                delivery_fee: data.delivery_fee !== undefined ? Number(data.delivery_fee) : this.activeOrder.delivery_fee,
                                 total_amount: data.total_amount,
                                 items: orderItems
                             };
@@ -378,6 +382,9 @@
                                 status_label: data.status_label || '{{ __('menu.status_pending') }}',
                                 status_desc: '{{ __('menu.status_desc_pending') }}',
                                 status_icon: 'fa-solid fa-clock',
+                                subtotal: Number(data.subtotal ?? (this.cartSubtotal || 0)),
+                                service_fee: Number(data.service_fee ?? (this.calculatedServiceFee || 0)),
+                                delivery_fee: Number(data.delivery_fee ?? (this.calculatedDeliveryFee || 0)),
                                 total_amount: data.total_amount,
                                 order_type: this.orderType,
                                 delivery_address: this.orderType === 'delivery' ? this.deliveryAddress : null,
@@ -464,6 +471,84 @@
                 }
             },
 
+            isOrderPillVisible() {
+                return !!(this.activeOrder && !this.showOrderTracker && (!['completed', 'cancelled'].includes(this.activeOrder.status) || !this.hideTrackerPill));
+            },
+
+            getActiveOrderSubtotal() {
+                if (!this.activeOrder) return 0;
+                if (this.activeOrder.subtotal !== undefined && Number(this.activeOrder.subtotal) > 0) {
+                    return Number(this.activeOrder.subtotal);
+                }
+                if (this.activeOrder.items && this.activeOrder.items.length > 0) {
+                    return this.activeOrder.items.reduce((sum, item) => sum + Number(item.subtotal || (item.price * item.quantity)), 0);
+                }
+                return Number(this.activeOrder.total_amount || 0);
+            },
+
+            getActiveOrderServiceFee() {
+                if (!this.activeOrder) return 0;
+                if (this.activeOrder.service_fee !== undefined && Number(this.activeOrder.service_fee) > 0) {
+                    return Number(this.activeOrder.service_fee);
+                }
+                if (this.activeOrder.type !== 'delivery' && this.activeOrder.items && this.activeOrder.total_amount) {
+                    const itemsSum = this.activeOrder.items.reduce((sum, item) => sum + Number(item.subtotal || (item.price * item.quantity)), 0);
+                    if (Number(this.activeOrder.total_amount) > itemsSum) {
+                        return Number(this.activeOrder.total_amount) - itemsSum;
+                    }
+                }
+                return 0;
+            },
+
+            getActiveOrderDeliveryFee() {
+                if (!this.activeOrder) return 0;
+                if (this.activeOrder.delivery_fee !== undefined) {
+                    return Number(this.activeOrder.delivery_fee);
+                }
+                if (this.activeOrder.type === 'delivery' && this.activeOrder.items && this.activeOrder.total_amount) {
+                    const itemsSum = this.activeOrder.items.reduce((sum, item) => sum + Number(item.subtotal || (item.price * item.quantity)), 0);
+                    if (Number(this.activeOrder.total_amount) > itemsSum) {
+                        return Number(this.activeOrder.total_amount) - itemsSum;
+                    }
+                }
+                return 0;
+            },
+
+            scheduleCompletedOrderDismissal() {
+                if (this.orderDismissTimeout) {
+                    clearTimeout(this.orderDismissTimeout);
+                    this.orderDismissTimeout = null;
+                }
+                if (!this.activeOrder || !['completed', 'cancelled'].includes(this.activeOrder.status)) {
+                    return;
+                }
+
+                let completedAt = this.activeOrder.completed_at;
+                if (!completedAt) {
+                    if (this.activeOrder.updated_at_timestamp) {
+                        completedAt = this.activeOrder.updated_at_timestamp * 1000;
+                    } else if (this.activeOrder.savedAt) {
+                        completedAt = this.activeOrder.savedAt;
+                    } else {
+                        completedAt = Date.now();
+                    }
+                    this.activeOrder.completed_at = completedAt;
+                }
+
+                const elapsed = Date.now() - completedAt;
+                const remaining = Math.max(0, 60000 - elapsed);
+
+                if (remaining <= 0) {
+                    this.hideTrackerPill = true;
+                    this.saveActiveOrderToStorage();
+                } else {
+                    this.orderDismissTimeout = setTimeout(() => {
+                        this.hideTrackerPill = true;
+                        this.saveActiveOrderToStorage();
+                    }, remaining);
+                }
+            },
+
             restoreActiveOrderFromStorage() {
                 try {
                     const saved = localStorage.getItem('active_order_{{ $vendor->slug }}');
@@ -473,6 +558,11 @@
                             this.activeOrder = parsed;
                             if (!['completed', 'cancelled'].includes(parsed.status)) {
                                 this.startOrderPolling();
+                            } else {
+                                this.scheduleCompletedOrderDismissal();
+                                if (this.activeOrder.service_fee === undefined && this.activeOrder.delivery_fee === undefined) {
+                                    this.pollOrderStatus();
+                                }
                             }
                         } else {
                             localStorage.removeItem('active_order_{{ $vendor->slug }}');
@@ -507,21 +597,32 @@
                         const data = await res.json();
                         if (data.success && data.order) {
                             const oldStatus = this.activeOrder.status;
+                            const newStatus = data.order.status;
+
+                            let completedAt = this.activeOrder.completed_at;
+                            if (['completed', 'cancelled'].includes(newStatus)) {
+                                if (!completedAt) {
+                                    completedAt = data.order.updated_at_timestamp ? (data.order.updated_at_timestamp * 1000) : Date.now();
+                                }
+                            }
+
                             this.activeOrder = {
                                 ...this.activeOrder,
-                                ...data.order
+                                ...data.order,
+                                completed_at: completedAt
                             };
                             this.saveActiveOrderToStorage();
 
-                            if (oldStatus && oldStatus !== data.order.status) {
+                            if (oldStatus && oldStatus !== newStatus) {
                                 this.triggerToast('{{ __('menu.order_number_label') }}' + data.order.order_number + ': ' + data.order.status_label, 'success', data.order.status_icon);
                                 if (navigator.vibrate) {
                                     try { navigator.vibrate([100, 50, 100]); } catch(e) {}
                                 }
                             }
 
-                            if (['completed', 'cancelled'].includes(data.order.status)) {
+                            if (['completed', 'cancelled'].includes(newStatus)) {
                                 this.stopOrderPolling();
+                                this.scheduleCompletedOrderDismissal();
                             }
                         }
                     } else if (res.status === 404) {
@@ -550,6 +651,10 @@
             },
 
             clearActiveOrder() {
+                if (this.orderDismissTimeout) {
+                    clearTimeout(this.orderDismissTimeout);
+                    this.orderDismissTimeout = null;
+                }
                 this.stopOrderPolling();
                 this.activeOrder = null;
                 this.showOrderTracker = false;

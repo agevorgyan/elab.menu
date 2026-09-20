@@ -114,10 +114,14 @@ class OrderTrackerTest extends TestCase
                     'status_label',
                     'status_desc',
                     'status_icon',
+                    'subtotal',
+                    'service_fee',
+                    'delivery_fee',
                     'total_amount',
                     'currency',
                     'created_at_human',
                     'created_at_time',
+                    'updated_at_timestamp',
                     'items' => [
                         '*' => ['id', 'name', 'quantity', 'price', 'subtotal'],
                     ],
@@ -199,6 +203,9 @@ class OrderTrackerTest extends TestCase
                 'order_id',
                 'status',
                 'status_label',
+                'subtotal',
+                'service_fee',
+                'delivery_fee',
                 'total_amount',
                 'whatsapp_url',
             ]);
@@ -213,6 +220,45 @@ class OrderTrackerTest extends TestCase
         $response->assertSee('showOrderTracker', false);
         $response->assertSee('showInfoModal', false);
         $response->assertSee('tracker-step', false);
+        $response->assertSee('has-active-order-pill', false);
+        $response->assertSee('scheduleCompletedOrderDismissal', false);
+        $response->assertSee('getActiveOrderServiceFee', false);
+        $response->assertSee('getActiveOrderDeliveryFee', false);
+    }
+
+    public function test_order_status_returns_service_fee_and_delivery_fee_breakdown(): void
+    {
+        $order = Order::create([
+            'vendor_id' => $this->vendor->id,
+            'location_id' => $this->location->id,
+            'order_number' => 'ORD-FEES-101',
+            'table_number' => 'Table 3',
+            'type' => 'dine_in',
+            'subtotal' => 7000,
+            'service_fee' => 700,
+            'delivery_fee' => 0,
+            'total_amount' => 7700,
+            'status' => 'completed',
+            'customer_name' => 'Avetis',
+        ]);
+
+        $response = $this->getJson(route('client.order.status', [
+            'vendor_slug' => $this->vendor->slug,
+            'order_number' => $order->order_number,
+        ]));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'order' => [
+                    'order_number' => 'ORD-FEES-101',
+                    'status' => 'completed',
+                    'subtotal' => 7000,
+                    'service_fee' => 700,
+                    'delivery_fee' => 0,
+                    'total_amount' => 7700,
+                ],
+            ]);
     }
 
     public function test_branding_customizer_renders_split_screen_with_phone_mockup(): void

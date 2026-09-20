@@ -1,8 +1,15 @@
 <!-- Mobile Bottom Navigation Bar & Persistent Trackers -->
 <div class="storefront-bottom-nav-container">
     <!-- Active Order Tracker Floating Pill (Shown when customer has an active order) -->
-    <template x-if="activeOrder && !showOrderTracker && (!['completed', 'cancelled'].includes(activeOrder.status) || !hideTrackerPill)">
-        <div class="active-order-floating-pill" @click="showOrderTracker = true">
+    <template x-if="isOrderPillVisible()">
+        <div class="active-order-floating-pill" 
+             @click="showOrderTracker = true"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 scale-95">
             <div class="order-pill-left">
                 <span class="live-pulse-dot"></span>
                 <i :class="activeOrder.status_icon || 'fa-solid fa-clock'" class="order-pill-icon"></i>
@@ -35,6 +42,7 @@
     @if($vendor->ai_waiter_enabled)
     <!-- AI Waiter Floating Launcher Bubble -->
     <div class="ai-waiter-floating-bubble" 
+         :class="{ 'has-active-order-pill': isOrderPillVisible() }"
          x-show="!showAiWaiter && !showWelcomeModal && !showCartModal" 
          @click="openAiWaiter()"
          x-transition:enter="transition ease-out duration-300"
@@ -383,7 +391,7 @@
     .ai-waiter-floating-bubble {
         pointer-events: auto;
         position: fixed;
-        bottom: calc(72px + max(0.5rem, env(safe-area-inset-bottom)));
+        bottom: calc(78px + max(0.5rem, env(safe-area-inset-bottom)));
         right: 1.25rem;
         z-index: 75;
         background: linear-gradient(135deg, #8b5cf6, #d946ef);
@@ -396,7 +404,10 @@
         box-shadow: 0 10px 25px rgba(139, 92, 246, 0.45), 0 0 15px rgba(217, 70, 239, 0.3);
         cursor: pointer;
         animation: aiBubbleFloat 3s ease-in-out infinite;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .ai-waiter-floating-bubble.has-active-order-pill {
+        bottom: calc(142px + max(0.5rem, env(safe-area-inset-bottom)));
     }
     .ai-waiter-floating-bubble:hover {
         transform: scale(1.05);

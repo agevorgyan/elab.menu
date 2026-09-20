@@ -88,9 +88,19 @@
 <body>
     <div class="login-card">
         <div class="brand-header">
-            <i class="fa-solid fa-qrcode"></i>
-            <h1>QR Menu SaaS</h1>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Restaurant & Hotel Digital Menu Platform</p>
+            @if(isset($customVendor) && $customVendor)
+                @if($customVendor->logo)
+                    <img src="{{ $customVendor->logo }}" style="width: 76px; height: 76px; border-radius: 50%; object-fit: cover; margin-bottom: 0.75rem; border: 2px solid {{ $customVendor->primary_color ?? '#f59e0b' }};" alt="{{ $customVendor->name }}">
+                @else
+                    <i class="fa-solid fa-utensils" style="color: {{ $customVendor->primary_color ?? '#f59e0b' }};"></i>
+                @endif
+                <h1 style="background: none; -webkit-text-fill-color: initial; color: #fff;">{{ $customVendor->name }}</h1>
+                <p style="font-size: 0.85rem; color: #94a3b8;">Կառավարման Վահանակ (Admin Panel)</p>
+            @else
+                <i class="fa-solid fa-qrcode"></i>
+                <h1>QR Menu SaaS</h1>
+                <p style="font-size: 0.85rem; color: #94a3b8;">Restaurant & Hotel Digital Menu Platform</p>
+            @endif
         </div>
 
         @if($errors->any())
@@ -103,38 +113,46 @@
             @csrf
             <div class="form-group">
                 <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-                <input type="email" name="email" id="emailInput" class="form-input" required placeholder="admin@qrmenu.local" value="owner@bistro.am">
+                <input type="email" name="email" id="emailInput" class="form-input" required placeholder="{{ isset($customVendor) && $customVendor ? 'staff@restaurant.com' : 'admin@qrmenu.local' }}" value="{{ old('email', (isset($customVendor) && $customVendor ? '' : 'owner@bistro.am')) }}">
             </div>
 
             <div class="form-group">
                 <label><i class="fa-solid fa-lock"></i> Password</label>
-                <input type="password" name="password" id="passwordInput" class="form-input" required placeholder="••••••••" value="password">
+                <input type="password" name="password" id="passwordInput" class="form-input" required placeholder="••••••••" value="{{ isset($customVendor) && $customVendor ? '' : 'password' }}">
             </div>
 
             <button type="submit" class="btn-submit">Sign In to Dashboard</button>
         </form>
 
-        <div style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem;">
-            <a href="{{ route('register.show') }}" style="color: #f59e0b; font-weight: 700; text-decoration: none;">
-                <i class="fa-solid fa-user-plus"></i> Գրանցվել որպես Նոր Vendor (Self-Register)
-            </a>
-        </div>
+        @if(!isset($customVendor) || !$customVendor)
+            <div style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem;">
+                <a href="{{ route('register.show') }}" style="color: #f59e0b; font-weight: 700; text-decoration: none;">
+                    <i class="fa-solid fa-user-plus"></i> Գրանցվել որպես Նոր Vendor (Self-Register)
+                </a>
+            </div>
 
-        <div class="demo-accounts">
-            <div class="demo-title">⚡ Quick Demo One-Click Login</div>
-            <button class="demo-btn" onclick="fillCreds('owner@bistro.am', 'password')">
-                <span><i class="fa-solid fa-store text-amber-400"></i> Vendor Owner (Bistro Yerevan)</span>
-                <i class="fa-solid fa-arrow-right"></i>
-            </button>
-            <button class="demo-btn" onclick="fillCreds('admin@qrmenu.local', 'password')">
-                <span><i class="fa-solid fa-user-shield text-red-400"></i> Super Admin Panel</span>
-                <i class="fa-solid fa-arrow-right"></i>
-            </button>
-            <button class="demo-btn" onclick="fillCreds('manager@bistro.am', 'password')">
-                <span><i class="fa-solid fa-user-gear text-blue-400"></i> Cascades Branch Manager</span>
-                <i class="fa-solid fa-arrow-right"></i>
-            </button>
-        </div>
+            <div class="demo-accounts">
+                <div class="demo-title">⚡ Quick Demo One-Click Login</div>
+                <button class="demo-btn" onclick="fillCreds('owner@bistro.am', 'password')">
+                    <span><i class="fa-solid fa-store text-amber-400"></i> Vendor Owner (Bistro Yerevan)</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button class="demo-btn" onclick="fillCreds('admin@qrmenu.local', 'password')">
+                    <span><i class="fa-solid fa-user-shield text-red-400"></i> Super Admin Panel</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button class="demo-btn" onclick="fillCreds('manager@bistro.am', 'password')">
+                    <span><i class="fa-solid fa-user-gear text-blue-400"></i> Cascades Branch Manager</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        @else
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem;">
+                <a href="/" style="color: {{ $customVendor->primary_color ?? '#38bdf8' }}; font-weight: 600; text-decoration: none;">
+                    &larr; Վերադառնալ {{ $customVendor->name }} Մենյու
+                </a>
+            </div>
+        @endif
     </div>
 
     <script>

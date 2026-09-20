@@ -321,4 +321,59 @@ class Vendor extends Model
                 return true;
         }
     }
+
+    /**
+     * Check if vendor has a valid custom domain configured.
+     */
+    public function hasCustomDomain(): bool
+    {
+        return ! empty($this->custom_domain) && trim($this->custom_domain) !== '';
+    }
+
+    /**
+     * Get the normalized lowercase custom domain without protocol.
+     */
+    public function getCleanCustomDomain(): ?string
+    {
+        if (! $this->hasCustomDomain()) {
+            return null;
+        }
+
+        $domain = preg_replace('#^https?://#i', '', trim($this->custom_domain));
+        $domain = explode('/', $domain)[0];
+
+        return strtolower(trim($domain));
+    }
+
+    /**
+     * Get the full public storefront URL (custom domain or platform route).
+     */
+    public function getStorefrontUrl(?string $locationSlug = null): string
+    {
+        if ($this->hasCustomDomain()) {
+            $scheme = (request()->isSecure() || str_starts_with(config('app.url'), 'https://')) ? 'https://' : 'http://';
+            $base = $scheme.$this->getCleanCustomDomain();
+
+            return $locationSlug ? "{$base}/{$locationSlug}" : "{$base}/";
+        }
+
+        return route('client.menu', array_filter([
+            'vendor_slug' => $this->slug,
+            'location_slug' => $locationSlug,
+        ]));
+    }
+
+    /**
+     * Get the admin panel URL for this vendor.
+     */
+    public function getAdminUrl(): string
+    {
+        if ($this->hasCustomDomain()) {
+            $scheme = (request()->isSecure() || str_starts_with(config('app.url'), 'https://')) ? 'https://' : 'http://';
+
+            return "{$scheme}".$this->getCleanCustomDomain().'/admin';
+        }
+
+        return route('admin.dashboard');
+    }
 }

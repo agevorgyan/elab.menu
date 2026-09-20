@@ -186,7 +186,118 @@
                 </div>
             </div>
 
-            <!-- 2. FEATURED DISH OF THE DAY BANNER CARD (ՕՐՎԱ ՈՒՏԵՍՏ) -->
+            <!-- 2. CUSTOM DOMAIN & BRANDING URL (ՍԵՓԱԿԱՆ ԴՈՄԵՆ) -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(6, 182, 212, 0.15); color: #06b6d4; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-globe"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('Սեփական Դոմեն (Custom Domain & White-Label)') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Կցեք ձեր սեփական դոմենը, որպեսզի մենյուն բացվի ձեր դոմենով (օր.՝ menu.restaurant.am), իսկ ադմինիստրատորները մուտք գործեն ձերդոմեն/admin') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    @if($vendor->hasCustomDomain())
+                        <span style="font-size: 0.78rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ Կցված է') }}
+                        </span>
+                    @else
+                        <span style="font-size: 0.78rem; font-weight: 700; background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-circle-minus"></i> {{ __('Անջատված է') }}
+                        </span>
+                    @endif
+                </div>
+
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end; flex-wrap: wrap;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Դոմենի հասցե (Custom Domain FQDN)') }}
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="text" name="custom_domain" id="customDomainInput" value="{{ old('custom_domain', $vendor->custom_domain) }}" class="form-control" placeholder="օրինակ՝ menu.restaurant.am կամ restaurant.com" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                                <span style="position: absolute; left: 1rem; color: #06b6d4; font-size: 1rem;">
+                                    <i class="fa-solid fa-link"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button type="button" id="btnCheckDomainDns" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; border-color: rgba(6, 182, 212, 0.4); color: #06b6d4; white-space: nowrap;">
+                                <i class="fa-solid fa-bolt"></i> {{ __('Ստուգել DNS') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        {{ __('Մուտքագրեք դոմենն առանց http:// կամ https://-ի (օր.՝ menu.restaurant.am): Դատարկ թողնելու դեպքում սեփական դոմենը կանջատվի:') }}
+                    </span>
+
+                    <!-- Live Check Result Alert Box -->
+                    <div id="dnsCheckResultBox" style="display: none; margin-top: 1rem; padding: 0.85rem 1.1rem; border-radius: 12px; font-size: 0.86rem; font-weight: 600;"></div>
+
+                    <!-- Action Links if domain exists -->
+                    @if($vendor->hasCustomDomain())
+                        <div style="margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                            <a href="{{ $vendor->getStorefrontUrl() }}" target="_blank" class="btn btn-secondary" style="font-size: 0.82rem; font-weight: 600; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.45rem;">
+                                <i class="fa-solid fa-arrow-up-right-from-square" style="color: #06b6d4;"></i> {{ __('Բացել Մենյուն (Storefront)') }}
+                            </a>
+                            <a href="{{ $vendor->getAdminUrl() }}" target="_blank" class="btn btn-secondary" style="font-size: 0.82rem; font-weight: 600; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.45rem;">
+                                <i class="fa-solid fa-shield-halved" style="color: #f59e0b;"></i> {{ __('Բացել Ադմինկան (Admin Panel)') }}
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- DNS & cPanel Setup Instructions Box -->
+                <div style="background: rgba(30, 41, 59, 0.4); border: 1px dashed rgba(6, 182, 212, 0.35); border-radius: 16px; padding: 1.25rem;">
+                    <div style="font-size: 0.92rem; font-weight: 800; color: #38bdf8; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-circle-info"></i> {{ __('Ինչպե՞ս կցել ձեր դոմենը (DNS և cPanel քայլերը)') }}
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; font-size: 0.84rem; color: var(--text-muted);">
+                        <!-- Step 1: DNS -->
+                        <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+                                1. DNS Կարգավորում (Cloudflare, Reg.am, etc.)
+                            </div>
+                            <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
+                                Ավելացրեք <strong>A Record</strong> ձեր դոմենի DNS-ում՝
+                            </p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 0.4rem 0.65rem; border-radius: 6px; font-family: monospace; color: #a5f3fc; font-size: 0.82rem;">
+                                <span>A &rarr; {{ $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am') }}</span>
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am') }}'); alert('IP-ն պատճենվեց');" style="background: none; border: none; color: #38bdf8; cursor: pointer; padding: 2px 4px;" title="Պատճենել IP-ն">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                            <div style="margin-top: 0.4rem; font-size: 0.78rem;">
+                                կամ <strong>CNAME</strong> դեպի <code>menu.elab.am</code>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: cPanel -->
+                        <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+                                2. cPanel &rarr; Domains
+                            </div>
+                            <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
+                                cPanel-ում ստեղծեք նոր Domain/Alias և <strong>Document Root</strong>-ը նշեք նույնը (օր.՝ <code>menu.elab.am/public</code> կամ <code>public_html/menu.elab.am/public</code>)։
+                            </p>
+                            <div style="font-size: 0.78rem; color: #a5f3fc;">
+                                <i class="fa-solid fa-shield"></i> cPanel-ի <strong>SSL/TLS Status</strong>-ում գործարկեք <strong>AutoSSL</strong>՝ անվճար HTTPS սերտիֆիկատի համար։
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. FEATURED DISH OF THE DAY BANNER CARD (ՕՐՎԱ ՈՒՏԵՍՏ) -->
             <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
@@ -957,6 +1068,62 @@ document.addEventListener('DOMContentLoaded', () => {
     if (aiWaiterToggle && aiWaiterOptionsBlock) {
         aiWaiterToggle.addEventListener('change', () => {
             aiWaiterOptionsBlock.style.display = aiWaiterToggle.checked ? 'block' : 'none';
+        });
+    }
+
+    const btnCheckDomainDns = document.getElementById('btnCheckDomainDns');
+    const customDomainInput = document.getElementById('customDomainInput');
+    const dnsCheckResultBox = document.getElementById('dnsCheckResultBox');
+
+    if (btnCheckDomainDns && customDomainInput && dnsCheckResultBox) {
+        btnCheckDomainDns.addEventListener('click', async () => {
+            const domain = customDomainInput.value.trim();
+            if (!domain) {
+                dnsCheckResultBox.style.display = 'block';
+                dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                dnsCheckResultBox.style.color = '#ef4444';
+                dnsCheckResultBox.textContent = 'Խնդրում ենք մուտքագրել դոմենի հասցեն:';
+                return;
+            }
+
+            btnCheckDomainDns.disabled = true;
+            btnCheckDomainDns.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ստուգում...';
+
+            try {
+                const res = await fetch('{{ route("admin.settings.domain.check") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ domain }),
+                });
+
+                const data = await res.json();
+                dnsCheckResultBox.style.display = 'block';
+
+                if (data.is_pointing) {
+                    dnsCheckResultBox.style.background = 'rgba(16, 185, 129, 0.15)';
+                    dnsCheckResultBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    dnsCheckResultBox.style.color = '#10b981';
+                } else {
+                    dnsCheckResultBox.style.background = 'rgba(245, 158, 11, 0.15)';
+                    dnsCheckResultBox.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+                    dnsCheckResultBox.style.color = '#f59e0b';
+                }
+                dnsCheckResultBox.textContent = data.message;
+            } catch (err) {
+                dnsCheckResultBox.style.display = 'block';
+                dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                dnsCheckResultBox.style.color = '#ef4444';
+                dnsCheckResultBox.textContent = 'Ստուգման ժամանակ սխալ տեղի ունեցավ: Կրկին փորձեք:';
+            } finally {
+                btnCheckDomainDns.disabled = false;
+                btnCheckDomainDns.innerHTML = '<i class="fa-solid fa-bolt"></i> {{ __("Ստուգել DNS") }}';
+            }
         });
     }
 });

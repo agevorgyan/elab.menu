@@ -11,6 +11,8 @@ class TenantContext
 
     protected ?Vendor $tenant = null;
 
+    protected ?string $customDomainHost = null;
+
     protected bool $bypassed = false;
 
     /**
@@ -31,6 +33,30 @@ class TenantContext
     {
         $this->tenant = $vendor;
         $this->tenantId = $vendor?->id;
+    }
+
+    /**
+     * Set the custom domain host string.
+     */
+    public function setCustomDomainHost(?string $host): void
+    {
+        $this->customDomainHost = $host ? strtolower($host) : null;
+    }
+
+    /**
+     * Get the custom domain host if request is using one.
+     */
+    public function getCustomDomainHost(): ?string
+    {
+        return $this->customDomainHost;
+    }
+
+    /**
+     * Determine if current tenant is operating via custom domain.
+     */
+    public function isCustomDomain(): bool
+    {
+        return ! empty($this->customDomainHost);
     }
 
     /**
@@ -135,6 +161,7 @@ class TenantContext
     {
         $this->tenantId = null;
         $this->tenant = null;
+        $this->customDomainHost = null;
         $this->bypassed = false;
     }
 }

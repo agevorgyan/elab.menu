@@ -14,11 +14,36 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\VendorAdminController;
 use App\Http\Controllers\VendorSettingsController;
+use App\Http\Middleware\EnsurePlanHasFeature;
+use App\Http\Middleware\EnsureSubscriptionIsActive;
+use App\Services\TenantContext;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // 1. Landing & Client Storefront PWA Routes
-Route::get('/', function () {
+Route::get('/', function (Request $request, TenantContext $tenantContext) {
+    $customDomainVendor = $tenantContext->getTenant();
+    if ($customDomainVendor) {
+        return app(ClientStorefrontController::class)->showMenu($request, $customDomainVendor->slug);
+    }
+
     return redirect()->route('client.menu', ['vendor_slug' => 'bistro-yerevan']);
+})->name('landing');
+
+Route::get('/manifest.json', function (TenantContext $tenantContext) {
+    $vendor = $tenantContext->getTenant();
+    if ($vendor) {
+        return app(ClientStorefrontController::class)->manifest($vendor->slug);
+    }
+    abort(404);
+});
+
+Route::get('/sw.js', function (TenantContext $tenantContext) {
+    $vendor = $tenantContext->getTenant();
+    if ($vendor) {
+        return app(ClientStorefrontController::class)->serviceWorker($vendor->slug);
+    }
+    abort(404);
 });
 
 Route::get('/m/{vendor_slug}/manifest.json', [ClientStorefrontController::class, 'manifest'])->name('client.manifest');
@@ -70,8 +95,6 @@ Route::get('/email/verify', [RegisterController::class, 'showVerificationNotice'
 Route::get('/email/verify/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('verification.verify');
 Route::post('/email/verify/demo', [RegisterController::class, 'directDemoVerify'])->name('verification.demo');
 
-use App\Http\Middleware\EnsureSubscriptionIsActive;
-
 // 3. Super Admin Panel (/superadmin)
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
@@ -91,8 +114,6 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::post('/subscriptions/{vendor}', [SuperAdminController::class, 'updateVendorSubscription'])->name('subscriptions.update');
     Route::post('/subscriptions/{vendor}/payments', [SuperAdminController::class, 'storeVendorPayment'])->name('subscriptions.payments.store');
 });
-
-use App\Http\Middleware\EnsurePlanHasFeature;
 
 // 4. Vendor Admin Panel (/admin)
 Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscriptionIsActive::class])->prefix('admin')->name('admin.')->group(function () {
@@ -144,6 +165,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     // Restaurant Settings (Service Fee & Delivery)
     Route::get('/settings', [VendorSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [VendorSettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/domain/check', [VendorSettingsController::class, 'checkDomainDns'])->name('settings.domain.check');
     Route::get('/settings/ai', [VendorSettingsController::class, 'aiIndex'])->name('settings.ai');
     Route::post('/settings/ai', [VendorSettingsController::class, 'aiUpdate'])->name('settings.ai.update');
     Route::post('/settings/ai/test', [VendorSettingsController::class, 'testAiConnection'])->name('settings.ai.test');
@@ -164,3 +186,16 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 });
+
+// 5. Custom Domain Branch/Location Route (e.g. https://example.com/cascades)
+Route::get('/{location_slug}', function (Request $request, string $location_slug, TenantContext $tenantContext) {
+    $customDomainVendor = $tenantContext->getTenant();
+    if ($customDomainVendor) {
+        $location = $customDomainVendor->locations()->where('slug', $location_slug)->first();
+        if ($location) {
+            return app(ClientStorefrontController::class)->showMenu($request, $customDomainVendor->slug, $location_slug);
+        }
+    }
+
+    abort(404);
+})->where('location_slug', '^[a-zA-Z0-9_-]+$');

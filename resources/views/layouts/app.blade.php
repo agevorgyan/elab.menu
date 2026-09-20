@@ -836,7 +836,7 @@
 
                 @if(Auth::user()?->vendor)
                     <div style="padding: 0.75rem 0.65rem 0.25rem;">
-                        <a href="{{ route('client.menu', ['vendor_slug' => Auth::user()->vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; border-radius: 12px; gap: 0.5rem; border-color: rgba(245, 158, 11, 0.3);">
+                        <a href="{{ Auth::user()->vendor->getStorefrontUrl() }}" target="_blank" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; border-radius: 12px; gap: 0.5rem; border-color: rgba(245, 158, 11, 0.3);">
                             <i class="fa-solid fa-arrow-up-right-from-square" style="color: var(--primary);"></i> <span>{{ __('Live Storefront') }}</span>
                         </a>
                     </div>

@@ -81,7 +81,7 @@
 
         <!-- QR Code Image Canvas -->
         <div style="background: #ffffff; padding: 1rem; border-radius: 18px; margin-bottom: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 100%;">
-            <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent('{{ route("client.menu", ["vendor_slug" => $vendor->slug, "location_slug" => $location?->slug]) }}?table=' + tableNum + '&mode=' + qrType)" style="width: 175px; height: 175px; display: block; max-width: 100%;" alt="Table QR">
+            <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent('{{ rtrim($vendor->getStorefrontUrl($location?->slug), '/') }}?table=' + tableNum + '&mode=' + qrType)" style="width: 175px; height: 175px; display: block; max-width: 100%;" alt="Table QR">
         </div>
 
         <div style="font-family: 'Outfit'; font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 0.25rem;">

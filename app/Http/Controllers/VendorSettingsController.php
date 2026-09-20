@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
+use App\Models\Vendor;
 use App\Services\AiGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -168,6 +169,56 @@ class VendorSettingsController extends Controller
             $vendorUpdate['contact_person_phone'] = $validated['contact_person_phone'];
         }
 
+        // Custom Domain Validation & Normalization
+        if ($request->has('custom_domain')) {
+            $rawDomain = $request->input('custom_domain');
+            if (empty($rawDomain) || trim($rawDomain) === '') {
+                $vendorUpdate['custom_domain'] = null;
+            } else {
+                $cleanDomain = preg_replace('#^https?://#i', '', trim($rawDomain));
+                $cleanDomain = explode('/', $cleanDomain)[0];
+                $cleanDomain = explode(':', $cleanDomain)[0];
+                $cleanDomain = strtolower(trim($cleanDomain));
+
+                $forbiddenHosts = [
+                    'menu.elab.am',
+                    'elab.am',
+                    'localhost',
+                    '127.0.0.1',
+                    'qrmenu.local',
+                ];
+                $mainHost = strtolower(parse_url(config('app.url', 'https://menu.elab.am'), PHP_URL_HOST) ?? '');
+                if ($mainHost) {
+                    $forbiddenHosts[] = $mainHost;
+                }
+
+                if (in_array($cleanDomain, $forbiddenHosts)) {
+                    return back()->withErrors([
+                        'custom_domain' => 'Հիմնական հարթակի դոմենը չի կարող օգտագործվել որպես սեփական դոմեն։',
+                    ])->withInput();
+                }
+
+                if (! preg_match('/^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/', $cleanDomain)) {
+                    return back()->withErrors([
+                        'custom_domain' => 'Դոմենի ձևաչափն անվավեր է (օրինակ՝ menu.restaurant.am կամ restaurant.com):',
+                    ])->withInput();
+                }
+
+                // Check uniqueness across other vendors
+                $existing = Vendor::where('custom_domain', $cleanDomain)
+                    ->where('id', '!=', $vendor->id)
+                    ->exists();
+
+                if ($existing) {
+                    return back()->withErrors([
+                        'custom_domain' => 'Այս դոմենն արդեն օգտագործվում է այլ ռեստորանի կողմից։',
+                    ])->withInput();
+                }
+
+                $vendorUpdate['custom_domain'] = $cleanDomain;
+            }
+        }
+
         $vendor->update($vendorUpdate);
 
         // Update Location (Branch)
@@ -300,5 +351,49 @@ class VendorSettingsController extends Controller
         );
 
         return response()->json($result);
+    }
+
+    /**
+     * Check DNS resolution status for a custom domain via AJAX.
+     */
+    public function checkDomainDns(Request $request): JsonResponse
+    {
+        $domain = trim($request->input('domain', ''));
+        $domain = preg_replace('#^https?://#i', '', $domain);
+        $domain = explode('/', $domain)[0];
+        $domain = explode(':', $domain)[0];
+        $domain = strtolower(trim($domain));
+
+        if (empty($domain)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Խնդրում ենք մուտքագրել դոմենի հասցեն։',
+            ]);
+        }
+
+        $serverIp = $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am');
+        $resolvedIp = @gethostbyname($domain);
+        $isResolved = ($resolvedIp !== $domain && ! empty($resolvedIp));
+
+        $records = @dns_get_record($domain, DNS_A + DNS_CNAME) ?: [];
+        $aRecords = collect($records)->where('type', 'A')->pluck('ip')->toArray();
+        $cnameRecords = collect($records)->where('type', 'CNAME')->pluck('target')->toArray();
+
+        $isPointing = ($resolvedIp === $serverIp)
+            || in_array($serverIp, $aRecords)
+            || in_array('menu.elab.am', $cnameRecords);
+
+        return response()->json([
+            'success' => true,
+            'domain' => $domain,
+            'server_ip' => $serverIp,
+            'resolved_ip' => $isResolved ? $resolvedIp : null,
+            'is_pointing' => $isPointing,
+            'message' => $isPointing
+                ? "✅ Դոմենը հաջողությամբ ուղղված է ձեր սերվերի IP-ին ({$serverIp})։"
+                : ($isResolved
+                    ? "⚠️ Դոմենը մատնանշում է այլ IP ({$resolvedIp})։ Փոխեք A-record-ը սերվերի IP-ին՝ {$serverIp}"
+                    : "⏳ Դոմենը դեռևս չունի ակտիվ DNS գրառումներ։ Ավելացրեք A-record դեպի {$serverIp} (կամ CNAME դեպի menu.elab.am)։"),
+        ]);
     }
 }

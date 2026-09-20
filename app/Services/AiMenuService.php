@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 class AiMenuService
 {
     /**
-     * Parse text/PDF raw text content into categories, products, prices, descriptions, and dietary tags.
+     * Parse text/PDF raw text content into categories, products, prices, descriptions, images, and dietary tags.
      */
     public function parseMenuFromText(string $rawText): array
     {
@@ -16,7 +16,17 @@ class AiMenuService
 
         if (! empty($geminiApiKey)) {
             try {
-                $prompt = 'You are a professional restaurant menu extraction AI. Extract the menu categories, products, prices, descriptions, dietary tags (vegan, vegetarian, gluten_free, chef_special), and calories from the following raw text. Output strictly valid JSON matching this structure:
+                $prompt = 'You are a professional restaurant menu extraction AI. Extract menu categories, products, prices, descriptions, images, dietary tags (vegan, vegetarian, gluten_free, chef_special), and calories from the provided menu data.
+
+IMPORTANT INSTRUCTION FOR TABULAR / SPREADSHEET / CSV DATA:
+Columns may appear in ANY order. Carefully read the header row to detect which column contains what data:
+- Name column (e.g. Name, Product, Dish, Title, Անվանում, Название) -> "name"
+- Description column (e.g. Description, Details, Ingredients, Նկարագրություն, Описание) -> "description"
+- Price column (e.g. Price, Cost, Գին, Цена) -> "price" (numerical)
+- Category column (e.g. Categories, Category, Group, Ապրանքախումբ, Категория) -> "categories" grouping
+- Image column (e.g. Images, Image, Photo, Picture, URL, Նկարներ, Նկար, Фото) -> "image" (URL or image path)
+
+Output strictly valid JSON matching this structure:
 {
   "categories": [
     {
@@ -26,6 +36,7 @@ class AiMenuService
           "name": "Product Name",
           "description": "Description",
           "price": 3500,
+          "image": "https://example.com/photo.jpg",
           "dietary_tags": ["vegan"],
           "calories": 450
         }
@@ -249,6 +260,50 @@ Menu text:
     private function fallbackMenuParser(string $text): array
     {
         $lines = explode("\n", $text);
+
+        // 1. Check if the text contains tabular rows (pipe, tab, or comma delimited)
+        $tabularRows = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+            if (str_contains($line, "\t")) {
+                $tabularRows[] = array_map('trim', explode("\t", $line));
+            } elseif (str_contains($line, ' | ')) {
+                $tabularRows[] = array_map('trim', explode(' | ', $line));
+            } elseif (str_contains($line, '|')) {
+                $tabularRows[] = array_map('trim', explode('|', $line));
+            }
+        }
+
+        if (count($tabularRows) >= 2) {
+            $parsed = (new MenuExtractorService)->parseTabularData($tabularRows);
+            if ($parsed !== null && ! empty($parsed['categories'])) {
+                return $parsed;
+            }
+        }
+
+        // Check if raw comma-separated CSV rows were pasted
+        if (empty($tabularRows) && count($lines) >= 2 && str_contains($lines[0], ',')) {
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) {
+                    continue;
+                }
+                $row = str_getcsv($line);
+                if (! empty($row)) {
+                    $tabularRows[] = array_map('trim', $row);
+                }
+            }
+            if (count($tabularRows) >= 2) {
+                $parsed = (new MenuExtractorService)->parseTabularData($tabularRows);
+                if ($parsed !== null && ! empty($parsed['categories'])) {
+                    return $parsed;
+                }
+            }
+        }
+
         $categories = [];
         $currentCategory = ['name' => 'General Menu', 'products' => []];
 

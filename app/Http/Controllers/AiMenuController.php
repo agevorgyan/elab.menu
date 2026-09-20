@@ -49,6 +49,8 @@ class AiMenuController extends Controller
                     $parsedMenu = $this->aiService->parseMenuFromImage($extraction['base64'], $extraction['mime']);
                 } elseif ($extraction['type'] === 'pdf') {
                     $parsedMenu = $this->aiService->parseMenuFromPdf($extraction['base64'], $extraction['text'] ?? null);
+                } elseif ($extraction['type'] === 'structured' && ! empty($extraction['categories'])) {
+                    $parsedMenu = ['categories' => $extraction['categories']];
                 } else {
                     $parsedMenu = $this->aiService->parseMenuFromText($extraction['text'] ?? '');
                 }
@@ -100,6 +102,10 @@ class AiMenuController extends Controller
                         continue;
                     }
 
+                    $image = ! empty($prodData['image'])
+                        ? trim((string) $prodData['image'])
+                        : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80';
+
                     Product::create([
                         'vendor_id' => $vendor->id,
                         'category_id' => $category->id,
@@ -107,7 +113,7 @@ class AiMenuController extends Controller
                         'name_translations' => ['hy' => $prodData['name'], 'en' => $prodData['name'], 'ru' => $prodData['name']],
                         'description' => $prodData['description'] ?? '',
                         'price' => (float) ($prodData['price'] ?? 0),
-                        'image' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
+                        'image' => $image,
                         'dietary_tags' => $prodData['dietary_tags'] ?? [],
                         'calories' => $prodData['calories'] ?? rand(300, 700),
                         'is_available' => true,

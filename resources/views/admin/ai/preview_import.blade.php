@@ -33,33 +33,61 @@
     </div>
 </div>
 
-<form action="{{ route('admin.ai.import.confirm') }}" method="POST" x-data="{
-    categories: @js(array_values($parsedData['categories'])),
-    addCategory() {
-        this.categories.push({
-            name: 'Նոր Բաժին',
-            products: [{ name: '', description: '', price: 0 }]
-        });
-    },
-    removeCategory(cIdx) {
-        if (this.categories.length > 1) {
-            this.categories.splice(cIdx, 1);
+<script id="parsed-menu-json" type="application/json">
+{!! json_encode(array_values($parsedData['categories']), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+</script>
+
+<script>
+function menuImportApp() {
+    let initialCategories = [];
+    try {
+        const jsonEl = document.getElementById('parsed-menu-json');
+        if (jsonEl && jsonEl.textContent) {
+            initialCategories = JSON.parse(jsonEl.textContent);
         }
-    },
-    addProduct(cIdx) {
-        if (!this.categories[cIdx].products) {
-            this.categories[cIdx].products = [];
-        }
-        this.categories[cIdx].products.push({
-            name: '',
-            description: '',
-            price: 0
-        });
-    },
-    removeProduct(cIdx, pIdx) {
-        this.categories[cIdx].products.splice(pIdx, 1);
+    } catch (err) {
+        console.error('Failed to parse menu JSON:', err);
     }
-}">
+
+    if (!Array.isArray(initialCategories) || initialCategories.length === 0) {
+        initialCategories = [{
+            name: '{{ __('Նոր Բաժին') }}',
+            products: [{ name: '', description: '', price: 0, image: '' }]
+        }];
+    }
+
+    return {
+        categories: initialCategories,
+        addCategory() {
+            this.categories.push({
+                name: '{{ __('Նոր Բաժին') }}',
+                products: [{ name: '', description: '', price: 0, image: '' }]
+            });
+        },
+        removeCategory(cIdx) {
+            if (this.categories.length > 1) {
+                this.categories.splice(cIdx, 1);
+            }
+        },
+        addProduct(cIdx) {
+            if (!this.categories[cIdx].products) {
+                this.categories[cIdx].products = [];
+            }
+            this.categories[cIdx].products.push({
+                name: '',
+                description: '',
+                price: 0,
+                image: ''
+            });
+        },
+        removeProduct(cIdx, pIdx) {
+            this.categories[cIdx].products.splice(pIdx, 1);
+        }
+    };
+}
+</script>
+
+<form action="{{ route('admin.ai.import.confirm') }}" method="POST" x-data="menuImportApp()">
     @csrf
 
     <template x-for="(cat, cIdx) in categories" :key="cIdx">
@@ -86,20 +114,42 @@
             <div style="display: flex; flex-direction: column; gap: 0.85rem;">
                 <template x-for="(prod, pIdx) in cat.products" :key="pIdx">
                     <div style="background: var(--input-bg); padding: 1rem; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.75rem; position: relative;">
-                        <div style="display: grid; grid-template-columns: minmax(180px, 2fr) minmax(220px, 3fr) minmax(130px, 1.2fr) auto; gap: 0.85rem; align-items: flex-end;">
+                        <div style="display: grid; grid-template-columns: minmax(160px, 1.8fr) minmax(180px, 2fr) minmax(110px, 1fr) minmax(160px, 1.5fr) auto; gap: 0.75rem; align-items: flex-end;">
                             <div>
-                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">{{ __('Ուտեստի Անվանում') }}</label>
+                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
+                                    <i class="fa-solid fa-utensils" style="color: var(--primary); margin-right: 0.2rem;"></i>
+                                    {{ __('Ուտեստի Անվանում') }}
+                                </label>
                                 <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][name]'" x-model="prod.name" required placeholder="{{ __('Անվանում') }}" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-weight: 600; outline: none; font-size: 0.88rem;">
                             </div>
 
                             <div>
-                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">{{ __('Նկարագրություն') }}</label>
+                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
+                                    <i class="fa-solid fa-align-left" style="color: var(--primary); margin-right: 0.2rem;"></i>
+                                    {{ __('Նկարագրություն') }}
+                                </label>
                                 <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][description]'" x-model="prod.description" placeholder="{{ __('Բաղադրություն, մանրամասներ') }}" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-size: 0.85rem; outline: none;">
                             </div>
 
                             <div>
-                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">{{ __('Գին') }} ({{ $vendor->currency }})</label>
+                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
+                                    <i class="fa-solid fa-tag" style="color: var(--primary); margin-right: 0.2rem;"></i>
+                                    {{ __('Գին') }} ({{ $vendor->currency }})
+                                </label>
                                 <input type="number" step="any" :name="'categories[' + cIdx + '][products][' + pIdx + '][price]'" x-model="prod.price" required placeholder="0" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--primary); font-weight: 800; outline: none; font-size: 0.95rem;">
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
+                                    <i class="fa-solid fa-image" style="color: var(--primary); margin-right: 0.2rem;"></i>
+                                    {{ __('Նկար (URL)') }}
+                                </label>
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <template x-if="prod.image">
+                                        <img :src="prod.image" style="width: 32px; height: 32px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); flex-shrink: 0;" x-on:error="$el.style.display='none'">
+                                    </template>
+                                    <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][image]'" x-model="prod.image" placeholder="https://..." style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-size: 0.82rem; outline: none;">
+                                </div>
                             </div>
 
                             <div>

@@ -12,7 +12,7 @@ class MenuExtractorService
     /**
      * Extract menu text or structured multimodal payload from an uploaded file.
      *
-     * @return array{type: string, text?: string, mime?: string, base64?: string, items?: array}
+     * @return array{type: string, text?: string, mime?: string, base64?: string, items?: array, categories?: array}
      */
     public function extractFromFile(UploadedFile $file): array
     {
@@ -21,18 +21,9 @@ class MenuExtractorService
         $realPath = $file->getRealPath();
 
         return match ($extension) {
-            'csv' => [
-                'type' => 'text',
-                'text' => $this->extractFromCsv($realPath),
-            ],
-            'xlsx' => [
-                'type' => 'text',
-                'text' => $this->extractFromXlsx($realPath),
-            ],
-            'xls' => [
-                'type' => 'text',
-                'text' => $this->extractFromLegacyXls($realPath),
-            ],
+            'csv' => $this->extractTabularOrTextFromCsv($realPath),
+            'xlsx' => $this->extractTabularOrTextFromXlsx($realPath),
+            'xls' => $this->extractTabularOrTextFromLegacyXls($realPath),
             'docx' => [
                 'type' => 'text',
                 'text' => $this->extractFromDocx($realPath),
@@ -64,17 +55,19 @@ class MenuExtractorService
     }
 
     /**
-     * Extract menu text from a CSV file.
+     * Extract array of rows from CSV file preserving dense column indexes.
+     *
+     * @return array<int, array<int, string>>
      */
-    public function extractFromCsv(string $filePath): string
+    public function extractRowsFromCsv(string $filePath): array
     {
         if (! file_exists($filePath)) {
-            return '';
+            return [];
         }
 
         $content = file_get_contents($filePath);
         if ($content === false) {
-            return '';
+            return [];
         }
 
         // Auto-detect delimiter from first line
@@ -91,34 +84,74 @@ class MenuExtractorService
             }
         }
 
-        $lines = [];
+        $rows = [];
         if (($handle = fopen($filePath, 'r')) !== false) {
-            while (($row = fgetcsv($handle, 4096, $bestDelimiter)) !== false) {
-                // Filter out empty columns
+            while (($row = fgetcsv($handle, 0, $bestDelimiter, '"', '')) !== false) {
                 $row = array_map('trim', $row);
-                $row = array_filter($row, fn ($val) => $val !== '');
-                if (! empty($row)) {
-                    $lines[] = implode(' | ', $row);
+                $hasContent = false;
+                foreach ($row as $val) {
+                    if ($val !== '') {
+                        $hasContent = true;
+                        break;
+                    }
+                }
+                if ($hasContent) {
+                    $rows[] = array_values($row);
                 }
             }
             fclose($handle);
         }
 
-        return implode("\n", $lines);
+        if (! empty($rows) && isset($rows[0][0])) {
+            $rows[0][0] = preg_replace('/^\xEF\xBB\xBF/', '', $rows[0][0]);
+        }
+
+        return $rows;
     }
 
     /**
-     * Extract menu text from modern Excel (.xlsx) using native ZipArchive + SimpleXML.
+     * Extract menu text from a CSV file.
      */
-    public function extractFromXlsx(string $filePath): string
+    public function extractFromCsv(string $filePath): string
+    {
+        return $this->rowsToText($this->extractRowsFromCsv($filePath));
+    }
+
+    /**
+     * Extract structured or fallback text from CSV.
+     */
+    public function extractTabularOrTextFromCsv(string $filePath): array
+    {
+        $rows = $this->extractRowsFromCsv($filePath);
+        $tabular = $this->parseTabularData($rows);
+        if ($tabular !== null && ! empty($tabular['categories'])) {
+            return [
+                'type' => 'structured',
+                'categories' => $tabular['categories'],
+                'text' => $this->rowsToText($rows),
+            ];
+        }
+
+        return [
+            'type' => 'text',
+            'text' => $this->rowsToText($rows),
+        ];
+    }
+
+    /**
+     * Extract array of rows from XLSX preserving dense column indexes.
+     *
+     * @return array<int, array<int, string>>
+     */
+    public function extractRowsFromXlsx(string $filePath): array
     {
         if (! file_exists($filePath) || ! class_exists(ZipArchive::class)) {
-            return '';
+            return [];
         }
 
         $zip = new ZipArchive;
         if ($zip->open($filePath) !== true) {
-            return '';
+            return [];
         }
 
         // 1. Extract shared strings table
@@ -147,7 +180,7 @@ class MenuExtractorService
             }
         }
 
-        // 2. Extract sheet rows
+        // 2. Extract sheet rows preserving cell column coordinates
         $rows = [];
         $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
         if ($sheetXml !== false) {
@@ -155,8 +188,13 @@ class MenuExtractorService
                 $xml = simplexml_load_string($sheetXml);
                 if ($xml && isset($xml->sheetData->row)) {
                     foreach ($xml->sheetData->row as $row) {
-                        $cells = [];
+                        $rowCells = [];
+                        $maxCol = 0;
+                        $hasContent = false;
+
                         foreach ($row->c as $cell) {
+                            $ref = (string) $cell['r'];
+                            $colIdx = $this->colLetterToIndex($ref);
                             $type = (string) $cell['t'];
                             $val = (string) $cell->v;
 
@@ -170,12 +208,21 @@ class MenuExtractorService
 
                             $cellVal = trim($cellVal);
                             if ($cellVal !== '') {
-                                $cells[] = $cellVal;
+                                $hasContent = true;
+                            }
+
+                            $rowCells[$colIdx] = $cellVal;
+                            if ($colIdx > $maxCol) {
+                                $maxCol = $colIdx;
                             }
                         }
 
-                        if (! empty($cells)) {
-                            $rows[] = implode(' | ', $cells);
+                        if ($hasContent) {
+                            $denseRow = [];
+                            for ($i = 0; $i <= $maxCol; $i++) {
+                                $denseRow[$i] = $rowCells[$i] ?? '';
+                            }
+                            $rows[] = $denseRow;
                         }
                     }
                 }
@@ -186,7 +233,442 @@ class MenuExtractorService
 
         $zip->close();
 
-        return implode("\n", $rows);
+        return $rows;
+    }
+
+    /**
+     * Extract menu text from modern Excel (.xlsx).
+     */
+    public function extractFromXlsx(string $filePath): string
+    {
+        return $this->rowsToText($this->extractRowsFromXlsx($filePath));
+    }
+
+    /**
+     * Extract structured or fallback text from modern Excel (.xlsx).
+     */
+    public function extractTabularOrTextFromXlsx(string $filePath): array
+    {
+        $rows = $this->extractRowsFromXlsx($filePath);
+        $tabular = $this->parseTabularData($rows);
+        if ($tabular !== null && ! empty($tabular['categories'])) {
+            return [
+                'type' => 'structured',
+                'categories' => $tabular['categories'],
+                'text' => $this->rowsToText($rows),
+            ];
+        }
+
+        return [
+            'type' => 'text',
+            'text' => $this->rowsToText($rows),
+        ];
+    }
+
+    /**
+     * Convert Excel column letter (e.g. A, B, Z, AA) to zero-based index.
+     */
+    public function colLetterToIndex(string $cellRef): int
+    {
+        preg_match('/^[A-Z]+/i', $cellRef, $matches);
+        if (empty($matches)) {
+            return 0;
+        }
+        $letters = strtoupper($matches[0]);
+        $len = strlen($letters);
+        $idx = 0;
+        for ($i = 0; $i < $len; $i++) {
+            $idx = $idx * 26 + (ord($letters[$i]) - ord('A') + 1);
+        }
+
+        return $idx - 1;
+    }
+
+    /**
+     * Convert rows array to pipe-separated text lines.
+     */
+    public function rowsToText(array $rows): string
+    {
+        $lines = [];
+        foreach ($rows as $row) {
+            $cells = array_filter(array_map('trim', $row), fn ($v) => $v !== '');
+            if (! empty($cells)) {
+                $lines[] = implode(' | ', $cells);
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Normalize header string for resilient matching.
+     */
+    public function normalizeHeader(string $header): string
+    {
+        $str = mb_strtolower(trim($header), 'UTF-8');
+        $str = preg_replace('/[\x{FEFF}\x{200B}-\x{200D}]/u', '', $str);
+
+        return preg_replace('/[\s_\-\.\:\#\(\)\[\]\/\\\'",;]+/u', '', $str);
+    }
+
+    /**
+     * Detect column index mapping from a header row regardless of column order.
+     *
+     * Roles: category, image, regular_price, sale_price, price, description, short_description, name
+     *
+     * @return array<string, int>
+     */
+    public function detectHeaderMap(array $headers): array
+    {
+        $roles = [
+            'name' => [
+                'exact' => [
+                    'name', 'names', 'productname', 'dishname', 'itemname', 'item', 'dish', 'product', 'title', 'label',
+                    'անվանում', 'անվանումը', 'անուն', 'անունը', 'ուտեստ', 'ուտեստիանվանում', 'ապրանք', 'ապրանքիանվանում', 'կերակրատեսակ',
+                    'наименование', 'название', 'названиеблюда', 'названиетовара', 'товар', 'блюдо', 'позиция', 'имя',
+                ],
+                'contains' => ['dishname', 'productname', 'itemname', 'ուտեստ', 'անվան', 'наименов', 'назван', 'name'],
+                'disallowed' => ['file', 'sheet', 'user', 'author', 'company', 'brand', 'customer', 'vendor', 'short', 'parent', 'grouped', 'upsell', 'cross', 'button'],
+            ],
+            'category' => [
+                'exact' => [
+                    'categories', 'category', 'productcategory', 'productcategories', 'cat', 'cats', 'categoryname', 'menusection', 'menucategory',
+                    'ապրանքախումբ', 'ապրանքախումբը', 'կատեգորիա', 'կատեգորիաներ', 'կատեգորիան', 'բաժին', 'բաժիններ', 'խումբ', 'խմբեր', 'դասակարգում',
+                    'категория', 'категории', 'категориятовара', 'раздел', 'разделы', 'группа', 'группы', 'группатоваров',
+                ],
+                'contains' => ['categor', 'կատեգոր', 'ապրանքախումբ', 'категор', 'раздел', 'խումբ', 'բաժին'],
+                'disallowed' => ['type', 'տիպ', 'тип', 'date', 'visibility', 'tax', 'shipping', 'download', 'stock', 'inventory', 'weight', 'height', 'length', 'width', 'tag', 'tags', 'parent', 'sku', 'button', 'status', 'review'],
+            ],
+            'regular_price' => [
+                'exact' => [
+                    'regularprice', 'price', 'prices', 'unitprice', 'sellingprice', 'cost', 'amount', 'rate', 'retailprice',
+                    'գին', 'գինը', 'արժեք', 'արժեքը',
+                    'цена', 'стоимость', 'тариф', 'сумма',
+                ],
+                'contains' => ['regularprice', 'unitprice', 'sellingprice', 'price', 'գին', 'արժեք', 'цена', 'стоим'],
+                'disallowed' => ['date', 'time', 'start', 'starts', 'end', 'ends', 'tax', 'class', 'status', 'range', 'period', 'sale', 'discount', 'special', 'promo', 'զեղչ', 'скидк'],
+            ],
+            'sale_price' => [
+                'exact' => [
+                    'saleprice', 'discountprice', 'specialprice', 'promoprice', 'offerprice',
+                    'զեղչվածգին', 'զեղչգին', 'զեղչիգին', 'զեղչվածարժեք',
+                    'акционнаяцена', 'скидочнаяцена', 'ценасоскидкой',
+                ],
+                'contains' => ['saleprice', 'discountprice', 'specialprice', 'զեղչված', 'акцион'],
+                'disallowed' => ['date', 'time', 'start', 'starts', 'end', 'ends', 'tax', 'class', 'status', 'range', 'period'],
+            ],
+            'description' => [
+                'exact' => [
+                    'description', 'descriptions', 'details', 'ingredients', 'about', 'summary', 'info', 'information',
+                    'նկարագրություն', 'նկարագրությունը', 'նկարագիր', 'բաղադրություն', 'բաղադրիչներ', 'մանրամասներ', 'տեղեկություն',
+                    'описание', 'состав', 'детали', 'ингредиенты', 'информация', 'описаниетовара', 'описаниеблюда',
+                ],
+                'contains' => ['description', 'նկարագր', 'բաղադր', 'описан', 'состав', 'detail', 'ingred'],
+                'disallowed' => ['short', 'brief', 'կարճ', 'հակիրճ', 'кратк'],
+            ],
+            'short_description' => [
+                'exact' => [
+                    'shortdescription', 'shortdesc', 'briefdescription', 'brief',
+                    'կարճնկարագրություն', 'հակիրճնկարագրություն',
+                    'краткоеописание', 'короткоеописание',
+                ],
+                'contains' => ['shortdesc', 'shortdescription', 'կարճնկարագր', 'краткоеопис'],
+                'disallowed' => ['date', 'time', 'tax'],
+            ],
+            'image' => [
+                'exact' => [
+                    'images', 'image', 'img', 'imgs', 'photo', 'photos', 'picture', 'pictures', 'pic', 'pics',
+                    'imageurl', 'imageurls', 'photourl', 'photourls', 'picurl', 'imgurl', 'pictureurl', 'url',
+                    'նկար', 'նկարներ', 'նկարները', 'նկարիհղում', 'պատկեր', 'պատկերներ', 'լուսանկար', 'լուսանկարներ',
+                    'изображение', 'изображения', 'фото', 'фотография', 'фотографии', 'картинка', 'картинки', 'ссылканафото',
+                ],
+                'contains' => ['image', 'photo', 'picture', 'նկար', 'լուսանկար', 'պատկեր', 'фото', 'картинк', 'изображ'],
+                'disallowed' => ['file', 'doc', 'pdf', 'date', 'tax', 'width', 'height'],
+            ],
+        ];
+
+        $normalized = [];
+        foreach ($headers as $colIdx => $raw) {
+            $normalized[$colIdx] = $this->normalizeHeader((string) $raw);
+        }
+
+        $map = [];
+        $used = [];
+
+        // Pass 1: Exact matches respecting disallowed negative keywords
+        foreach ($roles as $role => $cfg) {
+            foreach ($normalized as $colIdx => $norm) {
+                if (isset($used[$colIdx]) || $norm === '') {
+                    continue;
+                }
+
+                $disallowed = false;
+                foreach ($cfg['disallowed'] as $bad) {
+                    if (str_contains($norm, $bad)) {
+                        $disallowed = true;
+                        break;
+                    }
+                }
+                if ($disallowed) {
+                    continue;
+                }
+
+                if (in_array($norm, $cfg['exact'], true)) {
+                    $map[$role] = (int) $colIdx;
+                    $used[$colIdx] = true;
+                    break;
+                }
+            }
+        }
+
+        // Pass 2: Substring matches for remaining roles respecting disallowed keywords
+        foreach ($roles as $role => $cfg) {
+            if (isset($map[$role])) {
+                continue;
+            }
+
+            foreach ($normalized as $colIdx => $norm) {
+                if (isset($used[$colIdx]) || $norm === '') {
+                    continue;
+                }
+
+                $disallowed = false;
+                foreach ($cfg['disallowed'] as $bad) {
+                    if (str_contains($norm, $bad)) {
+                        $disallowed = true;
+                        break;
+                    }
+                }
+                if ($disallowed) {
+                    continue;
+                }
+
+                foreach ($cfg['contains'] as $substr) {
+                    if (str_contains($norm, $substr)) {
+                        $map[$role] = (int) $colIdx;
+                        $used[$colIdx] = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // Set fallback 'price' alias if regular_price is present
+        if (isset($map['regular_price']) && ! isset($map['price'])) {
+            $map['price'] = $map['regular_price'];
+        } elseif (isset($map['sale_price']) && ! isset($map['price'])) {
+            $map['price'] = $map['sale_price'];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Clean and parse price string/float into a clean float value.
+     */
+    public function cleanPrice(mixed $val): float
+    {
+        if (is_numeric($val)) {
+            return (float) $val;
+        }
+
+        $str = trim((string) $val);
+        if ($str === '') {
+            return 0.0;
+        }
+
+        $str = preg_replace('/[^\d.,]/', '', $str);
+        if ($str === '') {
+            return 0.0;
+        }
+
+        if (str_contains($str, ',') && str_contains($str, '.')) {
+            if (strrpos($str, '.') > strrpos($str, ',')) {
+                $str = str_replace(',', '', $str);
+            } else {
+                $str = str_replace('.', '', $str);
+                $str = str_replace(',', '.', $str);
+            }
+        } elseif (str_contains($str, ',')) {
+            $parts = explode(',', $str);
+            if (count($parts) === 2 && strlen($parts[1]) === 3) {
+                $str = str_replace(',', '', $str);
+            } else {
+                $str = str_replace(',', '.', $str);
+            }
+        }
+
+        return (float) $str;
+    }
+
+    /**
+     * Parse 2D tabular rows into categories and dishes by detecting arbitrary header layout.
+     *
+     * @return array{categories: array}|null
+     */
+    public function parseTabularData(array $rows): ?array
+    {
+        if (count($rows) < 2) {
+            return null;
+        }
+
+        $headerRowIndex = null;
+        $headerMap = [];
+
+        // Scan the first 5 rows to locate the header row
+        foreach (array_slice($rows, 0, 5, true) as $rIdx => $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $map = $this->detectHeaderMap($row);
+            if (isset($map['name']) || (isset($map['price']) && (isset($map['category']) || isset($map['image'])))) {
+                $headerRowIndex = $rIdx;
+                $headerMap = $map;
+                break;
+            }
+        }
+
+        if ($headerRowIndex === null || empty($headerMap)) {
+            return null;
+        }
+
+        // If 'name' was not detected but 'price' was, assign first available unmapped column to 'name'
+        if (! isset($headerMap['name'])) {
+            $mappedIndices = array_values($headerMap);
+            $firstRow = $rows[$headerRowIndex];
+            foreach (array_keys($firstRow) as $colIdx) {
+                if (! in_array($colIdx, $mappedIndices, true)) {
+                    $headerMap['name'] = $colIdx;
+                    break;
+                }
+            }
+        }
+
+        if (! isset($headerMap['name'])) {
+            return null;
+        }
+
+        $categoriesMap = [];
+        $dataRows = array_slice($rows, $headerRowIndex + 1);
+        $lastCategoryName = 'General Menu';
+        $hasSeenCategory = false;
+
+        foreach ($dataRows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $name = isset($headerMap['name'], $row[$headerMap['name']]) ? trim((string) $row[$headerMap['name']]) : '';
+            if ($name === '') {
+                continue;
+            }
+
+            // Category resolution with section carry-over
+            if (isset($headerMap['category'], $row[$headerMap['category']])) {
+                $catVal = trim((string) $row[$headerMap['category']]);
+                if ($catVal !== '') {
+                    $lastCategoryName = $catVal;
+                    $hasSeenCategory = true;
+                }
+            }
+
+            $categoryName = $hasSeenCategory ? $lastCategoryName : 'General Menu';
+
+            // Description resolution (main desc fallback to short_desc)
+            $desc = '';
+            if (isset($headerMap['description'], $row[$headerMap['description']])) {
+                $desc = trim((string) $row[$headerMap['description']]);
+            }
+            if ($desc === '' && isset($headerMap['short_description'], $row[$headerMap['short_description']])) {
+                $desc = trim((string) $row[$headerMap['short_description']]);
+            }
+
+            // Price resolution (sale_price > regular_price > price)
+            $price = 0.0;
+            if (isset($headerMap['sale_price'], $row[$headerMap['sale_price']])) {
+                $saleVal = $this->cleanPrice($row[$headerMap['sale_price']]);
+                if ($saleVal > 0) {
+                    $price = $saleVal;
+                }
+            }
+            if ($price <= 0.0 && isset($headerMap['regular_price'], $row[$headerMap['regular_price']])) {
+                $price = $this->cleanPrice($row[$headerMap['regular_price']]);
+            }
+            if ($price <= 0.0 && isset($headerMap['price'], $row[$headerMap['price']])) {
+                $price = $this->cleanPrice($row[$headerMap['price']]);
+            }
+
+            // Image URL resolution (take first valid URL if comma-separated)
+            $image = '';
+            if (isset($headerMap['image'], $row[$headerMap['image']])) {
+                $imgVal = trim((string) $row[$headerMap['image']]);
+                if ($imgVal !== '') {
+                    $imgParts = explode(',', $imgVal);
+                    $image = trim($imgParts[0]);
+                }
+            }
+
+            if (! isset($categoriesMap[$categoryName])) {
+                $categoriesMap[$categoryName] = [
+                    'name' => $categoryName,
+                    'products' => [],
+                ];
+            }
+
+            $categoriesMap[$categoryName]['products'][] = [
+                'name' => $name,
+                'description' => $desc ?: 'Freshly prepared specialty.',
+                'price' => $price,
+                'image' => $image,
+                'dietary_tags' => [],
+                'calories' => rand(250, 750),
+            ];
+        }
+
+        if (empty($categoriesMap)) {
+            return null;
+        }
+
+        return [
+            'categories' => array_values($categoriesMap),
+        ];
+    }
+
+    /**
+     * Extract structured or fallback text from legacy Excel (.xls).
+     */
+    public function extractTabularOrTextFromLegacyXls(string $filePath): array
+    {
+        $text = $this->extractFromLegacyXls($filePath);
+        $lines = explode("\n", $text);
+        $rows = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+            if (str_contains($line, "\t")) {
+                $rows[] = array_map('trim', explode("\t", $line));
+            } elseif (str_contains($line, ' | ')) {
+                $rows[] = array_map('trim', explode(' | ', $line));
+            }
+        }
+
+        if (count($rows) >= 2) {
+            $tabular = $this->parseTabularData($rows);
+            if ($tabular !== null && ! empty($tabular['categories'])) {
+                return [
+                    'type' => 'structured',
+                    'categories' => $tabular['categories'],
+                    'text' => $text,
+                ];
+            }
+        }
+
+        return [
+            'type' => 'text',
+            'text' => $text,
+        ];
     }
 
     /**

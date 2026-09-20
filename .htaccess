@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Enforce HTTPS for menu.elab.am
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Block access to hidden/sensitive files and directories
+    RewriteRule ^(\.env|\.git|storage|bootstrap/cache|artisan|composer\.(json|lock)|package\.(json|lock)|phpunit\.xml) - [F,L,NC]
+
+    # Rewrite all traffic to public directory if document root is set to project root
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

@@ -8,7 +8,9 @@ use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\Vendor;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class MenuManagementService
 {
@@ -169,11 +171,15 @@ class MenuManagementService
             defaultUrl: $product->image ?: Product::DEFAULT_IMAGE
         );
 
-        // If a new image was set and the old image was stored locally, purge the old file
+        // If a new image was set and the old image was stored locally, purge the old file safely
         if ($oldImage && $imageUrl !== $oldImage && ! str_starts_with($oldImage, 'http://') && ! str_starts_with($oldImage, 'https://')) {
-            $oldPath = ltrim(str_replace('/storage/', '', $oldImage), '/');
-            if (! empty($oldPath) && Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
+            try {
+                $oldPath = ltrim(str_replace('/storage/', '', $oldImage), '/');
+                if (! empty($oldPath) && Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to purge old product image: '.$e->getMessage());
             }
         }
 
@@ -326,9 +332,25 @@ class MenuManagementService
     protected function resolveProductImage(?UploadedFile $imageFile, ?string $fallbackUrl, ?string $defaultUrl): ?string
     {
         if ($imageFile && $imageFile->isValid()) {
-            $path = $imageFile->store('products', 'public');
+            try {
+                $targetDir = storage_path('app/public/products');
+                if (! is_dir($targetDir)) {
+                    @mkdir($targetDir, 0775, true);
+                }
 
-            return '/storage/'.$path;
+                $path = $imageFile->store('products', 'public');
+                if ($path) {
+                    return '/storage/'.$path;
+                }
+
+                Log::warning('Product image store() returned false for file: '.$imageFile->getClientOriginalName());
+            } catch (\Throwable $e) {
+                Log::error('Product image upload failed: '.$e->getMessage(), ['exception' => $e]);
+
+                throw ValidationException::withMessages([
+                    'image_file' => 'Նկարի վերբեռնումը ձախողվեց: '.$e->getMessage(),
+                ]);
+            }
         }
 
         if (! empty($fallbackUrl)) {

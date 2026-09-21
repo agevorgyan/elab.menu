@@ -13,6 +13,8 @@ use App\Models\Product;
 use App\Services\MenuManagementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class MenuBuilderController extends Controller
 {
@@ -67,7 +69,15 @@ class MenuBuilderController extends Controller
     {
         $validated = $request->validated();
 
-        $this->menuService->createProduct(Auth::user()->vendor, $validated, $request->file('image_file'));
+        try {
+            $this->menuService->createProduct(Auth::user()->vendor, $validated, $request->file('image_file'));
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Failed to create product dish: '.$e->getMessage(), ['exception' => $e]);
+
+            return back()->withInput()->with('error', 'Սխալ՝ ուտեստը ստեղծելիս: '.$e->getMessage());
+        }
 
         return back()->with('success', 'Product dish created successfully!');
     }
@@ -78,7 +88,15 @@ class MenuBuilderController extends Controller
 
         $validated = $request->validated();
 
-        $this->menuService->updateProduct($product, $validated, $request->file('image_file'));
+        try {
+            $this->menuService->updateProduct($product, $validated, $request->file('image_file'));
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error("Failed to update product {$product->id}: ".$e->getMessage(), ['exception' => $e]);
+
+            return back()->withInput()->with('error', 'Սխալ՝ ուտեստը թարմացնելիս: '.$e->getMessage());
+        }
 
         return back()->with('success', "Dish {$product->name} updated successfully!");
     }

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Category;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 
 class StoreProductRequest extends FormRequest
@@ -35,6 +36,17 @@ class StoreProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $imageRule = extension_loaded('fileinfo')
+            ? ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120']
+            : ['nullable', 'file', 'max:5120', function ($attribute, $value, $fail) {
+                if ($value instanceof UploadedFile) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (! in_array($ext, ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'])) {
+                        $fail('The '.$attribute.' must be a valid image file (jpeg, png, jpg, gif, webp, svg).');
+                    }
+                }
+            }];
+
         return [
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
@@ -51,7 +63,7 @@ class StoreProductRequest extends FormRequest
             'discount_end_time' => 'nullable|date_format:H:i',
             'is_discount_active' => 'nullable|boolean',
             'image' => 'nullable|string',
-            'image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'image_file' => $imageRule,
             'dietary_tags' => 'nullable|array',
             'allergens' => 'nullable|array',
             'calories' => 'nullable|integer',

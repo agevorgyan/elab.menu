@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\ClientStorefrontController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MenuBuilderController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QrStudioController;
@@ -21,14 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // 1. Landing & Client Storefront PWA Routes
-Route::get('/', function (Request $request, TenantContext $tenantContext) {
-    $customDomainVendor = $tenantContext->getTenant();
-    if ($customDomainVendor) {
-        return app(ClientStorefrontController::class)->showMenu($request, $customDomainVendor->slug);
-    }
-
-    return redirect()->route('client.menu', ['vendor_slug' => 'bistro-yerevan']);
-})->name('landing');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 Route::get('/manifest.json', function (TenantContext $tenantContext) {
     $vendor = $tenantContext->getTenant();
@@ -113,6 +107,10 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('/subscriptions', [SuperAdminController::class, 'subscriptionsIndex'])->name('subscriptions.index');
     Route::post('/subscriptions/{vendor}', [SuperAdminController::class, 'updateVendorSubscription'])->name('subscriptions.update');
     Route::post('/subscriptions/{vendor}/payments', [SuperAdminController::class, 'storeVendorPayment'])->name('subscriptions.payments.store');
+
+    // Landing & System Settings Management
+    Route::get('/settings', [SuperAdminController::class, 'settingsIndex'])->name('settings.index');
+    Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
 });
 
 // 4. Vendor Admin Panel (/admin)

@@ -7,6 +7,7 @@ use App\Models\MenuTemplate;
 use App\Models\Order;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Vendor;
 use Carbon\Carbon;
@@ -262,5 +263,37 @@ class SuperAdminController extends Controller
         }
 
         return back()->with('success', 'Վճարման գրանցումը հաջողությամբ պահպանվեց։');
+    }
+
+    public function settingsIndex()
+    {
+        $settings = SystemSetting::getAll();
+
+        return view('superadmin.settings.index', compact('settings'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'contact_phone' => 'required|string|max:50',
+            'contact_whatsapp' => 'nullable|string|max:50',
+            'contact_telegram' => 'nullable|string|max:100',
+            'contact_email' => 'required|email|max:100',
+            'social_facebook' => 'nullable|string|max:255',
+            'social_instagram' => 'nullable|string|max:255',
+            'demo_vendor_slug' => 'nullable|string|max:100',
+            'trial_days' => 'required|integer|min:1|max:90',
+            'hero_title_hy' => 'nullable|string|max:255',
+            'hero_title_en' => 'nullable|string|max:255',
+            'hero_subtitle_hy' => 'nullable|string|max:500',
+            'hero_subtitle_en' => 'nullable|string|max:500',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            $group = str_starts_with($key, 'contact_') ? 'contact' : (str_starts_with($key, 'social_') ? 'social' : 'landing');
+            SystemSetting::set($key, $value, $group);
+        }
+
+        return back()->with('success', 'Համակարգի և լենդինգի կարգավորումները հաջողությամբ պահպանվեցին։');
     }
 }

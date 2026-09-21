@@ -144,15 +144,15 @@
                     <select name="subscription_plan" class="form-select" required>
                         @if(isset($plans) && $plans->count())
                             @foreach($plans as $p)
-                                <option value="{{ $p->slug }}" {{ old('subscription_plan', 'pro') == $p->slug ? 'selected' : '' }}>
+                                <option value="{{ $p->slug }}" {{ old('subscription_plan', request('plan', 'pro')) == $p->slug ? 'selected' : '' }}>
                                     {{ $p->name }} — {{ $p->formatted_price }} (14 օր անվճար)
                                 </option>
                             @endforeach
                         @else
-                            <option value="basic" {{ old('subscription_plan') == 'basic' ? 'selected' : '' }}>Basic — 9 900 AMD / ամիս (14 օր անվճար)</option>
-                            <option value="pro" {{ old('subscription_plan', 'pro') == 'pro' ? 'selected' : '' }}>Pro — 19 900 AMD / ամիս (14 օր անվճար)</option>
-                            <option value="business" {{ old('subscription_plan') == 'business' ? 'selected' : '' }}>Business — 34 900 AMD / ամիս (14 օր անվճար)</option>
-                            <option value="custom" {{ old('subscription_plan') == 'custom' ? 'selected' : '' }}>Custom — Պայմանագրային</option>
+                            <option value="basic" {{ old('subscription_plan', request('plan', 'pro')) == 'basic' ? 'selected' : '' }}>Basic — 9 900 AMD / ամիս (14 օր անվճար)</option>
+                            <option value="pro" {{ old('subscription_plan', request('plan', 'pro')) == 'pro' ? 'selected' : '' }}>Pro — 19 900 AMD / ամիս (14 օր անվճար)</option>
+                            <option value="business" {{ old('subscription_plan', request('plan', 'pro')) == 'business' ? 'selected' : '' }}>Business — 34 900 AMD / ամիս (14 օր անվճար)</option>
+                            <option value="custom" {{ old('subscription_plan', request('plan', 'pro')) == 'custom' ? 'selected' : '' }}>Custom — Պայմանագրային</option>
                         @endif
                     </select>
                 </div>

@@ -761,6 +761,9 @@
                 <a href="{{ route('superadmin.subscriptions.index') }}" class="nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-credit-card" style="color: #ec4899;"></i> <span>{{ __('Vendor Subscriptions') }}</span>
                 </a>
+                <a href="{{ route('superadmin.settings.index') }}" class="nav-item {{ request()->routeIs('superadmin.settings.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-sliders" style="color: #06b6d4;"></i> <span>{{ __('Settings & Landing') }}</span>
+                </a>
             @else
                 @php $v = Auth::user()?->vendor; @endphp
                 

@@ -419,6 +419,11 @@
                     </label>
 
                     <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                        <input type="checkbox" name="allow_whatsapp_orders" value="1" {{ old('allow_whatsapp_orders', $vendor->allow_whatsapp_orders ?? true) ? 'checked' : '' }}>
+                        <span style="font-weight: 600; color: #22c55e;"><i class="fa-brands fa-whatsapp"></i> WhatsApp Կոճակն Ակտիվ է</span>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
                         <input type="checkbox" name="service_fee_enabled" value="1" {{ old('service_fee_enabled', $vendor->service_fee_enabled) ? 'checked' : '' }}>
                         <span style="font-weight: 600;">Սպասարկման Վճար (Service Fee)</span>
                     </label>

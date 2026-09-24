@@ -35,9 +35,13 @@ class ClientStorefrontController extends Controller
             $location = $vendor->locations->first();
         }
 
-        $lang = $request->get('lang') ?? session('app_locale', 'hy');
-        if (! in_array($lang, ['hy', 'en', 'ru'])) {
-            $lang = 'hy';
+        $supportedLanguages = $vendor->getSupportedLanguages();
+        $allowedCodes = array_map(fn ($l) => strtolower($l['code'] ?? ''), $supportedLanguages);
+        $defaultCode = $allowedCodes[0] ?? 'hy';
+
+        $lang = strtolower((string) ($request->get('lang') ?? session('app_locale', $defaultCode)));
+        if (! in_array($lang, $allowedCodes) && ! in_array($lang, ['hy', 'en', 'ru', 'fr', 'de', 'es', 'it', 'ge', 'ar'])) {
+            $lang = $defaultCode;
         }
         session(['app_locale' => $lang, 'locale' => $lang]);
         App::setLocale($lang);

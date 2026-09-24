@@ -340,6 +340,7 @@ class SuperAdminController extends Controller
             'delivery_min_amount' => 'nullable|numeric|min:0',
             'takeaway_enabled' => 'nullable|boolean',
             'takeaway_min_amount' => 'nullable|numeric|min:0',
+            'allow_whatsapp_orders' => 'nullable|boolean',
         ]);
 
         if (! empty($validated['custom_domain'])) {
@@ -354,6 +355,7 @@ class SuperAdminController extends Controller
         $validated['service_fee_enabled'] = $request->boolean('service_fee_enabled');
         $validated['delivery_enabled'] = $request->boolean('delivery_enabled');
         $validated['takeaway_enabled'] = $request->boolean('takeaway_enabled');
+        $validated['allow_whatsapp_orders'] = $request->boolean('allow_whatsapp_orders');
 
         if (! empty($validated['subscription_plan_id'])) {
             $plan = SubscriptionPlan::find($validated['subscription_plan_id']);

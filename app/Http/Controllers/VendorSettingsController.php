@@ -50,6 +50,7 @@ class VendorSettingsController extends Controller
             'wifi_ssid' => 'nullable|string|max:100',
             'wifi_password' => 'nullable|string|max:100',
             'working_hours' => 'nullable|string|max:255',
+            'allow_whatsapp_orders' => 'nullable|boolean',
 
             // Legal & Vendor Details (SuperAdmin)
             'legal_name' => 'nullable|string|max:255',
@@ -94,6 +95,7 @@ class VendorSettingsController extends Controller
         $validated['takeaway_enabled'] = $request->boolean('takeaway_enabled');
         $validated['featured_dish_enabled'] = $request->boolean('featured_dish_enabled');
         $validated['ai_waiter_enabled'] = $request->boolean('ai_waiter_enabled');
+        $validated['allow_whatsapp_orders'] = $request->boolean('allow_whatsapp_orders');
 
         $vendorUpdate = [
             'service_fee_enabled' => $validated['service_fee_enabled'],
@@ -110,6 +112,7 @@ class VendorSettingsController extends Controller
             'featured_dish_badge' => $validated['featured_dish_badge'] ?? null,
             'featured_dish_subtitle' => $validated['featured_dish_subtitle'] ?? null,
             'ai_waiter_enabled' => $validated['ai_waiter_enabled'],
+            'allow_whatsapp_orders' => $validated['allow_whatsapp_orders'],
         ];
 
         if (array_key_exists('ai_waiter_name', $validated)) {
@@ -248,6 +251,7 @@ class VendorSettingsController extends Controller
             if (array_key_exists('working_hours', $validated)) {
                 $locationUpdate['working_hours'] = $validated['working_hours'];
             }
+            $locationUpdate['allow_whatsapp_orders'] = $validated['allow_whatsapp_orders'];
 
             if (! empty($locationUpdate)) {
                 $location->update($locationUpdate);

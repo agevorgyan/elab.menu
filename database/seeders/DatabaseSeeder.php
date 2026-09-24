@@ -55,6 +55,15 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        $t4 = MenuTemplate::create([
+            'name' => 'Minimalist Scandinavian Light',
+            'slug' => 'minimalist-light',
+            'preview_image' => 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80',
+            'description' => 'Clean, airy minimalist aesthetics with soft light palettes, refined typography, and elegant spacious dish presentations.',
+            'default_config' => ['primary' => '#0f172a', 'bg' => '#fbfbfa', 'card' => '#ffffff'],
+            'is_active' => true,
+        ]);
+
         // 2. EU Allergens
         $allergensData = [
             ['code' => 'gluten', 'name' => 'Gluten', 'hy' => 'Գլյուտեն', 'en' => 'Gluten', 'ru' => 'Глютен', 'icon' => '🌾'],

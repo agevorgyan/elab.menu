@@ -1,3 +1,24 @@
+@php
+    $allCatalogProducts = ($categories ?? collect())->flatMap(function($cat) use ($lang, $location) {
+        return $cat->products->map(function($prod) use ($cat, $lang, $location) {
+            return [
+                'id' => $prod->id,
+                'category_id' => $cat->id,
+                'category_name' => mb_strtolower($cat->name),
+                'name' => $prod->getTranslatedName($lang),
+                'name_lower' => mb_strtolower($prod->name . ' ' . $prod->getTranslatedName($lang)),
+                'description' => $prod->getTranslatedDescription($lang),
+                'price' => (float) $prod->getEffectivePrice($location?->id),
+                'image' => $prod->image,
+                'variations' => $prod->variations->map(fn($v) => [
+                    'id' => $v->id,
+                    'name' => $v->name,
+                    'price' => (float)$v->price
+                ])->toArray(),
+            ];
+        });
+    })->values()->toArray();
+@endphp
 <script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('{{ route("client.sw", ["vendor_slug" => $vendor->slug]) }}');
@@ -5,6 +26,7 @@
 
     function createStorefrontApp(customConfig = {}) {
         return {
+            catalogProducts: @json($allCatalogProducts),
             activeCat: customConfig.activeCat || 'cat-{{ $categories->first()?->id ?? 1 }}',
             search: '',
             cart: [],
@@ -267,6 +289,133 @@
 
             get cartFinalTotal() {
                 return this.cartSubtotal + this.calculatedServiceFee + this.calculatedDeliveryFee;
+            },
+
+            get cartRecommendations() {
+                if (!this.cart || this.cart.length === 0 || !this.catalogProducts || this.catalogProducts.length === 0) {
+                    return [];
+                }
+
+                // IDs already in cart
+                const inCartIds = new Set(this.cart.map(item => Number(item.product_id)));
+
+                // Lowercase concatenated string of all items in cart
+                const cartText = this.cart.map(i => (i.name || '').toLowerCase()).join(' ');
+
+                // Detection flags
+                const hasFriesOrPotato = /fri|fries|ֆրի|картоф|potato|chips|տապակած/.test(cartText);
+                const hasBurgerOrPizza = /burger|բուրգեր|бургер|pizza|պիցցա|пицца|sandwich|սենդվիչ|shawarma|շաուրմա|wrap|hotdog|նրբերշիկ/.test(cartText);
+                const hasCoffeeOrTea = /coffee|սուրճ|кофе|tea|թեյ|чай|espresso|էսպրեսո|cappuccino|կապուչինո|latte|լատե/.test(cartText);
+                const hasMeatOrSteak = /steak|սթեյք|стейк|kebab|քյաբաբ|խորոված|шашлык|meat|միս|beef|տավար|chicken|հավ|pork|խոզ/.test(cartText);
+                const hasDrinks = /cola|կոլա|pepsi|պեպսի|fanta|ֆանտա|sprite|սպրայտ|juice|հյութ|сок|water|ջուր|вода|beer|գարեջուր|пиво|wine|գինի|вино|lemonade|լիմոնադ|կոկտեյլ|cocktail/.test(cartText);
+                const hasSauce = /ketchup|կետչուպ|кетчуп|sauce|սոուս|соус|mayo|մայոնեզ|barbecue|bbq|garlic|սխտոր|dip|դիպ/.test(cartText);
+
+                const recommendations = [];
+                const addedRecIds = new Set();
+
+                // Helper to find catalog items matching regex
+                const findCandidates = (regex, reasonText, maxCount = 2) => {
+                    let count = 0;
+                    for (const prod of this.catalogProducts) {
+                        if (inCartIds.has(Number(prod.id)) || addedRecIds.has(Number(prod.id))) continue;
+                        const matchText = (prod.name_lower || '') + ' ' + (prod.category_name || '');
+                        if (regex.test(matchText)) {
+                            recommendations.push({
+                                ...prod,
+                                reason: reasonText
+                            });
+                            addedRecIds.add(Number(prod.id));
+                            count++;
+                            if (count >= maxCount) break;
+                        }
+                    }
+                };
+
+                // Rule 1: French Fries / Potato -> Ketchup, Sauces, Mayo, Cheesy dip
+                if (hasFriesOrPotato && !hasSauce) {
+                    findCandidates(
+                        /ketchup|կետչուպ|кетчуп|sauce|սոուս|соус|mayo|մայոնեզ|bbq|barbecue|cheese|պանրային|սխտոր|garlic/i,
+                        '🍟 {{ __("Կատարյալ սոուս ֆրիի հետ") }}',
+                        2
+                    );
+                }
+
+                // Rule 2: Fast food / Mains -> Cold Drinks (Cola, Lemonade, Beer)
+                if ((hasFriesOrPotato || hasBurgerOrPizza || hasMeatOrSteak) && !hasDrinks) {
+                    findCandidates(
+                        /cola|կոլա|pepsi|լիմոնադ|lemonade|beer|գարեջուր|пиво|drink|ըմպելիք|juice|հյութ/i,
+                        '🥤 {{ __("Համեղ զովացուցիչ ըմպելիք") }}',
+                        2
+                    );
+                }
+
+                // Rule 3: Burger / Pizza without Fries -> French Fries / Onion rings
+                if (hasBurgerOrPizza && !hasFriesOrPotato) {
+                    findCandidates(
+                        /fri|fries|ֆրի|картоф|potato|rings|օղակներ|snack/i,
+                        '🍟 {{ __("Հաճախ պատվիրում են բուրգերի հետ") }}',
+                        2
+                    );
+                }
+
+                // Rule 4: Coffee / Tea -> Croissant, Cake, Pastry, Dessert
+                if (hasCoffeeOrTea) {
+                    findCandidates(
+                        /croissant|կրուասան|cookie|թխվածք|cake|տորթ|cheesecake|չիզքեյք|dessert|աղանդեր|բրաունի|brownie/i,
+                        '☕ {{ __("Քաղցր համադրություն սուրճի հետ") }}',
+                        2
+                    );
+                }
+
+                // Rule 5: Meat / Steak -> Sauce or Grilled vegetables or Wine
+                if (hasMeatOrSteak) {
+                    findCandidates(
+                        /sauce|սոուս|соус|vegetable|բանջարեղեն|wine|գինի|гриль|grill/i,
+                        '🥩 {{ __("Հիանալի լրացում մսային ուտեստին") }}',
+                        2
+                    );
+                }
+
+                // Rule 6: General complementary items if list has space (Sauces, popular snacks or drinks)
+                if (recommendations.length < 3) {
+                    findCandidates(
+                        /sauce|սոուս|соус|կետչուպ|ketchup|լիմոնադ|lemonade|juice|հյութ|cola|կոլա|dessert|աղանդեր/i,
+                        '✨ {{ __("Հաճախորդների սիրելի ընտրություն") }}',
+                        4 - recommendations.length
+                    );
+                }
+
+                // Rule 7: Fallback to any available catalog products not in cart
+                if (recommendations.length < 2) {
+                    for (const prod of this.catalogProducts) {
+                        if (inCartIds.has(Number(prod.id)) || addedRecIds.has(Number(prod.id))) continue;
+                        recommendations.push({
+                            ...prod,
+                            reason: '✨ {{ __("Առաջարկվող համեղ հավելում") }}'
+                        });
+                        addedRecIds.add(Number(prod.id));
+                        if (recommendations.length >= 4) break;
+                    }
+                }
+
+                return recommendations.slice(0, 5);
+            },
+
+            quickAddRec(rec) {
+                if (!rec.variations || rec.variations.length <= 1) {
+                    const v = (rec.variations && rec.variations.length === 1) ? rec.variations[0] : null;
+                    this.addToCart(
+                        rec.id,
+                        rec.name,
+                        v ? Number(v.price) : Number(rec.price),
+                        v ? v.name : 'Standard',
+                        v ? v.id : null,
+                        1
+                    );
+                } else {
+                    this.selectDish(rec);
+                }
+                this.triggerToast('✨ ' + rec.name + ' {{ __("ավելացվեց զամբյուղում") }}', 'success', 'fa-solid fa-cart-plus');
             },
 
             async submitOrder(channel) {

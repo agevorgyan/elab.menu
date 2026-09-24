@@ -122,9 +122,15 @@
 
                     <!-- WhatsApp -->
                     <div class="form-group">
-                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            WhatsApp
-                        </label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin: 0;">
+                                WhatsApp
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" name="allow_whatsapp_orders" value="1" {{ old('allow_whatsapp_orders', ($location?->allow_whatsapp_orders ?? $vendor->allow_whatsapp_orders ?? true)) ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: #22c55e; cursor: pointer;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">{{ __('Կոճակն Ակտիվ է') }}</span>
+                            </label>
+                        </div>
                         <div style="position: relative; display: flex; align-items: center;">
                             <input type="text" name="whatsapp_number" value="{{ old('whatsapp_number', $location?->whatsapp_number ?? $vendor->phone) }}" class="form-control" placeholder="+374 91 123456" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: #25d366; font-size: 1.1rem;">
@@ -132,7 +138,7 @@
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Այս համարին կուղարկվեն WhatsApp պատվերները') }}
+                            {{ __('Այս համարին կուղարկվեն WhatsApp պատվերները (անջատելու դեպքում կոճակը չի երևա զամբյուղում)') }}
                         </span>
                     </div>
 

@@ -135,7 +135,13 @@ class AiMenuController extends Controller
     public function translateMenu(Request $request)
     {
         $vendor = Auth::user()->vendor;
-        $targetLang = $request->validate(['target_language' => 'required|string|in:hy,en,ru,fr,de,es'])['target_language'];
+        $validated = $request->validate([
+            'target_language' => 'required|string|max:10',
+            'overwrite_existing' => 'nullable',
+        ]);
+
+        $targetLang = strtolower(trim($validated['target_language']));
+        $overwrite = $request->boolean('overwrite_existing', false);
 
         // Allow sufficient execution time for LLM multi-batch translation
         @set_time_limit(300);
@@ -143,7 +149,7 @@ class AiMenuController extends Controller
 
         try {
             // Execute synchronously so that menu items, categories, and descriptions are translated immediately
-            TranslateMenuJob::dispatchSync($vendor->id, $targetLang);
+            TranslateMenuJob::dispatchSync($vendor->id, $targetLang, $overwrite);
 
             $langLabels = [
                 'hy' => '🇦🇲 Հայերեն',
@@ -152,6 +158,10 @@ class AiMenuController extends Controller
                 'fr' => '🇫🇷 Français',
                 'de' => '🇩🇪 Deutsch',
                 'es' => '🇪🇸 Español',
+                'it' => '🇮🇹 Italiano',
+                'ge' => '🇬🇪 ქართული',
+                'ar' => '🇦🇪 العربية',
+                'fa' => '🇮🇷 فارسی',
             ];
             $selectedLabel = $langLabels[$targetLang] ?? strtoupper($targetLang);
 
@@ -161,5 +171,75 @@ class AiMenuController extends Controller
 
             return back()->with('error', 'Թարգմանության ընթացքում առաջացավ խնդիր: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Add or update a supported language for this partner.
+     */
+    public function saveLanguage(Request $request)
+    {
+        $vendor = Auth::user()->vendor;
+        $validated = $request->validate([
+            'code' => 'required|string|regex:/^[a-zA-Z]{2,5}$/|max:5',
+            'name' => 'required|string|max:50',
+            'flag' => 'nullable|string|max:10',
+            'original_code' => 'nullable|string|max:5',
+        ]);
+
+        $code = strtolower(trim($validated['code']));
+        $name = trim($validated['name']);
+        $flag = trim($validated['flag'] ?? '');
+        if (empty($flag)) {
+            $flag = '🌐';
+        }
+
+        $languages = $vendor->getSupportedLanguages();
+        $originalCode = ! empty($validated['original_code']) ? strtolower(trim($validated['original_code'])) : null;
+
+        $updated = false;
+        $newLanguages = [];
+
+        foreach ($languages as $lang) {
+            $lCode = strtolower($lang['code'] ?? '');
+            if ($originalCode && $lCode === $originalCode) {
+                $newLanguages[] = ['code' => $code, 'name' => $name, 'flag' => $flag];
+                $updated = true;
+            } elseif (! $originalCode && $lCode === $code) {
+                $newLanguages[] = ['code' => $code, 'name' => $name, 'flag' => $flag];
+                $updated = true;
+            } else {
+                $newLanguages[] = $lang;
+            }
+        }
+
+        if (! $updated) {
+            $newLanguages[] = ['code' => $code, 'name' => $name, 'flag' => $flag];
+        }
+
+        $vendor->update(['supported_languages' => $newLanguages]);
+
+        return back()->with('success', 'Լեզվի կարգավորումները հաջողությամբ պահպանվեցին:');
+    }
+
+    /**
+     * Remove a supported language for this partner.
+     */
+    public function deleteLanguage(string $code)
+    {
+        $vendor = Auth::user()->vendor;
+        $languages = $vendor->getSupportedLanguages();
+        $targetCode = strtolower(trim($code));
+
+        if (count($languages) <= 1) {
+            return back()->with('error', 'Հնարավոր չէ հեռացնել վերջին ակտիվ լեզուն:');
+        }
+
+        $newLanguages = array_values(array_filter($languages, function ($lang) use ($targetCode) {
+            return strtolower($lang['code'] ?? '') !== $targetCode;
+        }));
+
+        $vendor->update(['supported_languages' => $newLanguages]);
+
+        return back()->with('success', 'Լեզուն հաջողությամբ հեռացվեց:');
     }
 }

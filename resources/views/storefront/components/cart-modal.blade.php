@@ -147,6 +147,56 @@
                     </div>
                 </div>
 
+                <!-- AI Smart Recommendations / Cross-Selling & Up-Selling -->
+                <template x-if="cartRecommendations && cartRecommendations.length > 0">
+                    <div class="cart-ai-recs-container">
+                        <div class="cart-ai-recs-header">
+                            <div class="cart-ai-recs-title-wrap">
+                                <span class="cart-ai-recs-badge">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI Pairings
+                                </span>
+                                <span class="cart-ai-recs-title">{{ __('Հաճախ պատվիրում են միասին') }}</span>
+                            </div>
+                            <span class="cart-ai-recs-subtitle">{{ __('Կատարյալ համադրություններ Ձեր զամբյուղի հետ') }}</span>
+                        </div>
+
+                        <div class="cart-ai-recs-scroll">
+                            <template x-for="rec in cartRecommendations" :key="rec.id">
+                                <div class="cart-ai-rec-card">
+                                    <template x-if="rec.image">
+                                        <img :src="rec.image" :alt="rec.name" class="cart-ai-rec-img" loading="lazy">
+                                    </template>
+                                    <template x-if="!rec.image">
+                                        <div class="cart-ai-rec-img-placeholder">
+                                            <i class="fa-solid fa-utensils"></i>
+                                        </div>
+                                    </template>
+
+                                    <div class="cart-ai-rec-body">
+                                        <div class="cart-ai-rec-name" x-text="rec.name"></div>
+                                        <div class="cart-ai-rec-reason" x-text="rec.reason"></div>
+
+                                        <div class="cart-ai-rec-foot">
+                                            <div class="cart-ai-rec-price">
+                                                <span x-text="Number(rec.price).toLocaleString()"></span>
+                                                <small style="font-size: 0.72rem; font-weight: 600;">{{ $vendor->currency }}</small>
+                                            </div>
+
+                                            <button type="button" 
+                                                    @click="quickAddRec(rec)" 
+                                                    class="cart-ai-rec-add-btn" 
+                                                    title="{{ __('Ավելացնել') }}">
+                                                <i class="fa-solid fa-plus"></i>
+                                                <span>{{ __('Ավելացնել') }}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
                 <!-- Kitchen Notes Card -->
                 <!-- Order Type Switcher (Dine-In vs Takeaway vs Delivery) -->
                 <div class="cart-type-toggle-wrap" x-show="isTableFixed || takeawayEnabled || deliveryEnabled">
@@ -500,16 +550,18 @@
                     </button>
 
                     <!-- WhatsApp Order Button -->
+                    @if($vendor->hasWhatsAppOrdersEnabled($location ?? null))
                     <button type="button" 
                             @click="submitOrder('whatsapp')" 
                             :disabled="(orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
                             :style="((orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
-                            class="cart-whatsapp-btn">
+                            class="cart-whatsapp-btn cart-whatsapp-order-btn">
                         <i class="fa-brands fa-whatsapp cart-wa-icon"></i>
                         <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
                             ? '{{ __('menu.append_to_active_order_wa') }}'
                             : (orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}'))"></span>
                     </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -517,6 +569,168 @@
 </div>
 
 <style>
+    /* AI Cart Recommendations */
+    .cart-ai-recs-container {
+        margin-top: 1.15rem;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(245, 158, 11, 0.02));
+        border: 1px dashed rgba(245, 158, 11, 0.35);
+        border-radius: 18px;
+        padding: 0.95rem;
+    }
+
+    .cart-ai-recs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .cart-ai-recs-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .cart-ai-recs-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #ffffff;
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .cart-ai-recs-title {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .cart-ai-recs-subtitle {
+        font-size: 0.74rem;
+        color: var(--text-muted);
+    }
+
+    .cart-ai-recs-scroll {
+        display: flex;
+        gap: 0.75rem;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        scrollbar-width: none;
+    }
+
+    .cart-ai-recs-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .cart-ai-rec-card {
+        flex: 0 0 200px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cart-ai-rec-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    .cart-ai-rec-img {
+        width: 100%;
+        height: 95px;
+        object-fit: cover;
+        background: rgba(150, 150, 150, 0.08);
+    }
+
+    .cart-ai-rec-img-placeholder {
+        width: 100%;
+        height: 95px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(150, 150, 150, 0.08);
+        color: var(--text-muted);
+        font-size: 1.5rem;
+    }
+
+    .cart-ai-rec-body {
+        padding: 0.65rem 0.75rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        justify-content: space-between;
+    }
+
+    .cart-ai-rec-name {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--text-main);
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cart-ai-rec-reason {
+        font-size: 0.72rem;
+        color: #d97706;
+        font-weight: 600;
+        margin: 0.2rem 0 0.5rem;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .cart-ai-rec-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+    }
+
+    .cart-ai-rec-price {
+        font-weight: 800;
+        font-size: 0.92rem;
+        color: var(--text-main);
+    }
+
+    .cart-ai-rec-add-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 8px;
+        background: var(--primary);
+        color: #ffffff;
+        border: none;
+        font-size: 0.76rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .cart-ai-rec-add-btn:hover {
+        opacity: 0.9;
+    }
+
+    .cart-ai-rec-add-btn:active {
+        transform: scale(0.94);
+    }
+
     /* Cart Modal Backdrop Overlay */
     .cart-modal-overlay {
         position: fixed;

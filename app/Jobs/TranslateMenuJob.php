@@ -20,7 +20,8 @@ class TranslateMenuJob implements ShouldQueue
      */
     public function __construct(
         public int $vendorId,
-        public string $targetLang
+        public string $targetLang,
+        public bool $overwriteExisting = true
     ) {}
 
     /**
@@ -33,15 +34,27 @@ class TranslateMenuJob implements ShouldQueue
 
             $itemsToTranslate = [];
             foreach ($categories as $cat) {
-                $itemsToTranslate["cat_{$cat->id}"] = $cat->name;
+                $cTrans = $cat->name_translations ?? [];
+                if ($this->overwriteExisting || empty($cTrans[$this->targetLang])) {
+                    $itemsToTranslate["cat_{$cat->id}"] = $cat->name;
+                }
                 foreach ($cat->products as $prod) {
-                    $itemsToTranslate["prod_name_{$prod->id}"] = $prod->name;
+                    $pNameTrans = $prod->name_translations ?? [];
+                    if ($this->overwriteExisting || empty($pNameTrans[$this->targetLang])) {
+                        $itemsToTranslate["prod_name_{$prod->id}"] = $prod->name;
+                    }
                     if (! empty($prod->description)) {
-                        $itemsToTranslate["prod_desc_{$prod->id}"] = $prod->description;
+                        $pDescTrans = $prod->description_translations ?? [];
+                        if ($this->overwriteExisting || empty($pDescTrans[$this->targetLang])) {
+                            $itemsToTranslate["prod_desc_{$prod->id}"] = $prod->description;
+                        }
                     }
                     foreach ($prod->variations as $var) {
                         if (! empty($var->name) && ! in_array($var->name, ['Standard', 'Standard Portion'])) {
-                            $itemsToTranslate["var_name_{$var->id}"] = $var->name;
+                            $vTrans = $var->name_translations ?? [];
+                            if ($this->overwriteExisting || empty($vTrans[$this->targetLang])) {
+                                $itemsToTranslate["var_name_{$var->id}"] = $var->name;
+                            }
                         }
                     }
                 }

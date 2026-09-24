@@ -12,6 +12,7 @@ class Vendor extends Model
     protected $attributes = [
         'takeaway_enabled' => true,
         'delivery_enabled' => true,
+        'allow_whatsapp_orders' => true,
     ];
 
     protected $fillable = [
@@ -36,6 +37,8 @@ class Vendor extends Model
         'email',
         'currency',
         'custom_domain',
+        'allow_whatsapp_orders',
+        'supported_languages',
         'menu_template_id',
         'primary_color',
         'secondary_color',
@@ -92,6 +95,8 @@ class Vendor extends Model
         'ai_waiter_enabled' => 'boolean',
         'ai_waiter_featured_product_ids' => 'array',
         'ai_settings' => 'array',
+        'allow_whatsapp_orders' => 'boolean',
+        'supported_languages' => 'array',
     ];
 
     /**
@@ -375,5 +380,37 @@ class Vendor extends Model
         }
 
         return route('admin.dashboard');
+    }
+
+    /**
+     * Get configured supported languages for this vendor.
+     */
+    public function getSupportedLanguages(): array
+    {
+        if (! empty($this->supported_languages) && is_array($this->supported_languages)) {
+            return $this->supported_languages;
+        }
+
+        return [
+            ['code' => 'hy', 'name' => 'Հայերեն', 'flag' => '🇦🇲'],
+            ['code' => 'en', 'name' => 'English', 'flag' => '🇬🇧'],
+            ['code' => 'ru', 'name' => 'Русский', 'flag' => '🇷🇺'],
+        ];
+    }
+
+    /**
+     * Check if WhatsApp order button is enabled for this vendor.
+     */
+    public function hasWhatsAppOrdersEnabled(?Location $location = null): bool
+    {
+        if ($this->allow_whatsapp_orders === false) {
+            return false;
+        }
+
+        if ($location && $location->allow_whatsapp_orders === false) {
+            return false;
+        }
+
+        return true;
     }
 }

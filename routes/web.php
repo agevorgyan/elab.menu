@@ -181,6 +181,8 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     Route::post('/ai/import/process', [AiMenuController::class, 'processImport'])->name('ai.import.process');
     Route::post('/ai/import/confirm', [AiMenuController::class, 'confirmImport'])->name('ai.import.confirm');
     Route::post('/ai/translate', [AiMenuController::class, 'translateMenu'])->name('ai.translate');
+    Route::post('/ai/languages', [AiMenuController::class, 'saveLanguage'])->name('ai.languages.save');
+    Route::delete('/ai/languages/{code}', [AiMenuController::class, 'deleteLanguage'])->name('ai.languages.destroy');
 
     // Live Orders & Kitchen Panel (Pro / Business Plan Feature)
     Route::middleware([EnsurePlanHasFeature::class.':orders'])->group(function () {

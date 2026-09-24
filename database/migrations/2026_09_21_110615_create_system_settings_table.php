@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -32,7 +33,7 @@ return new class extends Migration
         ];
 
         foreach ($defaults as $setting) {
-            \Illuminate\Support\Facades\DB::table('system_settings')->insert(array_merge($setting, [
+            DB::table('system_settings')->insert(array_merge($setting, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

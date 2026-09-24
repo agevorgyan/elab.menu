@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +30,43 @@ class AuthController extends Controller
         }
 
         return view('auth.login', compact('customVendor'));
+    }
+
+    public function showDemoLogin(TenantContext $tenantContext)
+    {
+        $customVendor = $tenantContext->getTenant();
+
+        return view('auth.demo_login', compact('customVendor'));
+    }
+
+    public function demoLogin(Request $request, TenantContext $tenantContext)
+    {
+        $role = $request->input('role', 'owner');
+
+        // Only vendor accounts are permitted for demo; superadmin is strictly excluded
+        $email = match ($role) {
+            'manager' => 'manager@bistro.am',
+            default => 'owner@bistro.am',
+        };
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            $user = User::where('role', 'vendor_owner')->first();
+        }
+
+        if (! $user) {
+            return back()->withErrors([
+                'email' => 'Դեմո օգտատերը չի գտնվել համակարգում։',
+            ]);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $customVendor = $tenantContext->getTenant();
+
+        return $this->redirectUser($user, $customVendor);
     }
 
     public function login(Request $request, TenantContext $tenantContext)

@@ -420,12 +420,16 @@
             scroll-margin-top: 65px;
         }
     </style>
+    @include('storefront.components.desktop-frame-styles')
     {!! $vendor->custom_css ?? '' !!}
 </head>
 <body x-data="createStorefrontApp({
     activeCat: 'cat-{{ $categories->first()?->id ?? 1 }}',
     tableNumber: '{{ !empty($table) ? $table : '' }}'
 })" x-init="initApp()">
+
+    <!-- Storefront Desktop Max-Width App Shell -->
+    <div class="storefront-app-shell">
 
     <!-- Top Header -->
     <header class="header-wrap">
@@ -601,6 +605,7 @@
             </div>
         @endforeach
     </main>
+    </div> <!-- /.storefront-app-shell -->
 
     <!-- Variation Selection Modal -->
     @include('storefront.components.variation-modal')

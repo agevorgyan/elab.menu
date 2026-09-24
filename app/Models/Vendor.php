@@ -46,6 +46,7 @@ class Vendor extends Model
         'text_color',
         'bg_color',
         'theme_mode',
+        'desktop_max_width',
         'custom_css',
         'subscription_plan',
         'subscription_plan_id',
@@ -76,6 +77,10 @@ class Vendor extends Model
         'ai_waiter_welcome_text',
         'ai_waiter_featured_product_ids',
         'ai_settings',
+        'payment_settings',
+        'crm_settings',
+        'thermal_printer_settings',
+        'floor_plan_data',
     ];
 
     protected $casts = [
@@ -95,6 +100,10 @@ class Vendor extends Model
         'ai_waiter_enabled' => 'boolean',
         'ai_waiter_featured_product_ids' => 'array',
         'ai_settings' => 'array',
+        'payment_settings' => 'array',
+        'crm_settings' => 'array',
+        'thermal_printer_settings' => 'array',
+        'floor_plan_data' => 'array',
         'allow_whatsapp_orders' => 'boolean',
         'supported_languages' => 'array',
     ];
@@ -412,5 +421,184 @@ class Vendor extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Get vendor payment gateways configuration.
+     */
+    public function getPaymentSettings(): array
+    {
+        return array_merge([
+            'cash_enabled' => true,
+            'pos_terminal_enabled' => true,
+            'online_enabled' => true,
+            'default_method' => 'cash',
+            'gateways' => [
+                'idram' => [
+                    'enabled' => false,
+                    'title' => 'Idram Wallet / QR',
+                    'merchant_id' => '',
+                    'secret_key' => '',
+                    'sandbox' => true,
+                ],
+                'telcell' => [
+                    'enabled' => false,
+                    'title' => 'Telcell Wallet',
+                    'shop_id' => '',
+                    'key' => '',
+                    'sandbox' => true,
+                ],
+                'fastshift' => [
+                    'enabled' => false,
+                    'title' => 'FastShift',
+                    'merchant_id' => '',
+                    'api_key' => '',
+                    'sandbox' => true,
+                ],
+                'arca' => [
+                    'enabled' => false,
+                    'title' => 'ArCa / Ameriabank vPOS',
+                    'merchant_id' => '',
+                    'terminal_id' => '',
+                    'sandbox' => true,
+                ],
+                'stripe' => [
+                    'enabled' => false,
+                    'title' => 'Stripe (Cards / Apple Pay)',
+                    'publishable_key' => '',
+                    'secret_key' => '',
+                    'sandbox' => true,
+                ],
+            ],
+        ], $this->payment_settings ?? []);
+    }
+
+    /**
+     * Check if a specific payment gateway is enabled for this vendor.
+     */
+    public function isPaymentMethodEnabled(string $method): bool
+    {
+        $settings = $this->getPaymentSettings();
+
+        if ($method === 'cash') {
+            return (bool) ($settings['cash_enabled'] ?? true);
+        }
+        if ($method === 'pos_terminal') {
+            return (bool) ($settings['pos_terminal_enabled'] ?? true);
+        }
+
+        if (empty($settings['online_enabled'])) {
+            return false;
+        }
+
+        return ! empty($settings['gateways'][$method]['enabled']);
+    }
+
+    /**
+     * Check if at least one online payment method is enabled.
+     */
+    public function hasOnlinePaymentsEnabled(): bool
+    {
+        $settings = $this->getPaymentSettings();
+        if (empty($settings['online_enabled'])) {
+            return false;
+        }
+
+        foreach ($settings['gateways'] ?? [] as $gw) {
+            if (! empty($gw['enabled'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get vendor CRM automation settings (Birthday discounts & SMS).
+     */
+    public function getCrmSettings(): array
+    {
+        return array_merge([
+            'birthday_discount_enabled' => true,
+            'birthday_discount_percent' => 15,
+            'birthday_validity_days' => 3, // ±3 days from birthday
+            'birthday_sms_enabled' => false,
+            'birthday_sms_template' => 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։',
+            'order_ready_sms_enabled' => false,
+            'sms_provider' => 'mobipace', // mobipace, smsam, twilio, log
+            'sms_api_key' => '',
+            'sms_sender_id' => 'QRMENU',
+        ], $this->crm_settings ?? []);
+    }
+
+    /**
+     * Get vendor thermal printer settings.
+     */
+    public function getThermalPrinterSettings(): array
+    {
+        return array_merge([
+            'auto_print_live_orders' => false,
+            'paper_width' => '80mm', // 58mm or 80mm
+            'header_title' => $this->name,
+            'footer_text' => 'Շնորհակալություն այցելության համար!',
+            'print_customer_info' => true,
+            'print_prices' => true,
+            'copies' => 1,
+        ], $this->thermal_printer_settings ?? []);
+    }
+
+    /**
+     * Get visual floor plan tables and halls layout data.
+     */
+    public function getFloorPlanData(): array
+    {
+        if (! empty($this->floor_plan_data) && is_array($this->floor_plan_data)) {
+            return $this->floor_plan_data;
+        }
+
+        // Default layout generator using location table count
+        $halls = [
+            ['id' => 'main', 'name' => 'Գլխավոր Սրահ', 'color' => '#3b82f6'],
+            ['id' => 'terrace', 'name' => 'Տեռաս / Պատշգամբ', 'color' => '#10b981'],
+            ['id' => 'vip', 'name' => 'VIP Սրահ', 'color' => '#f59e0b'],
+        ];
+
+        $location = $this->locations->first();
+        $totalTables = $location?->table_count ?? 12;
+
+        $tables = [];
+        for ($i = 1; $i <= $totalTables; $i++) {
+            $hallId = $i <= 6 ? 'main' : ($i <= 10 ? 'terrace' : 'vip');
+            $tables[] = [
+                'id' => $i,
+                'number' => (string) $i,
+                'hall_id' => $hallId,
+                'capacity' => ($i % 3 === 0) ? 6 : 4,
+                'shape' => ($i % 4 === 0) ? 'round' : 'square',
+                'x' => (($i - 1) % 4) * 140 + 40,
+                'y' => floor(($i - 1) / 4) * 140 + 40,
+            ];
+        }
+
+        return [
+            'halls' => $halls,
+            'tables' => $tables,
+        ];
+    }
+
+    /**
+     * Get maximum desktop container width for digital menu storefront (e.g. 600px).
+     */
+    public function getDesktopMaxWidth(): string
+    {
+        $val = trim((string) ($this->desktop_max_width ?? '600px'));
+        if ($val === '' || $val === '0') {
+            return '600px';
+        }
+        if (is_numeric($val)) {
+            return $val.'px';
+        }
+
+        return $val;
     }
 }

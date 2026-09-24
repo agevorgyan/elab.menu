@@ -42,6 +42,7 @@ class BrandingController extends Controller
             'text_color' => 'nullable|string|max:20',
             'bg_color' => 'nullable|string|max:20',
             'theme_mode' => 'required|string|in:dark,light',
+            'desktop_max_width' => 'nullable|string|max:20',
             'logo' => 'nullable|string',
             'logo_file' => $imageRule,
             'cover_image' => 'nullable|string',

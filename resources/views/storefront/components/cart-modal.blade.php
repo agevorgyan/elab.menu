@@ -406,6 +406,75 @@
                     </template>
                 </div>
 
+                <!-- Payment Method Selection -->
+                @php
+                    $vendorPaymentSettings = $vendor->getPaymentSettings();
+                    $cashEnabled = !empty($vendorPaymentSettings['cash_enabled']);
+                    $posEnabled = !empty($vendorPaymentSettings['pos_terminal_enabled']);
+                    $onlineEnabled = !empty($vendorPaymentSettings['online_enabled']);
+                    $gateways = $vendorPaymentSettings['gateways'] ?? [];
+                @endphp
+
+                <div class="cart-card-group">
+                    <label class="cart-group-label">
+                        <i class="fa-solid fa-credit-card cart-label-icon"></i>
+                        <span>{{ __('menu.payment_method') ?? 'Վճարման Եղանակ' }}</span>
+                    </label>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem;">
+                        @if($cashEnabled)
+                        <div class="payment-method-tile" :style="paymentMethod === 'cash' ? 'border: 2px solid var(--primary); background: rgba(245, 158, 11, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'cash'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                            <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">💵</div>
+                            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">{{ __('Կանխիկ տեղում') }}</div>
+                        </div>
+                        @endif
+
+                        @if($posEnabled)
+                        <div class="payment-method-tile" :style="paymentMethod === 'pos_terminal' ? 'border: 2px solid var(--primary); background: rgba(245, 158, 11, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'pos_terminal'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                            <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">💳</div>
+                            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">{{ __('POS Տերմինալ') }}</div>
+                        </div>
+                        @endif
+
+                        @if($onlineEnabled)
+                            @if(!empty($gateways['idram']['enabled']))
+                            <div class="payment-method-tile" :style="paymentMethod === 'idram' ? 'border: 2px solid #ff6f00; background: rgba(255, 111, 0, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'idram'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🧡</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Idram</div>
+                            </div>
+                            @endif
+
+                            @if(!empty($gateways['telcell']['enabled']))
+                            <div class="payment-method-tile" :style="paymentMethod === 'telcell' ? 'border: 2px solid #e11d48; background: rgba(225, 29, 72, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'telcell'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">💛</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Telcell</div>
+                            </div>
+                            @endif
+
+                            @if(!empty($gateways['fastshift']['enabled']))
+                            <div class="payment-method-tile" :style="paymentMethod === 'fastshift' ? 'border: 2px solid #2563eb; background: rgba(37, 99, 235, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'fastshift'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">⚡</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">FastShift</div>
+                            </div>
+                            @endif
+
+                            @if(!empty($gateways['arca']['enabled']))
+                            <div class="payment-method-tile" :style="paymentMethod === 'arca' ? 'border: 2px solid #059669; background: rgba(5, 150, 105, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'arca'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🏦</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">ArCa / Bank</div>
+                            </div>
+                            @endif
+
+                            @if(!empty($gateways['stripe']['enabled']))
+                            <div class="payment-method-tile" :style="paymentMethod === 'stripe' ? 'border: 2px solid #6366f1; background: rgba(99, 102, 241, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'stripe'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
+                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🌐</div>
+                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Stripe</div>
+                            </div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+
                 <!-- Pricing Breakdown Summary Card -->
                 <div class="cart-summary-card">
                     <div class="cart-summary-row">
@@ -415,6 +484,20 @@
                             <span class="cart-summary-curr">{{ $vendor->currency }}</span>
                         </span>
                     </div>
+
+                    <!-- Birthday Discount Row -->
+                    <template x-if="birthdayDiscountAmount > 0">
+                        <div class="cart-summary-row" style="background: rgba(236, 72, 153, 0.1); padding: 0.4rem 0.6rem; border-radius: 8px; margin: 0.35rem 0;">
+                            <span class="cart-summary-label" style="color: #ec4899; font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+                                <i class="fa-solid fa-cake-candles"></i>
+                                <span>{{ __('menu.birthday_discount') ?? 'Ծննդյան զեղչ' }}</span>
+                            </span>
+                            <span class="cart-summary-val" style="color: #ec4899; font-weight: 800;">
+                                -<span x-text="Number(birthdayDiscountAmount).toLocaleString()"></span>
+                                <span class="cart-summary-curr">{{ $vendor->currency }}</span>
+                            </span>
+                        </div>
+                    </template>
 
                     <!-- Service Fee Row (Dine-in) -->
                     <template x-if="orderType === 'dine_in' && calculatedServiceFee > 0">
@@ -782,7 +865,7 @@
         border-bottom: none;
         border-radius: 28px 28px 0 0;
         width: 100%;
-        max-width: 620px;
+        max-width: var(--desktop-max-width, 600px);
         height: 92vh;
         height: 92dvh;
         display: flex;

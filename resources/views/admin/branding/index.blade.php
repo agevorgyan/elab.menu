@@ -170,10 +170,72 @@
                 </div>
             </div>
 
-            <!-- 4. Brand Logo & Cover Header -->
+            <!-- 4. Desktop Max Width Setting -->
             <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="section-header">
                     <span class="step-num">4</span>
+                    <div>
+                        <h3 class="section-title">Էկրանի Լայնություն Դեսքթոփում (Desktop Frame Width)</h3>
+                        <p class="section-desc">Կարգավորեք մենյուի մաքսիմալ լայնությունը համակարգիչներով (PC/Laptop) բացելիս</p>
+                    </div>
+                </div>
+
+                @php
+                    $currentMaxWidth = $vendor->getDesktopMaxWidth();
+                @endphp
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.65rem;">
+                    <label class="mode-choice-card {{ $currentMaxWidth === '480px' ? 'selected' : '' }}" style="padding: 0.85rem 0.5rem; flex-direction: column; text-align: center; justify-content: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="radio" name="desktop_max_width" value="480px" {{ $currentMaxWidth === '480px' ? 'checked' : '' }} onchange="onDesktopWidthChange('480px')">
+                        <i class="fa-solid fa-mobile-screen" style="font-size: 1.25rem; color: var(--primary);"></i>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">480px</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Կոմպակտ</div>
+                        </div>
+                    </label>
+
+                    <label class="mode-choice-card {{ $currentMaxWidth === '600px' ? 'selected' : '' }}" style="padding: 0.85rem 0.5rem; flex-direction: column; text-align: center; justify-content: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="radio" name="desktop_max_width" value="600px" {{ $currentMaxWidth === '600px' ? 'checked' : '' }} onchange="onDesktopWidthChange('600px')">
+                        <i class="fa-solid fa-tablet-screen-button" style="font-size: 1.25rem; color: #10b981;"></i>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">600px <span style="font-size: 0.6rem; background: #10b981; color: #fff; padding: 0.1rem 0.3rem; border-radius: 4px;">Top</span></div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Ստանդարտ</div>
+                        </div>
+                    </label>
+
+                    <label class="mode-choice-card {{ $currentMaxWidth === '680px' ? 'selected' : '' }}" style="padding: 0.85rem 0.5rem; flex-direction: column; text-align: center; justify-content: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="radio" name="desktop_max_width" value="680px" {{ $currentMaxWidth === '680px' ? 'checked' : '' }} onchange="onDesktopWidthChange('680px')">
+                        <i class="fa-solid fa-tablet" style="font-size: 1.25rem; color: #3b82f6;"></i>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">680px</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Մեծ Mobile</div>
+                        </div>
+                    </label>
+
+                    <label class="mode-choice-card {{ $currentMaxWidth === '768px' ? 'selected' : '' }}" style="padding: 0.85rem 0.5rem; flex-direction: column; text-align: center; justify-content: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="radio" name="desktop_max_width" value="768px" {{ $currentMaxWidth === '768px' ? 'checked' : '' }} onchange="onDesktopWidthChange('768px')">
+                        <i class="fa-solid fa-tablets" style="font-size: 1.25rem; color: #8b5cf6;"></i>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">768px</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Պլանշետ</div>
+                        </div>
+                    </label>
+
+                    <label class="mode-choice-card {{ $currentMaxWidth === '100%' ? 'selected' : '' }}" style="padding: 0.85rem 0.5rem; flex-direction: column; text-align: center; justify-content: center; gap: 0.4rem; cursor: pointer;">
+                        <input type="radio" name="desktop_max_width" value="100%" {{ $currentMaxWidth === '100%' ? 'checked' : '' }} onchange="onDesktopWidthChange('100%')">
+                        <i class="fa-solid fa-expand" style="font-size: 1.25rem; color: #64748b;"></i>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">100%</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Ամբողջական</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 5. Brand Logo & Cover Header -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="section-header">
+                    <span class="step-num">5</span>
                     <div>
                         <h3 class="section-title">Brand Media & Identity</h3>
                         <p class="section-desc">Upload logo and hero cover photo</p>
@@ -220,7 +282,7 @@
             <!-- 5. Custom CSS (Advanced) -->
             <div class="card" style="margin-bottom: 1.75rem;">
                 <div class="section-header">
-                    <span class="step-num">5</span>
+                    <span class="step-num">6</span>
                     <div>
                         <h3 class="section-title">Custom CSS Overrides</h3>
                         <p class="section-desc">Advanced fine-tuning with custom style rules</p>
@@ -252,6 +314,9 @@
                     </button>
                     <button type="button" class="toolbar-btn" id="btnDeviceTablet" onclick="setDeviceWidth('440px', this)" title="Compact / Large Mobile (440px)">
                         <i class="fa-solid fa-tablet-screen-button"></i> 440px
+                    </button>
+                    <button type="button" class="toolbar-btn" id="btnDeviceDesktop" onclick="setDeviceWidth('600px', this)" title="Desktop View (600px)">
+                        <i class="fa-solid fa-desktop"></i> 600px
                     </button>
                 </div>
 
@@ -565,8 +630,8 @@
 
     /* Smartphone Mockup Frame */
     .phone-mockup-frame {
-        width: 100%;
-        max-width: 375px;
+        width: 375px;
+        max-width: 100%;
         height: 720px;
         max-height: 85vh;
         background: #0b0f19;
@@ -733,6 +798,14 @@
         document.querySelectorAll('.template-choice-card').forEach(c => c.classList.remove('selected'));
         radio.closest('.template-choice-card')?.classList.add('selected');
         forceReloadPreview();
+    }
+
+    function onDesktopWidthChange(width) {
+        document.querySelectorAll('input[name="desktop_max_width"]').forEach(i => {
+            const card = i.closest('.mode-choice-card');
+            if (card) card.classList.toggle('selected', i.value === width);
+        });
+        debounceReloadPreview();
     }
 
     // Instant direct style update inside iframe for zero-lag color feedback

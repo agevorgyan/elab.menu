@@ -7,6 +7,7 @@ use App\Models\Location;
 use App\Models\Order;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\PaymentGatewayService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -146,5 +147,44 @@ class VendorAdminController extends Controller
         $allPlans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
 
         return view('admin.subscription.index', compact('vendor', 'allPlans'));
+    }
+
+    /**
+     * Renew or upgrade vendor SaaS subscription via selected payment gateway.
+     */
+    public function renewSubscription(Request $request, PaymentGatewayService $paymentService)
+    {
+        $vendor = Auth::user()->vendor;
+
+        $validated = $request->validate([
+            'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
+            'period_months' => 'required|integer|in:1,3,6,12',
+            'payment_method' => 'required|string|in:idram,telcell,fastshift,arca,stripe,bank_transfer,cash',
+        ]);
+
+        $plan = SubscriptionPlan::findOrFail($validated['subscription_plan_id']);
+
+        $payment = $paymentService->processSubscriptionRenewal(
+            $vendor,
+            $plan,
+            (int) $validated['period_months'],
+            $validated['payment_method']
+        );
+
+        $methodNames = [
+            'idram' => 'Idram Wallet / QR',
+            'telcell' => 'Telcell Wallet',
+            'fastshift' => 'FastShift',
+            'arca' => 'ArCa / Ameriabank vPOS',
+            'stripe' => 'Stripe',
+            'bank_transfer' => 'Բանկային փոխանցում',
+            'cash' => 'Կանխիկ',
+        ];
+        $selectedMethodName = $methodNames[$validated['payment_method']] ?? strtoupper($validated['payment_method']);
+
+        return back()->with(
+            'success',
+            "✨ Շնորհավորում ենք։ Ձեր բաժանորդագրությունը հաջողությամբ երկարաձգվեց {$validated['period_months']} ամսով ({$selectedMethodName})։ Հաշիվ-ապրանքագիր: {$payment->invoice_number}։"
+        );
     }
 }

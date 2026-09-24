@@ -236,32 +236,36 @@
         .toast-remove { border-bottom-color: #ef4444; }
         .toast-remove i { color: #ef4444; font-size: 1.15rem; flex-shrink: 0; }
     </style>
+    @include('storefront.components.desktop-frame-styles')
 </head>
 <body x-data="storefrontApp()" x-init="initScrollSpy()">
 
-    <!-- Toast Notification Feedback -->
-    <div x-show="toast.show" 
-         x-transition:enter="toast-anim-enter"
-         x-transition:enter-start="toast-anim-start"
-         x-transition:enter-end="toast-anim-end"
-         x-transition:leave="toast-anim-leave"
-         x-transition:leave-start="toast-anim-end"
-         x-transition:leave-end="toast-anim-start"
-         class="toast-notification"
-         :class="'toast-' + toast.type"
-         x-cloak>
-        <i :class="toast.icon"></i>
-        <span x-text="toast.message"></span>
-    </div>
+    <!-- Storefront Desktop Max-Width App Shell -->
+    <div class="storefront-app-shell">
 
-    <!-- PWA Install Banner -->
-    <div x-show="showPWA" style="background: var(--primary); color: #ffffff; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
-        <span><i class="fa-solid fa-mobile-screen"></i> Add menu to Home Screen for instant access!</span>
-        <button @click="showPWA = false" style="background: none; border: none; color: inherit; font-weight: 800; cursor: pointer;">✕</button>
-    </div>
+        <!-- Toast Notification Feedback -->
+        <div x-show="toast.show" 
+             x-transition:enter="toast-anim-enter"
+             x-transition:enter-start="toast-anim-start"
+             x-transition:enter-end="toast-anim-end"
+             x-transition:leave="toast-anim-leave"
+             x-transition:leave-start="toast-anim-end"
+             x-transition:leave-end="toast-anim-start"
+             class="toast-notification"
+             :class="'toast-' + toast.type"
+             x-cloak>
+            <i :class="toast.icon"></i>
+            <span x-text="toast.message"></span>
+        </div>
 
-    <!-- Header Cover -->
-    <div class="cover-header" style="background-image: url('{{ $vendor->cover_image ?? 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80' }}');">
+        <!-- PWA Install Banner -->
+        <div x-show="showPWA" style="background: var(--primary); color: #ffffff; padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-mobile-screen"></i> Add menu to Home Screen for instant access!</span>
+            <button @click="showPWA = false" style="background: none; border: none; color: inherit; font-weight: 800; cursor: pointer;">✕</button>
+        </div>
+
+        <!-- Header Cover -->
+        <div class="cover-header" style="background-image: url('{{ $vendor->cover_image ?? 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80' }}');">
         <div class="cover-overlay"></div>
     </div>
 
@@ -407,7 +411,7 @@
             </div>
         @endforeach
     </div>
-
+    </div> <!-- /.storefront-app-shell -->
 
     <!-- Variation Selection Modal -->
     @include('storefront.components.variation-modal')

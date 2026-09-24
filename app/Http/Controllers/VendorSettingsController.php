@@ -72,6 +72,7 @@ class VendorSettingsController extends Controller
             'delivery_fee' => 'required|numeric|min:0',
             'delivery_min_amount' => 'required|numeric|min:0',
             'delivery_free_from' => 'nullable|numeric|min:0',
+            'desktop_max_width' => 'nullable|string|max:20',
 
             // Takeaway
             'takeaway_enabled' => 'nullable|boolean',
@@ -135,6 +136,9 @@ class VendorSettingsController extends Controller
 
         if (! empty($validated['name'])) {
             $vendorUpdate['name'] = $validated['name'];
+        }
+        if (! empty($validated['desktop_max_width'])) {
+            $vendorUpdate['desktop_max_width'] = $validated['desktop_max_width'];
         }
         if (array_key_exists('phone', $validated)) {
             $vendorUpdate['phone'] = $validated['phone'];
@@ -220,6 +224,83 @@ class VendorSettingsController extends Controller
 
                 $vendorUpdate['custom_domain'] = $cleanDomain;
             }
+        }
+
+        // Payment Gateways Settings
+        if ($request->has('payment_settings')) {
+            $inputPayments = $request->input('payment_settings', []);
+            $vendorUpdate['payment_settings'] = [
+                'online_enabled' => ! empty($inputPayments['online_enabled']),
+                'cash_enabled' => ! empty($inputPayments['cash_enabled']),
+                'pos_terminal_enabled' => ! empty($inputPayments['pos_terminal_enabled']),
+                'gateways' => [
+                    'idram' => [
+                        'enabled' => ! empty($inputPayments['gateways']['idram']['enabled']),
+                        'title' => 'Idram',
+                        'merchant_id' => (string) ($inputPayments['gateways']['idram']['merchant_id'] ?? ''),
+                        'secret_key' => (string) ($inputPayments['gateways']['idram']['secret_key'] ?? ''),
+                        'sandbox' => ! empty($inputPayments['gateways']['idram']['sandbox']),
+                    ],
+                    'telcell' => [
+                        'enabled' => ! empty($inputPayments['gateways']['telcell']['enabled']),
+                        'title' => 'Telcell Wallet',
+                        'shop_id' => (string) ($inputPayments['gateways']['telcell']['shop_id'] ?? ''),
+                        'key' => (string) ($inputPayments['gateways']['telcell']['key'] ?? ''),
+                        'sandbox' => ! empty($inputPayments['gateways']['telcell']['sandbox']),
+                    ],
+                    'fastshift' => [
+                        'enabled' => ! empty($inputPayments['gateways']['fastshift']['enabled']),
+                        'title' => 'FastShift',
+                        'merchant_id' => (string) ($inputPayments['gateways']['fastshift']['merchant_id'] ?? ''),
+                        'api_key' => (string) ($inputPayments['gateways']['fastshift']['api_key'] ?? ''),
+                        'sandbox' => ! empty($inputPayments['gateways']['fastshift']['sandbox']),
+                    ],
+                    'arca' => [
+                        'enabled' => ! empty($inputPayments['gateways']['arca']['enabled']),
+                        'title' => 'ArCa / Ameriabank vPOS',
+                        'merchant_id' => (string) ($inputPayments['gateways']['arca']['merchant_id'] ?? ''),
+                        'terminal_id' => (string) ($inputPayments['gateways']['arca']['terminal_id'] ?? ''),
+                        'sandbox' => ! empty($inputPayments['gateways']['arca']['sandbox']),
+                    ],
+                    'stripe' => [
+                        'enabled' => ! empty($inputPayments['gateways']['stripe']['enabled']),
+                        'title' => 'Stripe (Cards / Apple Pay)',
+                        'publishable_key' => (string) ($inputPayments['gateways']['stripe']['publishable_key'] ?? ''),
+                        'secret_key' => (string) ($inputPayments['gateways']['stripe']['secret_key'] ?? ''),
+                        'sandbox' => ! empty($inputPayments['gateways']['stripe']['sandbox']),
+                    ],
+                ],
+            ];
+        }
+
+        // CRM Automation Settings
+        if ($request->has('crm_settings')) {
+            $crmInput = $request->input('crm_settings', []);
+            $vendorUpdate['crm_settings'] = [
+                'birthday_discount_enabled' => ! empty($crmInput['birthday_discount_enabled']),
+                'birthday_discount_percent' => floatval($crmInput['birthday_discount_percent'] ?? 15),
+                'birthday_validity_days' => intval($crmInput['birthday_validity_days'] ?? 3),
+                'birthday_sms_enabled' => ! empty($crmInput['birthday_sms_enabled']),
+                'birthday_sms_template' => (string) ($crmInput['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։'),
+                'order_ready_sms_enabled' => ! empty($crmInput['order_ready_sms_enabled']),
+                'sms_provider' => (string) ($crmInput['sms_provider'] ?? 'mobipace'),
+                'sms_api_key' => (string) ($crmInput['sms_api_key'] ?? ''),
+                'sms_sender_id' => (string) ($crmInput['sms_sender_id'] ?? 'QRMENU'),
+            ];
+        }
+
+        // Thermal Printer Settings
+        if ($request->has('thermal_printer_settings')) {
+            $printerInput = $request->input('thermal_printer_settings', []);
+            $vendorUpdate['thermal_printer_settings'] = [
+                'auto_print_live_orders' => ! empty($printerInput['auto_print_live_orders']),
+                'paper_width' => in_array($printerInput['paper_width'] ?? '', ['58mm', '80mm']) ? $printerInput['paper_width'] : '80mm',
+                'header_title' => (string) ($printerInput['header_title'] ?? $vendor->name),
+                'footer_text' => (string) ($printerInput['footer_text'] ?? 'Շնորհակալություն այցելության համար!'),
+                'print_customer_info' => ! empty($printerInput['print_customer_info']),
+                'print_prices' => ! empty($printerInput['print_prices']),
+                'copies' => max(1, min(5, intval($printerInput['copies'] ?? 1))),
+            ];
         }
 
         $vendor->update($vendorUpdate);

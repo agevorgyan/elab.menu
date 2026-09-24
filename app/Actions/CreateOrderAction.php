@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Vendor;
+use App\Services\CrmAutomationService;
 use App\Services\CustomerSyncService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,8 +23,11 @@ use Illuminate\Validation\ValidationException;
 class CreateOrderAction
 {
     public function __construct(
-        protected CustomerSyncService $customerSyncService
-    ) {}
+        protected CustomerSyncService $customerSyncService,
+        protected ?CrmAutomationService $crmService = null,
+    ) {
+        $this->crmService = $crmService ?? app(CrmAutomationService::class);
+    }
 
     /**
      * Process order submission within a database transaction.
@@ -133,13 +137,17 @@ class CreateOrderAction
 
             // Recalculate totals
             $itemsSubtotal = (float) OrderItem::where('order_id', $order->id)->sum('subtotal');
+            $birthdate = $order->customer_birthdate ?? ($order->customer?->birthdate ? ($order->customer->birthdate instanceof \DateTimeInterface ? $order->customer->birthdate->format('Y-m-d') : (string) $order->customer->birthdate) : null);
+            $birthdayDiscount = $this->crmService->calculateBirthdayDiscount($itemsSubtotal, $birthdate, $vendor);
             $fees = $this->calculateFees($vendor, $itemsSubtotal, $order->type);
+            $finalTotal = max(0, $fees['final_total'] - $birthdayDiscount);
 
             $order->update([
                 'subtotal' => $itemsSubtotal,
+                'birthday_discount_amount' => $birthdayDiscount,
                 'service_fee' => $fees['service_fee'],
                 'delivery_fee' => $fees['delivery_fee'],
-                'total_amount' => $fees['final_total'],
+                'total_amount' => $finalTotal,
                 'notes' => $order->notes,
             ]);
 
@@ -212,6 +220,9 @@ class CreateOrderAction
                 address: $dto->deliveryAddress
             );
 
+            $paymentMethod = $dto->paymentMethod ?: 'cash';
+            $paymentStatus = in_array($paymentMethod, ['cash', 'pos_terminal']) ? 'unpaid' : 'pending';
+
             // Create base order record
             $order = Order::create([
                 'vendor_id' => $vendor->id,
@@ -229,6 +240,9 @@ class CreateOrderAction
                 'customer_birthdate' => $dto->customerBirthdate,
                 'marketing_opt_in' => $dto->marketingOptIn,
                 'notes' => $dto->notes,
+                'payment_method' => $paymentMethod,
+                'payment_status' => $paymentStatus,
+                'birthday_discount_amount' => 0,
             ]);
 
             $totalAmount = 0;
@@ -284,13 +298,17 @@ class CreateOrderAction
                 }
             }
 
+            $effectiveBirthdate = $dto->customerBirthdate ?? ($customer?->birthdate ? ($customer->birthdate instanceof \DateTimeInterface ? $customer->birthdate->format('Y-m-d') : (string) $customer->birthdate) : null);
+            $birthdayDiscount = $this->crmService->calculateBirthdayDiscount($itemsSubtotal, $effectiveBirthdate, $vendor);
             $fees = $this->calculateFees($vendor, $itemsSubtotal, $dto->type);
+            $finalTotal = max(0, $fees['final_total'] - $birthdayDiscount);
 
             $order->update([
                 'subtotal' => $itemsSubtotal,
+                'birthday_discount_amount' => $birthdayDiscount,
                 'service_fee' => $fees['service_fee'],
                 'delivery_fee' => $fees['delivery_fee'],
-                'total_amount' => $fees['final_total'],
+                'total_amount' => $finalTotal,
             ]);
 
             if ($customer) {

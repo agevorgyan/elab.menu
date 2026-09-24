@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Order;
+use App\Services\CrmAutomationService;
 use App\Services\CustomerSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -81,6 +82,8 @@ class CustomerController extends Controller
             $totalRevenue = Customer::where('vendor_id', $vendor->id)->sum('total_spent');
         }
 
+        $upcomingBirthdays = (new CrmAutomationService)->getUpcomingBirthdays($vendor, 14);
+
         return view('admin.customers.index', compact(
             'vendor',
             'locations',
@@ -91,7 +94,8 @@ class CustomerController extends Controller
             'optedInCustomers',
             'totalRevenue',
             'search',
-            'consentFilter'
+            'consentFilter',
+            'upcomingBirthdays'
         ));
     }
 
@@ -240,5 +244,27 @@ class CustomerController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Send personalized birthday discount SMS greeting to customer.
+     */
+    public function sendBirthdayGreeting(Customer $customer, CrmAutomationService $crmService)
+    {
+        $vendor = Auth::user()->vendor;
+        if ($customer->vendor_id !== $vendor->id) {
+            abort(403);
+        }
+
+        if (empty($customer->phone)) {
+            return back()->with('error', 'Հաճախորդի հեռախոսահամարը նշված չէ։');
+        }
+
+        $res = $crmService->sendBirthdayGreeting($customer, $vendor);
+        if ($res['success']) {
+            return back()->with('success', 'Ծննդյան շնորհավորական SMS-ը հաջողությամբ ուղարկվեց '.($customer->name ?? 'հաճախորդին').'։');
+        }
+
+        return back()->with('error', 'SMS-ն ուղարկել չհաջողվեց: '.($res['error'] ?? ''));
     }
 }

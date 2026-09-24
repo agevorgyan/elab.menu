@@ -161,4 +161,29 @@ class StorefrontThemeRenderingTest extends TestCase
             $response->assertSee('/images/default-dish.png', false);
         }
     }
+
+    public function test_desktop_max_width_and_app_shell_renders_for_all_themes(): void
+    {
+        $themes = ['modern-bistro', 'luxury-dark', 'vibrant-glass', 'minimalist-light'];
+        $this->vendor->update(['desktop_max_width' => '600px']);
+
+        foreach ($themes as $themeSlug) {
+            $tmpl = MenuTemplate::firstOrCreate(['slug' => $themeSlug], [
+                'name' => ucfirst(str_replace('-', ' ', $themeSlug)),
+                'is_active' => true,
+            ]);
+            $this->vendor->update(['menu_template_id' => $tmpl->id]);
+
+            $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug]));
+            $response->assertStatus(200);
+            $response->assertSee('storefront-app-shell');
+            $response->assertSee('--desktop-max-width: 600px', false);
+        }
+
+        // Test custom width override
+        $this->vendor->update(['desktop_max_width' => '480px']);
+        $response = $this->get(route('client.menu', ['vendor_slug' => $this->vendor->slug]));
+        $response->assertStatus(200);
+        $response->assertSee('--desktop-max-width: 480px', false);
+    }
 }

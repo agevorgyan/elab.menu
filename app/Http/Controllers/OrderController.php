@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Models\Location;
 use App\Models\Order;
 use App\Models\WaiterCall;
+use App\Services\ThermalPrinterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -142,5 +143,26 @@ class OrderController extends Controller
         }
 
         return back()->with('success', "Սեղան #{$waiterCall->table_number}-ի կանչը նշվեց որպես սպասարկված։");
+    }
+
+    /**
+     * Get ESC/POS formatted receipt text and RawBT URL for thermal printing.
+     */
+    public function receiptText(Order $order, ThermalPrinterService $printerService)
+    {
+        abort_if($order->vendor_id !== auth()->user()->vendor_id, 403);
+        $order->load(['items.product', 'location', 'vendor']);
+
+        $receiptText = $printerService->generateReceiptText($order);
+        $rawBtUrl = $printerService->getRawBtUrl($order);
+
+        return response()->json([
+            'status' => 'success',
+            'success' => true,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'receipt_text' => $receiptText,
+            'rawbt_url' => $rawBtUrl,
+        ]);
     }
 }

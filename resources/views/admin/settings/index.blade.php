@@ -189,6 +189,41 @@
                             {{ __('Օրինակ՝ «Երկ-Կիրակի՝ 10:00 - 23:00»') }}
                         </span>
                     </div>
+
+                    <!-- Desktop Screen Max Width -->
+                    <div class="form-group" style="grid-column: 1 / -1; border-top: 1px dashed var(--border-color); padding-top: 1.25rem; margin-top: 0.5rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-desktop" style="color: var(--primary);"></i> {{ __('Էկրանի Լայնություն Դեսքթոփում (Desktop Frame Max-Width)') }}
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+                            @php
+                                $dWidth = $vendor->getDesktopMaxWidth();
+                            @endphp
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '480px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
+                                <input type="radio" name="desktop_max_width" value="480px" {{ $dWidth === '480px' ? 'checked' : '' }}>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">480px (Կոմպակտ)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '600px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
+                                <input type="radio" name="desktop_max_width" value="600px" {{ $dWidth === '600px' ? 'checked' : '' }}>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">600px (Լավագույն)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '680px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
+                                <input type="radio" name="desktop_max_width" value="680px" {{ $dWidth === '680px' ? 'checked' : '' }}>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">680px (Մեծ Mobile)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '768px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
+                                <input type="radio" name="desktop_max_width" value="768px" {{ $dWidth === '768px' ? 'checked' : '' }}>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">768px (Պլանշետ)</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '100%' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
+                                <input type="radio" name="desktop_max_width" value="100%" {{ $dWidth === '100%' ? 'checked' : '' }}>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">100% (Full Width)</span>
+                            </label>
+                        </div>
+                        <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Համակարգիչներով (Desktop) բացելիս մենյուն չի լղոզվի էկրանով մեկ, այլ կցուցադրվի ընտրված չափի էլեգանտ շրջանակով (կենտրոնացված)։ Լռելյայն՝ 600px:') }}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -845,6 +880,334 @@
                 </div>
             </div>
 
+            @php
+                $paymentSettings = $vendor->getPaymentSettings();
+                $crmSettings = $vendor->getCrmSettings();
+                $printerSettings = $vendor->getThermalPrinterSettings();
+            @endphp
+
+            <!-- 5. ONLINE PAYMENTS & GATEWAYS -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('Վճարային Համակարգեր (Local & International Payments)') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Կառավարեք հաճախորդների կողմից առցանց կամ տեղում վճարելու եղանակները') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <label class="switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                        <input type="checkbox" name="payment_settings[online_enabled]" value="1" {{ !empty($paymentSettings['online_enabled']) ? 'checked' : '' }} id="onlinePaymentsToggle" onchange="toggleOnlinePaymentsFields()">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                    </label>
+                </div>
+
+                <!-- Payment Methods Choice (Cash / Terminal) -->
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem;">
+                        {{ __('Վճարման ընդհանուր մեթոդներ զամբյուղում') }}
+                    </div>
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
+                            <input type="checkbox" name="payment_settings[cash_enabled]" value="1" {{ !empty($paymentSettings['cash_enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span>💵 {{ __('Կանխիկ վճարում տեղում') }}</span>
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
+                            <input type="checkbox" name="payment_settings[pos_terminal_enabled]" value="1" {{ !empty($paymentSettings['pos_terminal_enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <span>💳 {{ __('Տերմինալով (POS) վճարում տեղում') }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="onlineGatewaysContainer" style="{{ empty($paymentSettings['online_enabled']) ? 'opacity: 0.55; pointer-events: none;' : '' }}; transition: all 0.25s ease;">
+                    <div style="font-size: 0.92rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🇦🇲 {{ __('Հայկական Վճարային Համակարգեր') }}</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                        <!-- Idram -->
+                        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main);">
+                                    <span style="background: #ff6f00; color: #fff; width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900;">Id</span>
+                                    <span>Idram</span>
+                                </div>
+                                <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                    <input type="checkbox" name="payment_settings[gateways][idram][enabled]" value="1" {{ !empty($paymentSettings['gateways']['idram']['enabled']) ? 'checked' : '' }}>
+                                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <input type="text" name="payment_settings[gateways][idram][merchant_id]" value="{{ $paymentSettings['gateways']['idram']['merchant_id'] ?? '' }}" placeholder="Receiver / Merchant ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="{{ $paymentSettings['gateways']['idram']['secret_key'] ?? '' }}" placeholder="Secret Key" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
+                                    <input type="checkbox" name="payment_settings[gateways][idram][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['idram']['sandbox']) ? 'checked' : '' }}>
+                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Telcell Wallet -->
+                        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main);">
+                                    <span style="background: #e11d48; color: #fff; width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900;">TC</span>
+                                    <span>Telcell Wallet</span>
+                                </div>
+                                <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                    <input type="checkbox" name="payment_settings[gateways][telcell][enabled]" value="1" {{ !empty($paymentSettings['gateways']['telcell']['enabled']) ? 'checked' : '' }}>
+                                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <input type="text" name="payment_settings[gateways][telcell][shop_id]" value="{{ $paymentSettings['gateways']['telcell']['shop_id'] ?? '' }}" placeholder="Shop ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <input type="password" name="payment_settings[gateways][telcell][key]" value="{{ $paymentSettings['gateways']['telcell']['key'] ?? '' }}" placeholder="Security Key" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
+                                    <input type="checkbox" name="payment_settings[gateways][telcell][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['telcell']['sandbox']) ? 'checked' : '' }}>
+                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- FastShift -->
+                        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main);">
+                                    <span style="background: #2563eb; color: #fff; width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900;">FS</span>
+                                    <span>FastShift</span>
+                                </div>
+                                <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                    <input type="checkbox" name="payment_settings[gateways][fastshift][enabled]" value="1" {{ !empty($paymentSettings['gateways']['fastshift']['enabled']) ? 'checked' : '' }}>
+                                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <input type="text" name="payment_settings[gateways][fastshift][merchant_id]" value="{{ $paymentSettings['gateways']['fastshift']['merchant_id'] ?? '' }}" placeholder="Merchant ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="{{ $paymentSettings['gateways']['fastshift']['api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
+                                    <input type="checkbox" name="payment_settings[gateways][fastshift][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['fastshift']['sandbox']) ? 'checked' : '' }}>
+                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ArCa / Ameriabank vPOS -->
+                        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main);">
+                                    <span style="background: #059669; color: #fff; width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900;">AC</span>
+                                    <span>ArCa / Ameriabank vPOS</span>
+                                </div>
+                                <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                    <input type="checkbox" name="payment_settings[gateways][arca][enabled]" value="1" {{ !empty($paymentSettings['gateways']['arca']['enabled']) ? 'checked' : '' }}>
+                                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <input type="text" name="payment_settings[gateways][arca][merchant_id]" value="{{ $paymentSettings['gateways']['arca']['merchant_id'] ?? '' }}" placeholder="Merchant / Client ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <input type="text" name="payment_settings[gateways][arca][terminal_id]" value="{{ $paymentSettings['gateways']['arca']['terminal_id'] ?? '' }}" placeholder="Terminal ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
+                                    <input type="checkbox" name="payment_settings[gateways][arca][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['arca']['sandbox']) ? 'checked' : '' }}>
+                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.92rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🌍 {{ __('Միջազգային Վճարային Համակարգեր') }}</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.25rem;">
+                        <!-- Stripe -->
+                        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main);">
+                                    <span style="background: #6366f1; color: #fff; width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900;">S</span>
+                                    <span>Stripe (Visa, Mastercard, Apple Pay)</span>
+                                </div>
+                                <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                    <input type="checkbox" name="payment_settings[gateways][stripe][enabled]" value="1" {{ !empty($paymentSettings['gateways']['stripe']['enabled']) ? 'checked' : '' }}>
+                                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                                </label>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <input type="text" name="payment_settings[gateways][stripe][publishable_key]" value="{{ $paymentSettings['gateways']['stripe']['publishable_key'] ?? '' }}" placeholder="Publishable Key (pk_test_...)" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="{{ $paymentSettings['gateways']['stripe']['secret_key'] ?? '' }}" placeholder="Secret Key (sk_test_...)" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
+                                    <input type="checkbox" name="payment_settings[gateways][stripe][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['stripe']['sandbox']) ? 'checked' : '' }}>
+                                    <span>{{ __('Test Mode (pk_test / sk_test)') }}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. ESC/POS THERMAL PRINTERS -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-print"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('ESC/POS Ջերմային Տպիչներ (Kitchen & Bar Printers)') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Պատվերի կտրոնների ավտոմատ տպում խոհանոցի կամ բարի տպիչի վրա Web Bluetooth, RawBT կամ PrintNode միջոցով') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <label class="switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                        <input type="checkbox" name="thermal_printer_settings[auto_print_live_orders]" value="1" {{ !empty($printerSettings['auto_print_live_orders']) ? 'checked' : '' }}>
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Թղթի Լայնություն') }}
+                        </label>
+                        <select name="thermal_printer_settings[paper_width]" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                            <option value="80mm" {{ ($printerSettings['paper_width'] ?? '80mm') === '80mm' ? 'selected' : '' }}>80 մմ (Ստանդարտ ռեստորանային չափ)</option>
+                            <option value="58mm" {{ ($printerSettings['paper_width'] ?? '') === '58mm' ? 'selected' : '' }}>58 մմ (Կոմպակտ չափ)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Տպվող Օրինակների Քանակ') }}
+                        </label>
+                        <input type="number" min="1" max="5" name="thermal_printer_settings[copies]" value="{{ $printerSettings['copies'] ?? 1 }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Կտրոնի Վերնագիր') }}
+                        </label>
+                        <input type="text" name="thermal_printer_settings[header_title]" value="{{ $printerSettings['header_title'] ?? $vendor->name }}" placeholder="Ռեստորանի անուն" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" name="thermal_printer_settings[print_customer_info]" value="1" {{ !empty($printerSettings['print_customer_info']) ? 'checked' : '' }} style="accent-color: var(--primary);">
+                        <span>{{ __('Ներառել հաճախորդի տվյալները (հեռախոս, հասցե)') }}</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" name="thermal_printer_settings[print_prices]" value="1" {{ !empty($printerSettings['print_prices']) ? 'checked' : '' }} style="accent-color: var(--primary);">
+                        <span>{{ __('Տպել գները և ընդհանուր գումարը') }}</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        {{ __('Կտրոնի Ստորոտ (Footer Text)') }}
+                    </label>
+                    <input type="text" name="thermal_printer_settings[footer_text]" value="{{ $printerSettings['footer_text'] ?? 'Շնորհակալություն այցելության համար!' }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px;">
+                </div>
+            </div>
+
+            <!-- 7. CRM AUTOMATION & BIRTHDAY DISCOUNTS -->
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(236, 72, 153, 0.15); color: #ec4899; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-cake-candles"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('CRM Ավտոմատացում & Ծննդյան Օրվա Զեղչեր') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Ծննդյան օրվա ավտոմատ զեղչեր պատվերների ժամանակ և SMS ծանուցումներ (Mobipace, SMS.am, Twilio)') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <label class="switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                        <input type="checkbox" name="crm_settings[birthday_discount_enabled]" value="1" {{ !empty($crmSettings['birthday_discount_enabled']) ? 'checked' : '' }} id="crmBirthdayToggle" onchange="toggleCrmFields()">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                    </label>
+                </div>
+
+                <div id="crmContainer" style="{{ empty($crmSettings['birthday_discount_enabled']) ? 'opacity: 0.55; pointer-events: none;' : '' }}; transition: all 0.25s ease;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Ծննդյան Զեղչի Չափ (%)') }}
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="number" min="0" max="100" step="1" name="crm_settings[birthday_discount_percent]" value="{{ $crmSettings['birthday_discount_percent'] ?? 15 }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.2rem; border-radius: 12px; font-weight: 700; color: #10b981;">
+                                <span style="position: absolute; left: 0.9rem; color: var(--text-muted); font-weight: 700;">%</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Գործողության Ժամկետ (օր)') }}
+                            </label>
+                            <input type="number" min="0" max="30" name="crm_settings[birthday_validity_days]" value="{{ $crmSettings['birthday_validity_days'] ?? 3 }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Զեղչը կգործի ծննդյան օրվանից ± նշված օրերին') }}</span>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('SMS Պրովայդեր') }}
+                            </label>
+                            <select name="crm_settings[sms_provider]" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                                <option value="mobipace" {{ ($crmSettings['sms_provider'] ?? '') === 'mobipace' ? 'selected' : '' }}>Mobipace SMS (Հայաստան)</option>
+                                <option value="smsam" {{ ($crmSettings['sms_provider'] ?? '') === 'smsam' ? 'selected' : '' }}>SMS.am (Հայաստան)</option>
+                                <option value="twilio" {{ ($crmSettings['sms_provider'] ?? '') === 'twilio' ? 'selected' : '' }}>Twilio (International)</option>
+                                <option value="log" {{ ($crmSettings['sms_provider'] ?? '') === 'log' ? 'selected' : '' }}>Log / Թեստային (առանց ուղարկման)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('SMS API Key / Token') }}
+                            </label>
+                            <input type="password" name="crm_settings[sms_api_key]" value="{{ $crmSettings['sms_api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px;">
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('SMS Sender ID (Անվանում)') }}
+                            </label>
+                            <input type="text" name="crm_settings[sms_sender_id]" value="{{ $crmSettings['sms_sender_id'] ?? 'QRMENU' }}" placeholder="Օր․ QRMENU կամ Ռեստորան" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px;">
+                        </div>
+
+                        <div style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
+                            <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+                                <input type="checkbox" name="crm_settings[birthday_sms_enabled]" value="1" {{ !empty($crmSettings['birthday_sms_enabled']) ? 'checked' : '' }} style="accent-color: var(--primary);">
+                                <span>{{ __('Ակտիվացնել ավտոմատ SMS շնորհավորանքները') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('Շնորհավորական SMS-ի Տեքստը') }}
+                        </label>
+                        <textarea name="crm_settings[birthday_sms_template]" rows="2" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-size: 0.88rem;">{{ $crmSettings['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։' }}</textarea>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Հասանելի փոխարինիչներ՝ {NAME} - հաճախորդի անուն, {DISCOUNT} - զեղչի %, {VENDOR} - ռեստորանի անվանում') }}</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sticky Bottom Save Bar -->
             <div class="sticky-save-bar" style="position: sticky; bottom: 1.5rem; z-index: 30; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 0.85rem 1.25rem; box-shadow: 0 12px 30px rgba(0,0,0,0.25); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
                 <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--text-muted); font-size: 0.85rem;">
@@ -930,6 +1293,34 @@ function toggleTakeawayFields() {
         label.textContent = "{{ __('Անջատված է') }}";
     }
     updateCalculationsPreview();
+}
+
+function toggleOnlinePaymentsFields() {
+    const isChecked = document.getElementById('onlinePaymentsToggle').checked;
+    const container = document.getElementById('onlineGatewaysContainer');
+    if (container) {
+        if (isChecked) {
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+        } else {
+            container.style.opacity = '0.55';
+            container.style.pointerEvents = 'none';
+        }
+    }
+}
+
+function toggleCrmFields() {
+    const isChecked = document.getElementById('crmBirthdayToggle').checked;
+    const container = document.getElementById('crmContainer');
+    if (container) {
+        if (isChecked) {
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+        } else {
+            container.style.opacity = '0.55';
+            container.style.pointerEvents = 'none';
+        }
+    }
 }
 
 function handleFeeTypeChange(type) {

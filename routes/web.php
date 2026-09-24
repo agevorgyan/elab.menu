@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\ClientStorefrontController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\FloorPlanController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MenuBuilderController;
@@ -55,6 +56,9 @@ Route::middleware('throttle:15,1')->group(function () {
 Route::get('/api/m/{vendor_slug}/order/{order_number}/status', [ClientStorefrontController::class, 'orderStatus'])
     ->middleware('throttle:60,1')
     ->name('client.order.status');
+
+Route::get('/payment/callback/{vendor_slug}/{order_id}', [ClientStorefrontController::class, 'paymentCallback'])
+    ->name('client.payment.callback');
 
 // AI Waiter Advisor Endpoints
 Route::prefix('/api/m/{vendor_slug}/ai-waiter')->group(function () {
@@ -153,6 +157,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
 
     // Vendor Subscription Status & Payment History
     Route::get('/subscription', [VendorAdminController::class, 'subscriptionIndex'])->name('subscription');
+    Route::post('/subscription/renew', [VendorAdminController::class, 'renewSubscription'])->name('subscription.renew');
 
     // Locations & Team (Business Plan Feature)
     Route::middleware([EnsurePlanHasFeature::class.':locations'])->group(function () {
@@ -188,8 +193,13 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     Route::middleware([EnsurePlanHasFeature::class.':orders'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/feed', [OrderController::class, 'feed'])->name('orders.feed');
+        Route::get('/orders/{order}/receipt-text', [OrderController::class, 'receiptText'])->name('orders.receipt_text');
         Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
         Route::post('/waiter-calls/{waiterCall}/status', [OrderController::class, 'updateWaiterCallStatus'])->name('waiter_calls.status');
+
+        // Interactive Table Floor Plan
+        Route::get('/floor-plan', [FloorPlanController::class, 'index'])->name('floor_plan.index');
+        Route::post('/floor-plan', [FloorPlanController::class, 'saveFloorPlan'])->name('floor_plan.save');
     });
 
     // Branding & Theme Customizer
@@ -214,6 +224,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
         Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::post('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::post('/customers/{customer}/birthday-sms', [CustomerController::class, 'sendBirthdayGreeting'])->name('customers.birthday_sms');
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     });
 

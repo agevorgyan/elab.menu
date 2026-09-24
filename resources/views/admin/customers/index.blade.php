@@ -69,6 +69,69 @@
     </div>
 </div>
 
+<!-- Upcoming Birthdays & CRM Automation Widget -->
+@php
+    $crmSettings = $vendor->getCrmSettings();
+    $bdayDiscount = $crmSettings['birthday_discount_percent'] ?? 15;
+@endphp
+
+@if(isset($upcomingBirthdays) && count($upcomingBirthdays) > 0)
+<div class="card" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(245, 158, 11, 0.05)); border: 1px solid rgba(236, 72, 153, 0.25); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; box-shadow: var(--shadow-card);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span style="width: 36px; height: 36px; border-radius: 10px; background: rgba(236, 72, 153, 0.2); color: #ec4899; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="fa-solid fa-cake-candles"></i>
+            </span>
+            <div>
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit';">
+                    🎂 Առաջիկա Ծննդյան Տոներ (CRM Loyalty Automation)
+                </h3>
+                <p style="margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--text-muted);">
+                    Հաջորդ 14 օրերին ծննդյան օր ունեցող հաճախորդներ — Ավտոմատ զեղչ՝ <strong>{{ $bdayDiscount }}%</strong>
+                </p>
+            </div>
+        </div>
+        <span style="background: rgba(236, 72, 153, 0.15); color: #ec4899; font-weight: 800; font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 9999px;">
+            {{ count($upcomingBirthdays) }} հաճախորդ
+        </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 0.85rem;">
+        @foreach($upcomingBirthdays as $item)
+            @php
+                $cust = $item['customer'];
+                $isToday = $item['is_today'];
+                $days = $item['days_until'];
+            @endphp
+            <div style="background: var(--bg-card); border: 1.5px solid {{ $isToday ? '#ec4899' : 'var(--border-color)' }}; border-radius: 14px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
+                <div style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem;">
+                        <strong style="font-size: 0.92rem; color: var(--text-main);">{{ $cust->name ?? 'Հաճախորդ' }}</strong>
+                        @if($isToday)
+                            <span style="background: #ec4899; color: #fff; font-size: 0.68rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 6px;">🎉 ԱՅՍՕՐ Է</span>
+                        @else
+                            <span style="background: rgba(236, 72, 153, 0.12); color: #ec4899; font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 6px;">{{ $days }} օրից</span>
+                        @endif
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        <span>📞 {{ $cust->phone ?? 'Հեռ․ չկա' }}</span> &bull; <span>{{ $item['birthday_date'] }}</span>
+                    </div>
+                </div>
+
+                @if(!empty($cust->phone))
+                <form action="{{ route('admin.customers.birthday_sms', $cust->id) }}" method="POST" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="btn btn-primary" style="padding: 0.45rem 0.75rem; font-size: 0.78rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap;" title="Ուղարկել Շնորհավորական SMS">
+                        <i class="fa-solid fa-paper-plane"></i> SMS
+                    </button>
+                </form>
+                @endif
+            </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 <!-- Search & Filters -->
 <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card);">
     <form method="GET" action="{{ route('admin.customers.index') }}" style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: center;">

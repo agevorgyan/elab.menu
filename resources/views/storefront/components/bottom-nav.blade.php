@@ -154,7 +154,7 @@
         padding-left: 0.5rem;
         padding-right: 0.5rem;
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.07);
-        max-width: 640px;
+        max-width: var(--desktop-max-width, 600px);
         margin: 0 auto;
     }
 
@@ -249,7 +249,7 @@
     /* Active Order Floating Pill */
     .active-order-floating-pill {
         pointer-events: auto;
-        max-width: calc(640px - 2rem);
+        max-width: calc(var(--desktop-max-width, 600px) - 2rem);
         margin: 0 auto 0.6rem auto;
         width: calc(100% - 2rem);
         background: var(--bg-glass);

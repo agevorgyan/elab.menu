@@ -48,6 +48,10 @@
             customerName: '',
             customerPhone: '',
             customerBirthdate: '',
+            paymentMethod: '{{ !empty($vendor->getPaymentSettings()['cash_enabled']) ? 'cash' : (!empty($vendor->getPaymentSettings()['pos_terminal_enabled']) ? 'pos_terminal' : 'cash') }}',
+            birthdayDiscountPercent: {{ (float) ($vendor->getCrmSettings()['birthday_discount_percent'] ?? 15) }},
+            birthdayDiscountEnabled: {{ !empty($vendor->getCrmSettings()['birthday_discount_enabled']) ? 'true' : 'false' }},
+            birthdayValidityDays: {{ (int) ($vendor->getCrmSettings()['birthday_validity_days'] ?? 3) }},
             orderType: '{{ !empty($table) ? "dine_in" : ($vendor->takeaway_enabled ? "takeaway" : ($vendor->delivery_enabled ? "delivery" : "takeaway")) }}',
             deliveryAddress: '',
             serviceFeeEnabled: {{ $vendor->service_fee_enabled ? 'true' : 'false' }},
@@ -92,6 +96,10 @@
             init() {
                 this.restoreActiveOrderFromStorage();
                 this.initAiWaiterWelcome();
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('payment_success') === '1') {
+                    this.triggerToast('🎉 Վճարումը հաջողությամբ կատարվել է:', 'success', 'fa-solid fa-circle-check');
+                }
                 this.$nextTick(() => {
                     this.initScrollSpy();
                 });
@@ -287,8 +295,29 @@
                 return Math.max(0, this.takeawayMinAmount - this.cartSubtotal);
             },
 
+            get isBirthdayEligible() {
+                if (!this.birthdayDiscountEnabled || !this.customerBirthdate) return false;
+                try {
+                    const bdate = new Date(this.customerBirthdate);
+                    if (isNaN(bdate.getTime())) return false;
+                    const today = new Date();
+                    const thisYearBday = new Date(today.getFullYear(), bdate.getMonth(), bdate.getDate());
+                    const diffTime = Math.abs(today - thisYearBday);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= this.birthdayValidityDays;
+                } catch(e) {
+                    return false;
+                }
+            },
+
+            get birthdayDiscountAmount() {
+                if (!this.isBirthdayEligible) return 0;
+                return Math.round((this.cartSubtotal * this.birthdayDiscountPercent) / 100);
+            },
+
             get cartFinalTotal() {
-                return this.cartSubtotal + this.calculatedServiceFee + this.calculatedDeliveryFee;
+                const rawTotal = this.cartSubtotal + this.calculatedServiceFee + this.calculatedDeliveryFee - this.birthdayDiscountAmount;
+                return Math.max(0, rawTotal);
             },
 
             get cartRecommendations() {
@@ -484,6 +513,7 @@
                             customer_phone: this.customerPhone || null,
                             customer_email: this.customerEmail || null,
                             customer_birthdate: this.customerBirthdate || null,
+                            payment_method: this.paymentMethod || 'cash',
                             marketing_opt_in: this.marketingOptIn,
                             notes: this.orderNotes,
                             active_order_number: (this.activeOrder && !['completed', 'cancelled'].includes(this.activeOrder.status)) ? this.activeOrder.order_number : null,
@@ -497,6 +527,13 @@
                     });
                     const data = await res.json().catch(() => ({}));
                     if (res.ok && data.success) {
+                        if (data.payment_redirect_url) {
+                            this.cart = [];
+                            this.saveActiveOrderToStorage();
+                            window.location.href = data.payment_redirect_url;
+                            return;
+                        }
+
                         const isAppended = !!data.is_appended;
                         const orderItems = (data.items && data.items.length > 0)
                             ? data.items

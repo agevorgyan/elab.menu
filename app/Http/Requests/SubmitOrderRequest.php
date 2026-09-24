@@ -42,6 +42,7 @@ class SubmitOrderRequest extends FormRequest
             'customer_birthdate' => 'nullable|date',
             'marketing_opt_in' => 'nullable|boolean',
             'notes' => 'nullable|string',
+            'payment_method' => 'nullable|string|in:cash,pos_terminal,idram,telcell,fastshift,arca,stripe',
             'active_order_number' => 'nullable|string|max:50',
             'items' => 'required|array|min:1',
             'items.*.product_id' => [

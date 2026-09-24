@@ -208,26 +208,30 @@
         .toast-remove { border-bottom-color: #ef4444; }
         .toast-remove i { color: #ef4444; font-size: 1.15rem; flex-shrink: 0; }
     </style>
+    @include('storefront.components.desktop-frame-styles')
 </head>
 <body x-data="vibrantGlassApp()">
 
-    <!-- Toast Notification Feedback -->
-    <div x-show="toast.show" 
-         x-transition:enter="toast-anim-enter"
-         x-transition:enter-start="toast-anim-start"
-         x-transition:enter-end="toast-anim-end"
-         x-transition:leave="toast-anim-leave"
-         x-transition:leave-start="toast-anim-end"
-         x-transition:leave-end="toast-anim-start"
-         class="toast-notification"
-         :class="'toast-' + toast.type"
-         x-cloak>
-        <i :class="toast.icon"></i>
-        <span x-text="toast.message"></span>
-    </div>
+    <!-- Storefront Desktop Max-Width App Shell -->
+    <div class="storefront-app-shell">
 
-    <!-- Cafe Header -->
-    <div class="cafe-header">
+        <!-- Toast Notification Feedback -->
+        <div x-show="toast.show" 
+             x-transition:enter="toast-anim-enter"
+             x-transition:enter-start="toast-anim-start"
+             x-transition:enter-end="toast-anim-end"
+             x-transition:leave="toast-anim-leave"
+             x-transition:leave-start="toast-anim-end"
+             x-transition:leave-end="toast-anim-start"
+             class="toast-notification"
+             :class="'toast-' + toast.type"
+             x-cloak>
+            <i :class="toast.icon"></i>
+            <span x-text="toast.message"></span>
+        </div>
+
+        <!-- Cafe Header -->
+        <div class="cafe-header">
         <img src="{{ $vendor->logo ?? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&q=80' }}" class="cafe-logo">
         <h1 style="font-size: 1.65rem; font-weight: 800; margin-top: 0.5rem; color: var(--text-main);">{{ $vendor->name }}</h1>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem;">
@@ -367,7 +371,7 @@
             </div>
         @endforeach
     </div>
-
+    </div> <!-- /.storefront-app-shell -->
 
     <!-- Variation Selection Modal -->
     @include('storefront.components.variation-modal')

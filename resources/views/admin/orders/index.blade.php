@@ -95,6 +95,45 @@
 <!-- Orders Grid Container -->
 <div id="ordersContainer">
     @include('admin.orders.partials.order_cards', ['orders' => $orders, 'vendor' => $vendor])
+<!-- Thermal Receipt Print Modal -->
+<div id="thermalReceiptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 1rem;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+        <!-- Modal Header -->
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="width: 36px; height: 36px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-print"></i>
+                </span>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);" id="receiptModalTitle">Կտրոնի Տպում</h3>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">ESC/POS Thermal Printer</div>
+                </div>
+            </div>
+            <button type="button" onclick="closeThermalReceiptModal()" style="background: none; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Receipt Mono Preview -->
+        <div style="padding: 1.25rem; overflow-y: auto; flex: 1; background: #fff; color: #111;">
+            <pre id="receiptTextPreview" style="font-family: 'Courier New', Courier, monospace; font-size: 0.82rem; line-height: 1.35; white-space: pre-wrap; word-break: break-word; margin: 0; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #111;"></pre>
+        </div>
+
+        <!-- Print Actions Footer -->
+        <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.6rem; background: var(--bg-body);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                <button type="button" onclick="printViaBluetooth()" id="btnBluetoothPrint" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem; font-size: 0.82rem; border-radius: 12px;">
+                    <i class="fa-brands fa-bluetooth-b"></i> Web Bluetooth
+                </button>
+                <a id="btnRawBtPrint" href="#" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem; font-size: 0.82rem; border-radius: 12px; text-decoration: none;">
+                    <i class="fa-solid fa-mobile-screen"></i> RawBT (Android)
+                </a>
+            </div>
+            <button type="button" onclick="printViaBrowser()" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem; font-size: 0.85rem; border-radius: 12px;">
+                <i class="fa-solid fa-print"></i> Տպել Բրաուզերով (System Dialog)
+            </button>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -504,6 +543,11 @@ function handleWebSocketOrderCreated(data) {
     setTimeout(() => {
         document.title = 'Live Kitchen Orders - {{ $vendor->name }}';
     }, 8000);
+    @if(!empty($vendor->getThermalPrinterSettings()['auto_print_live_orders']))
+    if (data.order_id) {
+        printOrderReceipt(data.order_id, true);
+    }
+    @endif
     fetchKitchenFeed(true);
 }
 
@@ -516,6 +560,138 @@ function handleWebSocketWaiterCalled(data) {
         banner.style.display = 'flex';
     }
     fetchKitchenFeed(true);
+}
+
+let currentReceiptText = '';
+let currentReceiptOrderNumber = '';
+
+async function printOrderReceipt(orderId, isAuto = false) {
+    try {
+        const res = await fetch(`/admin/orders/${orderId}/receipt-text`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            currentReceiptText = data.receipt_text;
+            currentReceiptOrderNumber = data.order_number;
+
+            document.getElementById('receiptModalTitle').textContent = `Կտրոն #${data.order_number}`;
+            document.getElementById('receiptTextPreview').textContent = data.receipt_text;
+            document.getElementById('btnRawBtPrint').href = data.rawbt_url;
+            document.getElementById('thermalReceiptModal').style.display = 'flex';
+
+            if (isAuto) {
+                printViaBrowser();
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load receipt:', e);
+        alert('Չհաջողվեց բեռնել կտրոնը։');
+    }
+}
+
+function closeThermalReceiptModal() {
+    document.getElementById('thermalReceiptModal').style.display = 'none';
+}
+
+function printViaBrowser() {
+    if (!currentReceiptText) return;
+
+    const printWin = window.open('', '_blank', 'width=380,height=600');
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Receipt ${currentReceiptOrderNumber}</title>
+            <style>
+                @page { margin: 0; size: auto; }
+                body {
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 12px;
+                    line-height: 1.35;
+                    margin: 8px;
+                    padding: 0;
+                    color: #000;
+                    width: 76mm;
+                }
+                pre {
+                    white-space: pre-wrap;
+                    word-break: break-word;
+                    margin: 0;
+                }
+            </style>
+        </head>
+        <body>
+            <pre>${currentReceiptText}</pre>
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
+}
+
+async function printViaBluetooth() {
+    if (!navigator.bluetooth) {
+        alert('Web Bluetooth API-ն հասանելի չէ այս բրաուզերում (խնդրում ենք օգտագործել Chrome կամ Edge):');
+        return;
+    }
+
+    const btn = document.getElementById('btnBluetoothPrint');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Միացում...';
+
+    try {
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb',
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+            ]
+        });
+
+        const server = await device.gatt.connect();
+        const services = await server.getPrimaryServices();
+        if (services.length === 0) {
+            throw new Error('No services found on bluetooth printer');
+        }
+
+        const service = services[0];
+        const characteristics = await service.getCharacteristics();
+        const writeChar = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
+
+        if (!writeChar) {
+            throw new Error('Writable characteristic not found');
+        }
+
+        const encoder = new TextEncoder();
+        const initCmd = new Uint8Array([0x1B, 0x40]);
+        const cutCmd = new Uint8Array([0x1D, 0x56, 0x41, 0x10]);
+        const textBytes = encoder.encode(currentReceiptText + "\n\n\n");
+
+        await writeChar.writeValue(initCmd);
+        await writeChar.writeValue(textBytes);
+        await writeChar.writeValue(cutCmd);
+
+        alert('Կտրոնը հաջողությամբ ուղարկվեց Bluetooth տպիչին։');
+        closeThermalReceiptModal();
+    } catch (e) {
+        console.warn('Bluetooth print:', e);
+        if (e.name !== 'NotFoundError') {
+            alert('Bluetooth տպիչին միանալու սխալ: Կարող եք օգտագործել RawBT կամ Browser Print տարբերակը:');
+        }
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-brands fa-bluetooth-b"></i> Web Bluetooth';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

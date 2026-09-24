@@ -15,6 +15,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\WaiterCall;
+use App\Services\PaymentGatewayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +111,9 @@ class ClientStorefrontController extends Controller
         if ($request->has('custom_css') && $request->get('custom_css')) {
             $vendor->custom_css = $request->get('custom_css');
         }
+        if ($request->has('desktop_max_width') && $request->get('desktop_max_width')) {
+            $vendor->desktop_max_width = $request->get('desktop_max_width');
+        }
 
         // Featured Dish / Dish of the Day
         $featuredDish = null;
@@ -184,7 +188,7 @@ self.addEventListener('fetch', event => {
         return response($content, 200)->header('Content-Type', 'application/javascript');
     }
 
-    public function submitOrder(SubmitOrderRequest $request, string $vendor_slug, CreateOrderAction $createOrderAction)
+    public function submitOrder(SubmitOrderRequest $request, string $vendor_slug, CreateOrderAction $createOrderAction, PaymentGatewayService $paymentService)
     {
         $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
 
@@ -224,6 +228,13 @@ self.addEventListener('fetch', event => {
             ], 422);
         }
 
+        // Handle online payment gateway redirection
+        $paymentResult = null;
+        $chosenPayment = $validated['payment_method'] ?? 'cash';
+        if (! in_array($chosenPayment, ['cash', 'pos_terminal'])) {
+            $paymentResult = $paymentService->initiateOrderPayment($result['order'], $chosenPayment);
+        }
+
         return response()->json([
             'success' => true,
             'is_appended' => $result['is_appended'] ?? false,
@@ -231,6 +242,10 @@ self.addEventListener('fetch', event => {
             'order_id' => $result['order']->id,
             'status' => $result['order']->status,
             'status_label' => __('menu.status_'.$result['order']->status),
+            'payment_method' => $result['order']->payment_method,
+            'payment_status' => $result['order']->payment_status,
+            'payment_redirect_url' => $paymentResult['redirect_url'] ?? null,
+            'birthday_discount' => (float) ($result['order']->birthday_discount_amount ?? 0),
             'subtotal' => (float) ($result['order']->subtotal ?? 0),
             'service_fee' => (float) ($result['order']->service_fee ?? 0),
             'delivery_fee' => (float) ($result['order']->delivery_fee ?? 0),
@@ -250,6 +265,30 @@ self.addEventListener('fetch', event => {
                 ];
             }),
         ]);
+    }
+
+    /**
+     * Handle payment gateway success callback.
+     */
+    public function paymentCallback(string $vendor_slug, int $order_id, Request $request)
+    {
+        $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
+        $order = Order::where('vendor_id', $vendor->id)->findOrFail($order_id);
+
+        $gateway = $request->get('gateway', $order->payment_method ?? 'online');
+        $token = $request->get('token') ?? $request->get('trx') ?? $request->get('transaction_id') ?? $order->payment_transaction_id;
+
+        $order->update([
+            'payment_status' => 'paid',
+            'payment_transaction_id' => $token,
+        ]);
+
+        return redirect()->route('client.menu', [
+            'vendor_slug' => $vendor->slug,
+            'order_placed' => $order->order_number,
+            'payment_success' => 1,
+            'gateway' => $gateway,
+        ])->with('success', 'Վճարումը հաջողությամբ կատարվել է։ Պատվերը փոխանցվել է խոհանոց։');
     }
 
     public function orderStatus(string $vendor_slug, string $order_number)

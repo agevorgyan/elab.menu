@@ -38,6 +38,13 @@
                         <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem; text-transform: uppercase;">
                             {{ str_replace('_', ' ', $order->type) }}
                         </div>
+                        @if($order->payment_method)
+                            <div style="margin-top: 0.25rem;">
+                                <span style="font-size: 0.68rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 4px; background: {{ $order->payment_status === 'paid' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }}; color: {{ $order->payment_status === 'paid' ? '#10b981' : '#ef4444' }};">
+                                    {{ strtoupper($order->payment_method) }}: {{ $order->payment_status === 'paid' ? 'Վճարված' : 'Չվճարված' }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -118,6 +125,10 @@
                     </div>
 
                     <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.65rem; font-size: 0.78rem; border-color: rgba(245, 158, 11, 0.4); color: var(--primary);" title="Տպել կտրոնը (ESC/POS)" onclick="printOrderReceipt({{ $order->id }})">
+                            <i class="fa-solid fa-print"></i>
+                        </button>
+
                         @if($order->status == 'pending')
                             <button type="button" class="btn btn-primary" style="padding: 0.45rem 0.85rem; font-size: 0.78rem;" onclick="changeOrderStatus({{ $order->id }}, 'preparing')">
                                 <i class="fa-solid fa-fire"></i> Ընդունել

@@ -779,6 +779,14 @@
                         <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
                     @endif
                 </a>
+                <a href="{{ route('admin.floor_plan.index') }}" class="nav-item {{ request()->routeIs('admin.floor_plan.*') ? 'active' : '' }}" style="justify-content: space-between;">
+                    <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fa-solid fa-map-location-dot" style="color: #3b82f6;"></i> <span>{{ __('Սեղանների Քարտեզ') }}</span>
+                    </span>
+                    @if($v && !$v->hasFeature('orders'))
+                        <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
+                    @endif
+                </a>
 
                 <div class="menu-category">{{ __('Menu & Content') }}</div>
                 <a href="{{ route('admin.menu.index') }}" class="nav-item {{ request()->routeIs('admin.menu.*') ? 'active' : '' }}">

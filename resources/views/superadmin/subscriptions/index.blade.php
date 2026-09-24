@@ -87,7 +87,7 @@
                 <span style="font-size: 0.78rem; color: var(--text-muted);">Բաժանորդագրությունների կառավարում</span>
             </div>
             <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                Վենդորների Բաժանորդագրություններ & Վճարումներ
+                Գործընկերների Բաժանորդագրություններ & Վճարումներ
             </h1>
         </div>
     </div>
@@ -126,7 +126,7 @@
             <!-- Search -->
             <div style="flex: 1; min-width: 250px; position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
-                <input type="text" x-model="search" placeholder="Որոնել ըստ վենդորի անվան կամ էլ․ փոստի..." class="form-input" style="padding-left: 2.5rem; padding-right: 2rem; border-radius: 12px;">
+                <input type="text" x-model="search" placeholder="Որոնել ըստ գործընկերոջ անվան կամ էլ․ փոստի..." class="form-input" style="padding-left: 2.5rem; padding-right: 2rem; border-radius: 12px;">
                 <button x-show="search.length > 0" @click="search = ''" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -158,7 +158,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="min-width: 200px;">Վենդոր</th>
+                        <th style="min-width: 200px;">Գործընկեր</th>
                         <th>Փաթեթ</th>
                         <th>Կարգավիճակ</th>
                         <th>Փորձնական / Վերջնաժամկետ</th>
@@ -434,7 +434,7 @@
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main); cursor: pointer;">
                         <input type="checkbox" name="extend_subscription" value="1" checked>
-                        <span>Ավտոմատ երկարաձգել վենդորի բաժանորդագրությունը մինչև Ավարտի ամսաթիվը</span>
+                        <span>Ավտոմատ երկարաձգել գործընկերոջ բաժանորդագրությունը մինչև Ավարտի ամսաթիվը</span>
                     </label>
                 </div>
 

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\CaptchaService;
 use App\Services\TenantContext;
+use App\Services\TwoFactorAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,6 +14,7 @@ class AuthController extends Controller
     public function showLogin(TenantContext $tenantContext)
     {
         $customVendor = $tenantContext->getTenant();
+        $captcha = CaptchaService::generate();
 
         if (Auth::check()) {
             $user = Auth::user();
@@ -21,7 +24,7 @@ class AuthController extends Controller
                 session()->invalidate();
                 session()->regenerateToken();
 
-                return view('auth.login', compact('customVendor'))->withErrors([
+                return view('auth.login', compact('customVendor', 'captcha'))->withErrors([
                     'email' => "Այս կառավարման վահանակը նախատեսված է միայն {$customVendor->name} ռեստորանի անձնակազմի համար։",
                 ]);
             }
@@ -29,7 +32,12 @@ class AuthController extends Controller
             return $this->redirectUser($user, $customVendor);
         }
 
-        return view('auth.login', compact('customVendor'));
+        return view('auth.login', compact('customVendor', 'captcha'));
+    }
+
+    public function refreshCaptcha()
+    {
+        return response()->json(CaptchaService::generate());
     }
 
     public function showDemoLogin(TenantContext $tenantContext)
@@ -74,22 +82,40 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'captcha' => app()->environment('testing') ? ['nullable', 'string'] : ['required', 'string'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $user = Auth::user();
+        if ($request->filled('captcha') || ! app()->environment('testing')) {
+            if (! CaptchaService::validate($request->input('captcha'))) {
+                return back()->withErrors([
+                    'captcha' => 'Անվտանգության հարցի (CAPTCHA) պատասխանը սխալ է։',
+                ])->onlyInput('email');
+            }
+        }
+
+        if (Auth::validate(['email' => $credentials['email'], 'password' => $credentials['password']])) {
+            $user = User::where('email', $credentials['email'])->first();
             $customVendor = $tenantContext->getTenant();
 
             if ($customVendor && ! $user->isSuperAdmin() && (int) $user->vendor_id !== (int) $customVendor->id) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-
                 return back()->withErrors([
                     'email' => "Այս կառավարման վահանակ կարող են մուտք գործել միայն {$customVendor->name} ռեստորանի օգտատերերը։",
                 ])->onlyInput('email');
             }
 
+            // Check Two-Factor Authentication
+            if ($user->hasTwoFactorEnabled()) {
+                session([
+                    'login.2fa.user_id' => $user->id,
+                    'login.2fa.remember' => $request->boolean('remember'),
+                ]);
+
+                TwoFactorAuthService::sendEmailCode($user);
+
+                return redirect()->route('2fa.challenge');
+            }
+
+            Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
 
             return $this->redirectUser($user, $customVendor);

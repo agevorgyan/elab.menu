@@ -133,7 +133,7 @@
             <!-- Card Bottom Bar -->
             <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
-                    <span>🏢 Օգտագործող վենդորներ</span>
+                    <span>🏢 Օգտագործող գործընկերներ</span>
                     <strong style="color: var(--text-main); font-family: 'Outfit'; font-size: 0.95rem;">{{ $plan->vendors_count }}</strong>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">

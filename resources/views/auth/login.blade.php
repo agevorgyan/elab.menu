@@ -620,7 +620,39 @@
                         <input type="checkbox" name="remember" class="checkbox-custom" {{ old('remember') ? 'checked' : '' }}>
                         <span>Հիշել ինձ</span>
                     </label>
+                    <a href="{{ route('password.request') }}" style="color: #d97706; text-decoration: none; font-size: 0.82rem; font-weight: 600;">
+                        Մոռացե՞լ եք գաղտնաբառը
+                    </a>
                 </div>
+
+                <!-- CAPTCHA Field -->
+                @if(isset($captcha))
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span><i class="fa-solid fa-shield-halved"></i> Անվտանգության Ստուգում (CAPTCHA)</span>
+                        </label>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div id="captchaContainer" style="display: flex; align-items: center; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                                {!! $captcha['svg'] !!}
+                            </div>
+                            <button type="button" onclick="refreshCaptcha()" title="Փոխել հարցը" style="padding: 0.55rem 0.75rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; cursor: pointer; font-size: 0.9rem;">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                name="captcha" 
+                                class="form-input" 
+                                required 
+                                placeholder="Մուտքագրեք գումարի պատասխանը"
+                                autocomplete="off"
+                                inputmode="numeric"
+                            >
+                            <i class="fa-solid fa-calculator input-icon"></i>
+                        </div>
+                    </div>
+                @endif
 
                 <button type="submit" class="btn-submit">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
@@ -654,7 +686,7 @@
                 <div class="register-link-box">
                     Դեռ չունե՞ք գրանցված ռեստորան։ <br>
                     <a href="{{ route('register.show') }}">
-                        <i class="fa-solid fa-user-plus"></i> Գրանցվել որպես Նոր Vendor (14 օր անվճար)
+                        <i class="fa-solid fa-user-plus"></i> Գրանցվել որպես Նոր Գործընկեր (14 օր անվճար)
                     </a>
                 </div>
             @else
@@ -688,6 +720,20 @@
                 toggleIcon.classList.toggle('fa-eye', !isPassword);
                 toggleIcon.classList.toggle('fa-eye-slash', isPassword);
             });
+        }
+
+        function refreshCaptcha() {
+            fetch("{{ route('captcha.refresh') }}")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.svg) {
+                        const container = document.getElementById('captchaContainer');
+                        if (container) {
+                            container.innerHTML = data.svg;
+                        }
+                    }
+                })
+                .catch(() => {});
         }
     </script>
 </body>

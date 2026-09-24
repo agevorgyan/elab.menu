@@ -87,7 +87,7 @@
         <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
             @if($hasCustomKey)
                 <span style="font-size: 0.8rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-key"></i> {{ __('Վենդորի Սեփական API Key') }}
+                    <i class="fa-solid fa-key"></i> {{ __('Գործընկերոջ Սեփական API Key') }}
                 </span>
             @else
                 <span style="font-size: 0.8rem; font-weight: 700; background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem;">

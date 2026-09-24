@@ -7,12 +7,15 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\ClientStorefrontController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MenuBuilderController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\VendorAdminController;
 use App\Http\Controllers\VendorSettingsController;
 use App\Http\Middleware\EnsurePlanHasFeature;
@@ -82,6 +85,20 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// 2FA Challenge & Verification
+Route::get('/login/2fa', [TwoFactorController::class, 'showChallenge'])->name('2fa.challenge');
+Route::post('/login/2fa', [TwoFactorController::class, 'verify'])->name('2fa.verify');
+Route::post('/login/2fa/resend', [TwoFactorController::class, 'resendEmailCode'])->name('2fa.resend');
+
+// Password Reset Routes
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+
+// Captcha Refresh Endpoint
+Route::get('/captcha/refresh', [AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
+
 Route::get('/demo/login', [AuthController::class, 'showDemoLogin'])->name('demo.login');
 Route::post('/demo/login', [AuthController::class, 'demoLogin'])->name('demo.login.post');
 
@@ -97,7 +114,20 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/vendors', [SuperAdminController::class, 'vendorsIndex'])->name('vendors.index');
     Route::post('/vendors', [SuperAdminController::class, 'storeVendor'])->name('vendors.store');
+    Route::get('/vendors/{vendor}/edit', [SuperAdminController::class, 'editVendor'])->name('vendors.edit');
+    Route::put('/vendors/{vendor}', [SuperAdminController::class, 'updateVendor'])->name('vendors.update');
     Route::post('/vendors/{vendor}/toggle', [SuperAdminController::class, 'toggleStatus'])->name('vendors.toggle');
+
+    // Vendor Locations & Tables Management
+    Route::post('/vendors/{vendor}/locations', [SuperAdminController::class, 'storeVendorLocation'])->name('vendors.locations.store');
+    Route::put('/vendors/{vendor}/locations/{location}', [SuperAdminController::class, 'updateVendorLocation'])->name('vendors.locations.update');
+    Route::delete('/vendors/{vendor}/locations/{location}', [SuperAdminController::class, 'destroyVendorLocation'])->name('vendors.locations.destroy');
+    Route::post('/vendors/{vendor}/locations/{location}/tables', [SuperAdminController::class, 'updateVendorLocationTables'])->name('vendors.locations.tables');
+
+    // Vendor Users Management
+    Route::post('/vendors/{vendor}/users', [SuperAdminController::class, 'storeVendorUser'])->name('vendors.users.store');
+    Route::put('/vendors/{vendor}/users/{user}', [SuperAdminController::class, 'updateVendorUser'])->name('vendors.users.update');
+    Route::delete('/vendors/{vendor}/users/{user}', [SuperAdminController::class, 'destroyVendorUser'])->name('vendors.users.destroy');
 
     // Subscription Plans Management
     Route::get('/plans', [SuperAdminController::class, 'plansIndex'])->name('plans.index');
@@ -111,9 +141,10 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::post('/subscriptions/{vendor}', [SuperAdminController::class, 'updateVendorSubscription'])->name('subscriptions.update');
     Route::post('/subscriptions/{vendor}/payments', [SuperAdminController::class, 'storeVendorPayment'])->name('subscriptions.payments.store');
 
-    // Landing & System Settings Management
+    // Landing, System & Security Settings Management
     Route::get('/settings', [SuperAdminController::class, 'settingsIndex'])->name('settings.index');
     Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/security', [SuperAdminController::class, 'updateProfileSecurity'])->name('settings.security');
 });
 
 // 4. Vendor Admin Panel (/admin)

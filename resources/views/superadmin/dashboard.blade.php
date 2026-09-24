@@ -75,7 +75,7 @@
             Պլատֆորմի Գլխավոր Ակնարկ (SuperAdmin)
         </h1>
         <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 600px;">
-            Վենդորների, մասնաճյուղերի, պատվերների շրջանառության և բաժանորդագրությունների իրական ժամանակի կառավարում։
+            Գործընկերների, մասնաճյուղերի, պատվերների շրջանառության և բաժանորդագրությունների իրական ժամանակի կառավարում։
         </p>
     </div>
 
@@ -84,7 +84,7 @@
             <i class="fa-solid fa-credit-card" style="color: #6366f1;"></i> Բաժանորդագրություններ
         </a>
         <a href="{{ route('superadmin.vendors.index') }}" class="btn btn-primary" style="border-radius: 12px; font-size: 0.85rem; padding: 0.65rem 1.25rem;">
-            <i class="fa-solid fa-plus"></i> Ստեղծել Նոր Վենդոր
+            <i class="fa-solid fa-plus"></i> Ստեղծել Նոր Գործընկեր
         </a>
     </div>
 </div>
@@ -96,7 +96,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <div style="color: var(--text-muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Ընդհանուր Վենդորներ
+                    Ընդհանուր Գործընկերներ
                 </div>
                 <div style="font-size: 2.25rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin: 0.4rem 0 0.2rem;">
                     {{ $totalVendors }}
@@ -129,7 +129,7 @@
         </div>
         <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem;">
             <i class="fa-solid fa-diagram-project"></i>
-            <span>Միջինում {{ $totalVendors > 0 ? round($totalLocations / $totalVendors, 1) : 1 }} մասնաճյուղ / վենդոր</span>
+            <span>Միջինում {{ $totalVendors > 0 ? round($totalLocations / $totalVendors, 1) : 1 }} մասնաճյուղ / գործընկեր</span>
         </div>
     </div>
 
@@ -197,7 +197,7 @@
                     <span style="font-size: 0.85rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main);">
                         {{ $p->vendors_count ?? 0 }}
                     </span>
-                    <span style="font-size: 0.72rem; color: var(--text-muted);">վենդոր</span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">գործընկեր</span>
                 </div>
             @endforeach
         </div>
@@ -211,7 +211,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <div>
                 <h3 style="font-size: 1.15rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-bottom: 0.2rem;">
-                    <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Վերջին Գրանցված Վենդորները
+                    <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Վերջին Գրանցված Գործընկերները
                 </h3>
                 <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Վերջին 5 միացած ռեստորանները և սրճարանները</p>
             </div>
@@ -224,7 +224,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Վենդոր</th>
+                        <th>Գործընկեր</th>
                         <th>Տեսակ</th>
                         <th>Մասնաճյուղ</th>
                         <th>Փաթեթ</th>
@@ -283,7 +283,7 @@
                     @empty
                         <tr>
                             <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                                Դեռևս գրանցված վենդորներ չկան։
+                                Դեռևս գրանցված գործընկերներ չկան։
                             </td>
                         </tr>
                     @endforelse
@@ -316,7 +316,7 @@
                             @endif
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-                            Օգտագործվում է <strong>{{ $tmpl->vendors_count }}</strong> ակտիվ վենդորների կողմից
+                            Օգտագործվում է <strong>{{ $tmpl->vendors_count }}</strong> ակտիվ գործընկերների կողմից
                         </div>
                     </div>
                     <div style="flex-shrink: 0;">

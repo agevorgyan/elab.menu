@@ -190,7 +190,7 @@ class SuperAdminController extends Controller
     public function destroyPlan(SubscriptionPlan $plan)
     {
         if ($plan->vendors()->count() > 0) {
-            return back()->with('error', 'Հնարավոր չէ ջնջել փաթեթը, քանի որ այն կցված է վենդորների։');
+            return back()->with('error', 'Հնարավոր չէ ջնջել փաթեթը, քանի որ այն կցված է գործընկերների։');
         }
         $plan->delete();
 
@@ -295,5 +295,299 @@ class SuperAdminController extends Controller
         }
 
         return back()->with('success', 'Համակարգի և լենդինգի կարգավորումները հաջողությամբ պահպանվեցին։');
+    }
+
+    public function editVendor(Vendor $vendor)
+    {
+        $vendor->load(['locations', 'users.location', 'menuTemplate', 'plan']);
+        $templates = MenuTemplate::all();
+        $plans = SubscriptionPlan::where('is_active', true)->get();
+
+        return view('superadmin.vendor_edit', compact('vendor', 'templates', 'plans'));
+    }
+
+    public function updateVendor(Request $request, Vendor $vendor)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:100|alpha_dash|unique:vendors,slug,'.$vendor->id,
+            'type' => 'required|string|in:restaurant,cafe,hotel',
+            'custom_domain' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:100',
+            'currency' => 'required|string|in:AMD,USD,EUR,RUB',
+            'legal_name' => 'nullable|string|max:255',
+            'tax_id' => 'nullable|string|max:50',
+            'legal_address' => 'nullable|string|max:500',
+            'operating_address' => 'nullable|string|max:500',
+            'director_name' => 'nullable|string|max:255',
+            'director_phone' => 'nullable|string|max:50',
+            'contact_person_name' => 'nullable|string|max:255',
+            'contact_person_phone' => 'nullable|string|max:50',
+            'menu_template_id' => 'required|exists:menu_templates,id',
+            'subscription_plan_id' => 'nullable|exists:subscription_plans,id',
+            'primary_color' => 'nullable|string|max:20',
+            'secondary_color' => 'nullable|string|max:20',
+            'theme_mode' => 'nullable|string|in:light,dark,auto',
+            'wifi_ssid' => 'nullable|string|max:100',
+            'wifi_password' => 'nullable|string|max:100',
+            'working_hours' => 'nullable|string|max:255',
+            'service_fee_enabled' => 'nullable|boolean',
+            'service_fee_type' => 'nullable|string|in:percentage,fixed',
+            'service_fee_value' => 'nullable|numeric|min:0',
+            'delivery_enabled' => 'nullable|boolean',
+            'delivery_fee' => 'nullable|numeric|min:0',
+            'delivery_min_amount' => 'nullable|numeric|min:0',
+            'takeaway_enabled' => 'nullable|boolean',
+            'takeaway_min_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        if (! empty($validated['custom_domain'])) {
+            $domain = preg_replace('#^https?://#i', '', trim($validated['custom_domain']));
+            $domain = rtrim(explode('/', $domain)[0], '/');
+            $validated['custom_domain'] = strtolower($domain);
+        } else {
+            $validated['custom_domain'] = null;
+        }
+
+        $validated['slug'] = Str::slug($validated['slug']);
+        $validated['service_fee_enabled'] = $request->boolean('service_fee_enabled');
+        $validated['delivery_enabled'] = $request->boolean('delivery_enabled');
+        $validated['takeaway_enabled'] = $request->boolean('takeaway_enabled');
+
+        if (! empty($validated['subscription_plan_id'])) {
+            $plan = SubscriptionPlan::find($validated['subscription_plan_id']);
+            if ($plan) {
+                $validated['subscription_plan'] = $plan->slug;
+            }
+        }
+
+        $vendor->update($validated);
+
+        return back()->with('success', 'Գործընկերոջ տվյալները և հղումները հաջողությամբ թարմացվեցին։');
+    }
+
+    public function storeVendorLocation(Request $request, Vendor $vendor)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:50',
+            'whatsapp_number' => 'nullable|string|max:50',
+            'wifi_ssid' => 'nullable|string|max:100',
+            'wifi_password' => 'nullable|string|max:100',
+            'working_hours' => 'nullable|string|max:255',
+            'table_count' => 'required|integer|min:1|max:500',
+            'minimum_order_amount' => 'nullable|numeric|min:0',
+            'allow_dine_in_orders' => 'nullable|boolean',
+            'allow_whatsapp_orders' => 'nullable|boolean',
+        ]);
+
+        $slug = ! empty($validated['slug']) ? Str::slug($validated['slug']) : Str::slug($validated['name']);
+        if (Location::where('vendor_id', $vendor->id)->where('slug', $slug)->exists()) {
+            $slug .= '-'.Str::random(4);
+        }
+
+        Location::create([
+            'vendor_id' => $vendor->id,
+            'name' => $validated['name'],
+            'slug' => $slug,
+            'address' => $validated['address'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'whatsapp_number' => $validated['whatsapp_number'] ?? null,
+            'wifi_ssid' => $validated['wifi_ssid'] ?? null,
+            'wifi_password' => $validated['wifi_password'] ?? null,
+            'working_hours' => $validated['working_hours'] ?? null,
+            'table_count' => $validated['table_count'],
+            'minimum_order_amount' => $validated['minimum_order_amount'] ?? 0,
+            'allow_dine_in_orders' => $request->boolean('allow_dine_in_orders', true),
+            'allow_whatsapp_orders' => $request->boolean('allow_whatsapp_orders', true),
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Նոր մասնաճյուղը հաջողությամբ ավելացվեց։');
+    }
+
+    public function updateVendorLocation(Request $request, Vendor $vendor, Location $location)
+    {
+        abort_if($location->vendor_id !== $vendor->id, 403);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:50',
+            'whatsapp_number' => 'nullable|string|max:50',
+            'wifi_ssid' => 'nullable|string|max:100',
+            'wifi_password' => 'nullable|string|max:100',
+            'working_hours' => 'nullable|string|max:255',
+            'table_count' => 'required|integer|min:1|max:500',
+            'minimum_order_amount' => 'nullable|numeric|min:0',
+            'allow_dine_in_orders' => 'nullable|boolean',
+            'allow_whatsapp_orders' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        if (! empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['slug']);
+        }
+        $validated['allow_dine_in_orders'] = $request->boolean('allow_dine_in_orders');
+        $validated['allow_whatsapp_orders'] = $request->boolean('allow_whatsapp_orders');
+        $validated['is_active'] = $request->boolean('is_active', true);
+
+        $location->update($validated);
+
+        return back()->with('success', "«{$location->name}» մասնաճյուղի տվյալները հաջողությամբ թարմացվեցին։");
+    }
+
+    public function destroyVendorLocation(Vendor $vendor, Location $location)
+    {
+        abort_if($location->vendor_id !== $vendor->id, 403);
+
+        if ($vendor->locations()->count() <= 1) {
+            return back()->with('error', 'Հնարավոր չէ ջնջել վերջին մնացած մասնաճյուղը։ Գործընկերը պետք է ունենա առնվազն մեկ ակտիվ մասնաճյուղ։');
+        }
+
+        User::where('location_id', $location->id)->update(['location_id' => null]);
+
+        $locationName = $location->name;
+        $location->delete();
+
+        return back()->with('success', "«{$locationName}» մասնաճյուղը հաջողությամբ ջնջվեց։");
+    }
+
+    public function updateVendorLocationTables(Request $request, Vendor $vendor, Location $location)
+    {
+        abort_if($location->vendor_id !== $vendor->id, 403);
+
+        $validated = $request->validate([
+            'table_count' => 'required|integer|min:1|max:500',
+        ]);
+
+        $location->update(['table_count' => $validated['table_count']]);
+
+        return back()->with('success', "«{$location->name}» մասնաճյուղի սեղանների քանակը փոխվեց՝ {$validated['table_count']}։");
+    }
+
+    public function storeVendorUser(Request $request, Vendor $vendor)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'role' => 'required|string|in:vendor_owner,branch_manager,manager,waiter,kitchen_staff,staff',
+            'location_id' => 'nullable|exists:locations,id',
+            'phone' => 'nullable|string|max:50',
+            'password' => 'required|string|min:6',
+        ]);
+
+        if (! empty($validated['location_id'])) {
+            $loc = Location::find($validated['location_id']);
+            abort_if(! $loc || $loc->vendor_id !== $vendor->id, 403, 'Invalid location assignment');
+        }
+
+        User::create([
+            'vendor_id' => $vendor->id,
+            'location_id' => $validated['location_id'] ?? null,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return back()->with('success', 'Նոր աշխատակիցը/օգտատերը հաջողությամբ ավելացվեց։');
+    }
+
+    public function updateVendorUser(Request $request, Vendor $vendor, User $user)
+    {
+        abort_if($user->vendor_id !== $vendor->id, 403);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'role' => 'required|string|in:vendor_owner,branch_manager,manager,waiter,kitchen_staff,staff',
+            'location_id' => 'nullable|exists:locations,id',
+            'phone' => 'nullable|string|max:50',
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        if (! empty($validated['location_id'])) {
+            $loc = Location::find($validated['location_id']);
+            abort_if(! $loc || $loc->vendor_id !== $vendor->id, 403, 'Invalid location assignment');
+        }
+
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'location_id' => $validated['location_id'] ?? null,
+        ];
+
+        if (! empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($updateData);
+
+        return back()->with('success', "«{$user->name}» օգտատիրոջ տվյալները հաջողությամբ թարմացվեցին։");
+    }
+
+    public function destroyVendorUser(Vendor $vendor, User $user)
+    {
+        abort_if($user->vendor_id !== $vendor->id, 403);
+
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Հնարավոր չէ ջնջել ընթացիկ մուտք գործած հաշիվը։');
+        }
+
+        if ($vendor->users()->count() <= 1) {
+            return back()->with('error', 'Հնարավոր չէ ջնջել գործընկերոջ վերջին մնացած օգտատիրոջը։');
+        }
+
+        $userName = $user->name;
+        $user->delete();
+
+        return back()->with('success', "«{$userName}» օգտատերը հաջողությամբ ջնջվեց։");
+    }
+
+    public function updateProfileSecurity(Request $request)
+    {
+        $user = auth()->user();
+        $type = $request->input('action_type', 'password');
+
+        if ($type === 'email') {
+            $validated = $request->validate([
+                'current_password' => 'required|string',
+                'email' => 'required|email|unique:users,email,'.$user->id,
+            ], [
+                'email.unique' => 'Այս էլ․ փոստի հասցեն արդեն գրանցված է համակարգում։',
+            ]);
+
+            if (! Hash::check($validated['current_password'], $user->password)) {
+                return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', 'email');
+            }
+
+            $user->update(['email' => $validated['email']]);
+
+            return back()->with('success', 'Ձեր էլ․ փոստի հասցեն հաջողությամբ թարմացվեց։');
+        }
+
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'password.confirmed' => 'Նոր գաղտնաբառի հաստատումը չի համընկնում։',
+            'password.min' => 'Գաղտնաբառը պետք է լինի առնվազն 6 նիշ։',
+        ]);
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', 'password');
+        }
+
+        $user->update(['password' => Hash::make($validated['password'])]);
+
+        return back()->with('success', 'Ձեր գաղտնաբառը հաջողությամբ փոխվեց։');
     }
 }

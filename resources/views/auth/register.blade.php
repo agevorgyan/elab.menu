@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendor Գրանցում — QRMenu SaaS Platform</title>
+    <title>Գործընկերոջ Գրանցում — QRMenu SaaS Platform</title>
     
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -498,7 +498,7 @@
                     <i class="fa-solid fa-gift"></i> 14 Օր Անվճար Փորձաշրջան • Բանկային քարտ չի պահանջվում
                 </div>
                 <h1 class="brand-title">
-                    Vendor <span>Ինքնուրույն Գրանցում</span>
+                    Գործընկերոջ <span>Ինքնուրույն Գրանցում</span>
                 </h1>
                 <p class="brand-subtitle">
                     Ստեղծեք ձեր հաշիվը 2 րոպեում և սկսեք ընդունել առցանց պատվերներ թվային QR մենյուի միջոցով
@@ -688,6 +688,35 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- CAPTCHA Field -->
+                    @if(isset($captcha))
+                        <div class="form-group full-width">
+                            <label class="form-label">
+                                <span>Անվտանգության Ստուգում (CAPTCHA) <span class="req">*</span></span>
+                            </label>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                <div id="captchaContainer" style="display: flex; align-items: center; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                                    {!! $captcha['svg'] !!}
+                                </div>
+                                <button type="button" onclick="refreshCaptcha()" title="Փոխել հարցը" style="padding: 0.55rem 0.75rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; cursor: pointer; font-size: 0.9rem;">
+                                    <i class="fa-solid fa-arrows-rotate"></i>
+                                </button>
+                            </div>
+                            <div class="input-wrapper">
+                                <input 
+                                    type="text" 
+                                    name="captcha" 
+                                    class="form-input" 
+                                    required 
+                                    placeholder="Մուտքագրեք գումարի պատասխանը"
+                                    autocomplete="off"
+                                    inputmode="numeric"
+                                >
+                                <i class="fa-solid fa-calculator input-icon"></i>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <button type="submit" class="btn-submit-register">
@@ -738,6 +767,20 @@
 
         setupToggle('toggleRegPasswordBtn', 'regPasswordInput', 'toggleRegPasswordIcon');
         setupToggle('toggleRegPasswordConfirmBtn', 'regPasswordConfirmInput', 'toggleRegPasswordConfirmIcon');
+
+        function refreshCaptcha() {
+            fetch("{{ route('captcha.refresh') }}")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.svg) {
+                        const container = document.getElementById('captchaContainer');
+                        if (container) {
+                            container.innerHTML = data.svg;
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
     </script>
 </body>
 </html>

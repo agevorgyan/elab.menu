@@ -31,7 +31,7 @@ class AuthAndDemoLoginTest extends TestCase
         $response = $this->get('/register');
 
         $response->assertStatus(200);
-        $response->assertSee('Vendor');
+        $response->assertSee('Գործընկեր');
         $response->assertSee('/demo/login');
         $response->assertSee('14 Օր Անվճար Փորձաշրջան');
     }

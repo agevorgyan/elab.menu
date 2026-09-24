@@ -202,7 +202,7 @@ self.addEventListener('fetch', event => {
         if ($vendorProductsCount !== $productIds->count()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Պատվերի մեջ առկա են անվավեր կամ այլ վենդորի պատկանող ապրանքներ։',
+                'message' => 'Պատվերի մեջ առկա են անվավեր կամ այլ գործընկերոջ պատկանող ապրանքներ։',
             ], 422);
         }
 

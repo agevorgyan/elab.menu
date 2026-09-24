@@ -8,6 +8,7 @@ use App\Models\MenuTemplate;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\CaptchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,8 +21,9 @@ class RegisterController extends Controller
     {
         $templates = MenuTemplate::where('is_active', true)->get();
         $plans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        $captcha = CaptchaService::generate();
 
-        return view('auth.register', compact('templates', 'plans'));
+        return view('auth.register', compact('templates', 'plans', 'captcha'));
     }
 
     public function register(Request $request)
@@ -40,7 +42,14 @@ class RegisterController extends Controller
             'email' => 'required|email|unique:users,email|unique:vendors,email',
             'subscription_plan' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
+            'captcha' => 'nullable|string',
         ]);
+
+        if (! CaptchaService::validate($request->input('captcha'))) {
+            return back()->withErrors([
+                'captcha' => 'Անվտանգության հարցի (CAPTCHA) պատասխանը սխալ է։',
+            ])->withInput();
+        }
 
         $template = MenuTemplate::first();
         $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first()

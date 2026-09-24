@@ -112,23 +112,23 @@
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <span class="badge badge-indigo">
-                    <i class="fa-solid fa-store"></i> Վենդորների Ցուցակ
+                    <i class="fa-solid fa-store"></i> Գործընկերների Ցուցակ
                 </span>
-                <span style="font-size: 0.78rem; color: var(--text-muted);">Ընդհանուր՝ {{ $vendors->count() }} վենդոր</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Ընդհանուր՝ {{ $vendors->count() }} գործընկեր</span>
             </div>
             <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                Վենդորների Կատալոգ և Կառավարում
+                Գործընկերների Կատալոգ և Կառավարում
             </h1>
         </div>
         <button class="btn btn-primary" @click="showModal = true" style="border-radius: 12px; font-size: 0.88rem; padding: 0.65rem 1.25rem;">
-            <i class="fa-solid fa-plus"></i> Ստեղծել Նոր Վենդոր
+            <i class="fa-solid fa-plus"></i> Ստեղծել Նոր Գործընկեր
         </button>
     </div>
 
     <!-- KPI Summary Row -->
     <div class="grid-4" style="gap: 1rem; margin-bottom: 1.5rem;">
         <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Գրանցված Վենդորներ</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Գրանցված Գործընկերներ</div>
             <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-top: 0.2rem;">
                 {{ $vendors->count() }}
             </div>
@@ -197,7 +197,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="min-width: 220px;">Վենդոր և Մենյու</th>
+                        <th style="min-width: 220px;">Գործընկեր և Մենյու</th>
                         <th>Տեսակ</th>
                         <th style="min-width: 240px;">Իրավաբանական Տվյալներ (ՀՎՀՀ)</th>
                         <th>Մասնաճյուղ</th>
@@ -319,6 +319,10 @@
                             <!-- Actions -->
                             <td style="text-align: right;">
                                 <div style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                                    <a href="{{ route('superadmin.vendors.edit', $v->id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px; color: var(--primary);" title="Խմբագրել գործընկերոջը">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+
                                     <form action="{{ route('superadmin.vendors.toggle', $v->id) }}" method="POST" style="margin: 0;">
                                         @csrf
                                         <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px;" title="{{ $v->is_active ? 'Կասեցնել' : 'Ակտիվացնել' }}">
@@ -431,7 +435,10 @@
                 </div>
 
                 <!-- Action buttons -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                    <a href="{{ route('superadmin.vendors.edit', $v->id) }}" class="btn btn-secondary" style="justify-content: center; font-size: 0.8rem; padding: 0.55rem; color: var(--primary);">
+                        <i class="fa-solid fa-pen-to-square"></i> Խմբագրել
+                    </a>
                     <form action="{{ route('superadmin.vendors.toggle', $v->id) }}" method="POST" style="margin: 0;">
                         @csrf
                         <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; padding: 0.55rem;">
@@ -456,7 +463,7 @@
                     </div>
                     <div>
                         <h3 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                            Ստեղծել Նոր Վենդոր
+                            Ստեղծել Նոր Գործընկեր
                         </h3>
                         <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Ռեստորանի / սրճարանի հաշվի ստեղծում</p>
                     </div>
@@ -548,7 +555,7 @@
                         Չեղարկել
                     </button>
                     <button type="submit" class="btn btn-primary" style="border-radius: 10px;">
-                        <i class="fa-solid fa-plus"></i> Ստեղծել Վենդոր
+                        <i class="fa-solid fa-plus"></i> Ստեղծել Գործընկեր
                     </button>
                 </div>
             </form>

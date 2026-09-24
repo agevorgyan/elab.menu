@@ -231,7 +231,7 @@
                         <i class="fa-solid fa-utensils"></i> Դեմո Ռեստորանի Slug *
                     </label>
                     <input type="text" name="demo_vendor_slug" class="form-input" value="{{ old('demo_vendor_slug', $settings['demo_vendor_slug'] ?? 'bistro-yerevan') }}" placeholder="bistro-yerevan">
-                    <span class="input-hint">Լենդինգի «Տեսնել Դեմոն» կոճակը կբացի այս վենդորի մենյուն (/m/{slug})</span>
+                    <span class="input-hint">Լենդինգի «Տեսնել Դեմոն» կոճակը կբացի այս գործընկերոջ մենյուն (/m/{slug})</span>
                 </div>
 
                 <div class="form-group">
@@ -273,11 +273,100 @@
         </div>
 
         <!-- Submit Button -->
-        <div style="display: flex; justify-content: flex-end; margin-top: 1rem; margin-bottom: 3rem;">
+        <div style="display: flex; justify-content: flex-end; margin-top: 1rem; margin-bottom: 2.5rem;">
             <button type="submit" class="btn-save">
                 <i class="fa-solid fa-floppy-disk"></i> Պահպանել Բոլոր Կարգավորումները
             </button>
         </div>
     </form>
+
+    <!-- 5. Admin Profile & Security Settings (Email & Password Change) -->
+    <div style="margin-top: 1.5rem; padding-top: 2rem; border-top: 2px solid var(--border-color); margin-bottom: 3rem;">
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="badge badge-indigo">
+                    <i class="fa-solid fa-shield-halved"></i> Անվտանգություն
+                </span>
+            </div>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                Ադմինիստրատորի Անվտանգություն & Պրոֆիլ
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 0 0;">
+                Փոխեք SuperAdmin հաշվի էլ․ փոստի հասցեն և մուտքի գաղտնաբառը։
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem;">
+            <!-- Change Email Form -->
+            <div class="settings-card" style="margin-bottom: 0;">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-envelope" style="color: #6366f1;"></i>
+                    <span>Էլ․ Փոստի Փոփոխություն</span>
+                </div>
+                <form action="{{ route('superadmin.settings.security') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="action_type" value="email">
+
+                    <div style="display: flex; flex-direction: column; gap: 1.15rem;">
+                        <div class="form-group">
+                            <label class="form-label">Ընթացիկ Էլ․ Փոստ</label>
+                            <input type="text" value="{{ auth()->user()->email }}" disabled class="form-input" style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Նոր Էլ․ Փոստ *</label>
+                            <input type="email" name="email" required class="form-input" placeholder="new-admin@qrmenu.local" value="{{ old('action_type') === 'email' ? old('email') : '' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ընթացիկ Գաղտնաբառ (հաստատման համար) *</label>
+                            <input type="password" name="current_password" required class="form-input" placeholder="••••••••">
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem;">
+                                <i class="fa-solid fa-check"></i> Թարմացնել Էլ․ Փոստը
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Change Password Form -->
+            <div class="settings-card" style="margin-bottom: 0;">
+                <div class="settings-section-title">
+                    <i class="fa-solid fa-lock" style="color: #10b981;"></i>
+                    <span>Գաղտնաբառի Փոփոխություն</span>
+                </div>
+                <form action="{{ route('superadmin.settings.security') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="action_type" value="password">
+
+                    <div style="display: flex; flex-direction: column; gap: 1.15rem;">
+                        <div class="form-group">
+                            <label class="form-label">Ընթացիկ Գաղտնաբառ *</label>
+                            <input type="password" name="current_password" required class="form-input" placeholder="••••••••">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Նոր Գաղտնաբառ * (նվազագույնը 6 նիշ)</label>
+                            <input type="password" name="password" required minlength="6" class="form-input" placeholder="••••••••">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Հաստատել Նոր Գաղտնաբառը *</label>
+                            <input type="password" name="password_confirmation" required minlength="6" class="form-input" placeholder="••••••••">
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem;">
+                                <i class="fa-solid fa-key"></i> Փոխել Գաղտնաբառը
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

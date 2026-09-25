@@ -15,7 +15,17 @@
         </div>
 
         <p style="font-size: 15px; color: #334155; line-height: 1.5;">
-            Ողջույն, <strong>{{ $user->name }}</strong>։ Դուք կատարել եք մուտքի հարցում։ Ձեր մուտքի միանգամյա անվտանգության կոդն է․
+            Ողջույն, <strong>{{ $user->name }}</strong>։ 
+            @if(($action ?? 'login') === 'password')
+                Դուք կատարել եք գաղտնաբառի փոփոխման հարցում։
+            @elseif(($action ?? 'login') === 'email')
+                Դուք կատարել եք էլ․ փոստի հասցեի փոփոխման հարցում։
+            @elseif(($action ?? 'login') === 'setup')
+                Դուք ակտիվացնում եք երկփուլային նույնականացումը (2FA)։
+            @else
+                Դուք կատարել եք համակարգ մուտքի հարցում։
+            @endif
+            Ձեր միանգամյա անվտանգության 2FA կոդն է․
         </p>
 
         <div style="text-align: center; margin: 24px 0;">

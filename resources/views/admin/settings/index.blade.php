@@ -19,6 +19,9 @@
         </div>
 
         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <a href="{{ route('admin.profile') }}" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem;">
+                <i class="fa-solid fa-user-shield" style="color: {{ Auth::user()->hasTwoFactorEnabled() ? '#10b981' : '#f59e0b' }};"></i> {{ __('Անվտանգություն & 2FA') }}
+            </a>
             <a href="{{ route('client.menu', ['vendor_slug' => $vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem;">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('Դիտել մենյուն') }}
             </a>
@@ -1205,6 +1208,38 @@
                         <textarea name="crm_settings[birthday_sms_template]" rows="2" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-size: 0.88rem;">{{ $crmSettings['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։' }}</textarea>
                         <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Հասանելի փոխարինիչներ՝ {NAME} - հաճախորդի անուն, {DISCOUNT} - զեղչի %, {VENDOR} - ռեստորանի անվանում') }}</span>
                     </div>
+                </div>
+            <!-- 8. USER PROFILE & 2FA SECURITY CARD -->
+            <div class="card settings-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(245, 158, 11, 0.05) 100%); border: 1.5px solid {{ Auth::user()->hasTwoFactorEnabled() ? '#10b981' : 'var(--border-color)' }}; border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="width: 48px; height: 48px; border-radius: 14px; background: {{ Auth::user()->hasTwoFactorEnabled() ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)' }}; color: {{ Auth::user()->hasTwoFactorEnabled() ? '#10b981' : '#f59e0b' }}; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </span>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                    {{ __('Անձնական Անվտանգություն & 2FA (Պրոֆիլ)') }}
+                                </h3>
+                                @if(Auth::user()->hasTwoFactorEnabled())
+                                    <span class="badge badge-emerald" style="font-weight: 700;">
+                                        <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ') }} ({{ Auth::user()->two_factor_type === 'authenticator' ? 'Google Authenticator' : 'Email Code' }})
+                                    </span>
+                                @else
+                                    <span class="badge badge-amber" style="font-weight: 700;">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Անջատված') }}
+                                    </span>
+                                @endif
+                            </div>
+                            <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Երկփուլային նույնականացումը (2FA) պաշտպանում է /login մուտքը, գաղտնաբառի և էլ․ փոստի փոփոխությունը։') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('admin.profile') }}" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.3rem;">
+                        <i class="fa-solid fa-key"></i> {{ __('Կառավարել 2FA-ն & Գաղտնաբառը') }}
+                    </a>
                 </div>
             </div>
 

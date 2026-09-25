@@ -196,4 +196,164 @@ class SecurityAndAuthFeaturesTest extends TestCase
         $response->assertSessionHasErrors('code');
         $this->assertGuest();
     }
+
+    public function test_user_with_2fa_cannot_change_password_without_2fa_code(): void
+    {
+        $user = User::where('email', 'owner@bistro.am')->first();
+        $user->update([
+            'two_factor_enabled' => true,
+            'two_factor_type' => 'email',
+            'two_factor_email_code' => '999111',
+            'two_factor_email_expires_at' => now()->addMinutes(10),
+        ]);
+
+        // Missing 2FA code
+        $response = $this->actingAs($user)->post('/security/password', [
+            'current_password' => 'password',
+            'password' => 'new-secret-999',
+            'password_confirmation' => 'new-secret-999',
+        ]);
+
+        $response->assertSessionHasErrors('two_factor_code');
+        $user->refresh();
+        $this->assertFalse(Hash::check('new-secret-999', $user->password));
+
+        // Invalid 2FA code
+        $failResponse = $this->actingAs($user)->post('/security/password', [
+            'current_password' => 'password',
+            'password' => 'new-secret-999',
+            'password_confirmation' => 'new-secret-999',
+            'two_factor_code' => '000000',
+        ]);
+
+        $failResponse->assertSessionHasErrors('two_factor_code');
+        $user->refresh();
+        $this->assertFalse(Hash::check('new-secret-999', $user->password));
+    }
+
+    public function test_user_with_2fa_can_change_password_with_valid_2fa_code(): void
+    {
+        $user = User::where('email', 'owner@bistro.am')->first();
+        $user->update([
+            'two_factor_enabled' => true,
+            'two_factor_type' => 'email',
+            'two_factor_email_code' => '888222',
+            'two_factor_email_expires_at' => now()->addMinutes(10),
+        ]);
+
+        $response = $this->actingAs($user)->post('/security/password', [
+            'current_password' => 'password',
+            'password' => 'new-secret-888',
+            'password_confirmation' => 'new-secret-888',
+            'two_factor_code' => '888222',
+        ]);
+
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertTrue(Hash::check('new-secret-888', $user->password));
+    }
+
+    public function test_user_with_2fa_cannot_change_email_without_2fa_code(): void
+    {
+        $user = User::where('email', 'owner@bistro.am')->first();
+        $user->update([
+            'two_factor_enabled' => true,
+            'two_factor_type' => 'email',
+            'two_factor_email_code' => '777333',
+            'two_factor_email_expires_at' => now()->addMinutes(10),
+        ]);
+
+        $response = $this->actingAs($user)->post('/security/email', [
+            'current_password' => 'password',
+            'email' => 'new-owner@bistro.am',
+        ]);
+
+        $response->assertSessionHasErrors('two_factor_code');
+        $user->refresh();
+        $this->assertEquals('owner@bistro.am', $user->email);
+    }
+
+    public function test_user_with_2fa_can_change_email_with_valid_2fa_code(): void
+    {
+        $user = User::where('email', 'owner@bistro.am')->first();
+        $user->update([
+            'two_factor_enabled' => true,
+            'two_factor_type' => 'email',
+            'two_factor_email_code' => '777333',
+            'two_factor_email_expires_at' => now()->addMinutes(10),
+        ]);
+
+        $response = $this->actingAs($user)->post('/security/email', [
+            'current_password' => 'password',
+            'email' => 'updated-owner@bistro.am',
+            'two_factor_code' => '777333',
+        ]);
+
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertEquals('updated-owner@bistro.am', $user->email);
+    }
+
+    public function test_user_can_enable_and_disable_two_factor_authentication(): void
+    {
+        $user = User::where('email', 'owner@bistro.am')->first();
+        $user->update([
+            'two_factor_enabled' => false,
+            'two_factor_email_code' => '123456',
+            'two_factor_email_expires_at' => now()->addMinutes(10),
+        ]);
+
+        // Enable with valid test code
+        $enableResponse = $this->actingAs($user)->post('/security/2fa/enable', [
+            'type' => 'email',
+            'code' => '123456',
+        ]);
+
+        $enableResponse->assertSessionHas('success');
+        $user->refresh();
+        $this->assertTrue($user->hasTwoFactorEnabled());
+        $this->assertEquals('email', $user->two_factor_type);
+
+        // Disable with correct password
+        $disableResponse = $this->actingAs($user)->post('/security/2fa/disable', [
+            'current_password' => 'password',
+        ]);
+
+        $disableResponse->assertSessionHas('success');
+        $user->refresh();
+        $this->assertFalse($user->hasTwoFactorEnabled());
+    }
+
+    public function test_send_two_factor_code_endpoint_dispatches_mail(): void
+    {
+        Mail::fake();
+
+        $user = User::where('email', 'owner@bistro.am')->first();
+
+        $response = $this->actingAs($user)->postJson('/security/2fa/send-code', [
+            'action' => 'password',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        $user->refresh();
+        $this->assertNotEmpty($user->two_factor_email_code);
+
+        Mail::assertSent(TwoFactorCodeMail::class, function ($mail) {
+            return $mail->hasTo('owner@bistro.am') && $mail->action === 'password';
+        });
+    }
+
+    public function test_vendor_admin_can_view_profile_and_security_page(): void
+    {
+        $user = User::where('email', 'owner@bistro.am')->first();
+
+        $response = $this->actingAs($user)->get('/admin/profile');
+
+        $response->assertStatus(200);
+        $response->assertSee('Երկփուլային Նույնականացում');
+        $response->assertSee('Գաղտնաբառի Փոփոխություն');
+        $response->assertSee('Էլ․ Փոստի Փոփոխություն');
+    }
 }

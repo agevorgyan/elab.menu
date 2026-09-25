@@ -816,6 +816,9 @@
                 </a>
 
                 <div class="menu-category">{{ __('Settings & Administration') }}</div>
+                <a href="{{ route('admin.profile') }}" class="nav-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
+                    <i class="fa-solid fa-user-shield" style="color: #10b981;"></i> <span>{{ __('Անվտանգություն & 2FA') }}</span>
+                </a>
                 <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders" style="color: #64748b;"></i> <span>{{ __('Կարգավորումներ') }}</span>
                 </a>
@@ -936,6 +939,12 @@
                     <i class="fa-solid" :class="currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'" style="color: var(--primary);"></i>
                     <span class="hide-on-mobile" x-text="currentTheme === 'dark' ? '{{ __('Light') }}' : '{{ __('Dark') }}'"></span>
                 </button>
+
+                <!-- User Profile & 2FA Button -->
+                <a href="{{ Auth::user()?->isSuperAdmin() ? route('superadmin.settings.index') . '#security-section' : route('admin.profile') }}" class="theme-toggle-btn" style="text-decoration: none; border-radius: 10px;" title="{{ __('Անվտանգություն & 2FA') }}">
+                    <i class="fa-solid fa-shield-halved" style="color: {{ Auth::user()?->hasTwoFactorEnabled() ? '#10b981' : '#f59e0b' }};"></i>
+                    <span class="hide-on-mobile">{{ __('2FA & Պրոֆիլ') }}</span>
+                </a>
 
                 <!-- User Role Badge -->
                 <span class="badge-role hide-on-mobile {{ Auth::user()?->isSuperAdmin() ? 'badge-superadmin' : (Auth::user()?->isVendorOwner() ? 'badge-owner' : 'badge-manager') }}">

@@ -30,8 +30,8 @@ class TwoFactorController extends Controller
         }
 
         // If user uses email 2FA and code is not yet sent or expired, auto-dispatch
-        if (empty($user->two_factor_email_code) || now()->greaterThan($user->two_factor_email_expires_at)) {
-            TwoFactorAuthService::sendEmailCode($user);
+        if ($user->two_factor_type !== 'authenticator' && (empty($user->two_factor_email_code) || now()->greaterThan($user->two_factor_email_expires_at))) {
+            TwoFactorAuthService::sendEmailCode($user, 'login');
         }
 
         $customVendor = $tenantContext->getTenant();
@@ -91,18 +91,10 @@ class TwoFactorController extends Controller
             $isValid = TwoFactorAuthService::verifyGoogleAuthenticator($user->two_factor_secret, $code);
         } elseif ($authType === 'email') {
             $isValid = TwoFactorAuthService::verifyEmailCode($user, $code);
-        } else {
-            // Attempt both for maximum convenience
-            if (! empty($user->two_factor_secret) && TwoFactorAuthService::verifyGoogleAuthenticator($user->two_factor_secret, $code)) {
-                $isValid = true;
-            } elseif (TwoFactorAuthService::verifyEmailCode($user, $code)) {
-                $isValid = true;
-            }
         }
 
-        // In local/testing fallback
-        if (! $isValid && app()->environment('local', 'testing') && $code === '123456') {
-            $isValid = true;
+        if (! $isValid) {
+            $isValid = TwoFactorAuthService::verifyCode($user, $code);
         }
 
         if (! $isValid) {

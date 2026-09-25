@@ -12,6 +12,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MenuBuilderController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProfileSecurityController;
 use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ResetPasswordController;
@@ -112,6 +113,16 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 Route::get('/email/verify', [RegisterController::class, 'showVerificationNotice'])->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('verification.verify');
 Route::post('/email/verify/demo', [RegisterController::class, 'directDemoVerify'])->name('verification.demo');
+
+// Authenticated 2FA & Profile Security Routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/security/2fa/send-code', [ProfileSecurityController::class, 'sendTwoFactorCode'])->name('security.2fa.send_code');
+    Route::get('/security/2fa/secret', [ProfileSecurityController::class, 'getSecretKey'])->name('security.2fa.secret');
+    Route::post('/security/2fa/enable', [ProfileSecurityController::class, 'enableTwoFactor'])->name('security.2fa.enable');
+    Route::post('/security/2fa/disable', [ProfileSecurityController::class, 'disableTwoFactor'])->name('security.2fa.disable');
+    Route::post('/security/password', [ProfileSecurityController::class, 'updatePassword'])->name('security.password.update');
+    Route::post('/security/email', [ProfileSecurityController::class, 'updateEmail'])->name('security.email.update');
+});
 
 // 3. Super Admin Panel (/superadmin)
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
@@ -230,6 +241,10 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
 
     // Analytics
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+
+    // User Profile & 2FA Security
+    Route::get('/profile', [ProfileSecurityController::class, 'index'])->name('profile');
+    Route::post('/profile/update', [ProfileSecurityController::class, 'updateProfile'])->name('profile.update');
 });
 
 // 5. Custom Domain Branch/Location Route (e.g. https://example.com/cascades)

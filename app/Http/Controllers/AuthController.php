@@ -110,7 +110,9 @@ class AuthController extends Controller
                     'login.2fa.remember' => $request->boolean('remember'),
                 ]);
 
-                TwoFactorAuthService::sendEmailCode($user);
+                if ($user->two_factor_type !== 'authenticator') {
+                    TwoFactorAuthService::sendEmailCode($user, 'login');
+                }
 
                 return redirect()->route('2fa.challenge');
             }

@@ -314,28 +314,29 @@
                 </div>
             @endif
 
+            @php $isAuthApp = ($user->two_factor_type === 'authenticator' && !empty($user->two_factor_secret)); @endphp
             <!-- 2FA Selector Tabs -->
             <div class="auth-tabs">
-                <button type="button" class="auth-tab-btn active" id="tabEmailBtn" onclick="switchTab('email')">
+                <button type="button" class="auth-tab-btn {{ ! $isAuthApp ? 'active' : '' }}" id="tabEmailBtn" onclick="switchTab('email')">
                     <i class="fa-solid fa-envelope"></i> Email Կոդ
                 </button>
-                <button type="button" class="auth-tab-btn" id="tabAuthBtn" onclick="switchTab('authenticator')">
+                <button type="button" class="auth-tab-btn {{ $isAuthApp ? 'active' : '' }}" id="tabAuthBtn" onclick="switchTab('authenticator')">
                     <i class="fa-solid fa-mobile-screen-button"></i> Google Authenticator
                 </button>
             </div>
 
             <form action="{{ route('2fa.verify') }}" method="POST" id="twoFactorForm">
                 @csrf
-                <input type="hidden" name="auth_type" id="authTypeInput" value="email">
+                <input type="hidden" name="auth_type" id="authTypeInput" value="{{ $isAuthApp ? 'authenticator' : 'email' }}">
 
                 <!-- Mode 1: Email 2FA Info -->
-                <div id="emailInfoBox" class="info-box">
+                <div id="emailInfoBox" class="info-box" style="{{ $isAuthApp ? 'display: none;' : '' }}">
                     <i class="fa-solid fa-paper-plane" style="color: #d97706; margin-right: 0.35rem;"></i>
                     6-նիշ անվտանգության կոդն ուղարկվել է <strong>{{ $user->maskedEmail() }}</strong> հասցեին։
                 </div>
 
                 <!-- Mode 2: Google Authenticator Info -->
-                <div id="authInfoBox" class="info-box" style="display: none;">
+                <div id="authInfoBox" class="info-box" style="{{ $isAuthApp ? '' : 'display: none;' }}">
                     <i class="fa-solid fa-key" style="color: #d97706; margin-right: 0.35rem;"></i>
                     Բացեք <strong>Google Authenticator</strong> (կամ Authy) հավելվածը և մուտքագրեք ընթացիկ 6-նիշ կոդը։
                 </div>
@@ -362,7 +363,7 @@
             </form>
 
             <!-- Resend email code block -->
-            <div class="resend-box" id="resendCodeBox">
+            <div class="resend-box" id="resendCodeBox" style="{{ $isAuthApp ? 'display: none;' : '' }}">
                 Չե՞ք ստացել կոդը։
                 <form action="{{ route('2fa.resend') }}" method="POST" style="display: inline;">
                     @csrf

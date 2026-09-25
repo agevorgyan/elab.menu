@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Location;
 use App\Models\Vendor;
 use App\Services\AiGatewayService;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -303,6 +304,20 @@ class VendorSettingsController extends Controller
             ];
         }
 
+        // Telegram Notifications Settings
+        if ($request->has('telegram_settings')) {
+            $tgInput = $request->input('telegram_settings', []);
+            $vendorUpdate['telegram_settings'] = [
+                'enabled' => ! empty($tgInput['enabled']),
+                'bot_token' => ! empty($tgInput['bot_token']) ? trim((string) $tgInput['bot_token']) : null,
+                'chat_id' => ! empty($tgInput['chat_id']) ? trim((string) $tgInput['chat_id']) : null,
+                'topic_id' => ! empty($tgInput['topic_id']) ? (int) $tgInput['topic_id'] : null,
+                'notify_orders' => ! empty($tgInput['notify_orders']),
+                'notify_waiter_calls' => ! empty($tgInput['notify_waiter_calls']),
+                'notify_payments' => ! empty($tgInput['notify_payments']),
+            ];
+        }
+
         $vendor->update($vendorUpdate);
 
         // Update Location (Branch)
@@ -331,6 +346,9 @@ class VendorSettingsController extends Controller
             }
             if (array_key_exists('working_hours', $validated)) {
                 $locationUpdate['working_hours'] = $validated['working_hours'];
+            }
+            if ($request->has('telegram_chat_id')) {
+                $locationUpdate['telegram_chat_id'] = $request->input('telegram_chat_id') ? trim((string) $request->input('telegram_chat_id')) : null;
             }
             $locationUpdate['allow_whatsapp_orders'] = $validated['allow_whatsapp_orders'];
 
@@ -480,5 +498,33 @@ class VendorSettingsController extends Controller
                     ? "⚠️ Դոմենը մատնանշում է այլ IP ({$resolvedIp})։ Փոխեք A-record-ը սերվերի IP-ին՝ {$serverIp}"
                     : "⏳ Դոմենը դեռևս չունի ակտիվ DNS գրառումներ։ Ավելացրեք A-record դեպի {$serverIp} (կամ CNAME դեպի menu.elab.am)։"),
         ]);
+    }
+
+    /**
+     * Test Telegram notification connection by sending a test message.
+     */
+    public function testTelegramConnection(Request $request, TelegramNotificationService $telegramService): JsonResponse
+    {
+        $vendor = Auth::user()->vendor;
+
+        $chatId = $request->input('chat_id') ?: $vendor->getTelegramChatId();
+        $botToken = $request->input('bot_token') ?: $vendor->getTelegramBotToken();
+        $topicId = $request->input('topic_id') ? (int) $request->input('topic_id') : $vendor->getTelegramTopicId();
+
+        if (empty($chatId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Խնդրում ենք լրացնել Telegram Chat ID դաշտը թեստային հաղորդագրություն ուղարկելու համար։',
+            ]);
+        }
+
+        $result = $telegramService->sendTestMessage(
+            chatId: (string) $chatId,
+            botToken: $botToken,
+            topicId: $topicId,
+            sourceName: $vendor->name
+        );
+
+        return response()->json($result);
     }
 }

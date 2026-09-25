@@ -159,6 +159,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     // Landing, System & Security Settings Management
     Route::get('/settings', [SuperAdminController::class, 'settingsIndex'])->name('settings.index');
     Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/telegram/test', [SuperAdminController::class, 'testTelegramConnection'])->name('settings.telegram.test');
     Route::post('/settings/security', [SuperAdminController::class, 'updateProfileSecurity'])->name('settings.security');
 });
 
@@ -220,6 +221,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscription
     // Restaurant Settings (Service Fee & Delivery)
     Route::get('/settings', [VendorSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [VendorSettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/telegram/test', [VendorSettingsController::class, 'testTelegramConnection'])->name('settings.telegram.test');
     Route::post('/settings/domain/check', [VendorSettingsController::class, 'checkDomainDns'])->name('settings.domain.check');
     Route::get('/settings/ai', [VendorSettingsController::class, 'aiIndex'])->name('settings.ai');
     Route::post('/settings/ai', [VendorSettingsController::class, 'aiUpdate'])->name('settings.ai.update');

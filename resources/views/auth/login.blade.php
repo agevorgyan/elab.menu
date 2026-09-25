@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ isset($customVendor) && $customVendor ? $customVendor->name . ' — Մուտք' : 'Մուտք Համակարգ — QRMenu SaaS' }}</title>
+    @php
+        $siteName = \App\Models\SystemSetting::getSiteName();
+        $siteFavicon = \App\Models\SystemSetting::getFavicon();
+        $siteLogoLight = \App\Models\SystemSetting::getLogoLight();
+        $siteTagline = \App\Models\SystemSetting::getSiteTagline();
+    @endphp
+    <title>{{ isset($customVendor) && $customVendor ? $customVendor->name . ' — Մուտք' : ('Մուտք Համակարգ — ' . $siteName) }}</title>
+    
+    <link rel="icon" type="image/png" href="{{ $siteFavicon }}">
+    <link rel="apple-touch-icon" href="{{ $siteFavicon }}">
     
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -544,11 +553,17 @@
                     <h1 class="vendor-title">{{ $customVendor->name }}</h1>
                     <p class="brand-subtitle">Ռեստորանի Կառավարման Վահանակ</p>
                 @else
-                    <div class="brand-icon-box">
-                        <i class="fa-solid fa-qrcode"></i>
-                    </div>
-                    <h1 class="brand-title">QRMenu <span>SaaS</span></h1>
-                    <p class="brand-subtitle">Մուտք գործեք ձեր ռեստորանի կառավարման վահանակ</p>
+                    @if($siteLogoLight)
+                        <div style="margin-bottom: 1.25rem;">
+                            <img src="{{ $siteLogoLight }}" alt="{{ $siteName }}" style="max-height: 48px; max-width: 220px; object-fit: contain;">
+                        </div>
+                    @else
+                        <div class="brand-icon-box">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <h1 class="brand-title">{{ $siteName }}</h1>
+                    @endif
+                    <p class="brand-subtitle">{{ $siteTagline ?: 'Մուտք գործեք ձեր ռեստորանի կառավարման վահանակ' }}</p>
                 @endif
             </div>
 

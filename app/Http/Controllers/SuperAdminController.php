@@ -10,10 +10,14 @@ use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\TelegramNotificationService;
 use App\Services\TwoFactorAuthService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class SuperAdminController extends Controller
@@ -281,26 +285,105 @@ class SuperAdminController extends Controller
     public function updateSettings(Request $request)
     {
         $validated = $request->validate([
+            // Contacts
             'contact_phone' => 'required|string|max:50',
             'contact_whatsapp' => 'nullable|string|max:50',
             'contact_telegram' => 'nullable|string|max:100',
             'contact_email' => 'required|email|max:100',
+
+            // Social Media
             'social_facebook' => 'nullable|string|max:255',
             'social_instagram' => 'nullable|string|max:255',
+
+            // Landing & System Defaults
             'demo_vendor_slug' => 'nullable|string|max:100',
             'trial_days' => 'required|integer|min:1|max:90',
             'hero_title_hy' => 'nullable|string|max:255',
             'hero_title_en' => 'nullable|string|max:255',
             'hero_subtitle_hy' => 'nullable|string|max:500',
             'hero_subtitle_en' => 'nullable|string|max:500',
+
+            // Telegram Notifications
+            'telegram_bot_token' => 'nullable|string|max:255',
+            'telegram_admin_chat_id' => 'nullable|string|max:255',
+
+            // Branding & Identity
+            'site_name' => 'nullable|string|max:100',
+            'site_tagline' => 'nullable|string|max:255',
+            'site_logo_light' => 'nullable|string|max:500',
+            'site_logo_dark' => 'nullable|string|max:500',
+            'site_favicon' => 'nullable|string|max:500',
+            'logo_light_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'logo_dark_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'favicon_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,ico|max:2048',
+
+            // SEO & OpenGraph Social Sharing
+            'seo_title' => 'nullable|string|max:255',
+            'seo_title_en' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string|max:1000',
+            'seo_description_en' => 'nullable|string|max:1000',
+            'seo_keywords' => 'nullable|string|max:500',
+            'seo_og_image' => 'nullable|string|max:500',
+            'og_image_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'footer_copyright' => 'nullable|string|max:255',
         ]);
 
+        // File uploads for branding assets
+        $fileMap = [
+            'logo_light_file' => 'site_logo_light',
+            'logo_dark_file' => 'site_logo_dark',
+            'favicon_file' => 'site_favicon',
+            'og_image_file' => 'seo_og_image',
+        ];
+
+        foreach ($fileMap as $inputName => $settingKey) {
+            $removeFlag = 'remove_'.str_replace(['site_', 'seo_'], '', $settingKey);
+            if ($request->boolean($removeFlag)) {
+                $oldPath = SystemSetting::get($settingKey);
+                if ($oldPath && str_starts_with($oldPath, '/storage/system/')) {
+                    $relative = ltrim(str_replace('/storage/', '', $oldPath), '/');
+                    if (Storage::disk('public')->exists($relative)) {
+                        Storage::disk('public')->delete($relative);
+                    }
+                }
+                SystemSetting::set($settingKey, null, 'branding');
+                unset($validated[$settingKey]);
+            }
+
+            if ($request->hasFile($inputName) && $request->file($inputName)->isValid()) {
+                try {
+                    $oldPath = SystemSetting::get($settingKey);
+                    if ($oldPath && str_starts_with($oldPath, '/storage/system/')) {
+                        $relative = ltrim(str_replace('/storage/', '', $oldPath), '/');
+                        if (Storage::disk('public')->exists($relative)) {
+                            Storage::disk('public')->delete($relative);
+                        }
+                    }
+                    $stored = $request->file($inputName)->store('system', 'public');
+                    if ($stored) {
+                        $validated[$settingKey] = '/storage/'.$stored;
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("System setting upload failed for {$inputName}: ".$e->getMessage());
+                }
+            }
+
+            unset($validated[$inputName]);
+        }
+
         foreach ($validated as $key => $value) {
-            $group = str_starts_with($key, 'contact_') ? 'contact' : (str_starts_with($key, 'social_') ? 'social' : 'landing');
+            $group = match (true) {
+                str_starts_with($key, 'contact_') => 'contact',
+                str_starts_with($key, 'social_') => 'social',
+                str_starts_with($key, 'telegram_') => 'telegram',
+                str_starts_with($key, 'site_') || str_starts_with($key, 'footer_') => 'branding',
+                str_starts_with($key, 'seo_') => 'seo',
+                default => 'landing',
+            };
             SystemSetting::set($key, $value, $group);
         }
 
-        return back()->with('success', 'Համակարգի և լենդինգի կարգավորումները հաջողությամբ պահպանվեցին։');
+        return back()->with('success', 'Համակարգի, բրենդինգի և SEO կարգավորումները հաջողությամբ պահպանվեցին։');
     }
 
     public function editVendor(Vendor $vendor)
@@ -677,5 +760,30 @@ class SuperAdminController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Test SuperAdmin Telegram notification connection.
+     */
+    public function testTelegramConnection(Request $request, TelegramNotificationService $telegramService): JsonResponse
+    {
+        $chatId = $request->input('chat_id') ?: SystemSetting::get('telegram_admin_chat_id');
+        $botToken = $request->input('bot_token') ?: SystemSetting::get('telegram_bot_token');
+
+        if (empty($chatId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Խնդրում ենք լրացնել SuperAdmin Chat ID դաշտը թեստային հաղորդագրություն ուղարկելու համար։',
+            ]);
+        }
+
+        $result = $telegramService->sendTestMessage(
+            chatId: (string) $chatId,
+            botToken: $botToken,
+            topicId: null,
+            sourceName: 'SuperAdmin Կառավարման Համակարգ'
+        );
+
+        return response()->json($result);
     }
 }

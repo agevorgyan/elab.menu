@@ -102,6 +102,105 @@
         flex-wrap: wrap;
         gap: 1rem;
     }
+    .branding-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .branding-card:hover {
+        border-color: var(--primary);
+    }
+    .branding-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    .branding-preview-box {
+        height: 100px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .branding-preview-box.light-bg {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .branding-preview-box.dark-bg {
+        background: #070913;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .branding-preview-box.tab-mockup {
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .browser-tab-preview {
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px 8px 0 0;
+        padding: 0.5rem 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .social-preview-mockup {
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
+    .social-preview-img-wrap {
+        width: 100%;
+        height: 160px;
+        background: #0b0f19;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .social-preview-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .social-preview-body {
+        padding: 0.85rem 1rem;
+    }
+    .social-preview-domain {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    .social-preview-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #f8fafc;
+        margin-bottom: 0.25rem;
+        line-height: 1.35;
+    }
+    .social-preview-desc {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        line-height: 1.45;
+        margin: 0;
+    }
 </style>
 @endsection
 
@@ -147,14 +246,260 @@
         </div>
     @endif
 
-    <form action="{{ route('superadmin.settings.update') }}" method="POST">
+    <form action="{{ route('superadmin.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        <!-- 1. Contacts Section -->
+        <!-- 1. Brand Identity, Logos & Favicon -->
+        <div class="settings-card">
+            <div class="settings-section-title">
+                <i class="fa-solid fa-palette" style="color: #f59e0b;"></i>
+                <span>1. Համակարգի Բրենդինգ & Լոգոներ (Brand Identity & Logos)</span>
+            </div>
+
+            <div class="form-grid" style="margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-font"></i> Համակարգի Անվանում (Site Name) *
+                    </label>
+                    <input type="text" name="site_name" class="form-input" value="{{ old('site_name', $settings['site_name'] ?? 'menu by eLab') }}" placeholder="menu by eLab կամ QRMenu">
+                    <span class="input-hint">Ցուցադրվում է նավիգացիայում, էջերի վերնագրերում և նամակներում</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-tag"></i> Սուբանվանում / Կարգախոս (Tagline / Subtitle)
+                    </label>
+                    <input type="text" name="site_tagline" class="form-input" value="{{ old('site_tagline', $settings['site_tagline'] ?? 'Խելացի Ռեստորանային QR Մենյու & Պատվերների Համակարգ') }}" placeholder="Խելացի Ռեստորանային QR Մենյու & Պատվերների Համակարգ">
+                    <span class="input-hint">Օգտագործվում է մուտքի էջում և SEO նկարագրություններում</span>
+                </div>
+            </div>
+
+            <!-- Logos & Favicon Asset Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1.25rem;">
+                <!-- 1. Light Mode Logo -->
+                <div class="branding-card">
+                    <div class="branding-card-header">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.35rem 0.6rem; border-radius: 8px;">
+                                <i class="fa-solid fa-sun"></i>
+                            </span>
+                            <strong style="color: var(--text-main); font-size: 0.95rem;">Լոգո Բաց Ֆոնի Համար</strong>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Light Mode</span>
+                    </div>
+
+                    <div class="branding-preview-box light-bg">
+                        <img src="{{ \App\Models\SystemSetting::getLogoLight() }}" id="preview_logo_light" alt="Logo Light" style="max-height: 52px; max-width: 90%; object-fit: contain;">
+                    </div>
+
+                    <div style="margin-top: 0.85rem;">
+                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.35rem;">
+                            Վերբեռնել նոր լոգո (PNG, SVG, WebP)
+                        </label>
+                        <input type="file" name="logo_light_file" accept="image/*" class="form-input" style="padding: 0.45rem 0.6rem; font-size: 0.82rem;" onchange="previewImage(this, 'preview_logo_light')">
+                    </div>
+
+                    @if(!empty($settings['site_logo_light']))
+                        <div style="margin-top: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                            <label style="font-size: 0.76rem; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <input type="checkbox" name="remove_logo_light" value="1">
+                                <span>Վերականգնել լռելյայնը</span>
+                            </label>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ basename($settings['site_logo_light']) }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- 2. Dark Mode Logo -->
+                <div class="branding-card">
+                    <div class="branding-card-header">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #6366f1; padding: 0.35rem 0.6rem; border-radius: 8px;">
+                                <i class="fa-solid fa-moon"></i>
+                            </span>
+                            <strong style="color: var(--text-main); font-size: 0.95rem;">Լոգո Մուգ Ֆոնի Համար</strong>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Dark Mode & Landing</span>
+                    </div>
+
+                    <div class="branding-preview-box dark-bg">
+                        <img src="{{ \App\Models\SystemSetting::getLogoDark() }}" id="preview_logo_dark" alt="Logo Dark" style="max-height: 52px; max-width: 90%; object-fit: contain;">
+                    </div>
+
+                    <div style="margin-top: 0.85rem;">
+                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.35rem;">
+                            Վերբեռնել նոր լոգո (PNG, SVG, WebP)
+                        </label>
+                        <input type="file" name="logo_dark_file" accept="image/*" class="form-input" style="padding: 0.45rem 0.6rem; font-size: 0.82rem;" onchange="previewImage(this, 'preview_logo_dark')">
+                    </div>
+
+                    @if(!empty($settings['site_logo_dark']))
+                        <div style="margin-top: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                            <label style="font-size: 0.76rem; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <input type="checkbox" name="remove_logo_dark" value="1">
+                                <span>Վերականգնել լռելյայնը</span>
+                            </label>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ basename($settings['site_logo_dark']) }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- 3. Favicon -->
+                <div class="branding-card">
+                    <div class="branding-card-header">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.35rem 0.6rem; border-radius: 8px;">
+                                <i class="fa-solid fa-globe"></i>
+                            </span>
+                            <strong style="color: var(--text-main); font-size: 0.95rem;">Ֆավիկոն (Favicon / Icon)</strong>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Browser Tab</span>
+                    </div>
+
+                    <div class="branding-preview-box tab-mockup">
+                        <div class="browser-tab-preview">
+                            <img src="{{ \App\Models\SystemSetting::getFavicon() }}" id="preview_favicon" alt="Favicon" style="width: 22px; height: 22px; object-fit: contain; border-radius: 4px;">
+                            <span style="font-size: 0.78rem; font-weight: 600; color: #f8fafc; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ \App\Models\SystemSetting::getSiteName() }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 0.85rem;">
+                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.35rem;">
+                            Վերբեռնել (ICO, PNG, SVG - max 2MB)
+                        </label>
+                        <input type="file" name="favicon_file" accept=".ico,.png,.svg,.jpg" class="form-input" style="padding: 0.45rem 0.6rem; font-size: 0.82rem;" onchange="previewImage(this, 'preview_favicon')">
+                    </div>
+
+                    @if(!empty($settings['site_favicon']))
+                        <div style="margin-top: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                            <label style="font-size: 0.76rem; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <input type="checkbox" name="remove_favicon" value="1">
+                                <span>Վերականգնել լռելյայնը</span>
+                            </label>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ basename($settings['site_favicon']) }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. SEO & Social Meta (OpenGraph) -->
+        <div class="settings-card">
+            <div class="settings-section-title">
+                <i class="fa-solid fa-magnifying-glass-chart" style="color: #06b6d4;"></i>
+                <span>2. SEO Օպտիմիզացիա & Սոցիալական Ցանցերի Մետատվյալներ (SEO & OpenGraph)</span>
+            </div>
+
+            <div class="form-grid">
+                <!-- SEO Title (HY) -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-heading"></i> Գլխավոր SEO Title (Հայերեն) *
+                    </label>
+                    <input type="text" name="seo_title" id="input_seo_title" class="form-input" value="{{ old('seo_title', $settings['seo_title'] ?? '') }}" placeholder="menu by eLab — Ժամանակակից QR Մենյու Համակարգ" oninput="updateLiveSocialPreview()">
+                    <span class="input-hint">Երևում է Google որոնման և բրաուզերի tab-ում (առաջարկվում է 50-60 նիշ)</span>
+                </div>
+
+                <!-- SEO Title (EN) -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-globe"></i> SEO Title (English - optional)
+                    </label>
+                    <input type="text" name="seo_title_en" class="form-input" value="{{ old('seo_title_en', $settings['seo_title_en'] ?? '') }}" placeholder="menu by eLab — Smart QR Menu & Ordering Platform">
+                    <span class="input-hint">Անգլերեն լեզվով այցելուների համար</span>
+                </div>
+
+                <!-- SEO Description (HY) -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <i class="fa-solid fa-align-left"></i> SEO Meta Description (Հայերեն)
+                    </label>
+                    <textarea name="seo_description" id="input_seo_desc" rows="2" class="form-textarea" placeholder="Ժամանակակից ինտերակտիվ QR մենյու, սեղանից պատվերներ, մատուցողի կանչ և օնլայն վճարումներ ռեստորանների և սրճարանների համար։" oninput="updateLiveSocialPreview()">{{ old('seo_description', $settings['seo_description'] ?? '') }}</textarea>
+                    <span class="input-hint">Որոնողական համակարգերի տեքստային նկարագրություն (առաջարկվում է 140-160 նիշ)</span>
+                </div>
+
+                <!-- SEO Description (EN) -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <i class="fa-solid fa-globe"></i> SEO Meta Description (English - optional)
+                    </label>
+                    <textarea name="seo_description_en" rows="2" class="form-textarea" placeholder="Modern interactive QR Menu system with table ordering, waiter calls, and online payments for restaurants and cafes.">{{ old('seo_description_en', $settings['seo_description_en'] ?? '') }}</textarea>
+                </div>
+
+                <!-- SEO Keywords -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-tags"></i> SEO Keywords (Բանալի Բառեր)
+                    </label>
+                    <input type="text" name="seo_keywords" class="form-input" value="{{ old('seo_keywords', $settings['seo_keywords'] ?? 'qr menu, qrmenu, qr menyu, restaurant menu, elab menu, ռեստորանային մենյու, պատվերներ սեղանից') }}" placeholder="ստորակետերով բաժանված բառեր">
+                    <span class="input-hint">Հիմնաբառեր որոնողական ռոբոտների համար</span>
+                </div>
+
+                <!-- Footer Copyright -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-copyright"></i> Կայքի Copyright Տեքստ
+                    </label>
+                    <input type="text" name="footer_copyright" class="form-input" value="{{ old('footer_copyright', $settings['footer_copyright'] ?? '© 2026 eLab. Բոլոր իրավունքները պաշտպանված են։') }}" placeholder="© 2026 eLab. Բոլոր իրավունքները պաշտպանված են։">
+                    <span class="input-hint">Ցուցադրվում է լենդինգի ստորոտում</span>
+                </div>
+
+                <!-- OpenGraph Social Image Preview & Upload -->
+                <div class="form-group full-width" style="margin-top: 0.5rem;">
+                    <label class="form-label">
+                        <i class="fa-solid fa-share-nodes"></i> OpenGraph Social Share Preview & Նկար (Facebook, Telegram, WhatsApp)
+                    </label>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.25rem; align-items: start;">
+                        <!-- Social Mockup Card -->
+                        <div class="social-preview-mockup">
+                            <div class="social-preview-img-wrap">
+                                <img src="{{ \App\Models\SystemSetting::getOgImage() }}" id="preview_og_image" alt="Social Preview">
+                            </div>
+                            <div class="social-preview-body">
+                                <span class="social-preview-domain">{{ request()->getHost() }}</span>
+                                <h4 class="social-preview-title" id="mockup_title">{{ \App\Models\SystemSetting::getSeoTitle() }}</h4>
+                                <p class="social-preview-desc" id="mockup_desc">{{ Str::limit(\App\Models\SystemSetting::getSeoDescription(), 110) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Upload & Controls -->
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+                            <label class="form-label" style="font-size: 0.85rem; margin-bottom: 0.4rem;">
+                                Վերբեռնել OpenGraph Նկար (1200x630 px)
+                            </label>
+                            <input type="file" name="og_image_file" accept="image/*" class="form-input" style="padding: 0.5rem 0.75rem;" onchange="previewImage(this, 'preview_og_image')">
+                            <span class="input-hint" style="margin-top: 0.4rem; display: block;">
+                                Այս նկարը կցուցադրվի Telegram-ում, Facebook-ում, WhatsApp-ում կամ Viber-ում հղումը ուղարկելիս։
+                            </span>
+
+                            @if(!empty($settings['seo_og_image']))
+                                <div style="margin-top: 0.75rem;">
+                                    <label style="font-size: 0.8rem; color: #ef4444; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                        <input type="checkbox" name="remove_og_image" value="1">
+                                        <span>Ջնջել և վերականգնել լռելյայնը</span>
+                                    </label>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Contacts Section -->
         <div class="settings-card">
             <div class="settings-section-title">
                 <i class="fa-solid fa-headset" style="color: #f59e0b;"></i>
-                <span>1. Պաշտոնական Կոնտակտներ (Լենդինգ և Աջակցություն)</span>
+                <span>3. Պաշտոնական Կոնտակտներ (Լենդինգ և Աջակցություն)</span>
             </div>
 
             <div class="form-grid">
@@ -192,11 +537,11 @@
             </div>
         </div>
 
-        <!-- 2. Social Media Links -->
+        <!-- 4. Social Media Links -->
         <div class="settings-card">
             <div class="settings-section-title">
                 <i class="fa-solid fa-share-nodes" style="color: #3b82f6;"></i>
-                <span>2. Սոցիալական Ցանցեր</span>
+                <span>4. Սոցիալական Ցանցեր</span>
             </div>
 
             <div class="form-grid">
@@ -218,11 +563,11 @@
             </div>
         </div>
 
-        <!-- 3. Landing Page Experience & Demo -->
+        <!-- 5. Landing Page Experience & Demo -->
         <div class="settings-card">
             <div class="settings-section-title">
                 <i class="fa-solid fa-wand-magic-sparkles" style="color: #10b981;"></i>
-                <span>3. Լենդինգի Գործառույթներ & Դեմո Ռեստորան</span>
+                <span>5. Լենդինգի Գործառույթներ & Դեմո Ռեստորան</span>
             </div>
 
             <div class="form-grid">
@@ -270,6 +615,49 @@
                     Կառավարել Փաթեթները
                 </a>
             </div>
+        </div>
+
+        <!-- 6. Telegram System Settings (Platform Default & Alerts) -->
+        <div class="settings-card">
+            <div class="settings-section-title">
+                <i class="fa-brands fa-telegram" style="color: #229ed9;"></i>
+                <span>6. Telegram Ծանուցումների Կարգավորումներ (Platform Default & Admin Alerts)</span>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-robot" style="color: #229ed9;"></i> Հարթակի Լռելյայն Telegram Bot Token
+                    </label>
+                    <input type="password" name="telegram_bot_token" id="saTelegramBotToken" class="form-input" value="{{ old('telegram_bot_token', $settings['telegram_bot_token'] ?? '') }}" placeholder="123456789:ABCdefGHIjklMNOpqr... (@BotFather)">
+                    <span class="input-hint">Եթե ռեստորանը չունի սեփական բոտ, ծանուցումները կուղարկվեն այս բոտի միջոցով</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-hashtag" style="color: #229ed9;"></i> SuperAdmin Alert Chat ID / Group ID
+                    </label>
+                    <input type="text" name="telegram_admin_chat_id" id="saTelegramChatId" class="form-input" value="{{ old('telegram_admin_chat_id', $settings['telegram_admin_chat_id'] ?? '') }}" placeholder="-100123456789 կամ անձնական Chat ID">
+                    <span class="input-hint">Այս չատում կստանաք համակարգային թեստեր և ադմինիստրատիվ ազդանշաններ</span>
+                </div>
+            </div>
+
+            <!-- Test Connection Box -->
+            <div class="preview-box" style="margin-top: 1.25rem; background: rgba(34, 158, 217, 0.08); border: 1px dashed rgba(34, 158, 217, 0.35);">
+                <div>
+                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 0.25rem;">
+                        <i class="fa-solid fa-paper-plane" style="color: #229ed9;"></i> Ստուգել Telegram Կապը & Ուղարկել Թեստ
+                    </strong>
+                    <span style="font-size: 0.82rem; color: var(--text-muted);">
+                        Ստուգեք, որ Bot Token-ը և SuperAdmin Chat ID-ն ճիշտ են կարգավորված և հաղորդագրությունը հաջողությամբ հասնում է։
+                    </span>
+                </div>
+                <button type="button" id="btnTestSaTelegram" onclick="testSuperAdminTelegram()" class="btn" style="background: #229ed9; color: #fff; border-radius: 10px; padding: 0.55rem 1.2rem; font-size: 0.85rem; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Ուղարկել Թեստ
+                </button>
+            </div>
+
+            <div id="saTelegramTestResult" style="display: none; margin-top: 1rem; border-radius: 12px; padding: 0.85rem 1.15rem; font-size: 0.88rem; font-weight: 600;"></div>
         </div>
 
         <!-- Submit Button -->
@@ -610,6 +998,93 @@ function securityModule() {
                 }
             }, 1000);
         }
+    }
+}
+
+function testSuperAdminTelegram() {
+    const btn = document.getElementById('btnTestSaTelegram');
+    const resultBox = document.getElementById('saTelegramTestResult');
+    const chatId = document.getElementById('saTelegramChatId')?.value;
+    const botToken = document.getElementById('saTelegramBotToken')?.value;
+
+    if (!chatId || !chatId.trim()) {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+        resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+        resultBox.style.color = '#ef4444';
+        resultBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Խնդրում ենք լրացնել SuperAdmin Chat ID դաշտը։';
+        return;
+    }
+
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ուղարկվում է...';
+    resultBox.style.display = 'none';
+
+    fetch('{{ route("superadmin.settings.telegram.test") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            chat_id: chatId.trim(),
+            bot_token: botToken ? botToken.trim() : null,
+        }),
+    })
+    .then(res => res.json())
+    .then(data => {
+        resultBox.style.display = 'block';
+        if (data.success) {
+            resultBox.style.background = 'rgba(16, 185, 129, 0.12)';
+            resultBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+            resultBox.style.color = '#10b981';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + (data.message || 'Թեստային հաղորդագրությունը հաջողությամբ ուղարկվեց։');
+        } else {
+            resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+            resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            resultBox.style.color = '#ef4444';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.message || 'Սխալ՝ չհաջողվեց ուղարկել հաղորդագրությունը։');
+        }
+    })
+    .catch(err => {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+        resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+        resultBox.style.color = '#ef4444';
+        resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Կապի խափանում. ' + err.message;
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    });
+}
+
+function previewImage(input, previewId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById(previewId);
+            if (preview) {
+                preview.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function updateLiveSocialPreview() {
+    const titleInput = document.getElementById('input_seo_title');
+    const descInput = document.getElementById('input_seo_desc');
+    const mockupTitle = document.getElementById('mockup_title');
+    const mockupDesc = document.getElementById('mockup_desc');
+
+    if (titleInput && mockupTitle) {
+        mockupTitle.innerText = titleInput.value.trim() || '{{ \App\Models\SystemSetting::getSeoTitle() }}';
+    }
+    if (descInput && mockupDesc) {
+        mockupDesc.innerText = descInput.value.trim() || '{{ Str::limit(\App\Models\SystemSetting::getSeoDescription(), 110) }}';
     }
 }
 </script>

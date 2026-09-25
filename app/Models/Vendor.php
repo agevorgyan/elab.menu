@@ -81,6 +81,7 @@ class Vendor extends Model
         'crm_settings',
         'thermal_printer_settings',
         'floor_plan_data',
+        'telegram_settings',
     ];
 
     protected $casts = [
@@ -104,9 +105,69 @@ class Vendor extends Model
         'crm_settings' => 'array',
         'thermal_printer_settings' => 'array',
         'floor_plan_data' => 'array',
+        'telegram_settings' => 'array',
         'allow_whatsapp_orders' => 'boolean',
         'supported_languages' => 'array',
     ];
+
+    /**
+     * Check if Telegram notifications are enabled for this vendor.
+     */
+    public function hasTelegramEnabled(): bool
+    {
+        return ! empty($this->telegram_settings['enabled']);
+    }
+
+    /**
+     * Get configured Telegram Bot Token or fallback to platform settings / env.
+     */
+    public function getTelegramBotToken(): ?string
+    {
+        if (! empty($this->telegram_settings['bot_token'])) {
+            return trim($this->telegram_settings['bot_token']);
+        }
+
+        return SystemSetting::get('telegram_bot_token')
+            ?: config('services.telegram.bot_token')
+            ?: env('TELEGRAM_BOT_TOKEN');
+    }
+
+    /**
+     * Get configured Telegram Chat ID.
+     */
+    public function getTelegramChatId(): ?string
+    {
+        return ! empty($this->telegram_settings['chat_id'])
+            ? trim((string) $this->telegram_settings['chat_id'])
+            : null;
+    }
+
+    /**
+     * Get optional Telegram Message Thread / Topic ID.
+     */
+    public function getTelegramTopicId(): ?int
+    {
+        return ! empty($this->telegram_settings['topic_id'])
+            ? (int) $this->telegram_settings['topic_id']
+            : null;
+    }
+
+    /**
+     * Check if a specific notification type is enabled (orders, waiter_calls, payments).
+     */
+    public function shouldNotifyTelegram(string $type): bool
+    {
+        if (! $this->hasTelegramEnabled()) {
+            return false;
+        }
+
+        $key = 'notify_'.$type;
+
+        // If explicitly set, respect it; otherwise default to true when telegram is enabled
+        return array_key_exists($key, $this->telegram_settings ?? [])
+            ? (bool) $this->telegram_settings[$key]
+            : true;
+    }
 
     /**
      * Get configured AI Provider (gemini, openai, claude, deepseek, groq, openrouter, custom).

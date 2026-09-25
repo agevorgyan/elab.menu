@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Գործընկերոջ Գրանցում — QRMenu SaaS Platform</title>
+    @php
+        $siteName = \App\Models\SystemSetting::getSiteName();
+        $siteFavicon = \App\Models\SystemSetting::getFavicon();
+        $siteLogoLight = \App\Models\SystemSetting::getLogoLight();
+    @endphp
+    <title>Գործընկերոջ Գրանցում — {{ $siteName }}</title>
+    
+    <link rel="icon" type="image/png" href="{{ $siteFavicon }}">
+    <link rel="apple-touch-icon" href="{{ $siteFavicon }}">
     
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -494,6 +502,11 @@
         <div class="register-card">
             <!-- Header -->
             <div class="brand-header">
+                @if($siteLogoLight)
+                    <div style="margin-bottom: 1.25rem;">
+                        <img src="{{ $siteLogoLight }}" alt="{{ $siteName }}" style="max-height: 48px; max-width: 220px; object-fit: contain;">
+                    </div>
+                @endif
                 <div class="trial-badge">
                     <i class="fa-solid fa-gift"></i> 14 Օր Անվճար Փորձաշրջան • Բանկային քարտ չի պահանջվում
                 </div>

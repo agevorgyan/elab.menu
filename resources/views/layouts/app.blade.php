@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'QRMenu SaaS Admin Platform')</title>
+    <title>@yield('title', \App\Models\SystemSetting::getSiteName() . ' Admin Platform')</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ \App\Models\SystemSetting::getFavicon() }}">
+    <link rel="apple-touch-icon" href="{{ \App\Models\SystemSetting::getFavicon() }}">
 
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -707,14 +711,22 @@
     <aside class="sidebar" :class="{ 'mobile-open': mobileOpen }">
         <div class="sidebar-brand">
             @if(Auth::user()?->isSuperAdmin())
+                @php
+                    $sysLogo = \App\Models\SystemSetting::getLogoDark();
+                    $sysName = \App\Models\SystemSetting::getSiteName();
+                @endphp
                 <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%;">
-                    <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 1.2rem; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); flex-shrink: 0;">
-                        <i class="fa-solid fa-crown"></i>
-                    </div>
-                    <div style="flex: 1; min-width: 0;">
-                        <h1 style="font-size: 1.15rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">QRMenu HQ</h1>
-                        <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">SuperAdmin Console</div>
-                    </div>
+                    @if($sysLogo)
+                        <img src="{{ $sysLogo }}" alt="{{ $sysName }}" style="max-height: 38px; max-width: 140px; object-fit: contain;">
+                    @else
+                        <div style="width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 1.2rem; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); flex-shrink: 0;">
+                            <i class="fa-solid fa-crown"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <h1 style="font-size: 1.15rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $sysName }}</h1>
+                            <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">SuperAdmin Console</div>
+                        </div>
+                    @endif
                 </div>
             @else
                 @php 

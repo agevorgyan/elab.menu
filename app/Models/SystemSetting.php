@@ -72,4 +72,106 @@ class SystemSetting extends Model
 
         return $setting;
     }
+
+    /**
+     * Get system logo for light backgrounds.
+     */
+    public static function getLogoLight(): string
+    {
+        $val = static::get('site_logo_light');
+        if (! empty($val)) {
+            return str_starts_with($val, 'http') ? $val : asset(ltrim($val, '/'));
+        }
+
+        return asset('images/branding/logo-light.png');
+    }
+
+    /**
+     * Get system logo for dark backgrounds.
+     */
+    public static function getLogoDark(): string
+    {
+        $val = static::get('site_logo_dark');
+        if (! empty($val)) {
+            return str_starts_with($val, 'http') ? $val : asset(ltrim($val, '/'));
+        }
+
+        return asset('images/branding/logo-dark.png');
+    }
+
+    /**
+     * Get system favicon URL.
+     */
+    public static function getFavicon(): string
+    {
+        $val = static::get('site_favicon');
+        if (! empty($val)) {
+            return str_starts_with($val, 'http') ? $val : asset(ltrim($val, '/'));
+        }
+
+        return asset('images/branding/favicon.png');
+    }
+
+    /**
+     * Get the configured site/platform name.
+     */
+    public static function getSiteName(): string
+    {
+        return static::get('site_name') ?: config('app.name', 'menu by eLab');
+    }
+
+    /**
+     * Get the configured site tagline/subtitle.
+     */
+    public static function getSiteTagline(): string
+    {
+        return static::get('site_tagline') ?: 'Խելացի Ռեստորանային QR Մենյու & Պատվերների Համակարգ';
+    }
+
+    /**
+     * Get SEO Title (supports locale).
+     */
+    public static function getSeoTitle(?string $locale = null): string
+    {
+        $locale = $locale ?: app()->getLocale();
+        if ($locale === 'en' && ! empty(static::get('seo_title_en'))) {
+            return static::get('seo_title_en');
+        }
+
+        return static::get('seo_title') ?: (static::getSiteName().' — '.static::getSiteTagline());
+    }
+
+    /**
+     * Get SEO Meta Description (supports locale).
+     */
+    public static function getSeoDescription(?string $locale = null): string
+    {
+        $locale = $locale ?: app()->getLocale();
+        if ($locale === 'en' && ! empty(static::get('seo_description_en'))) {
+            return static::get('seo_description_en');
+        }
+
+        return static::get('seo_description') ?: 'Ժամանակակից ինտերակտիվ QR մենյու, սեղանից պատվերներ, մատուցողի կանչ և օնլայն վճարումներ ռեստորանների և սրճարանների համար։';
+    }
+
+    /**
+     * Get SEO Keywords.
+     */
+    public static function getSeoKeywords(): string
+    {
+        return static::get('seo_keywords') ?: 'qr menu, qrmenu, qr menyu, restaurant menu, elab menu, ռեստորանային մենյու';
+    }
+
+    /**
+     * Get OpenGraph / Social preview image.
+     */
+    public static function getOgImage(): string
+    {
+        $val = static::get('seo_og_image');
+        if (! empty($val)) {
+            return str_starts_with($val, 'http') ? $val : asset(ltrim($val, '/'));
+        }
+
+        return static::getLogoDark();
+    }
 }

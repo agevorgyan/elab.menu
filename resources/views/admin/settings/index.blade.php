@@ -1209,7 +1209,184 @@
                         <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Հասանելի փոխարինիչներ՝ {NAME} - հաճախորդի անուն, {DISCOUNT} - զեղչի %, {VENDOR} - ռեստորանի անվանում') }}</span>
                     </div>
                 </div>
-            <!-- 8. USER PROFILE & 2FA SECURITY CARD -->
+            </div>
+
+            <!-- 8. TELEGRAM NOTIFICATIONS CARD -->
+            @php
+                $tgSettings = $vendor->telegram_settings ?? [];
+                $tgEnabled = !empty($tgSettings['enabled']);
+                $tgBotToken = $tgSettings['bot_token'] ?? '';
+                $tgChatId = $tgSettings['chat_id'] ?? '';
+                $tgTopicId = $tgSettings['topic_id'] ?? '';
+                $tgNotifyOrders = !empty($tgSettings['notify_orders']) || !isset($tgSettings['notify_orders']);
+                $tgNotifyWaiters = !empty($tgSettings['notify_waiter_calls']) || !isset($tgSettings['notify_waiter_calls']);
+                $tgNotifyPayments = !empty($tgSettings['notify_payments']) || !isset($tgSettings['notify_payments']);
+                $platformBotConfigured = !empty(\App\Models\SystemSetting::get('telegram_bot_token')) || !empty(config('services.telegram.bot_token'));
+            @endphp
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(34, 158, 217, 0.15); color: #229ed9; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+                            <i class="fa-brands fa-telegram"></i>
+                        </span>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                    {{ __('Telegram Ծանուցումների Համակարգ') }}
+                                </h3>
+                                @if($tgEnabled && !empty($tgChatId))
+                                    <span class="badge badge-emerald" style="font-weight: 700; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ') }}
+                                    </span>
+                                @elseif($tgEnabled)
+                                    <span class="badge badge-amber" style="font-weight: 700; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Լրացրեք Chat ID') }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-secondary" style="font-weight: 700; font-size: 0.75rem;">
+                                        {{ __('Անջատված') }}
+                                    </span>
+                                @endif
+                            </div>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Ստացեք ակնթարթային ծանուցումներ Ձեր Telegram խմբում, ալիքում կամ անձնական չատում') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <label class="switch" style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                        <input type="checkbox" name="telegram_settings[enabled]" value="1" {{ $tgEnabled ? 'checked' : '' }} id="telegramToggle" onchange="toggleTelegramContainer()">
+                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
+                    </label>
+                </div>
+
+                <div id="telegramContainer" style="{{ ! $tgEnabled ? 'opacity: 0.55; pointer-events: none;' : '' }}; transition: all 0.25s ease;">
+                    <!-- Bot Credentials & Target Chat Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                        <!-- Chat ID (Required) -->
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Telegram Chat ID / Group ID / Channel') }} <span style="color: #ef4444;">*</span>
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="text" name="telegram_settings[chat_id]" id="telegramChatId" value="{{ old('telegram_settings.chat_id', $tgChatId) }}" placeholder="Օր․ -100123456789 կամ @restaurant_alerts" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.4rem; border-radius: 12px; font-weight: 600; font-family: monospace;">
+                                <span style="position: absolute; left: 0.85rem; color: #229ed9; font-size: 1rem;">
+                                    <i class="fa-solid fa-hashtag"></i>
+                                </span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                                {{ __('Խմբի կամ ալիքի ID-ն (սկսվում է -100-ով) կամ ալիքի @username-ը։ Բոտը պետք է ավելացված լինի այդ խմբում/ալիքում որպես ադմինիստրատոր։') }}
+                            </span>
+                        </div>
+
+                        <!-- Custom Bot Token (Optional) -->
+                        <div>
+                            <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                <span>{{ __('Սեփական Bot Token (ըստ ցանկության)') }}</span>
+                                @if($platformBotConfigured)
+                                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 600;">
+                                        <i class="fa-solid fa-check"></i> {{ __('Հարթակի բոտը հասանելի է') }}
+                                    </span>
+                                @endif
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="{{ old('telegram_settings.bot_token', $tgBotToken) }}" placeholder="{{ $platformBotConfigured ? 'Լռելյայն օգտագործվում է QR Menu բոտը' : '123456789:AA... (@BotFather)' }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
+                                <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
+                                    <i class="fa-solid fa-robot"></i>
+                                </span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                                {{ __('Թողեք դատարկ՝ համակարգի լռելյայն բոտն օգտագործելու համար, կամ նշեք @BotFather-ից ստացած սեփական Token-ը։') }}
+                            </span>
+                        </div>
+
+                        <!-- Forum Topic ID (Optional) -->
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('Forum Topic / Thread ID (ըստ ցանկության)') }}
+                            </label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="number" name="telegram_settings[topic_id]" id="telegramTopicId" value="{{ old('telegram_settings.topic_id', $tgTopicId) }}" placeholder="Օր․ 42" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.4rem; border-radius: 12px; font-weight: 600;">
+                                <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
+                                    <i class="fa-solid fa-comments"></i>
+                                </span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                                {{ __('Եթե ձեր Telegram խումբը բաժանված է թեմաների (Topics), նշեք թեմայի ID-ն։') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Branch-specific chat ID info -->
+                    @if($location)
+                        <div style="background: rgba(34, 158, 217, 0.05); border: 1px dashed rgba(34, 158, 217, 0.3); border-radius: 14px; padding: 0.85rem 1.15rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <i class="fa-solid fa-code-branch" style="color: #229ed9;"></i>
+                                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
+                                    {{ __('Այս մասնաճյուղի առանձին Chat ID (ըստ ցանկության)') }}: <strong>{{ $location->name }}</strong>
+                                </span>
+                            </div>
+                            <div style="flex: 1; max-width: 320px; min-width: 200px;">
+                                <input type="text" name="telegram_chat_id" value="{{ old('telegram_chat_id', $location->telegram_chat_id) }}" placeholder="{{ __('Թողեք դատարկ՝ ընդհանուրը կիրառելու համար') }}" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px; font-family: monospace;">
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Event checkboxes -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem;">
+                            {{ __('Ծանուցումների Տեսակները') }}
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 0.85rem;">
+                            <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 1rem; cursor: pointer; transition: border-color 0.2s;">
+                                <input type="checkbox" name="telegram_settings[notify_orders]" value="1" {{ $tgNotifyOrders ? 'checked' : '' }} style="accent-color: #229ed9; width: 18px; height: 18px;">
+                                <div style="font-size: 0.85rem;">
+                                    <strong style="color: var(--text-main); display: block;">🔔 {{ __('Նոր Պատվերներ') }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Սեղանի, տանելու և առաքման պատվերներ') }}</span>
+                                </div>
+                            </label>
+
+                            <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 1rem; cursor: pointer; transition: border-color 0.2s;">
+                                <input type="checkbox" name="telegram_settings[notify_waiter_calls]" value="1" {{ $tgNotifyWaiters ? 'checked' : '' }} style="accent-color: #229ed9; width: 18px; height: 18px;">
+                                <div style="font-size: 0.85rem;">
+                                    <strong style="color: var(--text-main); display: block;">🛎️ {{ __('Մատուցողի Կանչ') }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Կանչի և հաշվի (քարտ/կանխիկ) պահանջներ') }}</span>
+                                </div>
+                            </label>
+
+                            <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 1rem; cursor: pointer; transition: border-color 0.2s;">
+                                <input type="checkbox" name="telegram_settings[notify_payments]" value="1" {{ $tgNotifyPayments ? 'checked' : '' }} style="accent-color: #229ed9; width: 18px; height: 18px;">
+                                <div style="font-size: 0.85rem;">
+                                    <strong style="color: var(--text-main); display: block;">✅ {{ __('Օնլայն Վճարումներ') }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Idram, Telcell, ArCa, Stripe հաստատումներ') }}</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Test Connection Box -->
+                    <div style="background: rgba(34, 158, 217, 0.08); border: 1px solid rgba(34, 158, 217, 0.25); border-radius: 16px; padding: 1.15rem 1.35rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 0.2rem;">
+                                <i class="fa-solid fa-paper-plane" style="color: #229ed9;"></i> {{ __('Ստուգել Կապը & Ուղարկել Թեստ') }}
+                            </strong>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                {{ __('Սեղմեք կոճակը՝ նշված Chat ID-ին թեստային հաղորդագրություն ուղարկելու և ստուգելու համար') }}
+                            </span>
+                        </div>
+
+                        <button type="button" id="btnTestTelegram" onclick="testTelegramConnection()" class="btn" style="background: #229ed9; color: #fff; font-weight: 700; border-radius: 12px; padding: 0.65rem 1.4rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 158, 217, 0.35); transition: transform 0.15s ease;">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>{{ __('Ուղարկել Թեստ') }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Ajax Status Feedback Alert -->
+                    <div id="telegramTestResult" style="display: none; margin-top: 1rem; border-radius: 12px; padding: 0.85rem 1.15rem; font-size: 0.88rem; font-weight: 600;"></div>
+                </div>
+            </div>
+
+            <!-- 9. USER PROFILE & 2FA SECURITY CARD -->
             <div class="card settings-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(245, 158, 11, 0.05) 100%); border: 1.5px solid {{ Auth::user()->hasTwoFactorEnabled() ? '#10b981' : 'var(--border-color)' }}; border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
@@ -1559,5 +1736,80 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function toggleTelegramContainer() {
+    const toggle = document.getElementById('telegramToggle');
+    const container = document.getElementById('telegramContainer');
+    if (!toggle || !container) return;
+    if (toggle.checked) {
+        container.style.opacity = '1';
+        container.style.pointerEvents = 'auto';
+    } else {
+        container.style.opacity = '0.55';
+        container.style.pointerEvents = 'none';
+    }
+}
+
+function testTelegramConnection() {
+    const btn = document.getElementById('btnTestTelegram');
+    const resultBox = document.getElementById('telegramTestResult');
+    const chatId = document.getElementById('telegramChatId')?.value;
+    const botToken = document.getElementById('telegramBotToken')?.value;
+    const topicId = document.getElementById('telegramTopicId')?.value;
+
+    if (!chatId || !chatId.trim()) {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+        resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+        resultBox.style.color = '#ef4444';
+        resultBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Խնդրում ենք լրացնել Telegram Chat ID դաշտը։';
+        return;
+    }
+
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ուղարկվում է...';
+    resultBox.style.display = 'none';
+
+    fetch('{{ route("admin.settings.telegram.test") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            chat_id: chatId.trim(),
+            bot_token: botToken ? botToken.trim() : null,
+            topic_id: topicId ? topicId.trim() : null,
+        }),
+    })
+    .then(res => res.json())
+    .then(data => {
+        resultBox.style.display = 'block';
+        if (data.success) {
+            resultBox.style.background = 'rgba(16, 185, 129, 0.12)';
+            resultBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+            resultBox.style.color = '#10b981';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + (data.message || 'Թեստային հաղորդագրությունը հաջողությամբ ուղարկվեց։');
+        } else {
+            resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+            resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            resultBox.style.color = '#ef4444';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.message || 'Սխալ՝ չհաջողվեց ուղարկել հաղորդագրությունը։');
+        }
+    })
+    .catch(err => {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
+        resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+        resultBox.style.color = '#ef4444';
+        resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Կապի խափանում. ' + err.message;
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    });
+}
 </script>
 @endsection

@@ -16,6 +16,7 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\WaiterCall;
 use App\Services\PaymentGatewayService;
+use App\Services\TelegramNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -282,6 +283,12 @@ self.addEventListener('fetch', event => {
             'payment_status' => 'paid',
             'payment_transaction_id' => $token,
         ]);
+
+        try {
+            app(TelegramNotificationService::class)->sendPaymentNotification($order, (string) $gateway);
+        } catch (\Throwable $e) {
+            Log::warning('Telegram payment notification failed: '.$e->getMessage());
+        }
 
         return redirect()->route('client.menu', [
             'vendor_slug' => $vendor->slug,

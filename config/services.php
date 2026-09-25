@@ -39,4 +39,8 @@ return [
         'key' => env('GEMINI_API_KEY'),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+    ],
+
 ];

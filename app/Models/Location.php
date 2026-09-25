@@ -17,6 +17,7 @@ class Location extends Model
         'address',
         'phone',
         'whatsapp_number',
+        'telegram_chat_id',
         'wifi_ssid',
         'wifi_password',
         'working_hours',

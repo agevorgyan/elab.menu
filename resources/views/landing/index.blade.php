@@ -3,8 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name', 'elab.menu') }} — {{ __('hero_title') }}</title>
-    <meta name="description" content="{{ __('hero_subtitle') }}">
+    @php
+        $siteName = \App\Models\SystemSetting::getSiteName();
+        $seoTitle = \App\Models\SystemSetting::getSeoTitle(app()->getLocale()) ?? ($siteName . ' — ' . __('hero_title'));
+        $seoDesc = \App\Models\SystemSetting::getSeoDescription(app()->getLocale()) ?? __('hero_subtitle');
+        $seoKeywords = \App\Models\SystemSetting::getSeoKeywords();
+        $siteFavicon = \App\Models\SystemSetting::getFavicon();
+        $siteLogoDark = \App\Models\SystemSetting::getLogoDark();
+        $ogImage = \App\Models\SystemSetting::getOgImage();
+    @endphp
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDesc }}">
+    @if($seoKeywords)
+        <meta name="keywords" content="{{ $seoKeywords }}">
+    @endif
+
+    <!-- Dynamic Favicon -->
+    <link rel="icon" type="image/png" href="{{ $siteFavicon }}">
+    <link rel="apple-touch-icon" href="{{ $siteFavicon }}">
+
+    <!-- Open Graph / Facebook / Telegram -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDesc }}">
+    @if($ogImage)
+        <meta property="og:image" content="{{ str_starts_with($ogImage, 'http') ? $ogImage : url($ogImage) }}">
+    @endif
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDesc }}">
+    @if($ogImage)
+        <meta name="twitter:image" content="{{ str_starts_with($ogImage, 'http') ? $ogImage : url($ogImage) }}">
+    @endif
 
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1294,11 +1328,15 @@
     <header class="site-header">
         <div class="container">
             <div class="nav-wrapper">
-                <a href="{{ route('landing') }}" class="brand-logo">
-                    <div class="logo-icon">
-                        <i class="fa-solid fa-qrcode"></i>
-                    </div>
-                    <div class="brand-text">elab<span>.menu</span></div>
+                <a href="{{ route('landing') }}" class="brand-logo" style="text-decoration: none; display: flex; align-items: center; gap: 0.65rem;">
+                    @if($siteLogoDark)
+                        <img src="{{ $siteLogoDark }}" alt="{{ $siteName }}" style="height: 38px; max-width: 170px; object-fit: contain;">
+                    @else
+                        <div class="logo-icon">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <div class="brand-text">{{ $siteName }}</div>
+                    @endif
                 </a>
 
                 <ul class="nav-links">
@@ -1902,13 +1940,17 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <a href="{{ route('landing') }}" class="brand-logo">
-                        <div class="logo-icon">
-                            <i class="fa-solid fa-qrcode"></i>
-                        </div>
-                        <div class="brand-text">elab<span>.menu</span></div>
+                    <a href="{{ route('landing') }}" class="brand-logo" style="text-decoration: none; display: flex; align-items: center; gap: 0.65rem;">
+                        @if($siteLogoDark)
+                            <img src="{{ $siteLogoDark }}" alt="{{ $siteName }}" style="height: 36px; max-width: 160px; object-fit: contain;">
+                        @else
+                            <div class="logo-icon">
+                                <i class="fa-solid fa-qrcode"></i>
+                            </div>
+                            <div class="brand-text">{{ $siteName }}</div>
+                        @endif
                     </a>
-                    <p>{{ __('footer_description') }}</p>
+                    <p>{{ \App\Models\SystemSetting::getSiteTagline() ?: __('footer_description') }}</p>
                 </div>
 
                 <div class="footer-column">
@@ -1986,7 +2028,11 @@
 
             <div class="footer-bottom">
                 <div>
-                    &copy; {{ date('Y') }} elab.menu. {{ __('footer_rights') }}
+                    @if(!empty($settings['footer_copyright']))
+                        {{ $settings['footer_copyright'] }}
+                    @else
+                        &copy; {{ date('Y') }} {{ $siteName }}. {{ __('footer_rights') }}
+                    @endif
                 </div>
                 <div style="display: flex; gap: 1rem;">
                     <span>Yerevan, Armenia</span>

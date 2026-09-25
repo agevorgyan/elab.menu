@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="{{ $vendor->primary_color ?? '#f59e0b' }}">
     <link rel="manifest" href="{{ route('client.manifest', ['vendor_slug' => $vendor->slug]) }}">
-    <title>{{ $vendor->name }} - Digital Menu</title>
+    <title>{{ $vendor->name }} - {{ __('menu.digital_menu') }}</title>
 
-    <!-- Google Fonts -->
+    <!-- Dynamic Favicon & Icons -->
+    <link rel="icon" type="image/png" href="{{ $vendor->logo ?: \App\Models\SystemSetting::getFavicon() }}">
+    <link rel="apple-touch-icon" href="{{ $vendor->logo ?: \App\Models\SystemSetting::getFavicon() }}">
+
+    <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Alpine.js & FontAwesome -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -31,7 +35,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body, button, input, select, textarea { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body, button, input, select, textarea { font-family: 'Inter', -apple-system, sans-serif; }
         html { scroll-behavior: smooth; }
         body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-bottom: calc(115px + env(safe-area-inset-bottom, 0.5rem)); }
 
@@ -410,6 +414,22 @@
                 </div>
             </div>
         @endforeach
+
+        <!-- Storefront Discreet Legal & Powered By Footer -->
+        <footer style="text-align: center; padding: 2rem 1rem 3rem; margin-top: 2rem; border-top: 1px dashed var(--border-color); color: var(--text-muted); font-size: 0.78rem;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 0.85rem; margin-bottom: 0.65rem;">
+                <a href="{{ route('legal.privacy') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;">{{ __('footer_privacy') }}</a>
+                <span>•</span>
+                <a href="{{ route('legal.terms') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;">{{ __('footer_terms') }}</a>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 500;">
+                <span>Powered by</span>
+                <a href="{{ route('landing') }}" style="color: var(--primary); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <img src="{{ \App\Models\SystemSetting::getFavicon() }}" alt="{{ \App\Models\SystemSetting::getSiteName() }}" style="width: 14px; height: 14px; border-radius: 3px; object-fit: contain;">
+                    <span>{{ \App\Models\SystemSetting::getSiteName() }}</span>
+                </a>
+            </div>
+        </footer>
     </div>
     </div> <!-- /.storefront-app-shell -->
 

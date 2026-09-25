@@ -7,6 +7,10 @@
     <link rel="manifest" href="{{ route('client.manifest', ['vendor_slug' => $vendor->slug]) }}">
     <title>{{ $vendor->name }} - {{ __('menu.digital_menu') }}</title>
 
+    <!-- Dynamic Favicon & Icons -->
+    <link rel="icon" type="image/png" href="{{ $vendor->logo ?: \App\Models\SystemSetting::getFavicon() }}">
+    <link rel="apple-touch-icon" href="{{ $vendor->logo ?: \App\Models\SystemSetting::getFavicon() }}">
+
     <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -604,6 +608,22 @@
                 </div>
             </div>
         @endforeach
+
+        <!-- Storefront Discreet Legal & Powered By Footer -->
+        <footer style="text-align: center; padding: 2rem 1rem 3rem; margin-top: 2rem; border-top: 1px dashed var(--border-subtle); color: var(--text-muted); font-size: 0.78rem;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 0.85rem; margin-bottom: 0.65rem;">
+                <a href="{{ route('legal.privacy') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;">{{ __('footer_privacy') }}</a>
+                <span>•</span>
+                <a href="{{ route('legal.terms') }}" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;">{{ __('footer_terms') }}</a>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 500;">
+                <span>Powered by</span>
+                <a href="{{ route('landing') }}" style="color: var(--primary); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <img src="{{ \App\Models\SystemSetting::getFavicon() }}" alt="{{ \App\Models\SystemSetting::getSiteName() }}" style="width: 14px; height: 14px; border-radius: 3px; object-fit: contain;">
+                    <span>{{ \App\Models\SystemSetting::getSiteName() }}</span>
+                </a>
+            </div>
+        </footer>
     </main>
     </div> <!-- /.storefront-app-shell -->
 

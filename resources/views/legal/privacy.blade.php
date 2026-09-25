@@ -1,39 +1,179 @@
 <!DOCTYPE html>
-<html lang="hy">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Գաղտնիության Քաղաքականություն | Privacy Policy - QR Menu SaaS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    @php
+        $siteName = \App\Models\SystemSetting::getSiteName();
+        $siteFavicon = \App\Models\SystemSetting::getFavicon();
+        $siteLogo = \App\Models\SystemSetting::getLogoDark();
+        $contactEmail = \App\Models\SystemSetting::get('contact_email') ?: 'support@elab.am';
+    @endphp
+    <title>Գաղտնիության Քաղաքականություն | Privacy Policy — {{ $siteName }}</title>
+    <link rel="icon" type="image/png" href="{{ $siteFavicon }}">
+    <link rel="apple-touch-icon" href="{{ $siteFavicon }}">
+
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
+
     <style>
         :root {
-            --primary: #4f46e5;
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
+            --bg-main: #070913;
+            --bg-card: rgba(18, 25, 44, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.08);
             --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-amber: #f59e0b;
+            --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            --shadow-card: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, button, input, select, textarea { font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg-main); color: var(--text-main); min-height: 100vh; padding: 2rem 1rem; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 2.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: #ffffff; margin-bottom: 0.5rem; }
-        h2 { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-top: 1.75rem; margin-bottom: 0.75rem; }
-        p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem; }
-        ul { color: var(--text-muted); font-size: 0.95rem; margin-left: 1.5rem; margin-bottom: 1rem; }
-        li { margin-bottom: 0.5rem; }
-        .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--primary); color: #fff; text-decoration: none; padding: 0.6rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem; margin-top: 2rem; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 3rem 1rem;
+            line-height: 1.65;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .ambient-glow {
+            position: absolute;
+            top: 0;
+            left: 30%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(239, 68, 68, 0.04) 50%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .container {
+            max-width: 840px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: clamp(1.75rem, 4vw, 3rem);
+            box-shadow: var(--shadow-card);
+            position: relative;
+            z-index: 1;
+        }
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-glass);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .brand-logo-img {
+            max-height: 38px;
+            max-width: 170px;
+            object-fit: contain;
+        }
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            line-height: 1.25;
+        }
+        .updated-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-amber);
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        ul {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-left: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        li strong {
+            color: var(--text-main);
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--accent-gradient);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.75rem 1.4rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-top: 2.25rem;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+        }
     </style>
 </head>
 <body>
+    <div class="ambient-glow"></div>
     <div class="container">
-        <h1>🔒 Գաղտնիության Քաղաքականություն (Privacy Policy)</h1>
-        <p style="font-size: 0.85rem; color: var(--primary); font-weight: 700;">Վերջին թարմացում՝ {{ date('Y-m-d') }}</p>
+        <div class="brand-header">
+            <a href="{{ route('landing') }}" style="display: flex; align-items: center; text-decoration: none;">
+                @if($siteLogo)
+                    <img src="{{ $siteLogo }}" alt="{{ $siteName }}" class="brand-logo-img">
+                @else
+                    <span style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--text-main);">{{ $siteName }}</span>
+                @endif
+            </a>
+            <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> Վերադառնալ
+            </a>
+        </div>
+
+        <h1>🔒 Գաղտնիության Քաղաքականություն</h1>
+        <div class="updated-pill">
+            <i class="fa-solid fa-clock"></i> Վերջին թարմացում՝ {{ date('d.m.Y') }}
+        </div>
 
         <h2>1. Ընդհանուր Դրույթներ</h2>
-        <p>Սույն Գաղտնիության Քաղաքականությունը սահմանում է, թե ինչպես է QR Menu SaaS հարթակը և գործընկեր հաստատությունները (Ռեստորաններ, Սրճարաններ, Հյուրանոցներ) հավաքագրում, օգտագործում, պահպանում և պաշտպանում Հաճախորդների անձնական տվյալները թվային մենյուից պատվեր կատարելիս։</p>
+        <p>Սույն Գաղտնիության Քաղաքականությունը սահմանում է, թե ինչպես է {{ $siteName }} հարթակը և գործընկեր հաստատությունները (Ռեստորաններ, Սրճարաններ, Հյուրանոցներ) հավաքագրում, օգտագործում, պահպանում և պաշտպանում Հաճախորդների անձնական տվյալները թվային մենյուից պատվեր կատարելիս։</p>
 
         <h2>2. Հավաքագրվող Տվյալները</h2>
         <p>Պատվերի գրանցման ժամանակ կարող են հավաքագրվել հետևյալ տվյալները․</p>
@@ -56,9 +196,11 @@
         <p>Մենք կիրառում ենք ժամանակակից կոդավորման (SSL/TLS) և անվտանգության տեխնիկական միջոցներ Ձեր տվյալներն ապօրինի մուտքից կամ արտահոսքից պաշտպանելու համար։ Ձեր տվյալները ԵՐԲԵՔ չեն վաճառվում կամ փոխանցվում երրորդ անձանց։</p>
 
         <h2>5. Կոնտակտային Տվյալներ</h2>
-        <p>Գաղտնիության քաղաքականության վերաբերյալ հարցերի կամ տվյալների հեռացման պահանջի դեպքում կարող եք կապ հաստատել աջակցման թիմի հետ՝ <strong style="color: var(--text-main);">support@qrmenu.local</strong></p>
+        <p>Գաղտնիության քաղաքականության վերաբերյալ հարցերի կամ տվյալների հեռացման պահանջի դեպքում կարող եք կապ հաստատել աջակցման թիմի հետ՝ <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
 
-        <a href="javascript:history.back()" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Վերադառնալ Մենյու</a>
+        <a href="javascript:history.back()" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Վերադառնալ Մենյու
+        </a>
     </div>
 </body>
 </html>

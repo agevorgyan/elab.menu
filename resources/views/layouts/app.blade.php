@@ -888,7 +888,7 @@
                     <i class="fa-solid fa-headset" style="color: var(--primary);"></i> Support Desk
                 </div>
                 <p>{{ __('Need help or custom menu translation?') }}</p>
-                <a href="mailto:support@qrmenu.local" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px; width: 100%;">
+                <a href="mailto:{{ \App\Models\SystemSetting::get('contact_email') ?: 'support@elab.am' }}" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 8px; width: 100%;">
                     {{ __('Get Support') }}
                 </a>
             </div>

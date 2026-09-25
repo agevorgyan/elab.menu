@@ -238,14 +238,81 @@
             box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
         }
 
-        /* Mobile Hamburger */
+        /* Mobile Hamburger & Navigation Drawer */
         .mobile-toggle {
             display: none;
-            background: none;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
             color: var(--text-primary);
-            font-size: 1.5rem;
+            width: 38px;
+            height: 38px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mobile-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-amber);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: inline-flex;
+            }
+        }
+
+        .mobile-nav-drawer {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            background: rgba(7, 9, 19, 0.96);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 1.5rem;
+            display: none;
+            flex-direction: column;
+            gap: 1.25rem;
+            z-index: 999;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            animation: slideDownNav 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mobile-nav-drawer.open {
+            display: flex;
+        }
+        @keyframes slideDownNav {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .mobile-nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0;
+            margin: 0;
+        }
+        .mobile-nav-links a {
+            color: var(--text-secondary);
+            font-size: 0.98rem;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 0.6rem 0.85rem;
+            border-radius: 10px;
+            display: block;
+            transition: all 0.2s ease;
+        }
+        .mobile-nav-links a:hover {
+            color: var(--text-primary);
+            background: rgba(245, 158, 11, 0.1);
+        }
+        .mobile-nav-footer {
+            border-top: 1px solid var(--border-glass);
+            padding-top: 1rem;
         }
 
         /* Hero Section */
@@ -1372,10 +1439,50 @@
                             {{ __('nav_register_cta') }}
                         </a>
                     @endauth
+
+                    <!-- Mobile Hamburger Button -->
+                    <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Toggle Navigation" onclick="toggleMobileLandingNav()">
+                        <i class="fa-solid fa-bars" id="mobileMenuIcon"></i>
+                    </button>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileNavDrawer" class="mobile-nav-drawer">
+        <ul class="mobile-nav-links">
+            <li><a href="#comparison" onclick="closeMobileLandingNav()">{{ __('nav_comparison') }}</a></li>
+            <li><a href="#ai-waiter" onclick="closeMobileLandingNav()">{{ __('nav_ai') }}</a></li>
+            <li><a href="#calculator" onclick="closeMobileLandingNav()">{{ __('nav_calculator') }}</a></li>
+            <li><a href="#features" onclick="closeMobileLandingNav()">{{ __('nav_features') }}</a></li>
+            <li><a href="#pricing" onclick="closeMobileLandingNav()">{{ __('nav_pricing') }}</a></li>
+            <li><a href="#faq" onclick="closeMobileLandingNav()">{{ __('nav_faq') }}</a></li>
+            <li><a href="#contacts" onclick="closeMobileLandingNav()">{{ __('nav_contacts') }}</a></li>
+        </ul>
+        <div class="mobile-nav-footer">
+            @auth
+                @if(Auth::user()->isSuperAdmin())
+                    <a href="{{ route('superadmin.dashboard') }}" class="btn-register-top" style="display: block; text-align: center;">
+                        <i class="fa-solid fa-gauge-high"></i> SuperAdmin
+                    </a>
+                @else
+                    <a href="{{ route('admin.dashboard') }}" class="btn-register-top" style="display: block; text-align: center;">
+                        <i class="fa-solid fa-gauge-high"></i> {{ __('Dashboard') }}
+                    </a>
+                @endif
+            @else
+                <div style="display: flex; gap: 0.75rem; flex-direction: column;">
+                    <a href="{{ route('register.show') }}" class="btn-register-top" style="text-align: center;">
+                        {{ __('nav_register_cta') }}
+                    </a>
+                    <a href="{{ route('login') }}" class="btn-login" style="text-align: center; border: 1px solid var(--border-glass); border-radius: 12px; padding: 0.65rem;">
+                        {{ __('nav_login') }}
+                    </a>
+                </div>
+            @endauth
+        </div>
+    </div>
 
     <!-- 2. Hero Section (Hook & Value Prop) -->
     <section class="hero-section">
@@ -2117,6 +2224,30 @@
             // Toggle current
             if (!wasOpen) {
                 parent.classList.add('open');
+            }
+        }
+
+        // Mobile Nav Drawer Toggle
+        function toggleMobileLandingNav() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            const icon = document.getElementById('mobileMenuIcon');
+            if (!drawer) return;
+            drawer.classList.toggle('open');
+            if (drawer.classList.contains('open')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            } else {
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            }
+        }
+        function closeMobileLandingNav() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            const icon = document.getElementById('mobileMenuIcon');
+            if (drawer) drawer.classList.remove('open');
+            if (icon) {
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
             }
         }
 

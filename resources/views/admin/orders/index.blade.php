@@ -95,6 +95,8 @@
 <!-- Orders Grid Container -->
 <div id="ordersContainer">
     @include('admin.orders.partials.order_cards', ['orders' => $orders, 'vendor' => $vendor])
+</div>
+
 <!-- Thermal Receipt Print Modal -->
 <div id="thermalReceiptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 1rem;">
     <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">

@@ -11,6 +11,19 @@
         $siteFavicon = \App\Models\SystemSetting::getFavicon();
         $siteLogoDark = \App\Models\SystemSetting::getLogoDark();
         $ogImage = \App\Models\SystemSetting::getOgImage();
+        $loc = app()->getLocale();
+
+        // Dynamic CMS resolver: checks localized setting key ($key . '_' . $loc), then unlocalized ($key), then fallback
+        $cms = function (string $key, $fallback = '') use ($settings, $loc) {
+            $locKey = $key . '_' . $loc;
+            if (isset($settings[$locKey]) && $settings[$locKey] !== null && $settings[$locKey] !== '') {
+                return $settings[$locKey];
+            }
+            if (isset($settings[$key]) && $settings[$key] !== null && $settings[$key] !== '') {
+                return $settings[$key];
+            }
+            return $fallback;
+        };
     @endphp
     <title>{{ $seoTitle }}</title>
     <meta name="description" content="{{ $seoDesc }}">
@@ -75,6 +88,10 @@
             scroll-behavior: smooth;
         }
 
+        html {
+            scroll-padding-top: 110px;
+        }
+
         body {
             background-color: var(--bg-main);
             color: var(--text-primary);
@@ -117,22 +134,37 @@
             z-index: 1;
         }
 
-        /* Top Sticky Header */
+        /* Top Floating Capsule Header */
         .site-header {
             position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            background: rgba(7, 9, 19, 0.82);
-            border-bottom: 1px solid var(--border-glass);
+            top: 16px;
+            z-index: 1000;
+            padding: 0 1rem;
             transition: all 0.3s ease;
         }
+        .site-header .container {
+            max-width: 1220px;
+            padding: 0;
+        }
         .nav-wrapper {
+            background: rgba(10, 15, 29, 0.82);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 0.45rem 1.25rem;
+            min-height: 94px;
+            height: auto;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.65), 0 0 25px rgba(245, 158, 11, 0.08);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 76px;
+            transition: all 0.3s ease;
+        }
+        .site-header.scrolled .nav-wrapper {
+            background: rgba(7, 10, 20, 0.94);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 18px 45px -8px rgba(0, 0, 0, 0.8), 0 0 35px rgba(245, 158, 11, 0.15);
         }
         .brand-logo {
             display: flex;
@@ -140,18 +172,30 @@
             gap: 0.65rem;
             text-decoration: none;
             color: var(--text-primary);
+            flex-shrink: 0;
+        }
+        .brand-logo img,
+        .landing-nav-logo {
+            height: 80px;
+            max-height: 80px;
+            width: auto;
+            max-width: 280px;
+            object-fit: contain;
+            display: block;
+            transition: height 0.25s ease;
         }
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
             background: var(--accent-gradient);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.65rem;
             color: #ffffff;
             box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+            flex-shrink: 0;
         }
         .brand-text {
             font-family: 'Outfit', sans-serif;
@@ -164,26 +208,102 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .nav-links {
+
+        /* Center Nav Group: Burger Capsule & Quick Jumps */
+        .nav-center-group {
             display: flex;
             align-items: center;
-            gap: 1.75rem;
-            list-style: none;
+            gap: 0.65rem;
         }
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.92rem;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        .nav-links a:hover {
+        .nav-burger-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            padding: 0.45rem 1.05rem;
+            border-radius: 999px;
             color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
+        .nav-burger-pill:hover, .nav-burger-pill.active {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: var(--accent-amber);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+        }
+        .burger-bars-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 3.5px;
+            width: 17px;
+        }
+        .burger-bars-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background: currentColor;
+            border-radius: 2px;
+            transition: all 0.25s ease;
+        }
+        .nav-burger-pill.active .burger-bars-icon span:nth-child(1) {
+            transform: translateY(5.5px) rotate(45deg);
+        }
+        .nav-burger-pill.active .burger-bars-icon span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+        .nav-burger-pill.active .burger-bars-icon span:nth-child(3) {
+            transform: translateY(-5.5px) rotate(-45deg);
+        }
+        .burger-pill-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 999px;
+        }
+        .nav-quick-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .quick-nav-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            padding: 0.4rem 0.85rem;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .quick-nav-pill:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        @media (max-width: 900px) {
+            .nav-quick-pills {
+                display: none;
+            }
+        }
+
         .nav-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         /* Language Switcher Pill */
@@ -196,10 +316,10 @@
             padding: 3px;
         }
         .lang-btn {
-            padding: 4px 10px;
+            padding: 3px 9px;
             border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
+            font-size: 0.76rem;
+            font-weight: 700;
             color: var(--text-secondary);
             text-decoration: none;
             transition: all 0.2s ease;
@@ -213,9 +333,9 @@
         .btn-login {
             color: var(--text-secondary);
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 600;
-            padding: 0.55rem 1rem;
+            padding: 0.5rem 0.85rem;
             transition: color 0.2s;
         }
         .btn-login:hover {
@@ -224,11 +344,11 @@
         .btn-register-top {
             background: var(--accent-gradient);
             color: #ffffff;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 700;
             text-decoration: none;
-            padding: 0.65rem 1.35rem;
-            border-radius: 12px;
+            padding: 0.55rem 1.25rem;
+            border-radius: 999px;
             box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             white-space: nowrap;
@@ -238,81 +358,128 @@
             box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
         }
 
-        /* Mobile Hamburger & Navigation Drawer */
-        .mobile-toggle {
-            display: none;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            border-radius: 10px;
-            color: var(--text-primary);
+        /* Command Center Navigation Drawer / Modal */
+        .command-menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 7, 15, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+            overflow-y: auto;
+        }
+        .command-menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .command-menu-modal {
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 28px;
+            max-width: 960px;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.9), 0 0 60px rgba(245, 158, 11, 0.12);
+            transform: translateY(-15px) scale(0.98);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .command-menu-overlay.open .command-menu-modal {
+            transform: translateY(0) scale(1);
+        }
+        .command-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 1.5rem;
+        }
+        .command-modal-close {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-secondary);
             width: 38px;
             height: 38px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+        .command-modal-close:hover {
+            color: #ffffff;
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .command-bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .command-bento-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .command-bento-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 1.15rem;
+            text-decoration: none;
+            display: flex;
+            gap: 0.85rem;
+            align-items: flex-start;
+            transition: all 0.25s ease;
+        }
+        .command-bento-card:hover {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .command-icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.15rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            flex-shrink: 0;
         }
-        .mobile-toggle:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--accent-amber);
-            border-color: rgba(245, 158, 11, 0.3);
+        .command-card-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
         }
-        @media (max-width: 992px) {
-            .mobile-toggle {
-                display: inline-flex;
-            }
-        }
-
-        .mobile-nav-drawer {
-            position: fixed;
-            top: 70px;
-            left: 0;
-            right: 0;
-            background: rgba(7, 9, 19, 0.96);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-bottom: 1px solid var(--border-glass);
-            padding: 1.5rem;
-            display: none;
-            flex-direction: column;
-            gap: 1.25rem;
-            z-index: 999;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            animation: slideDownNav 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .mobile-nav-drawer.open {
-            display: flex;
-        }
-        @keyframes slideDownNav {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .mobile-nav-links {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            padding: 0;
+        .command-card-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
             margin: 0;
         }
-        .mobile-nav-links a {
-            color: var(--text-secondary);
-            font-size: 0.98rem;
-            font-weight: 600;
-            text-decoration: none;
-            padding: 0.6rem 0.85rem;
-            border-radius: 10px;
-            display: block;
-            transition: all 0.2s ease;
-        }
-        .mobile-nav-links a:hover {
-            color: var(--text-primary);
-            background: rgba(245, 158, 11, 0.1);
-        }
-        .mobile-nav-footer {
-            border-top: 1px solid var(--border-glass);
-            padding-top: 1rem;
+        .command-modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         /* Hero Section */
@@ -422,84 +589,279 @@
             color: var(--accent-emerald);
         }
 
-        /* 3D Phone Mockup Container */
+        /* Realistic iPhone 16 Pro Mockup Visual */
         .mockup-wrapper {
             position: relative;
             display: flex;
             justify-content: center;
         }
-        .phone-frame {
-            width: 320px;
-            background: #0f172a;
-            border: 2px solid rgba(255, 255, 255, 0.12);
-            border-radius: 36px;
-            padding: 1.25rem;
-            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(245, 158, 11, 0.15);
+        .iphone-mockup-outer {
             position: relative;
-            overflow: hidden;
-            transform: perspective(1000px) rotateY(-5deg) rotateX(4deg);
-            transition: transform 0.4s ease;
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem 0;
         }
-        .phone-frame:hover {
+        .iphone-16-pro {
+            width: 328px;
+            background: #0f141f;
+            border-radius: 54px;
+            position: relative;
+            padding: 11px 11px 13px;
+            border: 4px solid #334155;
+            box-shadow: 
+                0 0 0 1.5px rgba(255, 255, 255, 0.18),
+                inset 0 0 0 2px #0a0d16,
+                0 30px 80px -15px rgba(0, 0, 0, 0.9),
+                0 0 50px rgba(245, 158, 11, 0.14);
+            transform: perspective(1000px) rotateY(-5deg) rotateX(3deg);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .iphone-16-pro:hover {
             transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+            box-shadow: 
+                0 0 0 1.5px rgba(255, 255, 255, 0.25),
+                inset 0 0 0 2px #0a0d16,
+                0 35px 90px -10px rgba(0, 0, 0, 0.95),
+                0 0 60px rgba(245, 158, 11, 0.22);
         }
-        .phone-notch {
-            width: 120px;
-            height: 18px;
-            background: #050811;
-            border-radius: 0 0 14px 14px;
-            margin: -1.25rem auto 1rem;
+
+        /* Physical Side Hardware Buttons */
+        .iphone-hw-button {
+            position: absolute;
+            background: #1e293b;
+            border-radius: 4px;
+            box-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
         }
-        .phone-header-venue {
+        .iphone-btn-action {
+            left: -8px;
+            top: 92px;
+            width: 4px;
+            height: 24px;
+        }
+        .iphone-btn-vol-up {
+            left: -8px;
+            top: 130px;
+            width: 4px;
+            height: 44px;
+        }
+        .iphone-btn-vol-down {
+            left: -8px;
+            top: 184px;
+            width: 4px;
+            height: 44px;
+        }
+        .iphone-btn-power {
+            right: -8px;
+            top: 140px;
+            width: 4px;
+            height: 68px;
+        }
+
+        /* Screen Glass & Reflection */
+        .iphone-screen {
+            border-radius: 44px;
+            overflow: hidden;
+            background: #070913;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            padding: 10px 14px 12px;
+        }
+        .iphone-glare {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 32%, transparent 55%);
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* Dynamic Island */
+        .dynamic-island {
+            width: 108px;
+            height: 26px;
+            background: #000000;
+            border-radius: 20px;
+            margin: 0 auto 6px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border-glass);
+            padding: 0 9px;
+            position: relative;
+            z-index: 25;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
         }
-        .phone-venue-name {
-            font-size: 0.82rem;
+        .di-camera {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #0c1524;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 0 3px #38bdf8;
+        }
+        .di-sensor {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #050810;
+        }
+
+        /* iOS Status Bar */
+        .iphone-status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.74rem;
+            color: #ffffff;
             font-weight: 700;
-            color: var(--text-primary);
+            padding: 0 4px 8px;
+            letter-spacing: -0.2px;
         }
-        .phone-table-badge {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 20px;
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.68rem;
         }
-        .phone-dish-card {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid var(--border-glass);
-            border-radius: 18px;
-            padding: 0.85rem;
-            margin-bottom: 1rem;
+        .battery-pill {
+            width: 20px;
+            height: 10px;
+            border: 1.5px solid #ffffff;
+            border-radius: 3px;
+            padding: 1px;
+            position: relative;
+            display: flex;
+            align-items: center;
         }
-        .phone-dish-img {
-            width: 100%;
-            height: 125px;
-            border-radius: 12px;
-            object-fit: cover;
-            margin-bottom: 0.65rem;
-            background: linear-gradient(135deg, #334155, #1e293b);
+        .battery-pill::after {
+            content: '';
+            position: absolute;
+            right: -3.5px;
+            width: 2px;
+            height: 4px;
+            background: #ffffff;
+            border-radius: 0 1px 1px 0;
+        }
+        .battery-fill {
+            height: 100%;
+            width: 82%;
+            background: #10b981;
+            border-radius: 1px;
+        }
+
+        /* In-Screen App UI */
+        .iphone-app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 10px;
+        }
+        .app-venue-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .venue-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: var(--accent-gradient);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 0.72rem;
+            color: #fff;
         }
-        .phone-dish-title {
-            font-size: 0.92rem;
+        .app-table-pill {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            font-size: 0.68rem;
             font-weight: 700;
-            margin-bottom: 0.2rem;
+            padding: 2px 7px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        .phone-dish-price {
+        .pulse-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        /* Category Chips Slider */
+        .app-categories {
+            display: flex;
+            gap: 5px;
+            overflow-x: hidden;
+            margin-bottom: 10px;
+        }
+        .app-cat-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        .app-cat-chip.active {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        /* Dish Card Inside iPhone */
+        .app-dish-card {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 9px;
+            margin-bottom: 9px;
+        }
+        .app-dish-img {
+            width: 100%;
+            height: 110px;
+            border-radius: 11px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            position: relative;
+            margin-bottom: 7px;
+        }
+        .app-dish-rating {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 6px;
+            padding: 2px 5px;
+            font-size: 0.65rem;
+            color: #fbbf24;
+            font-weight: 700;
+        }
+        .app-dish-title {
+            font-family: 'Outfit', sans-serif;
             font-size: 0.88rem;
             font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+        .app-dish-price {
+            font-size: 0.84rem;
+            font-weight: 800;
             color: var(--accent-amber);
-            margin-bottom: 0.5rem;
         }
 
         /* Floating AI Waiter Bubble */
@@ -552,6 +914,15 @@
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-glass);
             color: #fff;
+        }
+
+        /* Home Indicator Bar */
+        .iphone-home-bar {
+            width: 125px;
+            height: 4px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.75);
+            margin: 8px auto 0;
         }
 
         /* Section Commons */
@@ -677,16 +1048,26 @@
         }
 
         /* 2. AI Waiter Feature Section & Live Simulator */
+        #ai-waiter {
+            overflow: hidden;
+            width: 100%;
+        }
         .ai-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 3rem;
             align-items: center;
+            width: 100%;
+            max-width: 100%;
         }
         .ai-features-column {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .ai-feature-card {
             background: var(--bg-card);
@@ -696,6 +1077,11 @@
             display: flex;
             gap: 1.25rem;
             transition: all 0.25s ease;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .ai-feature-card:hover {
             border-color: rgba(139, 92, 246, 0.4);
@@ -719,11 +1105,13 @@
             font-weight: 700;
             margin-bottom: 0.35rem;
             color: var(--text-primary);
+            word-break: break-word;
         }
         .ai-feature-desc {
             font-size: 0.88rem;
             color: var(--text-secondary);
             line-height: 1.5;
+            word-break: break-word;
         }
 
         /* Simulator Card */
@@ -733,6 +1121,11 @@
             border-radius: 28px;
             padding: 2.25rem;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.15);
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .sim-header {
             display: flex;
@@ -741,6 +1134,10 @@
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-glass);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-width: 0;
+            width: 100%;
         }
         .sim-title {
             font-family: 'Outfit', sans-serif;
@@ -749,15 +1146,27 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            min-width: 0;
+            flex: 1 1 auto;
+            word-break: break-word;
+        }
+        .sim-title span {
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .sim-title i {
             color: #c084fc;
+            flex-shrink: 0;
         }
         .dish-tabs {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.65rem;
             margin-bottom: 1.75rem;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
         }
         .dish-tab-btn {
             background: rgba(255, 255, 255, 0.05);
@@ -770,6 +1179,7 @@
             cursor: pointer;
             text-align: left;
             transition: all 0.2s ease;
+            min-width: 0;
         }
         .dish-tab-btn:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -788,6 +1198,11 @@
             border-radius: 18px;
             padding: 1.25rem;
             position: relative;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .sim-recommendation-label {
             font-size: 0.72rem;
@@ -806,6 +1221,9 @@
             line-height: 1.5;
             font-style: italic;
             margin-bottom: 1rem;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
         }
         .sim-upsell-stat {
             display: flex;
@@ -818,6 +1236,16 @@
             font-size: 0.8rem;
             color: #34d399;
             font-weight: 600;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .sim-upsell-stat span {
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         /* 3. Interactive ROI Calculator */
@@ -1209,6 +1637,11 @@
             gap: 1.25rem;
             flex-wrap: wrap;
         }
+        .final-cta-social-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
         .btn-whatsapp {
             background: #25d366;
             color: #ffffff;
@@ -1339,14 +1772,23 @@
             gap: 1rem;
         }
 
-        /* Mobile Responsiveness */
+        /* Comprehensive Mobile Responsiveness & Polish */
         @media (max-width: 992px) {
             .nav-links {
                 display: none;
             }
             .hero-grid, .vs-grid, .ai-grid, .calculator-card, .footer-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
                 gap: 2.5rem;
+                width: 100%;
+                max-width: 100%;
+            }
+            .ai-feature-card:hover {
+                transform: none !important;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
             }
             .bento-grid {
                 grid-template-columns: 1fr 1fr;
@@ -1357,29 +1799,633 @@
             .calculator-card {
                 padding: 2rem;
             }
+            .command-bento-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
+
+        /* Tablet & Mobile Nav Header Re-layout */
+        @media (max-width: 768px) {
+            html {
+                scroll-padding-top: 85px;
+            }
+            .site-header {
+                top: 8px;
+                padding: 0 0.5rem;
+            }
+            .nav-wrapper {
+                min-height: 75px;
+                height: auto;
+                padding: 0.35rem 0.75rem;
+                border-radius: 999px;
+                gap: 0.5rem;
+            }
+            .brand-logo {
+                gap: 0.45rem;
+                flex-shrink: 0;
+            }
+            .brand-logo img,
+            .landing-nav-logo {
+                height: 65px !important;
+                max-height: 65px !important;
+                width: auto;
+                max-width: 190px;
+            }
+            .logo-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.35rem;
+                border-radius: 13px;
+            }
+            .brand-text {
+                font-size: 1.15rem;
+            }
+            .nav-center-group {
+                order: 3;
+                margin-left: 0;
+            }
+            .nav-quick-pills {
+                display: none;
+            }
+            .nav-burger-pill {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.82rem;
+                gap: 0.45rem;
+            }
+            .burger-bars-icon {
+                width: 15px;
+            }
+            .nav-actions {
+                order: 2;
+                margin-left: auto;
+                gap: 0.45rem;
+            }
+            .nav-actions .btn-login,
+            .nav-actions .btn-register-top {
+                display: none !important;
+            }
+            .lang-switch {
+                padding: 2px;
+                border-radius: 20px;
+            }
+            .lang-btn {
+                padding: 2px 7px;
+                font-size: 0.72rem;
+            }
+        }
+
+        /* Mobile Screens (Phones < 640px) */
         @media (max-width: 640px) {
-            .bento-grid {
-                grid-template-columns: 1fr;
+            .container {
+                padding: 0 1rem;
+            }
+            .section {
+                padding: 3.5rem 0;
+            }
+            .section-header {
+                margin-bottom: 2rem;
+            }
+            .section-badge {
+                font-size: 0.74rem;
+                padding: 0.3rem 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            .section-title {
+                font-size: 1.85rem;
+                line-height: 1.25;
+                letter-spacing: -0.5px;
+                margin-bottom: 0.75rem;
+            }
+            .section-subtitle {
+                font-size: 0.92rem;
+                line-height: 1.55;
+            }
+
+            /* Hero Section */
+            .hero-section {
+                padding: 2.25rem 0 2rem;
+            }
+            .hero-grid {
+                gap: 2rem;
+            }
+            .hero-badge-pill {
+                font-size: 0.76rem;
+                padding: 0.35rem 0.85rem;
+                margin-bottom: 1rem;
+                line-height: 1.35;
+                max-width: 100%;
             }
             .hero-title {
-                font-size: 2.1rem;
+                font-size: 1.9rem;
+                line-height: 1.22;
+                letter-spacing: -0.5px;
+                margin-bottom: 1rem;
+            }
+            .hero-subtitle {
+                font-size: 0.95rem;
+                line-height: 1.55;
+                margin-bottom: 1.75rem;
             }
             .hero-actions {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 0.75rem;
+                margin-bottom: 1.75rem;
             }
-            .btn-cta-primary, .btn-cta-secondary {
+            .btn-cta-primary,
+            .btn-cta-secondary {
+                width: 100%;
                 justify-content: center;
                 text-align: center;
+                padding: 0.9rem 1.25rem;
+                font-size: 0.98rem;
+                border-radius: 14px;
             }
-            .nav-actions .btn-login {
+            .hero-trust-list {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.55rem;
+            }
+            .trust-item {
+                font-size: 0.82rem;
+            }
+
+            /* iPhone Mockup Mobile Optimization */
+            .iphone-mockup-outer {
+                padding: 0;
+                width: 100%;
+            }
+            .iphone-16-pro {
+                width: 100%;
+                max-width: 310px;
+                margin: 0 auto;
+                transform: none !important;
+                border-radius: 46px;
+                padding: 9px 9px 12px;
+                box-shadow: 
+                    0 0 0 1.5px rgba(255, 255, 255, 0.15),
+                    inset 0 0 0 2px #0a0d16,
+                    0 25px 60px -10px rgba(0, 0, 0, 0.9),
+                    0 0 35px rgba(245, 158, 11, 0.15);
+            }
+            .iphone-16-pro:hover {
+                transform: none !important;
+            }
+            .iphone-screen {
+                border-radius: 38px;
+                padding: 8px 10px 10px;
+            }
+            .dynamic-island {
+                width: 90px;
+                height: 22px;
+                margin-bottom: 4px;
+                padding: 0 7px;
+            }
+            .di-camera {
+                width: 7px;
+                height: 7px;
+            }
+            .di-sensor {
+                width: 6px;
+                height: 6px;
+            }
+            .iphone-status-bar {
+                font-size: 0.7rem;
+                padding: 0 2px 6px;
+            }
+            .app-dish-card {
+                padding: 7px;
+                border-radius: 13px;
+                margin-bottom: 7px;
+            }
+            .app-dish-img {
+                height: 90px;
+                font-size: 2.2rem;
+                border-radius: 9px;
+                margin-bottom: 5px;
+            }
+            .app-dish-title {
+                font-size: 0.82rem;
+            }
+            .app-dish-price {
+                font-size: 0.78rem;
+            }
+            .ai-floating-bubble {
+                padding: 0.65rem 0.75rem;
+                border-radius: 13px;
+                margin-bottom: 0.75rem;
+            }
+            .ai-bubble-tag {
+                font-size: 0.65rem;
+            }
+            .ai-bubble-quote {
+                font-size: 0.72rem;
+                line-height: 1.35;
+            }
+            .phone-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.4rem;
+            }
+            .phone-btn {
+                padding: 0.55rem 0.25rem;
+                font-size: 0.66rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                border-radius: 8px;
+            }
+            .iphone-home-bar {
+                width: 100px;
+                height: 3.5px;
+                margin-top: 6px;
+            }
+
+            /* Comparison Section */
+            .vs-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            .vs-card {
+                padding: 1.35rem 1.15rem;
+                border-radius: 20px;
+            }
+            .vs-card-title {
+                font-size: 1.15rem;
+            }
+            .vs-list {
+                gap: 0.75rem;
+            }
+            .vs-list li {
+                font-size: 0.88rem;
+                gap: 0.65rem;
+                align-items: flex-start;
+            }
+
+            /* AI Waiter Section */
+            #ai-waiter {
+                overflow: hidden;
+                width: 100%;
+                max-width: 100%;
+            }
+            .ai-grid {
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 1.5rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+            .ai-features-column {
+                gap: 0.85rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box;
+            }
+            .ai-feature-card {
+                padding: 1.15rem 1rem;
+                border-radius: 18px;
+                gap: 0.85rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box;
+                transform: none !important;
+            }
+            .ai-feature-card:hover {
+                transform: none !important;
+            }
+            .ai-feature-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 1.05rem;
+                border-radius: 12px;
+                flex-shrink: 0;
+            }
+            .ai-feature-title {
+                font-size: 1.02rem;
+                margin-bottom: 0.25rem;
+                word-break: break-word;
+            }
+            .ai-feature-desc {
+                font-size: 0.85rem;
+                line-height: 1.5;
+                word-break: break-word;
+            }
+            .simulator-box {
+                padding: 1.25rem 1rem;
+                border-radius: 20px;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .sim-header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-bottom: 1.15rem;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .sim-title {
+                font-size: 1.02rem;
+                word-break: break-word;
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .sim-title span {
+                word-break: break-word;
+                overflow-wrap: break-word;
+                min-width: 0;
+            }
+            .dish-tabs {
+                display: flex;
+                gap: 0.4rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 4px;
+                scrollbar-width: none;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            .dish-tabs::-webkit-scrollbar {
                 display: none;
             }
-            .final-cta-title {
-                font-size: 2rem;
+            .dish-tab-btn {
+                white-space: nowrap;
+                font-size: 0.78rem;
+                padding: 0.45rem 0.75rem;
+                flex-shrink: 0;
+            }
+            .sim-output-card {
+                padding: 1.15rem 0.95rem;
+                border-radius: 16px;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                overflow: hidden;
+            }
+            .sim-recommendation-text {
+                font-size: 0.85rem;
+                line-height: 1.5;
+                word-break: break-word;
+            }
+            .sim-upsell-stat {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.35rem;
+                font-size: 0.75rem;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            /* ROI Calculator */
+            .calculator-card {
+                padding: 1.35rem 1rem;
+                border-radius: 22px;
+                gap: 1.5rem;
+            }
+            .calc-main-num {
+                font-size: 2.2rem;
+                margin: 0.25rem 0;
             }
             .calc-sub-metrics {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.65rem;
+                margin: 1.15rem 0 1.35rem;
+            }
+            .calc-metric-item {
+                padding: 0.75rem 0.5rem;
+                border-radius: 12px;
+            }
+            .calc-metric-value {
+                font-size: 1.15rem;
+            }
+            .calc-metric-label {
+                font-size: 0.72rem;
+            }
+            .btn-calc-cta {
+                padding: 0.85rem;
+                font-size: 0.95rem;
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Bento Grid */
+            .bento-grid {
+                grid-template-columns: 1fr;
+                gap: 0.85rem;
+            }
+            .bento-card {
+                padding: 1.35rem 1.15rem;
+                border-radius: 18px;
+            }
+            .bento-card h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.35rem;
+            }
+            .bento-card p {
+                font-size: 0.86rem;
+                line-height: 1.5;
+            }
+
+            /* Pricing */
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            .pricing-card {
+                padding: 1.75rem 1.25rem;
+                border-radius: 22px;
+            }
+            .plan-price-num {
+                font-size: 2.2rem;
+            }
+            .plan-price-box {
+                margin: 1.25rem 0;
+            }
+            .plan-features-list {
+                gap: 0.7rem;
+                margin-bottom: 1.75rem;
+            }
+            .plan-feature-item {
+                font-size: 0.88rem;
+            }
+            .btn-plan-cta {
+                padding: 0.85rem;
+                font-size: 0.95rem;
+                width: 100%;
+            }
+
+            /* FAQ Accordion */
+            .faq-accordion {
+                gap: 0.65rem;
+            }
+            .faq-item {
+                border-radius: 14px;
+            }
+            .faq-question {
+                padding: 1.05rem 1.15rem;
+                font-size: 0.95rem;
+                gap: 0.65rem;
+            }
+            .faq-answer {
+                font-size: 0.88rem;
+                line-height: 1.55;
+            }
+            .faq-item.open .faq-answer {
+                padding-bottom: 1.15rem;
+            }
+
+            /* Final CTA Banner */
+            .final-cta-section {
+                padding: 2.75rem 0;
+            }
+            .final-cta-card {
+                padding: 2.25rem 1.15rem;
+                border-radius: 24px;
+            }
+            .final-cta-title {
+                font-size: 1.75rem;
+                line-height: 1.25;
+                margin-bottom: 0.85rem;
+            }
+            .final-cta-subtitle {
+                font-size: 0.92rem;
+                line-height: 1.55;
+                margin-bottom: 1.5rem;
+            }
+            .final-cta-buttons {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                gap: 0.75rem;
+            }
+            .final-cta-buttons .btn-cta-primary {
+                width: 100%;
+                padding: 0.95rem 1.25rem !important;
+                font-size: 1.02rem !important;
+                justify-content: center;
+            }
+            .final-cta-social-group {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.65rem;
+                width: 100%;
+            }
+            .btn-whatsapp,
+            .btn-telegram {
+                width: 100%;
+                justify-content: center;
+                padding: 0.85rem 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            /* Footer */
+            .site-footer {
+                padding: 3rem 0 1.75rem;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 1.75rem;
+                margin-bottom: 2rem;
+            }
+            .footer-brand p {
+                max-width: 100%;
+                font-size: 0.85rem;
+            }
+            .footer-column h4 {
+                margin-bottom: 0.85rem;
+            }
+            .footer-column ul {
+                gap: 0.6rem;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.65rem;
+                font-size: 0.78rem;
+            }
+
+            /* Command Center Navigation Modal */
+            .command-menu-overlay {
+                padding: 0.75rem 0.5rem;
+            }
+            .command-menu-modal {
+                padding: 1.25rem 0.95rem;
+                border-radius: 22px;
+                max-height: 92vh;
+            }
+            .command-modal-header {
+                padding-bottom: 0.85rem;
+                margin-bottom: 1rem;
+            }
+            .command-bento-grid {
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
+                margin-bottom: 1.15rem;
+            }
+            .command-bento-card {
+                padding: 0.85rem;
+                border-radius: 14px;
+                gap: 0.75rem;
+            }
+            .command-icon-box {
+                width: 36px;
+                height: 36px;
+                font-size: 0.95rem;
+                border-radius: 10px;
+            }
+            .command-card-title {
+                font-size: 0.88rem;
+            }
+            .command-card-desc {
+                font-size: 0.74rem;
+            }
+            .command-modal-footer {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+                padding-top: 1rem;
+            }
+            .command-modal-footer > div {
+                width: 100%;
+            }
+            .command-modal-footer .btn-register-top,
+            .command-modal-footer .btn-login {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+        }
+
+        /* Ultra-small phones (< 390px) */
+        @media (max-width: 390px) {
+            .brand-text {
+                font-size: 1rem;
+            }
+            .nav-burger-pill {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.76rem;
+            }
+            .burger-pill-badge {
+                display: none;
+            }
+            .hero-title {
+                font-size: 1.7rem;
+            }
+            .section-title {
+                font-size: 1.6rem;
+            }
+            .final-cta-social-group {
                 grid-template-columns: 1fr;
             }
         }
@@ -1391,13 +2437,13 @@
     <div class="ambient-glow-1"></div>
     <div class="ambient-glow-2"></div>
 
-    <!-- 1. Sticky Navigation Header -->
-    <header class="site-header">
+    <!-- 1. Top Floating Capsule Header -->
+    <header class="site-header" id="siteHeader">
         <div class="container">
             <div class="nav-wrapper">
                 <a href="{{ route('landing') }}" class="brand-logo" style="text-decoration: none; display: flex; align-items: center; gap: 0.65rem;">
                     @if($siteLogoDark)
-                        <img src="{{ $siteLogoDark }}" alt="{{ $siteName }}" style="height: 38px; max-width: 170px; object-fit: contain;">
+                        <img src="{{ $siteLogoDark }}" alt="{{ $siteName }}" class="landing-nav-logo" style="height: 80px; max-height: 80px; width: auto; object-fit: contain;">
                     @else
                         <div class="logo-icon">
                             <i class="fa-solid fa-qrcode"></i>
@@ -1406,21 +2452,31 @@
                     @endif
                 </a>
 
-                <ul class="nav-links">
-                    <li><a href="#comparison">{{ __('nav_comparison') }}</a></li>
-                    <li><a href="#ai-waiter">{{ __('nav_ai') }}</a></li>
-                    <li><a href="#calculator">{{ __('nav_calculator') }}</a></li>
-                    <li><a href="#features">{{ __('nav_features') }}</a></li>
-                    <li><a href="#pricing">{{ __('nav_pricing') }}</a></li>
-                    <li><a href="#faq">{{ __('nav_faq') }}</a></li>
-                    <li><a href="#contacts">{{ __('nav_contacts') }}</a></li>
-                </ul>
+                <!-- Center UI: Burger Capsule & Quick Jumps -->
+                <div class="nav-center-group">
+                    <button type="button" class="nav-burger-pill" id="commandMenuBtn" onclick="toggleCommandDrawer()" aria-label="Menu & Sections">
+                        <span class="burger-bars-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </span>
+                        <span>{{ $loc === 'hy' ? 'Բաժիններ' : 'Explore' }}</span>
+                        <span class="burger-pill-badge"><i class="fa-solid fa-compass"></i></span>
+                    </button>
+
+                    <div class="nav-quick-pills">
+                        <a href="#comparison" class="quick-nav-pill"><i class="fa-solid fa-code-compare" style="color: #06b6d4;"></i> {{ $cms('vs_badge', __('nav_comparison')) }}</a>
+                        <a href="#ai-waiter" class="quick-nav-pill"><i class="fa-solid fa-robot" style="color: #a78bfa;"></i> AI</a>
+                        <a href="#calculator" class="quick-nav-pill"><i class="fa-solid fa-calculator" style="color: #f59e0b;"></i> ROI</a>
+                        <a href="#pricing" class="quick-nav-pill"><i class="fa-solid fa-tag" style="color: #10b981;"></i> {{ $cms('pricing_badge', __('nav_pricing')) }}</a>
+                    </div>
+                </div>
 
                 <div class="nav-actions">
                     <!-- Language Switcher -->
                     <div class="lang-switch">
-                        <a href="{{ route('lang.switch', 'hy') }}" class="lang-btn {{ app()->getLocale() === 'hy' ? 'active' : '' }}">HY</a>
-                        <a href="{{ route('lang.switch', 'en') }}" class="lang-btn {{ app()->getLocale() === 'en' ? 'active' : '' }}">EN</a>
+                        <a href="{{ route('lang.switch', 'hy') }}" class="lang-btn {{ $loc === 'hy' ? 'active' : '' }}">HY</a>
+                        <a href="{{ route('lang.switch', 'en') }}" class="lang-btn {{ $loc === 'en' ? 'active' : '' }}">EN</a>
                     </div>
 
                     @auth
@@ -1439,48 +2495,145 @@
                             {{ __('nav_register_cta') }}
                         </a>
                     @endauth
-
-                    <!-- Mobile Hamburger Button -->
-                    <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Toggle Navigation" onclick="toggleMobileLandingNav()">
-                        <i class="fa-solid fa-bars" id="mobileMenuIcon"></i>
-                    </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Mobile Navigation Drawer -->
-    <div id="mobileNavDrawer" class="mobile-nav-drawer">
-        <ul class="mobile-nav-links">
-            <li><a href="#comparison" onclick="closeMobileLandingNav()">{{ __('nav_comparison') }}</a></li>
-            <li><a href="#ai-waiter" onclick="closeMobileLandingNav()">{{ __('nav_ai') }}</a></li>
-            <li><a href="#calculator" onclick="closeMobileLandingNav()">{{ __('nav_calculator') }}</a></li>
-            <li><a href="#features" onclick="closeMobileLandingNav()">{{ __('nav_features') }}</a></li>
-            <li><a href="#pricing" onclick="closeMobileLandingNav()">{{ __('nav_pricing') }}</a></li>
-            <li><a href="#faq" onclick="closeMobileLandingNav()">{{ __('nav_faq') }}</a></li>
-            <li><a href="#contacts" onclick="closeMobileLandingNav()">{{ __('nav_contacts') }}</a></li>
-        </ul>
-        <div class="mobile-nav-footer">
-            @auth
-                @if(Auth::user()->isSuperAdmin())
-                    <a href="{{ route('superadmin.dashboard') }}" class="btn-register-top" style="display: block; text-align: center;">
-                        <i class="fa-solid fa-gauge-high"></i> SuperAdmin
+    <!-- Command Center Navigation Drawer / Modal -->
+    <div id="commandMenuDrawer" class="command-menu-overlay" onclick="handleDrawerOverlayClick(event)">
+        <div class="command-menu-modal" role="dialog" aria-modal="true" aria-labelledby="commandModalTitle">
+            <div class="command-modal-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="logo-icon" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                        <i class="fa-solid fa-compass"></i>
+                    </div>
+                    <div>
+                        <div id="commandModalTitle" style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: #fff;">
+                            {{ $loc === 'hy' ? 'Համակարգի Բաժիններ' : 'Navigation & Services' }}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            {{ $loc === 'hy' ? 'Արագ անցում դեպի լենդինգի գլխավոր հնարավորությունները' : 'Fast-track to key features and tools' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);">ESC</span>
+                    <button type="button" class="command-modal-close" onclick="closeCommandDrawer()" aria-label="Close Navigation">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bento Navigation Tiles -->
+            <div class="command-bento-grid">
+                <a href="#comparison" class="command-bento-card" onclick="closeCommandDrawer()">
+                    <div class="command-icon-box" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+                        <i class="fa-solid fa-code-compare"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ $cms('vs_badge', __('nav_comparison')) }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'Թղթե մենյուի և թվային QR մենյուի համեմատություն' : 'Paper vs Intelligent QR Menu comparison' }}</p>
+                    </div>
+                </a>
+
+                <a href="#ai-waiter" class="command-bento-card" onclick="closeCommandDrawer()">
+                    <div class="command-icon-box" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa;">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ $cms('ai_section_badge', __('nav_ai')) }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'Խելացի AI մատուցող & սոմելիե, ավտոմատ upsell' : 'AI Waiter & Sommelier cross-selling simulator' }}</p>
+                    </div>
+                </a>
+
+                <a href="#calculator" class="command-bento-card" onclick="closeCommandDrawer()">
+                    <div class="command-icon-box" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ $cms('calc_badge', __('nav_calculator')) }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'Հաշվեք հավելյալ շահույթն ու տնտեսումները' : 'Estimate your monthly profit lift and print savings' }}</p>
+                    </div>
+                </a>
+
+                <a href="#features" class="command-bento-card" onclick="closeCommandDrawer()">
+                    <div class="command-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ $cms('features_badge', __('nav_features')) }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'KDS խոհանոց, կանչ, բազմալեզվություն & QR ստուդիա' : 'PWA, Kitchen Display, Waiter Call & QR Studio' }}</p>
+                    </div>
+                </a>
+
+                <a href="#pricing" class="command-bento-card" onclick="closeCommandDrawer()">
+                    <div class="command-icon-box" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                        <i class="fa-solid fa-tag"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ $cms('pricing_badge', __('nav_pricing')) }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'Սակագնային պլաններ և 14 օր անվճար փորձաշրջան' : 'Transparent pricing plans with free 14-day trial' }}</p>
+                    </div>
+                </a>
+
+                <a href="#faq" class="command-bento-card" onclick="closeCommandDrawer()">
+                    <div class="command-icon-box" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ $cms('faq_badge', __('nav_faq')) }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'Հաճախ տրվող հարցերի պատասխաններ' : 'Frequently asked questions & integration details' }}</p>
+                    </div>
+                </a>
+
+                <a href="#contacts" class="command-bento-card" onclick="closeCommandDrawer()" style="grid-column: 1 / -1;">
+                    <div class="command-icon-box" style="background: rgba(236, 72, 153, 0.15); color: #ec4899;">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div>
+                        <div class="command-card-title">{{ __('footer_contact_us') }}</div>
+                        <p class="command-card-desc">{{ $loc === 'hy' ? 'Կապ մեր մասնագետների հետ, WhatsApp & Telegram խորհրդատվություն' : 'Connect with our team directly via WhatsApp or Telegram' }}</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Drawer Footer Quick Actions -->
+            <div class="command-modal-footer">
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    @php
+                        $rawPhone = $settings['contact_phone'] ?? '+37455776066';
+                        $cleanPhone = preg_replace('/[^0-9]/', '', $settings['contact_whatsapp'] ?? $rawPhone);
+                        $tgHandle = str_replace('@', '', $settings['contact_telegram'] ?? '+37455776066');
+                    @endphp
+                    <a href="https://wa.me/{{ $cleanPhone }}" target="_blank" class="btn-whatsapp" style="padding: 0.55rem 1.15rem; font-size: 0.82rem;">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
                     </a>
-                @else
-                    <a href="{{ route('admin.dashboard') }}" class="btn-register-top" style="display: block; text-align: center;">
-                        <i class="fa-solid fa-gauge-high"></i> {{ __('Dashboard') }}
-                    </a>
-                @endif
-            @else
-                <div style="display: flex; gap: 0.75rem; flex-direction: column;">
-                    <a href="{{ route('register.show') }}" class="btn-register-top" style="text-align: center;">
-                        {{ __('nav_register_cta') }}
-                    </a>
-                    <a href="{{ route('login') }}" class="btn-login" style="text-align: center; border: 1px solid var(--border-glass); border-radius: 12px; padding: 0.65rem;">
-                        {{ __('nav_login') }}
+                    <a href="https://t.me/{{ $tgHandle }}" target="_blank" class="btn-telegram" style="padding: 0.55rem 1.15rem; font-size: 0.82rem;">
+                        <i class="fa-brands fa-telegram"></i> Telegram
                     </a>
                 </div>
-            @endauth
+
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    @auth
+                        @if(Auth::user()->isSuperAdmin())
+                            <a href="{{ route('superadmin.dashboard') }}" class="btn-register-top" style="font-size: 0.82rem;">
+                                SuperAdmin <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('admin.dashboard') }}" class="btn-register-top" style="font-size: 0.82rem;">
+                                {{ __('Dashboard') }} <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        @endif
+                    @else
+                        <a href="{{ route('login') }}" class="btn-login" style="font-size: 0.82rem;">{{ __('nav_login') }}</a>
+                        <a href="{{ route('register.show') }}" class="btn-register-top" style="font-size: 0.82rem;">
+                            {{ __('nav_register_cta') }} <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    @endauth
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1491,31 +2644,22 @@
                 <div>
                     <div class="hero-badge-pill">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>{{ __('hero_badge') }}</span>
+                        <span>{{ $cms('hero_badge', __('hero_badge')) }}</span>
                     </div>
 
                     <h1 class="hero-title">
-                        @if(!empty($settings['hero_title_'.app()->getLocale()]))
-                            {{ $settings['hero_title_'.app()->getLocale()] }}
-                        @else
-                            {!! app()->getLocale() === 'hy' 
-                                ? 'Ավելացրեք ռեստորանի շրջանառությունը <span class="gradient-text">+30%-ով</span> խելացի QR մենյուի և AI-ի շնորհիվ'
-                                : 'Boost Restaurant Revenue by <span class="gradient-text">+30%</span> with Smart QR Menu & AI Waiter' 
-                            !!}
-                        @endif
+                        {!! $cms('hero_title', ($loc === 'hy' 
+                            ? 'Ավելացրեք ռեստորանի շրջանառությունը <span class="gradient-text">+30%-ով</span> խելացի QR մենյուի և AI-ի շնորհիվ' 
+                            : 'Boost Restaurant Revenue by <span class="gradient-text">+30%</span> with Smart QR Menu & AI Waiter')) !!}
                     </h1>
 
                     <p class="hero-subtitle">
-                        @if(!empty($settings['hero_subtitle_'.app()->getLocale()]))
-                            {{ $settings['hero_subtitle_'.app()->getLocale()] }}
-                        @else
-                            {{ __('hero_subtitle') }}
-                        @endif
+                        {{ $cms('hero_subtitle', __('hero_subtitle')) }}
                     </p>
 
                     <div class="hero-actions">
                         <a href="{{ route('register.show') }}" class="btn-cta-primary">
-                            <span>{{ __('hero_cta_primary') }}</span>
+                            <span>{{ $cms('hero_cta_primary', __('hero_cta_primary')) }}</span>
                             <i class="fa-solid fa-arrow-right"></i>
                         </a>
 
@@ -1524,56 +2668,110 @@
                         @endphp
                         <a href="{{ route('client.menu', ['vendor_slug' => $demoSlug]) }}" target="_blank" class="btn-cta-secondary">
                             <i class="fa-solid fa-mobile-screen-button"></i>
-                            <span>{{ __('hero_cta_secondary') }}</span>
+                            <span>{{ $cms('hero_cta_secondary', __('hero_cta_secondary')) }}</span>
                         </a>
                     </div>
 
                     <div class="hero-trust-list">
                         <div class="trust-item">
                             <i class="fa-solid fa-circle-check"></i>
-                            <span>{{ __('hero_trust_badge1') }}</span>
+                            <span>{{ $cms('hero_trust_badge1', __('hero_trust_badge1')) }}</span>
                         </div>
                         <div class="trust-item">
                             <i class="fa-solid fa-circle-check"></i>
-                            <span>{{ __('hero_trust_badge2') }}</span>
+                            <span>{{ $cms('hero_trust_badge2', __('hero_trust_badge2')) }}</span>
                         </div>
                         <div class="trust-item">
                             <i class="fa-solid fa-circle-check"></i>
-                            <span>{{ __('hero_trust_badge3') }}</span>
+                            <span>{{ $cms('hero_trust_badge3', __('hero_trust_badge3')) }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 3D Phone Mockup Visual -->
+                <!-- Realistic iPhone 16 Pro Mockup Visual -->
                 <div class="mockup-wrapper">
-                    <div class="phone-frame">
-                        <div class="phone-notch"></div>
-                        <div class="phone-header-venue">
-                            <span class="phone-venue-name">{{ __('hero_mockup_restaurant') }}</span>
-                            <span class="phone-table-badge">Active</span>
-                        </div>
+                    <div class="iphone-mockup-outer">
+                        <div class="iphone-16-pro">
+                            <!-- Physical Side Hardware Buttons -->
+                            <div class="iphone-hw-button iphone-btn-action"></div>
+                            <div class="iphone-hw-button iphone-btn-vol-up"></div>
+                            <div class="iphone-hw-button iphone-btn-vol-down"></div>
+                            <div class="iphone-hw-button iphone-btn-power"></div>
 
-                        <div class="phone-dish-card">
-                            <div class="phone-dish-img">
-                                🥩
-                            </div>
-                            <div class="phone-dish-title">Ribeye Steak Prime Black Angus</div>
-                            <div class="phone-dish-price">7 900 AMD</div>
-                        </div>
+                            <!-- Screen Glass -->
+                            <div class="iphone-screen">
+                                <div class="iphone-glare"></div>
 
-                        <!-- AI Floating Bubble Simulation -->
-                        <div class="ai-floating-bubble">
-                            <div class="ai-bubble-tag">
-                                <i class="fa-solid fa-robot"></i> AI Waiter Recommendation
-                            </div>
-                            <div class="ai-bubble-quote">
-                                {{ __('hero_mockup_ai_bubble') }}
-                            </div>
-                        </div>
+                                <!-- Dynamic Island -->
+                                <div class="dynamic-island">
+                                    <span class="di-camera"></span>
+                                    <span class="di-sensor"></span>
+                                </div>
 
-                        <div class="phone-actions">
-                            <button class="phone-btn">{{ __('hero_mockup_add_order') }}</button>
-                            <button class="phone-btn phone-btn-alt">{{ __('hero_mockup_call_waiter') }}</button>
+                                <!-- iOS Status Bar -->
+                                <div class="iphone-status-bar">
+                                    <span>9:41</span>
+                                    <div class="status-icons">
+                                        <i class="fa-solid fa-signal"></i>
+                                        <i class="fa-solid fa-wifi"></i>
+                                        <div class="battery-pill"><span class="battery-fill"></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- In-Screen Digital Menu App UI -->
+                                <div class="iphone-app-header">
+                                    <div class="app-venue-badge">
+                                        <div class="venue-avatar">
+                                            <i class="fa-solid fa-utensils"></i>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.8rem; font-weight: 800; color: #fff;">{{ $cms('hero_mockup_restaurant', __('hero_mockup_restaurant')) }}</div>
+                                            <div style="font-size: 0.65rem; color: var(--text-secondary);">Table #04 &bull; Dine-In</div>
+                                        </div>
+                                    </div>
+                                    <span class="app-table-pill">
+                                        <span class="pulse-dot"></span> Live
+                                    </span>
+                                </div>
+
+                                <!-- Category Chips -->
+                                <div class="app-categories">
+                                    <span class="app-cat-chip active">{{ $loc === 'hy' ? '🔥 Թոփ Մսային' : '🔥 Top Steaks' }}</span>
+                                    <span class="app-cat-chip">{{ $loc === 'hy' ? '🍷 Գինիներ' : '🍷 Wines' }}</span>
+                                    <span class="app-cat-chip">{{ $loc === 'hy' ? '🥗 Աղցաններ' : '🥗 Salads' }}</span>
+                                </div>
+
+                                <!-- Dish Card Inside iPhone -->
+                                <div class="app-dish-card">
+                                    <div class="app-dish-img">
+                                        🥩
+                                        <div class="app-dish-rating">
+                                            <i class="fa-solid fa-star"></i> 4.9
+                                        </div>
+                                    </div>
+                                    <div class="app-dish-title">Ribeye Prime Angus Steak</div>
+                                    <div class="app-dish-price">8 900 AMD</div>
+                                </div>
+
+                                <!-- Floating AI Waiter Bubble -->
+                                <div class="ai-floating-bubble">
+                                    <div class="ai-bubble-tag">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Waiter Suggestion
+                                    </div>
+                                    <div class="ai-bubble-quote">
+                                        {{ $cms('hero_mockup_ai_bubble', __('hero_mockup_ai_bubble')) }}
+                                    </div>
+                                </div>
+
+                                <!-- Phone Order Actions -->
+                                <div class="phone-actions">
+                                    <button type="button" class="phone-btn"><i class="fa-solid fa-bag-shopping"></i> {{ $cms('hero_mockup_add_order', __('hero_mockup_add_order')) }}</button>
+                                    <button type="button" class="phone-btn phone-btn-alt"><i class="fa-solid fa-bell"></i> {{ $cms('hero_mockup_call_waiter', __('hero_mockup_call_waiter')) }}</button>
+                                </div>
+
+                                <!-- Home Indicator Bar -->
+                                <div class="iphone-home-bar"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1585,38 +2783,38 @@
     <section id="comparison" class="section">
         <div class="container">
             <div class="section-header">
-                <div class="section-badge">{{ __('nav_comparison') }}</div>
-                <h2 class="section-title">{{ __('vs_title') }}</h2>
-                <p class="section-subtitle">{{ __('vs_subtitle') }}</p>
+                <div class="section-badge">{{ $cms('vs_badge', __('nav_comparison')) }}</div>
+                <h2 class="section-title">{{ $cms('vs_title', __('vs_title')) }}</h2>
+                <p class="section-subtitle">{{ $cms('vs_subtitle', __('vs_subtitle')) }}</p>
             </div>
 
             <div class="vs-grid">
                 <!-- Old Paper Menu -->
                 <div class="vs-card vs-card-paper">
                     <div class="vs-card-head">
-                        <h3 class="vs-card-title">{{ __('vs_paper_title') }}</h3>
-                        <span class="vs-badge-bad">{{ __('vs_paper_badge') }}</span>
+                        <h3 class="vs-card-title">{{ $cms('vs_paper_title', __('vs_paper_title')) }}</h3>
+                        <span class="vs-badge-bad">{{ $cms('vs_paper_badge', __('vs_paper_badge')) }}</span>
                     </div>
                     <ul class="vs-list">
                         <li>
                             <i class="fa-solid fa-xmark vs-icon-bad"></i>
-                            <span>{{ __('vs_paper_item1') }}</span>
+                            <span>{{ $cms('vs_paper_item1', __('vs_paper_item1')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-xmark vs-icon-bad"></i>
-                            <span>{{ __('vs_paper_item2') }}</span>
+                            <span>{{ $cms('vs_paper_item2', __('vs_paper_item2')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-xmark vs-icon-bad"></i>
-                            <span>{{ __('vs_paper_item3') }}</span>
+                            <span>{{ $cms('vs_paper_item3', __('vs_paper_item3')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-xmark vs-icon-bad"></i>
-                            <span>{{ __('vs_paper_item4') }}</span>
+                            <span>{{ $cms('vs_paper_item4', __('vs_paper_item4')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-xmark vs-icon-bad"></i>
-                            <span>{{ __('vs_paper_item5') }}</span>
+                            <span>{{ $cms('vs_paper_item5', __('vs_paper_item5')) }}</span>
                         </li>
                     </ul>
                 </div>
@@ -1624,29 +2822,29 @@
                 <!-- elab Digital QR Menu -->
                 <div class="vs-card vs-card-qr">
                     <div class="vs-card-head">
-                        <h3 class="vs-card-title">{{ __('vs_qr_title') }}</h3>
-                        <span class="vs-badge-good">{{ __('vs_qr_badge') }}</span>
+                        <h3 class="vs-card-title">{{ $cms('vs_qr_title', __('vs_qr_title')) }}</h3>
+                        <span class="vs-badge-good">{{ $cms('vs_qr_badge', __('vs_qr_badge')) }}</span>
                     </div>
                     <ul class="vs-list">
                         <li>
                             <i class="fa-solid fa-check vs-icon-good"></i>
-                            <span>{{ __('vs_qr_item1') }}</span>
+                            <span>{{ $cms('vs_qr_item1', __('vs_qr_item1')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-check vs-icon-good"></i>
-                            <span>{{ __('vs_qr_item2') }}</span>
+                            <span>{{ $cms('vs_qr_item2', __('vs_qr_item2')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-check vs-icon-good"></i>
-                            <span>{{ __('vs_qr_item3') }}</span>
+                            <span>{{ $cms('vs_qr_item3', __('vs_qr_item3')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-check vs-icon-good"></i>
-                            <span>{{ __('vs_qr_item4') }}</span>
+                            <span>{{ $cms('vs_qr_item4', __('vs_qr_item4')) }}</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-check vs-icon-good"></i>
-                            <span>{{ __('vs_qr_item5') }}</span>
+                            <span>{{ $cms('vs_qr_item5', __('vs_qr_item5')) }}</span>
                         </li>
                     </ul>
                 </div>
@@ -1658,9 +2856,9 @@
     <section id="ai-waiter" class="section">
         <div class="container">
             <div class="section-header">
-                <div class="section-badge">{{ __('ai_section_badge') }}</div>
-                <h2 class="section-title">{{ __('ai_section_title') }}</h2>
-                <p class="section-subtitle">{{ __('ai_section_subtitle') }}</p>
+                <div class="section-badge">{{ $cms('ai_section_badge', __('ai_section_badge')) }}</div>
+                <h2 class="section-title">{{ $cms('ai_section_title', __('ai_section_title')) }}</h2>
+                <p class="section-subtitle">{{ $cms('ai_section_subtitle', __('ai_section_subtitle')) }}</p>
             </div>
 
             <div class="ai-grid">
@@ -1670,8 +2868,8 @@
                             <i class="fa-solid fa-wine-glass"></i>
                         </div>
                         <div>
-                            <h3 class="ai-feature-title">{{ __('ai_feature1_title') }}</h3>
-                            <p class="ai-feature-desc">{{ __('ai_feature1_desc') }}</p>
+                            <h3 class="ai-feature-title">{{ $cms('ai_feature1_title', __('ai_feature1_title')) }}</h3>
+                            <p class="ai-feature-desc">{{ $cms('ai_feature1_desc', __('ai_feature1_desc')) }}</p>
                         </div>
                     </div>
 
@@ -1680,8 +2878,8 @@
                             <i class="fa-solid fa-shield-halved"></i>
                         </div>
                         <div>
-                            <h3 class="ai-feature-title">{{ __('ai_feature2_title') }}</h3>
-                            <p class="ai-feature-desc">{{ __('ai_feature2_desc') }}</p>
+                            <h3 class="ai-feature-title">{{ $cms('ai_feature2_title', __('ai_feature2_title')) }}</h3>
+                            <p class="ai-feature-desc">{{ $cms('ai_feature2_desc', __('ai_feature2_desc')) }}</p>
                         </div>
                     </div>
 
@@ -1690,8 +2888,8 @@
                             <i class="fa-solid fa-language"></i>
                         </div>
                         <div>
-                            <h3 class="ai-feature-title">{{ __('ai_feature3_title') }}</h3>
-                            <p class="ai-feature-desc">{{ __('ai_feature3_desc') }}</p>
+                            <h3 class="ai-feature-title">{{ $cms('ai_feature3_title', __('ai_feature3_title')) }}</h3>
+                            <p class="ai-feature-desc">{{ $cms('ai_feature3_desc', __('ai_feature3_desc')) }}</p>
                         </div>
                     </div>
                 </div>
@@ -1742,9 +2940,9 @@
     <section id="calculator" class="section">
         <div class="container">
             <div class="section-header">
-                <div class="section-badge">{{ __('nav_calculator') }}</div>
-                <h2 class="section-title">{{ __('calc_title') }}</h2>
-                <p class="section-subtitle">{{ __('calc_subtitle') }}</p>
+                <div class="section-badge">{{ $cms('calc_badge', __('nav_calculator')) }}</div>
+                <h2 class="section-title">{{ $cms('calc_title', __('calc_title')) }}</h2>
+                <p class="section-subtitle">{{ $cms('calc_subtitle', __('calc_subtitle')) }}</p>
             </div>
 
             <div class="calculator-card">
@@ -1791,7 +2989,7 @@
                     </div>
 
                     <a href="{{ route('register.show') }}" class="btn-calc-cta">
-                        {{ __('calc_cta') }} <i class="fa-solid fa-arrow-right"></i>
+                        {{ $cms('calc_cta', __('calc_cta')) }} <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
@@ -1802,9 +3000,9 @@
     <section id="features" class="section">
         <div class="container">
             <div class="section-header">
-                <div class="section-badge">{{ __('nav_features') }}</div>
-                <h2 class="section-title">{{ __('features_title') }}</h2>
-                <p class="section-subtitle">{{ __('features_subtitle') }}</p>
+                <div class="section-badge">{{ $cms('features_badge', __('nav_features')) }}</div>
+                <h2 class="section-title">{{ $cms('features_title', __('features_title')) }}</h2>
+                <p class="section-subtitle">{{ $cms('features_subtitle', __('features_subtitle')) }}</p>
             </div>
 
             <div class="bento-grid">
@@ -1813,8 +3011,8 @@
                         <div class="bento-icon-circle" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
                             <i class="fa-solid fa-mobile-screen"></i>
                         </div>
-                        <h3>{{ __('feat_pwa_title') }}</h3>
-                        <p>{{ __('feat_pwa_desc') }}</p>
+                        <h3>{{ $cms('feat_pwa_title', __('feat_pwa_title')) }}</h3>
+                        <p>{{ $cms('feat_pwa_desc', __('feat_pwa_desc')) }}</p>
                     </div>
                 </div>
 
@@ -1823,8 +3021,8 @@
                         <div class="bento-icon-circle" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
                             <i class="fa-solid fa-bell-concierge"></i>
                         </div>
-                        <h3>{{ __('feat_kds_title') }}</h3>
-                        <p>{{ __('feat_kds_desc') }}</p>
+                        <h3>{{ $cms('feat_kds_title', __('feat_kds_title')) }}</h3>
+                        <p>{{ $cms('feat_kds_desc', __('feat_kds_desc')) }}</p>
                     </div>
                 </div>
 
@@ -1833,8 +3031,8 @@
                         <div class="bento-icon-circle" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                             <i class="fa-solid fa-hand"></i>
                         </div>
-                        <h3>{{ __('feat_call_title') }}</h3>
-                        <p>{{ __('feat_call_desc') }}</p>
+                        <h3>{{ $cms('feat_call_title', __('feat_call_title')) }}</h3>
+                        <p>{{ $cms('feat_call_desc', __('feat_call_desc')) }}</p>
                     </div>
                 </div>
 
@@ -1843,8 +3041,8 @@
                         <div class="bento-icon-circle" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                         </div>
-                        <h3>{{ __('feat_ai_import_title') }}</h3>
-                        <p>{{ __('feat_ai_import_desc') }}</p>
+                        <h3>{{ $cms('feat_ai_import_title', __('feat_ai_import_title')) }}</h3>
+                        <p>{{ $cms('feat_ai_import_desc', __('feat_ai_import_desc')) }}</p>
                     </div>
                 </div>
 
@@ -1853,8 +3051,8 @@
                         <div class="bento-icon-circle" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
                             <i class="fa-solid fa-palette"></i>
                         </div>
-                        <h3>{{ __('feat_branding_title') }}</h3>
-                        <p>{{ __('feat_branding_desc') }}</p>
+                        <h3>{{ $cms('feat_branding_title', __('feat_branding_title')) }}</h3>
+                        <p>{{ $cms('feat_branding_desc', __('feat_branding_desc')) }}</p>
                     </div>
                 </div>
 
@@ -1863,8 +3061,8 @@
                         <div class="bento-icon-circle" style="background: rgba(236, 72, 153, 0.15); color: #ec4899;">
                             <i class="fa-solid fa-print"></i>
                         </div>
-                        <h3>{{ __('feat_qr_studio_title') }}</h3>
-                        <p>{{ __('feat_qr_studio_desc') }}</p>
+                        <h3>{{ $cms('feat_qr_studio_title', __('feat_qr_studio_title')) }}</h3>
+                        <p>{{ $cms('feat_qr_studio_desc', __('feat_qr_studio_desc')) }}</p>
                     </div>
                 </div>
             </div>
@@ -1875,9 +3073,9 @@
     <section id="pricing" class="section">
         <div class="container">
             <div class="section-header">
-                <div class="section-badge">{{ __('nav_pricing') }}</div>
-                <h2 class="section-title">{{ __('pricing_title') }}</h2>
-                <p class="section-subtitle">{{ __('pricing_subtitle') }}</p>
+                <div class="section-badge">{{ $cms('pricing_badge', __('nav_pricing')) }}</div>
+                <h2 class="section-title">{{ $cms('pricing_title', __('pricing_title')) }}</h2>
+                <p class="section-subtitle">{{ $cms('pricing_subtitle', __('pricing_subtitle')) }}</p>
             </div>
 
             <div class="pricing-grid">
@@ -1943,59 +3141,59 @@
     <section id="faq" class="section">
         <div class="container">
             <div class="section-header">
-                <div class="section-badge">{{ __('nav_faq') }}</div>
-                <h2 class="section-title">{{ __('faq_title') }}</h2>
-                <p class="section-subtitle">{{ __('faq_subtitle') }}</p>
+                <div class="section-badge">{{ $cms('faq_badge', __('nav_faq')) }}</div>
+                <h2 class="section-title">{{ $cms('faq_title', __('faq_title')) }}</h2>
+                <p class="section-subtitle">{{ $cms('faq_subtitle', __('faq_subtitle')) }}</p>
             </div>
 
             <div class="faq-accordion">
                 <div class="faq-item open">
                     <div class="faq-question" onclick="toggleFaq(this)">
-                        <span>{{ __('faq_q1') }}</span>
+                        <span>{{ $cms('faq_q1', __('faq_q1')) }}</span>
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>{{ __('faq_a1') }}</p>
+                        <p>{{ $cms('faq_a1', __('faq_a1')) }}</p>
                     </div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFaq(this)">
-                        <span>{{ __('faq_q2') }}</span>
+                        <span>{{ $cms('faq_q2', __('faq_q2')) }}</span>
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>{{ __('faq_a2') }}</p>
+                        <p>{{ $cms('faq_a2', __('faq_a2')) }}</p>
                     </div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFaq(this)">
-                        <span>{{ __('faq_q3') }}</span>
+                        <span>{{ $cms('faq_q3', __('faq_q3')) }}</span>
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>{{ __('faq_a3') }}</p>
+                        <p>{{ $cms('faq_a3', __('faq_a3')) }}</p>
                     </div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFaq(this)">
-                        <span>{{ __('faq_q4') }}</span>
+                        <span>{{ $cms('faq_q4', __('faq_q4')) }}</span>
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>{{ __('faq_a4') }}</p>
+                        <p>{{ $cms('faq_a4', __('faq_a4')) }}</p>
                     </div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFaq(this)">
-                        <span>{{ __('faq_q5') }}</span>
+                        <span>{{ $cms('faq_q5', __('faq_q5')) }}</span>
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>{{ __('faq_a5') }}</p>
+                        <p>{{ $cms('faq_a5', __('faq_a5')) }}</p>
                     </div>
                 </div>
             </div>
@@ -2007,18 +3205,17 @@
         <div class="container">
             <div class="final-cta-card">
                 <h2 class="final-cta-title">
-                    {!! app()->getLocale() === 'hy'
+                    {!! $cms('cta_banner_title', ($loc === 'hy'
                         ? 'Պատրա՞ստ եք ռեստորանը տեղափոխել <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">նոր մակարդակ</span>'
-                        : 'Ready to Transform Your <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Dining Experience</span>?' 
-                    !!}
+                        : 'Ready to Transform Your <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Dining Experience</span>?')) !!}
                 </h2>
                 <p class="final-cta-subtitle">
-                    {{ __('cta_final_subtitle') }}
+                    {{ $cms('cta_banner_subtitle', __('cta_final_subtitle')) }}
                 </p>
 
                 <div class="final-cta-buttons">
                     <a href="{{ route('register.show') }}" class="btn-cta-primary" style="padding: 1.1rem 2.5rem; font-size: 1.15rem;">
-                        <span>{{ __('cta_final_btn') }}</span>
+                        <span>{{ $cms('cta_banner_btn_text', __('cta_final_btn')) }}</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>
 
@@ -2028,15 +3225,17 @@
                         $tgHandle = str_replace('@', '', $settings['contact_telegram'] ?? '+37455776066');
                     @endphp
 
-                    <a href="https://wa.me/{{ $cleanPhone }}?text=Hello%2C%20I%20am%20interested%20in%20elab.menu%20QR%20system" target="_blank" class="btn-whatsapp">
-                        <i class="fa-brands fa-whatsapp" style="font-size: 1.25rem;"></i>
-                        <span>WhatsApp</span>
-                    </a>
+                    <div class="final-cta-social-group">
+                        <a href="https://wa.me/{{ $cleanPhone }}?text=Hello%2C%20I%20am%20interested%20in%20elab.menu%20QR%20system" target="_blank" class="btn-whatsapp">
+                            <i class="fa-brands fa-whatsapp" style="font-size: 1.25rem;"></i>
+                            <span>WhatsApp</span>
+                        </a>
 
-                    <a href="https://t.me/{{ $tgHandle }}" target="_blank" class="btn-telegram">
-                        <i class="fa-brands fa-telegram" style="font-size: 1.25rem;"></i>
-                        <span>Telegram</span>
-                    </a>
+                        <a href="https://t.me/{{ $tgHandle }}" target="_blank" class="btn-telegram">
+                            <i class="fa-brands fa-telegram" style="font-size: 1.25rem;"></i>
+                            <span>Telegram</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2049,7 +3248,7 @@
                 <div class="footer-brand">
                     <a href="{{ route('landing') }}" class="brand-logo" style="text-decoration: none; display: flex; align-items: center; gap: 0.65rem;">
                         @if($siteLogoDark)
-                            <img src="{{ $siteLogoDark }}" alt="{{ $siteName }}" style="height: 36px; max-width: 160px; object-fit: contain;">
+                            <img src="{{ $siteLogoDark }}" alt="{{ $siteName }}" class="landing-footer-logo" style="height: 60px; max-height: 60px; width: auto; max-width: 220px; object-fit: contain;">
                         @else
                             <div class="logo-icon">
                                 <i class="fa-solid fa-qrcode"></i>
@@ -2063,11 +3262,11 @@
                 <div class="footer-column">
                     <h4>{{ __('footer_quick_links') }}</h4>
                     <ul>
-                        <li><a href="#comparison">{{ __('nav_comparison') }}</a></li>
-                        <li><a href="#ai-waiter">{{ __('nav_ai') }}</a></li>
-                        <li><a href="#calculator">{{ __('nav_calculator') }}</a></li>
-                        <li><a href="#pricing">{{ __('nav_pricing') }}</a></li>
-                        <li><a href="#faq">{{ __('nav_faq') }}</a></li>
+                        <li><a href="#comparison">{{ $cms('vs_badge', __('nav_comparison')) }}</a></li>
+                        <li><a href="#ai-waiter">{{ $cms('ai_section_badge', __('nav_ai')) }}</a></li>
+                        <li><a href="#calculator">{{ $cms('calc_badge', __('nav_calculator')) }}</a></li>
+                        <li><a href="#pricing">{{ $cms('pricing_badge', __('nav_pricing')) }}</a></li>
+                        <li><a href="#faq">{{ $cms('faq_badge', __('nav_faq')) }}</a></li>
                         <li><a href="{{ route('login') }}">{{ __('nav_login') }}</a></li>
                         <li><a href="{{ route('register.show') }}">{{ __('nav_register_cta') }}</a></li>
                     </ul>
@@ -2148,8 +3347,55 @@
         </div>
     </footer>
 
-    <!-- Interactive Scripts for Simulator & ROI Calculator -->
+    <!-- Interactive Scripts for Command Center, Simulator & ROI Calculator -->
     <script>
+        // Command Drawer Toggle
+        function toggleCommandDrawer() {
+            const drawer = document.getElementById('commandMenuDrawer');
+            const btn = document.getElementById('commandMenuBtn');
+            if (!drawer) return;
+            const isOpen = drawer.classList.contains('open');
+            if (isOpen) {
+                closeCommandDrawer();
+            } else {
+                drawer.classList.add('open');
+                if (btn) btn.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeCommandDrawer() {
+            const drawer = document.getElementById('commandMenuDrawer');
+            const btn = document.getElementById('commandMenuBtn');
+            if (drawer) drawer.classList.remove('open');
+            if (btn) btn.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function handleDrawerOverlayClick(event) {
+            if (event.target && event.target.id === 'commandMenuDrawer') {
+                closeCommandDrawer();
+            }
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCommandDrawer();
+            }
+        });
+
+        // Floating Sticky Header Effect on Scroll
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('siteHeader');
+            if (!header) return;
+            if (window.scrollY > 40) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        }, { passive: true });
+
         // AI Waiter Simulator Data
         const dishData = {
             steak: {
@@ -2224,30 +3470,6 @@
             // Toggle current
             if (!wasOpen) {
                 parent.classList.add('open');
-            }
-        }
-
-        // Mobile Nav Drawer Toggle
-        function toggleMobileLandingNav() {
-            const drawer = document.getElementById('mobileNavDrawer');
-            const icon = document.getElementById('mobileMenuIcon');
-            if (!drawer) return;
-            drawer.classList.toggle('open');
-            if (drawer.classList.contains('open')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-xmark');
-            } else {
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
-            }
-        }
-        function closeMobileLandingNav() {
-            const drawer = document.getElementById('mobileNavDrawer');
-            const icon = document.getElementById('mobileMenuIcon');
-            if (drawer) drawer.classList.remove('open');
-            if (icon) {
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
             }
         }
 

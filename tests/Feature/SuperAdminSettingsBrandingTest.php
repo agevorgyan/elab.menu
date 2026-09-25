@@ -165,4 +165,55 @@ class SuperAdminSettingsBrandingTest extends TestCase
         ]);
         $this->assertTrue(in_array($updateResponse->status(), [403, 302]));
     }
+
+    public function test_superadmin_can_update_landing_page_cms_and_see_it_on_landing_page(): void
+    {
+        $superadmin = User::where('role', 'superadmin')->first();
+        $this->actingAs($superadmin);
+
+        // 1. Verify SuperAdmin settings page has the Landing CMS tab and fields
+        $settingsView = $this->get(route('superadmin.settings.index'));
+        $settingsView->assertStatus(200);
+        $settingsView->assertSee('Լենդինգ Էջ (CMS)');
+        $settingsView->assertSee('name="hero_title_hy"', false);
+        $settingsView->assertSee('name="hero_subtitle_hy"', false);
+        $settingsView->assertSee('name="vs_title_hy"', false);
+        $settingsView->assertSee('name="ai_section_title_hy"', false);
+
+        // 2. Post Landing CMS updates
+        $updateResponse = $this->post(route('superadmin.settings.update'), [
+            'contact_phone' => '+37455112233',
+            'contact_email' => 'admin@test.com',
+            'trial_days' => 14,
+            'hero_badge_hy' => 'Նոր Սերնդի AI Ռեստորան',
+            'hero_title_hy' => 'Ռեստորանի Գերժամանակակից QR Մենյու Երևանում',
+            'hero_subtitle_hy' => 'Ավելացրեք միջին չեկը 25%-ով մեր ինտերակտիվ համակարգով',
+            'vs_title_hy' => 'Ինչո՞ւ են առաջատար ռեստորանները հրաժարվում թղթե մենյուից',
+            'ai_section_title_hy' => 'Արհեստական Բանականություն, որը վաճառում է Ձեր փոխարեն',
+            'calc_title_hy' => 'Հաշվեք Ձեր ռեստորանի տարեկան տնտեսումը',
+        ]);
+
+        $updateResponse->assertSessionHas('success');
+
+        // Check database/SystemSetting persistence
+        $this->assertSame('Նոր Սերնդի AI Ռեստորան', SystemSetting::get('hero_badge_hy'));
+        $this->assertSame('Ռեստորանի Գերժամանակակից QR Մենյու Երևանում', SystemSetting::get('hero_title_hy'));
+        $this->assertSame('Ավելացրեք միջին չեկը 25%-ով մեր ինտերակտիվ համակարգով', SystemSetting::get('hero_subtitle_hy'));
+
+        // 3. Visit Landing page and confirm dynamic rendering, Command Center, and iPhone Mockup
+        $landing = $this->get(route('landing'));
+        $landing->assertStatus(200);
+        $landing->assertSee('Նոր Սերնդի AI Ռեստորան');
+        $landing->assertSee('Ռեստորանի Գերժամանակակից QR Մենյու Երևանում');
+        $landing->assertSee('Ավելացրեք միջին չեկը 25%-ով մեր ինտերակտիվ համակարգով');
+        $landing->assertSee('Ինչո՞ւ են առաջատար ռեստորանները հրաժարվում թղթե մենյուից');
+        $landing->assertSee('Արհեստական Բանականություն, որը վաճառում է Ձեր փոխարեն');
+        $landing->assertSee('Հաշվեք Ձեր ռեստորանի տարեկան տնտեսումը');
+
+        // Confirm unique Command Center navigation and iPhone 16 Pro mockup elements
+        $landing->assertSee('id="commandMenuBtn"', false);
+        $landing->assertSee('id="commandMenuDrawer"', false);
+        $landing->assertSee('iphone-16-pro', false);
+        $landing->assertSee('dynamic-island', false);
+    }
 }

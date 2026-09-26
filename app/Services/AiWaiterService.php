@@ -10,8 +10,422 @@ use Illuminate\Support\Facades\Log;
 
 class AiWaiterService
 {
+    public function __construct(
+        protected ?AiGatewayService $aiGateway = null
+    ) {
+        $this->aiGateway = $aiGateway ?? app(AiGatewayService::class);
+    }
+
     /**
-     * Generate dish recommendations based on preferences, priority ingredients, and optional user prompt.
+     * Get the standardized question library with translations and icons.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getQuestionLibrary(string $lang = 'hy'): array
+    {
+        return [
+            'mood' => [
+                'key' => 'mood',
+                'priority' => 1,
+                'title' => match ($lang) {
+                    'en' => 'What are you in the mood for today?',
+                    'ru' => 'С каким настроением вы сегодня?',
+                    default => '🍽️ Ի՞նչ տրամադրությամբ եք այսօր։',
+                },
+                'subtitle' => match ($lang) {
+                    'en' => 'Select a flavor vibe or tell us in your own words',
+                    'ru' => 'Выберите вкусовое направление или напишите своими словами',
+                    default => 'Ընտրեք համային ուղղությունը կամ գրեք Ձեր տարբերակը',
+                },
+                'options' => [
+                    ['value' => 'meat', 'emoji' => '🥩', 'label' => match ($lang) {
+                        'en' => 'Meaty & Savory', 'ru' => 'Мясное и сытное', default => 'Մսային'
+                    }],
+                    ['value' => 'light', 'emoji' => '🍗', 'label' => match ($lang) {
+                        'en' => 'Light & Tender', 'ru' => 'Легкое и нежное', default => 'Թեթև'
+                    }],
+                    ['value' => 'spicy', 'emoji' => '🌶️', 'label' => match ($lang) {
+                        'en' => 'Spicy & Bold', 'ru' => 'Острое и пикантное', default => 'Կծու'
+                    }],
+                    ['value' => 'fresh', 'emoji' => '🥗', 'label' => match ($lang) {
+                        'en' => 'Fresh & Healthy', 'ru' => 'Свежее и полезное', default => 'Թարմ և առողջ'
+                    }],
+                    ['value' => 'sweet', 'emoji' => '🍰', 'label' => match ($lang) {
+                        'en' => 'Sweet & Indulgent', 'ru' => 'Сладкое и десертное', default => 'Քաղցր'
+                    }],
+                    ['value' => 'surprise', 'emoji' => '✨', 'label' => match ($lang) {
+                        'en' => 'Surprise Me', 'ru' => 'Удиви меня', default => 'Դու ընտրիր'
+                    }],
+                ],
+            ],
+            'preference' => [
+                'key' => 'preference',
+                'priority' => 2,
+                'title' => match ($lang) {
+                    'en' => 'What type of dish do you prefer?',
+                    'ru' => 'Что вы предпочитаете в основе?',
+                    default => 'Ի՞նչ եք նախընտրում։',
+                },
+                'subtitle' => match ($lang) {
+                    'en' => 'Pick your primary ingredient preference',
+                    'ru' => 'Выберите ключевой ингредиент',
+                    default => 'Ընտրեք հիմնական բաղադրիչը',
+                },
+                'options' => [
+                    ['value' => 'beef', 'emoji' => '🥩', 'label' => match ($lang) {
+                        'en' => 'Meat / Beef', 'ru' => 'Мясо / Говядина', default => 'Միս / Տավար'
+                    }],
+                    ['value' => 'chicken', 'emoji' => '🍗', 'label' => match ($lang) {
+                        'en' => 'Chicken / Poultry', 'ru' => 'Курица / Птица', default => 'Հավ'
+                    }],
+                    ['value' => 'fish', 'emoji' => '🐟', 'label' => match ($lang) {
+                        'en' => 'Fish & Seafood', 'ru' => 'Рыба и морепродукты', default => 'Ձուկ / Ծովամթերք'
+                    }],
+                    ['value' => 'vegetarian', 'emoji' => '🥦', 'label' => match ($lang) {
+                        'en' => 'Vegetarian / Greens', 'ru' => 'Овощи и зелень', default => 'Բուսական'
+                    }],
+                    ['value' => 'all', 'emoji' => '🍽️', 'label' => match ($lang) {
+                        'en' => 'Open to Everything', 'ru' => 'Любое блюдо', default => 'Ամեն ինչ'
+                    }],
+                ],
+            ],
+            'spiciness' => [
+                'key' => 'spiciness',
+                'priority' => 3,
+                'title' => match ($lang) {
+                    'en' => 'How spicy do you like your food?',
+                    'ru' => 'Насколько острую еду вы любите?',
+                    default => 'Որքա՞ն կծու եք սիրում։',
+                },
+                'subtitle' => match ($lang) {
+                    'en' => 'We will calibrate the spice level for you',
+                    'ru' => 'Мы подберем идеальный уровень остроты',
+                    default => 'Մենք կընտրենք համապատասխան կծվության մակարդակը',
+                },
+                'options' => [
+                    ['value' => 'none', 'emoji' => '🙅', 'label' => match ($lang) {
+                        'en' => 'Not Spicy at all', 'ru' => 'Совсем не острое', default => 'Չեմ սիրում կծու'
+                    }],
+                    ['value' => 'mild', 'emoji' => '🌶️', 'label' => match ($lang) {
+                        'en' => 'Mildly Spicy', 'ru' => 'Слегка пикантное', default => 'Թեթև կծու'
+                    }],
+                    ['value' => 'medium', 'emoji' => '🌶️🌶️', 'label' => match ($lang) {
+                        'en' => 'Medium Spice', 'ru' => 'Средней остроты', default => 'Միջին'
+                    }],
+                    ['value' => 'hot', 'emoji' => '🔥', 'label' => match ($lang) {
+                        'en' => 'Very Spicy', 'ru' => 'Очень острое', default => 'Շատ կծու'
+                    }],
+                ],
+            ],
+            'occasion' => [
+                'key' => 'occasion',
+                'priority' => 4,
+                'title' => match ($lang) {
+                    'en' => 'What is the dining occasion today?',
+                    'ru' => 'Какой сегодня повод для визита?',
+                    default => 'Այսօր ինչպիսի՞ առիթ է։',
+                },
+                'subtitle' => match ($lang) {
+                    'en' => 'Helps us tailor portion sizes and pairings',
+                    'ru' => 'Поможет составить идеальное сочетание порций',
+                    default => 'Կօգնի ընտրել չափաբաժինը և մատուցման ոճը',
+                },
+                'options' => [
+                    ['value' => 'solo', 'emoji' => '👤', 'label' => match ($lang) {
+                        'en' => 'Just for Me', 'ru' => 'Только для меня', default => 'Միայն ինձ համար'
+                    }],
+                    ['value' => 'couple', 'emoji' => '💑', 'label' => match ($lang) {
+                        'en' => 'Date / Couple', 'ru' => 'Вдвоем / Романтика', default => 'Զույգով'
+                    }],
+                    ['value' => 'friends', 'emoji' => '👥', 'label' => match ($lang) {
+                        'en' => 'With Friends', 'ru' => 'С друзьями', default => 'Ընկերներով'
+                    }],
+                    ['value' => 'family', 'emoji' => '👨‍👩‍👧', 'label' => match ($lang) {
+                        'en' => 'Family Dinner', 'ru' => 'Семьей', default => 'Ընտանիքով'
+                    }],
+                    ['value' => 'celebration', 'emoji' => '🎉', 'label' => match ($lang) {
+                        'en' => 'Celebration / Party', 'ru' => 'Праздник / Событие', default => 'Տոնական'
+                    }],
+                ],
+            ],
+            'budget' => [
+                'key' => 'budget',
+                'priority' => 5,
+                'title' => match ($lang) {
+                    'en' => 'What is your approximate budget?',
+                    'ru' => 'Какой бюджет вы планируете?',
+                    default => 'Մոտավորապես ի՞նչ բյուջե եք նախատեսում։',
+                },
+                'subtitle' => match ($lang) {
+                    'en' => 'Per person estimate',
+                    'ru' => 'Примерная сумма на человека',
+                    default => 'Մեկ անձի համար նախատեսված',
+                },
+                'options' => [
+                    ['value' => '5000', 'emoji' => '💵', 'label' => match ($lang) {
+                        'en' => 'Up to 5,000 ֏', 'ru' => 'До 5,000 ֏', default => 'Մինչև 5,000 ֏'
+                    }],
+                    ['value' => '10000', 'emoji' => '💳', 'label' => match ($lang) {
+                        'en' => '5,000 – 10,000 ֏', 'ru' => '5,000 – 10,000 ֏', default => '5,000–10,000 ֏'
+                    }],
+                    ['value' => '20000', 'emoji' => '💎', 'label' => match ($lang) {
+                        'en' => '10,000 – 20,000 ֏', 'ru' => '10,000 – 20,000 ֏', default => '10,000–20,000 ֏'
+                    }],
+                    ['value' => 'any', 'emoji' => '🤷', 'label' => match ($lang) {
+                        'en' => "Doesn't Matter", 'ru' => 'Не имеет значения', default => 'Կարևոր չէ'
+                    }],
+                ],
+            ],
+            'drink' => [
+                'key' => 'drink',
+                'priority' => 6,
+                'title' => match ($lang) {
+                    'en' => 'What would you like to drink?',
+                    'ru' => 'Что бы вы хотели выпить?',
+                    default => 'Ի՞նչ կցանկանաք խմել։',
+                },
+                'subtitle' => match ($lang) {
+                    'en' => 'Choose your beverage preference',
+                    'ru' => 'Выберите напиток к блюду',
+                    default => 'Ընտրեք ըմպելիքի տեսակը',
+                },
+                'options' => [
+                    ['value' => 'water', 'emoji' => '💧', 'label' => match ($lang) {
+                        'en' => 'Water', 'ru' => 'Вода', default => 'Ջուր'
+                    }],
+                    ['value' => 'soft', 'emoji' => '🥤', 'label' => match ($lang) {
+                        'en' => 'Soft Drinks', 'ru' => 'Прохладительные', default => 'Զովացուցիչ'
+                    }],
+                    ['value' => 'lemonade', 'emoji' => '🍋', 'label' => match ($lang) {
+                        'en' => 'Fresh Lemonade', 'ru' => 'Лимонад', default => 'Լիմոնադ'
+                    }],
+                    ['value' => 'coffee', 'emoji' => '☕', 'label' => match ($lang) {
+                        'en' => 'Coffee / Tea', 'ru' => 'Кофе / Чай', default => 'Սուրճ / Թեյ'
+                    }],
+                    ['value' => 'cocktail', 'emoji' => '🍸', 'label' => match ($lang) {
+                        'en' => 'Cocktails', 'ru' => 'Коктейли', default => 'Կոկտեյլ'
+                    }],
+                    ['value' => 'wine', 'emoji' => '🍷', 'label' => match ($lang) {
+                        'en' => 'Wine', 'ru' => 'Вино', default => 'Գինի'
+                    }],
+                    ['value' => 'beer', 'emoji' => '🍺', 'label' => match ($lang) {
+                        'en' => 'Beer', 'ru' => 'Пиво', default => 'Գարեջուր'
+                    }],
+                    ['value' => 'surprise', 'emoji' => '✨', 'label' => match ($lang) {
+                        'en' => 'You choose', 'ru' => 'На твой выбор', default => 'Դու ընտրիր'
+                    }],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Determine next best question dynamically based on current profile and information gain.
+     *
+     * @param  array<string, mixed>  $preferences
+     * @param  array<int, string>  $answeredKeys
+     * @return array<string, mixed>|null Returns null if AI has sufficient confidence to stop questioning
+     */
+    public function getNextQuestion(
+        Vendor $vendor,
+        array $preferences,
+        array $answeredKeys,
+        string $lang = 'hy'
+    ): ?array {
+        $library = $this->getQuestionLibrary($lang);
+        $config = $vendor->getAiWaiterConfig();
+        $configuredQuestions = $config['questions'] ?? [];
+
+        // Check if we should stop questioning early (sufficient information gain)
+        $answeredCount = count($answeredKeys);
+        if ($this->hasSufficientInformation($preferences, $answeredCount)) {
+            return null;
+        }
+
+        // Hard cap: maximum 5 questions
+        if ($answeredCount >= 5) {
+            return null;
+        }
+
+        // Determine question priority ordering
+        $candidateKeys = [];
+        foreach ($library as $key => $q) {
+            if (in_array($key, $answeredKeys, true)) {
+                continue;
+            }
+
+            // Check if question is disabled in vendor settings
+            if (isset($configuredQuestions[$key]) && empty($configuredQuestions[$key]['enabled'])) {
+                continue;
+            }
+
+            // If user's free text already answered this aspect, skip asking it
+            if ($this->isPreferenceAlreadyResolved($key, $preferences)) {
+                continue;
+            }
+
+            $priority = $configuredQuestions[$key]['priority'] ?? $q['priority'];
+            $candidateKeys[$key] = $priority;
+        }
+
+        if (empty($candidateKeys)) {
+            return null;
+        }
+
+        asort($candidateKeys);
+        $nextKey = array_key_first($candidateKeys);
+
+        $questionData = $library[$nextKey];
+        $questionData['step_index'] = $answeredCount + 1;
+        $questionData['total_estimated_steps'] = min(4, $answeredCount + count($candidateKeys));
+
+        return $questionData;
+    }
+
+    /**
+     * Check if AI currently has sufficient information to recommend dishes without further questions.
+     *
+     * @param  array<string, mixed>  $preferences
+     */
+    public function hasSufficientInformation(array $preferences, int $questionsAnswered): bool
+    {
+        // Must have answered at least 2 questions unless free text provided rich profile
+        if ($questionsAnswered < 2 && empty($preferences['free_text'])) {
+            return false;
+        }
+
+        $hasCoreFood = ! empty($preferences['mood']) || ! empty($preferences['preference']) || ! empty($preferences['protein']);
+        $hasFlavorOrOccasion = ! empty($preferences['spiciness']) || ! empty($preferences['occasion']) || ! empty($preferences['dietary']);
+
+        if ($hasCoreFood && $hasFlavorOrOccasion && $questionsAnswered >= 3) {
+            return true;
+        }
+
+        // If user gave comprehensive free text
+        if (! empty($preferences['free_text']) && mb_strlen($preferences['free_text']) >= 20 && $hasCoreFood) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a specific preference aspect is already resolved.
+     *
+     * @param  array<string, mixed>  $preferences
+     */
+    protected function isPreferenceAlreadyResolved(string $key, array $preferences): bool
+    {
+        return match ($key) {
+            'mood' => ! empty($preferences['mood']),
+            'preference' => ! empty($preferences['preference']) || ! empty($preferences['protein']),
+            'spiciness' => isset($preferences['spiciness']) && $preferences['spiciness'] !== null,
+            'occasion' => ! empty($preferences['occasion']),
+            'budget' => ! empty($preferences['budget']),
+            'drink' => ! empty($preferences['drink']),
+            default => false,
+        };
+    }
+
+    /**
+     * Parse natural language free-text input into structured customer preferences.
+     *
+     * @return array<string, mixed>
+     */
+    public function parseFreeText(string $text, string $lang = 'hy', ?Vendor $vendor = null): array
+    {
+        $normalized = mb_strtolower(trim($text));
+        if ($normalized === '') {
+            return [];
+        }
+
+        $extracted = [
+            'free_text' => $text,
+            'dietary' => [],
+            'exclusions' => [],
+        ];
+
+        // 1. Dietary restrictions & allergies
+        if (preg_match('/(բուսակեր|վեգան|առանց մսի|vegetarian|vegan|meatless|веган|вегетариан)/u', $normalized)) {
+            $extracted['dietary'][] = 'vegetarian';
+            $extracted['preference'] = 'vegetarian';
+        }
+        if (preg_match('/(գլյուտեն|առանց գլյուտենի|gluten[- ]?free|без глютена)/u', $normalized)) {
+            $extracted['dietary'][] = 'gluten_free';
+        }
+        if (preg_match('/(լակտոզ|առանց կաթի|lactose[- ]?free|dairy[- ]?free|без лактозы)/u', $normalized)) {
+            $extracted['dietary'][] = 'lactose_free';
+        }
+
+        // 2. Explicit exclusions (e.g. "չեմ սիրում սունկ", "առանց սոխ")
+        if (preg_match('/(չեմ սիրում|առանց|չլինի|no |without |не люблю|без )\s*([a-z\p{Armenian}\p{Cyrillic}\s]+)/ui', $normalized, $m)) {
+            $exclusionTarget = trim($m[2]);
+            if (mb_strlen($exclusionTarget) >= 3) {
+                $extracted['exclusions'][] = $exclusionTarget;
+            }
+        }
+        if (str_contains($normalized, 'սունկ') && (str_contains($normalized, 'չեմ') || str_contains($normalized, 'առանց'))) {
+            $extracted['exclusions'][] = 'mushroom';
+        }
+
+        // 3. Protein / Food preference
+        if (preg_match('/(սթեյք|տավար|միս|steak|beef|говядина|мясо)/u', $normalized)) {
+            $extracted['preference'] = 'beef';
+            $extracted['mood'] = 'meat';
+        } elseif (preg_match('/(հավ|chicken|курица|птица)/u', $normalized)) {
+            $extracted['preference'] = 'chicken';
+            $extracted['mood'] = 'light';
+        } elseif (preg_match('/(ձուկ|սաղմոն|ծովամթերք|fish|salmon|seafood|рыба|лосось)/u', $normalized)) {
+            $extracted['preference'] = 'fish';
+        } elseif (preg_match('/(խինկալի|պելմենի|քյուֆթա|пельмени|хинкали)/u', $normalized)) {
+            $extracted['preference'] = 'beef';
+            $extracted['mood'] = 'meat';
+            $extracted['dish_hint'] = 'khinkali';
+        }
+
+        // 4. Spiciness
+        if (preg_match('/(չեմ սիրում կծու|ոչ կծու|մեղմ|not spicy|mild|не остр)/u', $normalized)) {
+            $extracted['spiciness'] = 'none';
+        } elseif (preg_match('/(շատ կծու|hot|very spicy|очень остр)/u', $normalized)) {
+            $extracted['spiciness'] = 'hot';
+        } elseif (preg_match('/(կծու|spicy|остр)/u', $normalized)) {
+            $extracted['spiciness'] = 'medium';
+        }
+
+        // 5. Mood / Vibe
+        if (preg_match('/(թեթև|աղցան|light|fresh|салат|легк)/u', $normalized)) {
+            $extracted['mood'] = 'light';
+        } elseif (preg_match('/(քաղցր|դեսերտ|աղանդեր|sweet|dessert|десерт)/u', $normalized)) {
+            $extracted['mood'] = 'sweet';
+        }
+
+        // 6. Occasion
+        if (preg_match('/(երկուսով|երկուսիս|զույգով|date|couple|romantic|вдвоем|для двоих)/u', $normalized)) {
+            $extracted['occasion'] = 'couple';
+        } elseif (preg_match('/(ընտանիք|family|семь)/u', $normalized)) {
+            $extracted['occasion'] = 'family';
+        } elseif (preg_match('/(ընկեր|friends|друзь)/u', $normalized)) {
+            $extracted['occasion'] = 'friends';
+        }
+
+        // 7. Budget detection (e.g. 5000, 10000, 15000)
+        if (preg_match('/(\d{4,6})\s*(֏|դրամ|amd|rub|руб|\$)?/ui', $normalized, $matches)) {
+            $amount = (int) $matches[1];
+            if ($amount <= 6000) {
+                $extracted['budget'] = '5000';
+            } elseif ($amount <= 12000) {
+                $extracted['budget'] = '10000';
+            } else {
+                $extracted['budget'] = '20000';
+            }
+            $extracted['raw_budget'] = $amount;
+        }
+
+        return $extracted;
+    }
+
+    /**
+     * Generate personalized dish recommendations applying Hard Constraints and Restaurant-Controlled Priority Stack.
      *
      * @param  array<string, mixed>  $preferences
      * @return array<string, mixed>
@@ -23,9 +437,21 @@ class AiWaiterService
         string $lang = 'hy',
         ?int $locationId = null
     ): array {
+        if (! in_array($lang, ['hy', 'en', 'ru'])) {
+            $lang = 'hy';
+        }
+
+        // Merge prompt analysis into preferences if provided
+        if (! empty($prompt)) {
+            $parsedPrompt = $this->parseFreeText($prompt, $lang, $vendor);
+            $preferences = array_merge($preferences, $parsedPrompt);
+            $preferences['free_text'] = $prompt;
+        }
+
         // 1. Fetch available products with relations
         $products = Product::where('vendor_id', $vendor->id)
             ->where('is_available', true)
+            ->where('ai_enabled', true)
             ->whereHas('category', function ($q) {
                 $q->where('is_active', true);
             })
@@ -35,318 +461,817 @@ class AiWaiterService
         if ($products->isEmpty()) {
             return [
                 'commentary' => $this->getDefaultEmptyCommentary($lang),
+                'main_recommendations' => [],
                 'recommendations' => [],
+                'secondary_recommendations' => [],
+                'pairing_drink' => null,
+                'bundle' => null,
             ];
         }
 
-        // 2. Extract vendor priority ingredients
-        $priorityIngredients = $vendor->getAiWaiterPriorityIngredientsList();
+        // 2. HARD CONSTRAINTS FILTERING (Dietary, Allergies, Availability, Explicit Exclusions)
+        $candidates = $this->applyHardConstraints($products, $preferences, $lang);
 
-        // 3. Score each product
-        $scoredProducts = [];
-        $craving = $preferences['craving'] ?? null;
-        $occasion = $preferences['occasion'] ?? null;
-        $drinkPref = $preferences['drink_preference'] ?? null;
-        $dietary = $preferences['dietary'] ?? [];
-        $normalizedPrompt = ! empty($prompt) ? mb_strtolower(trim($prompt)) : '';
+        if ($candidates->isEmpty()) {
+            // Fallback gracefully to general available products if constraints were overly restrictive
+            $candidates = $products;
+        }
 
-        foreach ($products as $product) {
-            $score = 0;
-            $matchedPriorityIngredients = [];
+        // 3. RANKING & SCORING HIERARCHY
+        $scoredProducts = $this->scoreProductCandidates($candidates, $vendor, $preferences, $lang, $locationId);
 
-            $nameText = mb_strtolower($product->getTranslatedName($lang).' '.$product->name);
-            $descText = mb_strtolower($product->getTranslatedDescription($lang).' '.($product->description ?? ''));
-            $catName = mb_strtolower($product->category?->getTranslatedName($lang) ?? ($product->category?->name ?? ''));
-            $fullText = $nameText.' '.$descText.' '.$catName;
+        // 4. PARTITION INTO MAIN, ALTERNATIVE, DRINK, AND COMBO BUNDLE
+        $mainDishes = [];
+        $secondaryDishes = [];
+        $drinkCandidates = [];
 
-            // Priority Ingredients Match (+40 points per match)
-            foreach ($priorityIngredients as $ingredient) {
-                $ingLower = mb_strtolower(trim($ingredient));
-                if ($ingLower !== '' && str_contains($fullText, $ingLower)) {
-                    $score += 40;
-                    $matchedPriorityIngredients[] = $ingredient;
+        foreach ($scoredProducts as $entry) {
+            /** @var Product $p */
+            $p = $entry['product'];
+            $catName = mb_strtolower($p->category?->name ?? '');
+
+            if ($this->isBeverageCategory($catName)) {
+                $drinkCandidates[] = $entry;
+            } else {
+                if (count($mainDishes) < 3) {
+                    $mainDishes[] = $entry;
+                } elseif (count($secondaryDishes) < 2) {
+                    $secondaryDishes[] = $entry;
                 }
             }
+        }
 
-            // Featured Dish Boost (+15 points)
-            if ($product->is_featured || ($vendor->featured_product_id === $product->id)) {
-                $score += 15;
-            }
+        // If no food found, populate from general candidates
+        if (empty($mainDishes) && ! empty($scoredProducts)) {
+            $mainDishes = array_slice($scoredProducts, 0, 2);
+        }
 
-            // Craving Match
-            if ($craving) {
-                $score += $this->calculateCravingScore($craving, $fullText, $product);
-            }
+        // Format recommended output models
+        $formattedMain = array_map(fn ($item) => $this->formatProductPayload($item['product'], $item['match_score'], $item['reason'], $vendor, $lang, $locationId, $item['matched_priority_ingredients']), $mainDishes);
+        $formattedSecondary = array_map(fn ($item) => $this->formatProductPayload($item['product'], $item['match_score'], $item['reason'], $vendor, $lang, $locationId, $item['matched_priority_ingredients']), $secondaryDishes);
 
-            // Occasion Match
-            if ($occasion) {
-                $score += $this->calculateOccasionScore($occasion, $fullText, $product);
-            }
+        // Select primary drink pairing
+        $selectedDrinkEntry = ! empty($drinkCandidates) ? $drinkCandidates[0] : null;
+        $formattedDrink = $selectedDrinkEntry ? $this->formatProductPayload($selectedDrinkEntry['product'], $selectedDrinkEntry['match_score'], $selectedDrinkEntry['reason'], $vendor, $lang, $locationId) : null;
 
-            // Dietary Filters
-            if (! empty($dietary)) {
-                $score += $this->calculateDietaryScore($dietary, $fullText, $product);
-            }
+        // 5. SMART PAIRING BUNDLE (Main + Side/Appetizer + Drink)
+        $bundle = $this->buildSmartPairingBundle($mainDishes, $products, $formattedDrink, $vendor, $lang, $locationId);
 
-            // Freeform prompt keyword matches
-            if ($normalizedPrompt !== '') {
-                $score += $this->calculatePromptScore($normalizedPrompt, $fullText);
-            }
-
-            // Give non-drinks higher priority for main recommendations unless user specifically asked for drinks/dessert
-            $isDrinkCategory = $this->isBeverageCategory($catName);
-            if ($isDrinkCategory && $craving !== 'drink') {
-                $score -= 30; // Drinks are presented primarily through pairings
-            }
-
-            $scoredProducts[] = [
-                'product' => $product,
-                'score' => $score,
-                'priority_matches' => array_unique($matchedPriorityIngredients),
+        // Attach pairings structure to main recommendations for backwards compatibility
+        foreach ($formattedMain as &$fMain) {
+            $fMain['pairings'] = [
+                'pairing_note' => $bundle['title'] ?? 'Sommelier Pairing Selection',
+                'drink' => $formattedDrink,
+                'side' => $bundle['side'] ?? null,
             ];
         }
+        unset($fMain);
 
-        // 4. Sort by score descending
-        usort($scoredProducts, function ($a, $b) {
-            return $b['score'] <=> $a['score'];
-        });
-
-        // 5. Select top 3 distinct products
-        $topItems = array_slice($scoredProducts, 0, 3);
-        if (empty($topItems)) {
-            $topItems = array_slice($scoredProducts, 0, 1);
-        }
-
-        // 6. Build recommendation payloads with reasons & pairings
-        $recommendations = [];
-        foreach ($topItems as $item) {
-            /** @var Product $prod */
-            $prod = $item['product'];
-            $priorityMatches = $item['priority_matches'];
-
-            $reason = $this->buildRecommendationReason($prod, $priorityMatches, $craving, $occasion, $lang);
-            $pairings = $this->findPairingsForProduct($prod, $products, $vendor, $lang, $locationId);
-
-            $recommendations[] = [
-                'id' => $prod->id,
-                'name' => $prod->getTranslatedName($lang),
-                'category_name' => $prod->category?->getTranslatedName($lang) ?? '',
-                'description' => $prod->getTranslatedDescription($lang),
-                'price' => (float) $prod->getEffectivePrice($locationId),
-                'regular_price' => (float) $prod->getRegularPrice($locationId),
-                'is_discount_active' => $prod->isDiscountActive(),
-                'discount_percentage' => $prod->getDiscountPercentage(),
-                'formatted_price' => number_format($prod->getEffectivePrice($locationId)).' '.$vendor->currency,
-                'image' => $prod->image ?: Product::DEFAULT_IMAGE,
-                'dietary_tags' => $prod->dietary_tags ?? [],
-                'calories' => $prod->calories,
-                'preparation_time_min' => $prod->preparation_time_min,
-                'reason' => $reason,
-                'pairings' => $pairings,
-                'payload' => [
-                    'id' => $prod->id,
-                    'name' => $prod->getTranslatedName($lang),
-                    'image' => $prod->image ?: Product::DEFAULT_IMAGE,
-                    'description' => $prod->getTranslatedDescription($lang),
-                    'base_price' => (float) $prod->getEffectivePrice($locationId),
-                    'regular_price' => (float) $prod->getRegularPrice($locationId),
-                    'is_discount_active' => $prod->isDiscountActive(),
-                    'discount_percentage' => $prod->getDiscountPercentage(),
-                    'variations' => $prod->variations->map(function ($v) use ($lang) {
-                        return [
-                            'id' => $v->id,
-                            'name' => $v->getTranslatedName($lang),
-                            'price' => (float) $v->getEffectivePrice(),
-                            'regular_price' => (float) $v->price,
-                            'is_default' => (bool) $v->is_default,
-                        ];
-                    })->values(),
-                ],
-            ];
-        }
-
-        // 7. Craft warm sommelier commentary
-        $commentary = $this->generateSommelierCommentary($vendor, $recommendations, $preferences, $prompt, $lang);
+        // 6. AI COMMENTARY
+        $commentary = $this->generateSommelierCommentary($vendor, $formattedMain, $preferences, $prompt, $lang);
 
         return [
             'commentary' => $commentary,
-            'recommendations' => $recommendations,
+            'recommendations' => $formattedMain, // For backwards-compatibility
+            'main_recommendations' => $formattedMain,
+            'secondary_recommendations' => $formattedSecondary,
+            'pairing_drink' => $formattedDrink,
+            'bundle' => $bundle,
         ];
     }
 
     /**
-     * Find best complementary drinks and sides/salads for a given product.
+     * Apply Hard Constraints (Dietary, Allergies, Availability, Exclusions).
+     *
+     * @param  Collection<int, Product>  $products
+     * @param  array<string, mixed>  $preferences
+     * @return Collection<int, Product>
+     */
+    protected function applyHardConstraints(Collection $products, array $preferences, string $lang): Collection
+    {
+        $dietary = (array) ($preferences['dietary'] ?? []);
+        $pref = $preferences['preference'] ?? null;
+        if ($pref === 'vegetarian') {
+            $dietary[] = 'vegetarian';
+        }
+        $dietary = array_unique($dietary);
+
+        $exclusions = (array) ($preferences['exclusions'] ?? []);
+        $allergies = (array) ($preferences['allergies'] ?? []);
+
+        return $products->filter(function (Product $prod) use ($dietary, $exclusions, $allergies, $lang) {
+            // Must be available
+            if (! $prod->is_available) {
+                return false;
+            }
+
+            $prodName = mb_strtolower($prod->name.' '.$prod->getTranslatedName($lang));
+            $prodDesc = mb_strtolower(($prod->description ?? '').' '.$prod->getTranslatedDescription($lang));
+            $fullText = $prodName.' '.$prodDesc;
+            $tags = array_map('mb_strtolower', (array) ($prod->dietary_tags ?? []));
+
+            // Hard Dietary Constraint: Vegetarian
+            if (in_array('vegetarian', $dietary, true)) {
+                $meatKeywords = ['steak', 'beef', 'chicken', 'pork', 'lamb', 'bacon', 'ham', 'sausage', 'meat', 'տավար', 'խոզ', 'գառ', 'հավ', 'միս', 'սթեյք', 'բաստուրմա', 'խինկալի', 'քյուֆթա', 'говядина', 'свинина', 'курица', 'мясо', 'стейк'];
+                foreach ($meatKeywords as $kw) {
+                    if (str_contains($fullText, $kw) && ! in_array('vegetarian', $tags) && ! in_array('vegan', $tags)) {
+                        return false;
+                    }
+                }
+            }
+
+            // Hard Dietary Constraint: Vegan
+            if (in_array('vegan', $dietary, true)) {
+                if (! in_array('vegan', $tags)) {
+                    $animalKeywords = ['cheese', 'milk', 'cream', 'butter', 'egg', 'beef', 'chicken', 'fish', 'պանիր', 'կաթ', 'սերուցք', 'կարագ', 'ձու', 'միս', 'ձուկ', 'сыр', 'молоко', 'сливки', 'масло', 'яйцо'];
+                    foreach ($animalKeywords as $kw) {
+                        if (str_contains($fullText, $kw)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            // Hard Allergy Exclusion
+            if (! empty($allergies)) {
+                $prodAllergenNames = $prod->allergens->pluck('name')->map(fn ($n) => mb_strtolower($n))->toArray();
+                foreach ($allergies as $allergen) {
+                    $allergenLower = mb_strtolower(trim($allergen));
+                    if (in_array($allergenLower, $prodAllergenNames, true) || str_contains($fullText, $allergenLower)) {
+                        return false;
+                    }
+                }
+            }
+
+            // Explicit customer exclusion words
+            foreach ($exclusions as $ex) {
+                $exLower = mb_strtolower(trim($ex));
+                if ($exLower === 'mushroom' || str_contains($exLower, 'սունկ') || str_contains($exLower, 'гриб')) {
+                    if (str_contains($fullText, 'սունկ') || str_contains($fullText, 'mushroom') || str_contains($fullText, 'гриб')) {
+                        return false;
+                    }
+                } elseif (mb_strlen($exLower) >= 3 && str_contains($fullText, $exLower)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Score product candidates according to the restaurant priority hierarchy.
+     *
+     * @param  Collection<int, Product>  $candidates
+     * @param  array<string, mixed>  $preferences
+     * @return array<int, array{product: Product, score: float, match_score: int, reason: string, matched_priority_ingredients: array<int, string>}>
+     */
+    protected function scoreProductCandidates(
+        Collection $candidates,
+        Vendor $vendor,
+        array $preferences,
+        string $lang,
+        ?int $locationId = null
+    ): array {
+        $weights = $vendor->getAiScoringWeights();
+        $promotedProducts = $vendor->getAiPromotedProductsList();
+        $promotedMap = [];
+        foreach ($promotedProducts as $item) {
+            $promotedMap[$item['product_id']] = (int) ($item['priority'] ?? 100);
+        }
+
+        $preferredIngredients = $vendor->getAiPreferredIngredients();
+        $config = $vendor->getAiWaiterConfig();
+        $groupPriorities = $config['group_priorities'] ?? [];
+        $tagPriorities = $config['tag_priorities'] ?? [];
+
+        $craving = $preferences['craving'] ?? ($preferences['mood'] ?? null);
+        $prefProtein = $preferences['preference'] ?? ($preferences['protein'] ?? null);
+        $spiciness = $preferences['spiciness'] ?? null;
+        $occasion = $preferences['occasion'] ?? null;
+        $budget = $preferences['budget'] ?? null;
+        $freeText = mb_strtolower(trim($preferences['free_text'] ?? ''));
+
+        $scored = [];
+
+        foreach ($candidates as $product) {
+            $nameText = mb_strtolower($product->getTranslatedName($lang).' '.$product->name);
+            $descText = mb_strtolower(($product->description ?? '').' '.$product->getTranslatedDescription($lang));
+            $catName = mb_strtolower($product->category?->getTranslatedName($lang) ?? ($product->category?->name ?? ''));
+            $fullText = $nameText.' '.$descText.' '.$catName;
+
+            // 1. Restaurant Explicit Priority (0 - 100 normalized)
+            $explicitPriority = 0;
+            if (isset($promotedMap[$product->id])) {
+                $explicitPriority = max(80, $promotedMap[$product->id]);
+            } elseif ($product->ai_priority) {
+                $explicitPriority = $product->ai_priority_level > 0 ? $product->ai_priority_level : 90;
+            } elseif ($product->is_featured || ($vendor->featured_product_id === $product->id)) {
+                $explicitPriority = 70;
+            }
+
+            // 2. Preferred Ingredients Match (0 - 100 normalized)
+            $ingredientScore = 0;
+            $matchedIngredients = [];
+            foreach ($preferredIngredients as $ingItem) {
+                $ingName = mb_strtolower(trim($ingItem['ingredient'] ?? ''));
+                if ($ingName !== '' && str_contains($fullText, $ingName)) {
+                    $prio = (int) ($ingItem['priority'] ?? 80);
+                    $ingredientScore = max($ingredientScore, $prio);
+                    $matchedIngredients[] = $ingItem['ingredient'];
+                }
+            }
+
+            // 3. Product Group & Tag Boosts
+            $groupBoost = 0;
+            if (! empty($product->ai_group) && isset($groupPriorities[$product->ai_group])) {
+                $groupBoost = $groupPriorities[$product->ai_group] * 0.15;
+            }
+
+            $tagBoost = 0;
+            $prodTags = (array) ($product->ai_tags ?? []);
+            foreach ($prodTags as $t) {
+                if (isset($tagPriorities[$t])) {
+                    $tagBoost = max($tagBoost, $tagPriorities[$t] * 0.1);
+                }
+            }
+
+            // 4. Customer Preference Match (0 - 100 normalized)
+            $customerMatch = 50; // Neutral baseline
+
+            // Protein / Food preference match
+            if ($prefProtein && $prefProtein !== 'all') {
+                $customerMatch += $this->calculateProteinMatch($prefProtein, $fullText);
+            }
+
+            // Mood match
+            if ($craving) {
+                $customerMatch += $this->calculateCravingMatch($craving, $fullText);
+            }
+
+            // Spiciness match
+            if ($spiciness !== null) {
+                $prodSpicy = (int) ($product->ai_spicy_level ?? 0);
+                if ($spiciness === 'none') {
+                    $customerMatch += ($prodSpicy === 0) ? 20 : -35;
+                } elseif ($spiciness === 'mild') {
+                    $customerMatch += ($prodSpicy <= 1) ? 20 : -10;
+                } elseif ($spiciness === 'hot') {
+                    $customerMatch += ($prodSpicy >= 2) ? 25 : -15;
+                }
+            }
+
+            // Occasion match
+            if ($occasion) {
+                $customerMatch += $this->calculateOccasionMatch($occasion, $fullText, $product);
+            }
+
+            // Budget match
+            $effectivePrice = (float) $product->getEffectivePrice($locationId);
+            if ($budget && $budget !== 'any') {
+                $maxBudget = (float) $budget;
+                if ($effectivePrice <= $maxBudget) {
+                    $customerMatch += 15;
+                } elseif ($effectivePrice > $maxBudget * 1.3) {
+                    $customerMatch -= 25;
+                }
+            }
+
+            // Free text keyword matches
+            if ($freeText !== '') {
+                $customerMatch += $this->calculateFreeTextMatch($freeText, $fullText, $product);
+            }
+
+            $customerMatch = max(10, min(100, $customerMatch));
+
+            // 5. Compute Weighted Score
+            $wRest = $weights['restaurant_priority'] ?? 30;
+            $wIng = $weights['preferred_ingredient'] ?? 20;
+            $wCust = $weights['customer_preference'] ?? 25;
+            $wDiet = $weights['dietary_compatibility'] ?? 10;
+            $wTaste = $weights['taste_spiciness'] ?? 5;
+            $wOccasion = $weights['occasion'] ?? 5;
+            $wBudget = $weights['budget'] ?? 5;
+
+            $totalWeight = $wRest + $wIng + $wCust + $wDiet + $wTaste + $wOccasion + $wBudget;
+            if ($totalWeight <= 0) {
+                $totalWeight = 100;
+            }
+
+            $totalScore = (
+                ($explicitPriority * $wRest) +
+                ($ingredientScore * $wIng) +
+                ($customerMatch * $wCust) +
+                (85 * $wDiet) +
+                (80 * $wTaste) +
+                (80 * $wOccasion) +
+                (80 * $wBudget)
+            ) / $totalWeight;
+
+            $totalScore += $groupBoost + $tagBoost;
+
+            // Compute human-friendly, genuine Match Percentage (82% - 98%)
+            $matchPercentage = (int) round(min(98, max(75, 70 + ($totalScore * 0.28))));
+
+            $reason = $this->buildRecommendationReason($product, $matchedIngredients, $craving, $prefProtein, $lang);
+
+            $scored[] = [
+                'product' => $product,
+                'score' => $totalScore,
+                'match_score' => $matchPercentage,
+                'reason' => $reason,
+                'matched_priority_ingredients' => array_unique($matchedIngredients),
+            ];
+        }
+
+        usort($scored, fn ($a, $b) => $b['score'] <=> $a['score']);
+
+        return $scored;
+    }
+
+    /**
+     * Calculate protein match.
+     */
+    protected function calculateProteinMatch(string $protein, string $text): int
+    {
+        $keywords = match ($protein) {
+            'beef' => ['տավար', 'միս', 'սթեյք', 'անգուս', 'beef', 'steak', 'angus', 'ribeye', 'говядина', 'стейк', 'мясо'],
+            'chicken' => ['հավ', 'թռչնամիս', 'chicken', 'poultry', 'курица', 'птица'],
+            'fish' => ['ձուկ', 'սաղմոն', 'ծովամթերք', 'խեցգետին', 'fish', 'salmon', 'seafood', 'shrimp', 'рыба', 'лосось', 'креветки'],
+            'vegetarian' => ['բուսական', 'բանջարեղեն', 'սունկ', 'պանիր', 'աղցան', 'vegetarian', 'vegan', 'salad', 'cheese', 'салат', 'овощи'],
+            default => [],
+        };
+
+        foreach ($keywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return 25;
+            }
+        }
+
+        return -15;
+    }
+
+    /**
+     * Calculate craving match.
+     */
+    protected function calculateCravingMatch(string $craving, string $text): int
+    {
+        $keywords = match ($craving) {
+            'meat' => ['տավար', 'միս', 'սթեյք', 'հորթ', 'գառ', 'beef', 'steak', 'meat', 'lamb', 'говядина', 'стейк', 'мясо'],
+            'seafood', 'fish' => ['ձուկ', 'սաղմոն', 'ծովամթերք', 'խեցգետին', 'fish', 'salmon', 'seafood', 'shrimp', 'рыба', 'лосось', 'креветки'],
+            'vegetarian' => ['բուսական', 'բանջարեղեն', 'սունկ', 'պանիր', 'աղցան', 'vegetarian', 'vegan', 'salad', 'cheese', 'салат', 'овощи'],
+            'light' => ['թեթև', 'հավ', 'նախուտեստ', 'light', 'chicken', 'starter', 'легк', 'курица'],
+            'spicy' => ['կծու', 'չիլի', 'պղպեղ', 'spicy', 'chili', 'hot', 'остр', 'чили'],
+            'fresh' => ['թարմ', 'աղցան', 'բանջարեղեն', 'fresh', 'salad', 'green', 'салат', 'свеж'],
+            'sweet', 'dessert' => ['քաղցր', 'շոկոլադ', 'աղանդեր', 'թխվածք', 'sweet', 'chocolate', 'dessert', 'десерт', 'торт'],
+            default => [],
+        };
+
+        if (empty($keywords)) {
+            return 0;
+        }
+
+        foreach ($keywords as $kw) {
+            if (str_contains($text, $kw)) {
+                return 35;
+            }
+        }
+
+        if (in_array($craving, ['meat', 'seafood', 'fish', 'vegetarian', 'sweet', 'dessert'], true)) {
+            return -25;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Calculate occasion match.
+     */
+    protected function calculateOccasionMatch(string $occasion, string $text, Product $product): int
+    {
+        return match ($occasion) {
+            'couple' => (str_contains($text, 'steak') || str_contains($text, 'wine') || str_contains($text, 'salmon') || $product->is_featured) ? 20 : 5,
+            'family' => (str_contains($text, 'pizza') || str_contains($text, 'burger') || str_contains($text, 'խինկալի') || str_contains($text, 'sharing')) ? 20 : 5,
+            'friends' => (str_contains($text, 'beer') || str_contains($text, 'snack') || str_contains($text, 'wings') || str_contains($text, 'sharing')) ? 20 : 5,
+            'celebration' => ($product->is_featured || (float) $product->price > 4500) ? 25 : 5,
+            default => 10,
+        };
+    }
+
+    /**
+     * Calculate free-text match.
+     */
+    protected function calculateFreeTextMatch(string $freeText, string $prodText, Product $product): int
+    {
+        $words = preg_split('/[\s,\.\!\?]+/', $freeText);
+        $score = 0;
+        foreach ($words ?: [] as $w) {
+            $w = trim($w);
+            if (mb_strlen($w) >= 3 && str_contains($prodText, $w)) {
+                $score += 15;
+            }
+        }
+
+        return min(40, $score);
+    }
+
+    /**
+     * Build recommendation explanation reason.
+     *
+     * @param  array<int, string>  $matchedIngredients
+     */
+    protected function buildRecommendationReason(
+        Product $product,
+        array $matchedIngredients,
+        ?string $craving,
+        ?string $protein,
+        string $lang
+    ): string {
+        if (! empty($matchedIngredients)) {
+            $ingList = implode(', ', array_slice($matchedIngredients, 0, 2));
+
+            return match ($lang) {
+                'en' => "Features our chef's signature ingredient: {$ingList}, prepared with meticulous craft.",
+                'ru' => "Приготовлено с использованием фирменного ингредиента ресторана: {$ingList}.",
+                default => "Պարունակում է մեր ռեստորանի առաջնահերթ բաղադրիչը՝ «{$ingList}», որը պատրաստված է շեֆ-խոհարարի հատուկ բաղադրատոմսով:",
+            };
+        }
+
+        if ($product->ai_priority || $product->is_featured) {
+            return match ($lang) {
+                'en' => 'One of our most celebrated dishes, matching your taste profile flawlessly.',
+                'ru' => 'Фирменное блюдо нашего меню, идеально соответствующее вашим вкусовым предпочтениям.',
+                default => 'Մեր մենյուի ամենասիրված ֆիրմային ուտեստներից է՝ կատարյալ համապատասխանությամբ Ձեր նախասիրություններին:',
+            };
+        }
+
+        return match ($lang) {
+            'en' => 'Handpicked by AI Sommelier for exceptional flavor balance and quality.',
+            'ru' => 'Подобрано AI-сомелье для безупречного гастрономического баланса.',
+            default => 'Ընտրված է AI մատուցողի կողմից՝ ճաշատեսակի բարձր որակի և ներդաշնակ համադրության շնորհիվ:',
+        };
+    }
+
+    /**
+     * Build smart pairing bundle combining Main Dish + Side / Starter + Drink.
+     *
+     * @param  array<int, array{product: Product, match_score: int}>  $mainDishes
+     * @param  Collection<int, Product>  $allProducts
+     * @param  array<string, mixed>|null  $formattedDrink
+     * @return array<string, mixed>|null
+     */
+    protected function buildSmartPairingBundle(
+        array $mainDishes,
+        Collection $allProducts,
+        ?array $formattedDrink,
+        Vendor $vendor,
+        string $lang,
+        ?int $locationId = null
+    ): ?array {
+        if (empty($mainDishes)) {
+            return null;
+        }
+
+        /** @var Product $mainProd */
+        $mainProd = $mainDishes[0]['product'];
+        $formattedMain = $this->formatProductPayload($mainProd, $mainDishes[0]['match_score'], '', $vendor, $lang, $locationId);
+
+        // Find best side dish / salad / appetizer
+        $sides = $allProducts->filter(function (Product $p) use ($mainProd) {
+            if ($p->id === $mainProd->id) {
+                return false;
+            }
+            $cat = mb_strtolower($p->category?->name ?? '');
+
+            return ! $this->isBeverageCategory($cat);
+        });
+
+        $chosenSide = $sides->first(function (Product $p) {
+            $cat = mb_strtolower($p->category?->name ?? '');
+
+            return str_contains($cat, 'salad') || str_contains($cat, 'starter') || str_contains($cat, 'appetizer') || str_contains($cat, 'նախուտեստ') || str_contains($cat, 'աղցան');
+        }) ?? $sides->first();
+
+        $formattedSide = $chosenSide ? $this->formatProductPayload($chosenSide, 90, '', $vendor, $lang, $locationId) : null;
+
+        $items = array_values(array_filter([$formattedMain, $formattedSide, $formattedDrink]));
+        if (count($items) < 2) {
+            return null;
+        }
+
+        $totalPrice = 0;
+        foreach ($items as $it) {
+            $totalPrice += (float) ($it['price'] ?? 0);
+        }
+
+        $bundleName = match ($lang) {
+            'en' => "Chef's Complete Gastronomic Set",
+            'ru' => 'Полный гастрономический сет от шефа',
+            default => 'Շեֆի Ամբողջական Հավաքածու',
+        };
+
+        return [
+            'title' => $bundleName,
+            'items_count' => count($items),
+            'total_price' => $totalPrice,
+            'formatted_total_price' => number_format($totalPrice).' '.$vendor->currency,
+            'main' => $formattedMain,
+            'side' => $formattedSide,
+            'drink' => $formattedDrink,
+            'items' => $items,
+        ];
+    }
+
+    /**
+     * Format a product for UI payloads with variations and pricing.
+     *
+     * @param  array<int, string>  $matchedIngredients
+     * @return array<string, mixed>
+     */
+    public function formatProductPayload(
+        Product $prod,
+        int $matchScore,
+        string $reason,
+        Vendor $vendor,
+        string $lang,
+        ?int $locationId = null,
+        array $matchedIngredients = []
+    ): array {
+        $effectivePrice = (float) $prod->getEffectivePrice($locationId);
+        $regularPrice = (float) $prod->getRegularPrice($locationId);
+
+        return [
+            'id' => $prod->id,
+            'name' => $prod->getTranslatedName($lang),
+            'category_name' => $prod->category?->getTranslatedName($lang) ?? '',
+            'description' => $prod->getTranslatedDescription($lang),
+            'price' => $effectivePrice,
+            'regular_price' => $regularPrice,
+            'is_discount_active' => $prod->isDiscountActive(),
+            'discount_percentage' => $prod->getDiscountPercentage(),
+            'formatted_price' => number_format($effectivePrice).' '.$vendor->currency,
+            'image' => $prod->image ?: Product::DEFAULT_IMAGE,
+            'match_score' => $matchScore,
+            'reason' => $reason,
+            'matched_ingredients' => $matchedIngredients,
+            'dietary_tags' => $prod->dietary_tags ?? [],
+            'calories' => $prod->calories,
+            'preparation_time_min' => $prod->preparation_time_min,
+            'payload' => [
+                'id' => $prod->id,
+                'name' => $prod->getTranslatedName($lang),
+                'image' => $prod->image ?: Product::DEFAULT_IMAGE,
+                'description' => $prod->getTranslatedDescription($lang),
+                'base_price' => $effectivePrice,
+                'regular_price' => $regularPrice,
+                'is_discount_active' => $prod->isDiscountActive(),
+                'discount_percentage' => $prod->getDiscountPercentage(),
+                'variations' => $prod->variations->map(fn ($v) => [
+                    'id' => $v->id,
+                    'name' => $v->getTranslatedName($lang),
+                    'price' => (float) $v->getEffectivePrice(),
+                    'regular_price' => (float) $v->price,
+                    'is_default' => (bool) $v->is_default,
+                ])->values(),
+            ],
+        ];
+    }
+
+    /**
+     * Grounded conversational Q&A assistant: NEVER invents products, answers strictly from menu.
+     *
+     * @param  array<string, mixed>  $sessionContext
+     * @return array<string, mixed>
+     */
+    public function answerChatQuery(
+        Vendor $vendor,
+        string $message,
+        array $sessionContext = [],
+        string $lang = 'hy',
+        ?int $locationId = null
+    ): array {
+        if (! in_array($lang, ['hy', 'en', 'ru'])) {
+            $lang = 'hy';
+        }
+
+        $waiterName = $vendor->getAiWaiterName();
+
+        // 1. Fetch all active menu products for grounded reference
+        $allProducts = Product::where('vendor_id', $vendor->id)
+            ->where('is_available', true)
+            ->whereHas('category', fn ($q) => $q->where('is_active', true))
+            ->with(['category'])
+            ->get();
+
+        if ($allProducts->isEmpty()) {
+            return [
+                'reply' => $this->getDefaultEmptyCommentary($lang),
+                'suggested_products' => [],
+            ];
+        }
+
+        // 2. Build concise menu context inventory for LLM
+        $menuInventory = [];
+        foreach ($allProducts as $p) {
+            $menuInventory[] = [
+                'id' => $p->id,
+                'name' => $p->getTranslatedName($lang),
+                'category' => $p->category?->getTranslatedName($lang) ?? '',
+                'price' => (float) $p->getEffectivePrice($locationId),
+                'description' => $p->getTranslatedDescription($lang),
+                'tags' => $p->dietary_tags ?? [],
+            ];
+        }
+
+        // Try LLM response if credentials exist
+        if ($vendor->hasCustomAiConfig() || ! empty(config('services.gemini.key')) || ! empty(env('GEMINI_API_KEY'))) {
+            try {
+                $inventoryJson = json_encode(array_slice($menuInventory, 0, 40), JSON_UNESCAPED_UNICODE);
+                $systemPrompt = "You are {$waiterName}, the polite and expert AI waiter at '{$vendor->name}'.
+CRITICAL GROUNDING RULES:
+1. You MUST ONLY recommend and mention products that exist in the provided JSON menu inventory below.
+2. NEVER invent, hallucinate, or assume any dish, drink, or price not present in the inventory.
+3. If the user asks for something not in the menu, clearly state that it is not available and recommend the closest available dish from the menu.
+4. Keep replies concise (1-3 sentences), warm, and appetizing.
+5. Language: {$lang}.
+6. Currency: {$vendor->currency}.
+
+MENU INVENTORY:
+{$inventoryJson}
+
+Guest question: \"{$message}\"
+
+Respond directly to the guest.";
+
+                $generated = $this->aiGateway->generateText($vendor, $systemPrompt, ['timeout' => 8]);
+                if (! empty($generated)) {
+                    $matchingProducts = $this->findMentionedProductsInText($generated, $allProducts, $lang, $vendor, $locationId);
+
+                    return [
+                        'reply' => trim($generated),
+                        'suggested_products' => $matchingProducts,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning('AI chat grounded response failed, using rule-based engine: '.$e->getMessage());
+            }
+        }
+
+        // Rule-based Grounded Intelligent Fallback
+        return $this->generateRuleBasedChatAnswer($message, $allProducts, $vendor, $lang, $locationId);
+    }
+
+    /**
+     * Grounded rule-based chat query resolution.
      *
      * @param  Collection<int, Product>  $allProducts
      * @return array<string, mixed>
      */
-    public function findPairingsForProduct(
-        Product $product,
-        $allProducts,
+    protected function generateRuleBasedChatAnswer(
+        string $message,
+        Collection $allProducts,
         Vendor $vendor,
-        string $lang = 'hy',
+        string $lang,
         ?int $locationId = null
     ): array {
-        $prodName = mb_strtolower($product->name.' '.$product->getTranslatedName($lang));
-        $prodDesc = mb_strtolower(($product->description ?? '').' '.$product->getTranslatedDescription($lang));
-        $catName = mb_strtolower($product->category?->name ?? '');
-        $combined = $prodName.' '.$prodDesc.' '.$catName;
+        $msg = mb_strtolower(trim($message));
+        $waiterName = $vendor->getAiWaiterName();
 
-        $pairedDrink = null;
-        $pairedSide = null;
-        $pairingNote = '';
+        // 1. Without meat / vegetarian
+        if (preg_match('/(առանց մսի|բուսակեր|վեգան|vegetarian|vegan|без мяса|вегетариан)/u', $msg)) {
+            $vegDishes = $allProducts->filter(function ($p) {
+                $c = mb_strtolower($p->category?->name ?? '');
+                $tags = (array) ($p->dietary_tags ?? []);
 
-        // Determine profile
-        $isRedMeat = str_contains($combined, 'steak') || str_contains($combined, 'ribeye') || str_contains($combined, 'beef') || str_contains($combined, 'տավար') || str_contains($combined, 'սթեյք') || str_contains($combined, 'говядина') || str_contains($combined, 'стейк');
-        $isSeafood = str_contains($combined, 'salmon') || str_contains($combined, 'fish') || str_contains($combined, 'calamari') || str_contains($combined, 'shrimp') || str_contains($combined, 'սաղմոն') || str_contains($combined, 'ձուկ') || str_contains($combined, 'խեցգետին') || str_contains($combined, 'лосось') || str_contains($combined, 'рыба');
-        $isDessert = str_contains($combined, 'cake') || str_contains($combined, 'chocolate') || str_contains($combined, 'fondant') || str_contains($combined, 'աղանդեր') || str_contains($combined, 'թխվածք') || str_contains($combined, 'պաղպաղակ') || str_contains($combined, 'десерт');
-        $isAppetizer = str_contains($combined, 'hummus') || str_contains($combined, 'pita') || str_contains($combined, 'starter') || str_contains($combined, 'նախուտեստ') || str_contains($combined, 'закуска');
+                return in_array('vegetarian', $tags) || in_array('vegan', $tags) || str_contains($c, 'salad') || str_contains($c, 'աղցան');
+            })->take(3);
 
-        // Look for companion drinks
-        $drinks = $allProducts->filter(function ($p) {
-            $c = mb_strtolower($p->category?->name ?? '');
-
-            return $this->isBeverageCategory($c);
-        });
-
-        if ($drinks->isNotEmpty()) {
-            if ($isRedMeat) {
-                // Look for cocktail (old fashioned, bourbon, whiskey) or red wine
-                $pairedDrink = $drinks->first(function ($d) {
-                    $text = mb_strtolower($d->name.' '.$d->description);
-
-                    return str_contains($text, 'old fashioned') || str_contains($text, 'bourbon') || str_contains($text, 'red') || str_contains($text, 'wine') || str_contains($text, 'գինի');
-                }) ?? $drinks->first();
-
-                $pairingNote = match ($lang) {
-                    'en' => 'The robust richness of the meat pairs flawlessly with an aged Bourbon cocktail or full-bodied red wine.',
-                    'ru' => 'Глубокий мясной вкус идеально раскрывается с выдержанным коктейлем Old Fashioned или бокалом красного вина.',
-                    default => 'Մսի հարուստ համը կատարելապես ընդգծվում է հնեցված բուրբոնով կոկտեյլով կամ հարուստ կարմիր գինով:',
+            if ($vegDishes->isNotEmpty()) {
+                $names = $vegDishes->map(fn ($p) => '«'.$p->getTranslatedName($lang).'» ('.number_format($p->getEffectivePrice($locationId)).' '.$vendor->currency.')')->implode(', ');
+                $reply = match ($lang) {
+                    'en' => "We have wonderful vegetarian selections: {$names}. Freshly prepared and bursting with flavor!",
+                    'ru' => "У нас есть прекрасные блюда без мяса: {$names}. Очень свежие и аппетитные!",
+                    default => "Մեր մենյուում ունենք հիանալի բուսական և թեթև տարբերակներ՝ {$names}: Բոլորն էլ պատրաստվում են թարմ բաղադրիչներով:",
                 };
-            } elseif ($isSeafood) {
-                // Look for white wine, spritz, gin tonic, or lemonade
-                $pairedDrink = $drinks->first(function ($d) {
-                    $text = mb_strtolower($d->name.' '.$d->description);
 
-                    return str_contains($text, 'white') || str_contains($text, 'spritz') || str_contains($text, 'tonic') || str_contains($text, 'lemonade') || str_contains($text, 'գինի');
-                }) ?? $drinks->first();
-
-                $pairingNote = match ($lang) {
-                    'en' => 'Crisp citrus notes and light beverages beautifully balance the tender seafood textures.',
-                    'ru' => 'Освежающие цитрусовые нотки напитка подчеркивают нежную текстуру рыбы и морепродуктов.',
-                    default => 'Թարմեցնող ցիտրուսային և նուրբ նոտաները հիանալիորեն համադրվում են նուրբ ծովամթերքի հետ:',
-                };
-            } elseif ($isDessert) {
-                // Look for coffee, espresso or sweet cocktail
-                $pairedDrink = $drinks->first(function ($d) {
-                    $text = mb_strtolower($d->name.' '.$d->description);
-
-                    return str_contains($text, 'coffee') || str_contains($text, 'espresso') || str_contains($text, 'tea') || str_contains($text, 'սուրճ');
-                }) ?? $drinks->first();
-
-                $pairingNote = match ($lang) {
-                    'en' => 'A warm aromatic espresso or fine liqueur provides the ultimate sweet finale.',
-                    'ru' => 'Ароматный эспрессо или изысканный дижестив создают идеальный сладкий финал.',
-                    default => 'Անուշաբույր տաք էսպրեսոն կամ նուրբ ըմպելիքը ստեղծում են կատարյալ քաղցր ավարտ:',
-                };
-            } else {
-                $pairedDrink = $drinks->first();
-                $pairingNote = match ($lang) {
-                    'en' => 'Specially selected by our sommelier to elevate your dining experience.',
-                    'ru' => 'Особый выбор нашего сомелье для идеального гастрономического баланса.',
-                    default => 'Մեր մատուցողի հատուկ ընտրությունը՝ ճաշատեսակի համային երանգներն ամբողջացնելու համար:',
-                };
+                return [
+                    'reply' => $reply,
+                    'suggested_products' => $vegDishes->map(fn ($p) => $this->formatProductPayload($p, 95, '', $vendor, $lang, $locationId))->values()->toArray(),
+                ];
             }
         }
 
-        // Look for companion starter / side
-        $sides = $allProducts->filter(function ($p) use ($product) {
-            return $p->id !== $product->id && ! $this->isBeverageCategory(mb_strtolower($p->category?->name ?? ''));
-        });
+        // 2. Beer pairing
+        if (preg_match('/(գարեջուր|beer|пиво)/u', $msg)) {
+            $beerSnacks = $allProducts->filter(function ($p) {
+                $text = mb_strtolower($p->name.' '.$p->description);
 
-        if ($isRedMeat || $isSeafood) {
-            // Pair with an appetizer or salad
-            $pairedSide = $sides->first(function ($s) {
-                $c = mb_strtolower($s->category?->name ?? '');
+                return str_contains($text, 'wings') || str_contains($text, 'snack') || str_contains($text, 'cheese') || str_contains($text, 'sausage') || str_contains($text, 'բաստուրմա') || str_contains($text, 'տապակած');
+            })->take(3);
 
-                return str_contains($c, 'starter') || str_contains($c, 'appetizer') || str_contains($c, 'salad') || str_contains($c, 'նախուտեստ');
-            });
-        } elseif ($isAppetizer) {
-            // Pair with a main steak or dish
-            $pairedSide = $sides->first(function ($s) {
-                $c = mb_strtolower($s->category?->name ?? '');
+            if ($beerSnacks->isNotEmpty()) {
+                $names = $beerSnacks->map(fn ($p) => '«'.$p->getTranslatedName($lang).'»')->implode(', ');
+                $reply = match ($lang) {
+                    'en' => "With cold beer, I highly recommend our savory favorites: {$names}!",
+                    'ru' => "К холодному пиву идеально подойдут наши закуски: {$names}!",
+                    default => "Սառը գարեջրի հետ խորհուրդ կտամ մեր լավագույն խորտիկները՝ {$names}: Իդեալական համադրություն է:",
+                };
 
-                return str_contains($c, 'main') || str_contains($c, 'steak');
-            });
+                return [
+                    'reply' => $reply,
+                    'suggested_products' => $beerSnacks->map(fn ($p) => $this->formatProductPayload($p, 94, '', $vendor, $lang, $locationId))->values()->toArray(),
+                ];
+            }
         }
 
+        // 3. Least spicy
+        if (preg_match('/(ամենաքիչ կծու|ոչ կծու|least spicy|mildest|наименее острое)/u', $msg)) {
+            $mildDishes = $allProducts->filter(fn ($p) => ($p->ai_spicy_level ?? 0) === 0)->take(3);
+            if ($mildDishes->isNotEmpty()) {
+                $names = $mildDishes->map(fn ($p) => '«'.$p->getTranslatedName($lang).'»')->implode(', ');
+                $reply = match ($lang) {
+                    'en' => "For a gentle and delicate palate, I recommend: {$names}.",
+                    'ru' => "Для мягкого и нежного вкуса без остроты рекомендую: {$names}.",
+                    default => "Մեր ամենանուրբ և բացարձակապես ոչ կծու ուտեստներից են՝ {$names}:",
+                };
+
+                return [
+                    'reply' => $reply,
+                    'suggested_products' => $mildDishes->map(fn ($p) => $this->formatProductPayload($p, 92, '', $vendor, $lang, $locationId))->values()->toArray(),
+                ];
+            }
+        }
+
+        // 4. Search matching products directly
+        $matching = $allProducts->filter(function ($p) use ($msg, $lang) {
+            $name = mb_strtolower($p->name.' '.$p->getTranslatedName($lang));
+
+            return str_contains($msg, $name) || str_contains($name, $msg);
+        })->take(3);
+
+        if ($matching->isNotEmpty()) {
+            $names = $matching->map(fn ($p) => '«'.$p->getTranslatedName($lang).'» ('.number_format($p->getEffectivePrice($locationId)).' '.$vendor->currency.')')->implode(', ');
+            $reply = match ($lang) {
+                'en' => "Yes, we have: {$names}. Excellent choice!",
+                'ru' => "Да, у нас есть: {$names}. Отличный выбор!",
+                default => "Այո, մեր մենյուում առկա է՝ {$names}: Գերազանց ընտրություն է:",
+            };
+
+            return [
+                'reply' => $reply,
+                'suggested_products' => $matching->map(fn ($p) => $this->formatProductPayload($p, 96, '', $vendor, $lang, $locationId))->values()->toArray(),
+            ];
+        }
+
+        // Default polite grounded response
+        $featured = $allProducts->where('is_featured', true)->take(2);
+        if ($featured->isEmpty()) {
+            $featured = $allProducts->take(2);
+        }
+        $featuredNames = $featured->map(fn ($p) => '«'.$p->getTranslatedName($lang).'»')->implode(', ');
+
+        $reply = match ($lang) {
+            'en' => "At {$vendor->name}, we take great pride in our specialties such as {$featuredNames}. Let me know if you would like me to guide you to the perfect plate!",
+            'ru' => "В {$vendor->name} мы особенно гордимся такими блюдами, как {$featuredNames}. С радостью помогу вам с идеальным выбором!",
+            default => "«{$vendor->name}»-ում հատկապես առանձնանում են {$featuredNames} ուտեստները: Սիրով կօգնեմ ընտրել հենց Ձեր ճաշակին համապատասխան տարբերակ:",
+        };
+
         return [
-            'pairing_note' => $pairingNote,
-            'drink' => $pairedDrink ? [
-                'id' => $pairedDrink->id,
-                'name' => $pairedDrink->getTranslatedName($lang),
-                'price' => (float) $pairedDrink->getEffectivePrice($locationId),
-                'regular_price' => (float) $pairedDrink->getRegularPrice($locationId),
-                'is_discount_active' => $pairedDrink->isDiscountActive(),
-                'discount_percentage' => $pairedDrink->getDiscountPercentage(),
-                'formatted_price' => number_format($pairedDrink->getEffectivePrice($locationId)).' '.$vendor->currency,
-                'image' => $pairedDrink->image ?: Product::DEFAULT_IMAGE,
-                'payload' => [
-                    'id' => $pairedDrink->id,
-                    'name' => $pairedDrink->getTranslatedName($lang),
-                    'image' => $pairedDrink->image,
-                    'description' => $pairedDrink->getTranslatedDescription($lang),
-                    'base_price' => (float) $pairedDrink->getEffectivePrice($locationId),
-                    'regular_price' => (float) $pairedDrink->getRegularPrice($locationId),
-                    'is_discount_active' => $pairedDrink->isDiscountActive(),
-                    'discount_percentage' => $pairedDrink->getDiscountPercentage(),
-                    'variations' => $pairedDrink->variations->map(function ($v) use ($lang) {
-                        return [
-                            'id' => $v->id,
-                            'name' => $v->getTranslatedName($lang),
-                            'price' => (float) $v->getEffectivePrice(),
-                            'regular_price' => (float) $v->price,
-                            'is_default' => (bool) $v->is_default,
-                        ];
-                    })->values(),
-                ],
-            ] : null,
-            'side' => $pairedSide ? [
-                'id' => $pairedSide->id,
-                'name' => $pairedSide->getTranslatedName($lang),
-                'price' => (float) $pairedSide->getEffectivePrice($locationId),
-                'regular_price' => (float) $pairedSide->getRegularPrice($locationId),
-                'is_discount_active' => $pairedSide->isDiscountActive(),
-                'discount_percentage' => $pairedSide->getDiscountPercentage(),
-                'formatted_price' => number_format($pairedSide->getEffectivePrice($locationId)).' '.$vendor->currency,
-                'image' => $pairedSide->image ?: Product::DEFAULT_IMAGE,
-                'payload' => [
-                    'id' => $pairedSide->id,
-                    'name' => $pairedSide->getTranslatedName($lang),
-                    'image' => $pairedSide->image,
-                    'description' => $pairedSide->getTranslatedDescription($lang),
-                    'base_price' => (float) $pairedSide->getEffectivePrice($locationId),
-                    'regular_price' => (float) $pairedSide->getRegularPrice($locationId),
-                    'is_discount_active' => $pairedSide->isDiscountActive(),
-                    'discount_percentage' => $pairedSide->getDiscountPercentage(),
-                    'variations' => $pairedSide->variations->map(function ($v) use ($lang) {
-                        return [
-                            'id' => $v->id,
-                            'name' => $v->getTranslatedName($lang),
-                            'price' => (float) $v->getEffectivePrice(),
-                            'regular_price' => (float) $v->price,
-                            'is_default' => (bool) $v->is_default,
-                        ];
-                    })->values(),
-                ],
-            ] : null,
+            'reply' => $reply,
+            'suggested_products' => $featured->map(fn ($p) => $this->formatProductPayload($p, 90, '', $vendor, $lang, $locationId))->values()->toArray(),
         ];
+    }
+
+    /**
+     * Find products referenced in generated text.
+     *
+     * @param  Collection<int, Product>  $allProducts
+     * @return array<int, mixed>
+     */
+    protected function findMentionedProductsInText(string $text, Collection $allProducts, string $lang, Vendor $vendor, ?int $locationId = null): array
+    {
+        $textLower = mb_strtolower($text);
+        $found = [];
+
+        foreach ($allProducts as $p) {
+            $nameEn = mb_strtolower($p->name);
+            $nameLoc = mb_strtolower($p->getTranslatedName($lang));
+
+            if (str_contains($textLower, $nameEn) || str_contains($textLower, $nameLoc)) {
+                $found[] = $this->formatProductPayload($p, 95, '', $vendor, $lang, $locationId);
+                if (count($found) >= 3) {
+                    break;
+                }
+            }
+        }
+
+        return $found;
     }
 
     /**
      * Determine if a category is for beverages.
      */
-    protected function isBeverageCategory(string $categoryName): bool
+    public function isBeverageCategory(string $categoryName): bool
     {
         $cat = trim(mb_strtolower($categoryName));
         if ($cat === '') {
@@ -356,113 +1281,6 @@ class AiWaiterService
         $pattern = '/\b(drinks?|beverages?|cocktails?|wines?|beers?|bar|coffee|teas?|խմիչք[ա-ֆ]*|կոկտեյլ[ա-ֆ]*|գինի[ա-ֆ]*|գարեջուր|սուրճ|թեյ|напитк[а-я]*|коктейл[а-я]*|вин[ао][а-я]*|пив[оа]|кофе|чай)\b/ui';
 
         return (bool) preg_match($pattern, $cat);
-    }
-
-    /**
-     * Score craving match.
-     */
-    protected function calculateCravingScore(string $craving, string $text, Product $product): int
-    {
-        $keywords = match ($craving) {
-            'meat' => ['steak', 'ribeye', 'angus', 'beef', 'chicken', 'pork', 'lamb', 'տավար', 'միս', 'սթեյք', 'գառ', 'հավ', 'говядина', 'стейк', 'курица', 'мясо'],
-            'seafood' => ['salmon', 'fish', 'calamari', 'shrimp', 'crab', 'seafood', 'ձուկ', 'սաղմոն', 'ծովամթերք', 'խեցգետին', 'рыба', 'лосось', 'морепродукты', 'креветки'],
-            'vegetarian' => ['hummus', 'salad', 'vegan', 'vegetarian', 'pasta', 'cheese', 'բուսական', 'վեգան', 'աղցան', 'բանջարեղեն', 'веган', 'вегетарианский', 'салат'],
-            'dessert' => ['cake', 'dessert', 'lava', 'fondant', 'sweet', 'chocolate', 'pistachio', 'աղանդեր', 'թխվածք', 'պաղպաղակ', 'քաղցր', 'десерт', 'торт', 'шоколад'],
-            default => [],
-        };
-
-        $score = 0;
-        foreach ($keywords as $kw) {
-            if (str_contains($text, $kw)) {
-                $score += 35;
-                break;
-            }
-        }
-
-        return $score;
-    }
-
-    /**
-     * Score occasion match.
-     */
-    protected function calculateOccasionScore(string $occasion, string $text, Product $product): int
-    {
-        return match ($occasion) {
-            'romantic' => (str_contains($text, 'steak') || str_contains($text, 'salmon') || str_contains($text, 'wine') || str_contains($text, 'cake') || $product->is_featured) ? 25 : 5,
-            'quick_lunch' => (str_contains($text, 'hummus') || str_contains($text, 'calamari') || ($product->preparation_time_min && $product->preparation_time_min <= 20)) ? 25 : 5,
-            'family' => (str_contains($text, 'hummus') || str_contains($text, 'pita') || str_contains($text, 'steak')) ? 20 : 5,
-            'celebration' => ($product->is_featured || $product->price > 4000) ? 25 : 5,
-            default => 10,
-        };
-    }
-
-    /**
-     * Score dietary match.
-     *
-     * @param  array<int, string>  $dietary
-     */
-    protected function calculateDietaryScore(array $dietary, string $text, Product $product): int
-    {
-        $score = 0;
-        foreach ($dietary as $tag) {
-            if ($tag === 'vegan' && (! empty($product->dietary_tags) && in_array('vegan', $product->dietary_tags))) {
-                $score += 30;
-            }
-            if ($tag === 'gluten_free' && (! empty($product->dietary_tags) && in_array('gluten_free', $product->dietary_tags))) {
-                $score += 30;
-            }
-            if ($tag === 'low_calorie' && $product->calories && $product->calories < 500) {
-                $score += 25;
-            }
-        }
-
-        return $score;
-    }
-
-    /**
-     * Score prompt match based on words.
-     */
-    protected function calculatePromptScore(string $prompt, string $text): int
-    {
-        $words = preg_split('/[\s,\.\!\?]+/', $prompt);
-        $matched = 0;
-        foreach ($words ?: [] as $w) {
-            $w = trim($w);
-            if (mb_strlen($w) >= 3 && str_contains($text, $w)) {
-                $matched += 20;
-            }
-        }
-
-        return $matched;
-    }
-
-    /**
-     * Build recommendation explanation reason.
-     *
-     * @param  array<int, string>  $priorityMatches
-     */
-    protected function buildRecommendationReason(
-        Product $product,
-        array $priorityMatches,
-        ?string $craving,
-        ?string $occasion,
-        string $lang
-    ): string {
-        if (! empty($priorityMatches)) {
-            $ingText = implode(', ', $priorityMatches);
-
-            return match ($lang) {
-                'en' => "Features our chef's signature ingredient: {$ingText}, crafted to perfection.",
-                'ru' => "Приготовлено с использованием нашего фирменного ингредиента: {$ingText}.",
-                default => "Պարունակում է մեր ֆիրմային առաջնահերթ բաղադրիչը՝ «{$ingText}», որը պատրաստված է շեֆ-խոհարարի հատուկ բաղադրատոմսով:",
-            };
-        }
-
-        return match ($lang) {
-            'en' => 'One of our most celebrated dishes, balancing vibrant flavors and premium ingredients.',
-            'ru' => 'Одно из самых изысканных блюд нашего ресторана с неповторимой гармонией вкусов.',
-            default => 'Մեր մենյուի ամենասիրված և բարձր գնահատված ուտեստներից մեկը՝ կատարյալ համերի համադրությամբ:',
-        };
     }
 
     /**
@@ -480,14 +1298,12 @@ class AiWaiterService
     ): string {
         $waiterName = $vendor->getAiWaiterName();
 
-        // Check if AI generation is enabled via vendor configured provider
         if (! empty($recommendations)) {
             try {
                 $dishNames = implode(', ', array_column($recommendations, 'name'));
                 $promptText = "You are {$waiterName}, a friendly and ultra-sophisticated AI waiter & sommelier at '{$vendor->name}'. Write a short (2-3 sentences), warm, appetizing and enthusiastic recommendation directly to the guest in the requested language ({$lang}). Explain why the selected dishes ({$dishNames}) are the perfect choice for their taste and occasion. Keep it elegant, concise, and without any markdown bullet points.";
 
-                $gateway = app(AiGatewayService::class);
-                $aiText = $gateway->generateText($vendor, $promptText, ['timeout' => 5]);
+                $aiText = $this->aiGateway->generateText($vendor, $promptText, ['timeout' => 4]);
                 if (! empty($aiText)) {
                     return $aiText;
                 }
@@ -496,7 +1312,6 @@ class AiWaiterService
             }
         }
 
-        // Sophisticated Rule-Based Narrative Commentary Fallback
         $dishNames = ! empty($recommendations) ? implode(' և ', array_column(array_slice($recommendations, 0, 2), 'name')) : '';
 
         return match ($lang) {

@@ -596,6 +596,47 @@
                 </div>
             </div>
 
+            <!-- AI Waiter Metadata & Priority Settings -->
+            <div style="background: rgba(139, 92, 246, 0.05); border: 1.5px dashed rgba(139, 92, 246, 0.3); border-radius: 14px; padding: 1.1rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+                    <div style="font-weight: 700; font-size: 0.88rem; color: #8b5cf6; display: flex; align-items: center; gap: 0.45rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Waiter Recommendation Settings
+                    </div>
+                    <label style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" name="ai_priority" value="1"> ★ AI Promoted
+                    </label>
+                </div>
+                <div class="grid-3" style="margin-bottom: 0.75rem;">
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">AI Priority (1-100)</label>
+                        <input type="number" name="ai_priority_level" min="1" max="100" value="50" class="form-input" placeholder="50">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">AI Group</label>
+                        <select name="ai_group" class="form-select">
+                            <option value="">None (Standard)</option>
+                            <option value="bestseller">AI Bestseller</option>
+                            <option value="chef_choice">Chef Recommendation</option>
+                            <option value="high_margin">High Margin</option>
+                            <option value="new_arrival">New Product</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Spiciness Level</label>
+                        <select name="ai_spicy_level" class="form-select">
+                            <option value="0">0 - Not Spicy</option>
+                            <option value="1">1 - Mild / Light</option>
+                            <option value="2">2 - Medium Spicy</option>
+                            <option value="3">3 - Hot / Very Spicy</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 0.75rem;">AI Keywords / Flavor Tags (comma separated)</label>
+                    <input type="text" name="ai_tags" placeholder="e.g. meat, savory, juicy, dinner, signature" class="form-input">
+                </div>
+            </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('newProductModal').style.display='none'">Cancel</button>
                 <button type="submit" class="btn btn-primary">Create Dish</button>
@@ -787,6 +828,47 @@
                 </div>
             </div>
 
+            <!-- AI Waiter Metadata & Priority Settings -->
+            <div style="background: rgba(139, 92, 246, 0.05); border: 1.5px dashed rgba(139, 92, 246, 0.3); border-radius: 14px; padding: 1.1rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+                    <div style="font-weight: 700; font-size: 0.88rem; color: #8b5cf6; display: flex; align-items: center; gap: 0.45rem;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Waiter Recommendation Settings
+                    </div>
+                    <label style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" id="edit_prod_ai_priority" name="ai_priority" value="1"> ★ AI Promoted
+                    </label>
+                </div>
+                <div class="grid-3" style="margin-bottom: 0.75rem;">
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">AI Priority (1-100)</label>
+                        <input type="number" id="edit_prod_ai_priority_level" name="ai_priority_level" min="1" max="100" class="form-input" placeholder="50">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">AI Group</label>
+                        <select id="edit_prod_ai_group" name="ai_group" class="form-select">
+                            <option value="">None (Standard)</option>
+                            <option value="bestseller">AI Bestseller</option>
+                            <option value="chef_choice">Chef Recommendation</option>
+                            <option value="high_margin">High Margin</option>
+                            <option value="new_arrival">New Product</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Spiciness Level</label>
+                        <select id="edit_prod_ai_spicy_level" name="ai_spicy_level" class="form-select">
+                            <option value="0">0 - Not Spicy</option>
+                            <option value="1">1 - Mild / Light</option>
+                            <option value="2">2 - Medium Spicy</option>
+                            <option value="3">3 - Hot / Very Spicy</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: 0.75rem;">AI Keywords / Flavor Tags (comma separated)</label>
+                    <input type="text" id="edit_prod_ai_tags" name="ai_tags" placeholder="e.g. meat, savory, juicy, dinner, signature" class="form-input">
+                </div>
+            </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('editProductModal').style.display='none'">Cancel</button>
                 <button type="submit" class="btn btn-primary">Update Dish</button>
@@ -848,6 +930,13 @@
         document.getElementById('edit_prod_calories').value = prod.calories || '';
         document.getElementById('edit_prod_preparation_time_min').value = prod.preparation_time_min || '';
         document.getElementById('edit_prod_is_featured').checked = !!prod.is_featured;
+
+        // AI Waiter metadata
+        document.getElementById('edit_prod_ai_priority').checked = !!prod.ai_priority;
+        document.getElementById('edit_prod_ai_priority_level').value = prod.ai_priority_level || 50;
+        document.getElementById('edit_prod_ai_group').value = prod.ai_group || '';
+        document.getElementById('edit_prod_ai_spicy_level').value = (prod.ai_spicy_level !== undefined && prod.ai_spicy_level !== null) ? prod.ai_spicy_level : 0;
+        document.getElementById('edit_prod_ai_tags').value = Array.isArray(prod.ai_tags) ? prod.ai_tags.join(', ') : (prod.ai_tags || '');
 
         // Discount & Happy Hour fields
         document.getElementById('edit_prod_discount_price').value = prod.discount_price || '';

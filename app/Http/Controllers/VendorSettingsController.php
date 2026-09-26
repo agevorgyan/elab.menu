@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AiWaiterSession;
+use App\Models\Category;
 use App\Models\Location;
+use App\Models\Product;
 use App\Models\Vendor;
 use App\Services\AiGatewayService;
 use App\Services\TelegramNotificationService;
@@ -10,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class VendorSettingsController extends Controller
@@ -367,8 +371,59 @@ class VendorSettingsController extends Controller
     {
         $vendor = Auth::user()->vendor;
         $providers = AiGatewayService::PROVIDERS;
+        $aiWaiterConfig = $vendor->getAiWaiterConfig();
 
-        return view('admin.settings.ai', compact('vendor', 'providers'));
+        $products = Product::where('vendor_id', $vendor->id)
+            ->where('is_available', true)
+            ->orderBy('sort_order', 'asc')
+            ->get(['id', 'name', 'price', 'category_id', 'is_featured', 'ai_priority', 'ai_priority_level']);
+
+        $categories = Category::where('vendor_id', $vendor->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->get(['id', 'name']);
+
+        // AI Waiter Analytics
+        $totalSessions = AiWaiterSession::where('vendor_id', $vendor->id)->count();
+        $recommendedCount = AiWaiterSession::where('vendor_id', $vendor->id)
+            ->whereIn('status', ['recommended', 'added_to_cart', 'order_placed', 'completed'])
+            ->count();
+        $addedToCartCount = AiWaiterSession::where('vendor_id', $vendor->id)
+            ->whereIn('status', ['added_to_cart', 'order_placed', 'completed'])
+            ->count();
+        $orderedSessionsCount = AiWaiterSession::where('vendor_id', $vendor->id)
+            ->where(function ($q) {
+                $q->whereNotNull('order_id')->orWhere('status', 'order_placed');
+            })
+            ->count();
+        $totalAiRevenue = (float) AiWaiterSession::where('vendor_id', $vendor->id)->sum('total_order_amount');
+        $averageOrderValue = $orderedSessionsCount > 0 ? ($totalAiRevenue / $orderedSessionsCount) : 0;
+
+        $languageStats = AiWaiterSession::where('vendor_id', $vendor->id)
+            ->select('language', DB::raw('count(*) as count'))
+            ->groupBy('language')
+            ->pluck('count', 'language')
+            ->toArray();
+
+        $analytics = [
+            'total_sessions' => $totalSessions,
+            'recommended_count' => $recommendedCount,
+            'added_to_cart_count' => $addedToCartCount,
+            'ordered_count' => $orderedSessionsCount,
+            'conversion_rate' => $totalSessions > 0 ? round(($orderedSessionsCount / $totalSessions) * 100, 1) : 0,
+            'total_revenue' => $totalAiRevenue,
+            'average_order_value' => $averageOrderValue,
+            'languages' => $languageStats,
+        ];
+
+        return view('admin.settings.ai', compact(
+            'vendor',
+            'providers',
+            'aiWaiterConfig',
+            'products',
+            'categories',
+            'analytics'
+        ));
     }
 
     /**
@@ -384,6 +439,21 @@ class VendorSettingsController extends Controller
             'ai_waiter_name' => 'nullable|string|max:100',
             'ai_waiter_priority_ingredients' => 'nullable|string|max:2000',
             'ai_waiter_welcome_text' => 'nullable|string|max:1000',
+            'ai_waiter_languages' => 'nullable|array',
+            'ai_waiter_personality' => 'nullable|string|in:friendly,professional,sommelier,concise',
+            'auto_popup' => 'nullable|boolean',
+            'free_text_enabled' => 'nullable|boolean',
+            'ai_chat_enabled' => 'nullable|boolean',
+            'max_recommendations' => 'nullable|integer|min:1|max:10',
+
+            // Complex AI Config
+            'promoted_products' => 'nullable|array',
+            'preferred_ingredients' => 'nullable|array',
+            'preferred_categories' => 'nullable|array',
+            'scoring_weights' => 'nullable|array',
+            'questions' => 'nullable|array',
+            'group_priorities' => 'nullable|array',
+            'tag_priorities' => 'nullable|array',
 
             // AI Provider Configuration
             'ai_provider' => 'required|string|in:gemini,openai,claude,deepseek,groq,openrouter,custom',
@@ -403,7 +473,6 @@ class VendorSettingsController extends Controller
             ? trim((string) $validated['ai_api_key'])
             : ($currentSettings['api_key'] ?? null);
 
-        // If user explicitly checked to clear API key (or if passed empty while custom provider requires none)
         if ($request->has('clear_api_key') && $request->boolean('clear_api_key')) {
             $apiKey = null;
         }
@@ -415,11 +484,60 @@ class VendorSettingsController extends Controller
             'base_url' => ! empty($validated['ai_base_url']) ? trim((string) $validated['ai_base_url']) : null,
         ];
 
+        // Format structured AI Waiter Config
+        $currentConfig = $vendor->getAiWaiterConfig();
+
+        // Process Promoted Products
+        $promotedList = [];
+        if (! empty($validated['promoted_products']) && is_array($validated['promoted_products'])) {
+            foreach ($validated['promoted_products'] as $p) {
+                if (! empty($p['product_id'])) {
+                    $promotedList[] = [
+                        'product_id' => (int) $p['product_id'],
+                        'priority' => max(1, min(100, (int) ($p['priority'] ?? 90))),
+                        'active' => ! empty($p['active']),
+                    ];
+                }
+            }
+        }
+
+        // Process Preferred Ingredients
+        $ingredientList = [];
+        if (! empty($validated['preferred_ingredients']) && is_array($validated['preferred_ingredients'])) {
+            foreach ($validated['preferred_ingredients'] as $i) {
+                $ing = trim((string) ($i['ingredient'] ?? ''));
+                if ($ing !== '') {
+                    $ingredientList[] = [
+                        'ingredient' => $ing,
+                        'priority' => max(1, min(100, (int) ($i['priority'] ?? 80))),
+                        'active' => ! empty($i['active']),
+                    ];
+                }
+            }
+        }
+
+        $newAiWaiterConfig = array_merge($currentConfig, [
+            'languages' => ! empty($validated['ai_waiter_languages']) ? (array) $validated['ai_waiter_languages'] : ['hy', 'en', 'ru'],
+            'personality' => $validated['ai_waiter_personality'] ?? 'friendly',
+            'auto_popup' => $request->boolean('auto_popup', true),
+            'free_text_enabled' => $request->boolean('free_text_enabled', true),
+            'ai_chat_enabled' => $request->boolean('ai_chat_enabled', true),
+            'max_recommendations' => (int) ($validated['max_recommendations'] ?? 3),
+            'promoted_products' => $promotedList,
+            'preferred_ingredients' => $ingredientList,
+            'preferred_categories' => (array) ($validated['preferred_categories'] ?? ($currentConfig['preferred_categories'] ?? [])),
+            'scoring_weights' => ! empty($validated['scoring_weights']) ? array_map('intval', $validated['scoring_weights']) : ($currentConfig['scoring_weights'] ?? []),
+            'questions' => ! empty($validated['questions']) ? $validated['questions'] : ($currentConfig['questions'] ?? []),
+            'group_priorities' => ! empty($validated['group_priorities']) ? array_map('intval', $validated['group_priorities']) : ($currentConfig['group_priorities'] ?? []),
+            'tag_priorities' => ! empty($validated['tag_priorities']) ? array_map('intval', $validated['tag_priorities']) : ($currentConfig['tag_priorities'] ?? []),
+        ]);
+
         $vendor->update([
             'ai_waiter_enabled' => $request->boolean('ai_waiter_enabled'),
             'ai_waiter_name' => ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Մատուցող',
             'ai_waiter_priority_ingredients' => $validated['ai_waiter_priority_ingredients'] ?? null,
             'ai_waiter_welcome_text' => $validated['ai_waiter_welcome_text'] ?? null,
+            'ai_waiter_config' => $newAiWaiterConfig,
             'ai_settings' => $newAiSettings,
         ]);
 

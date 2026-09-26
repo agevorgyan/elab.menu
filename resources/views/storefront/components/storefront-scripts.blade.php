@@ -75,16 +75,38 @@
             selectedLang: '{{ $lang ?? "hy" }}',
             showWelcomeModal: false,
             showAiWaiter: false,
+            showAiChatDrawer: false,
+            aiStep: 'intro', // 'intro' | 'language' | 'greeting' | 'question' | 'analyzing' | 'recommendations'
+            aiAnalysisStep: 1,
+            aiSessionId: null,
+            aiSessionToken: null,
+            aiCurrentQuestion: null,
+            aiQuestionHistory: [],
+            aiAnswerHistory: [],
             aiPreferences: {
                 craving: null,
                 occasion: null,
                 drink_preference: null,
                 dietary: []
             },
+            aiFreeTextInput: '',
             aiPromptInput: '',
             aiLoading: false,
             aiCommentary: '',
-            aiRecommendations: [],
+            aiMainRecommendations: [],
+            aiSecondaryRecommendations: [],
+            aiPairingDrink: null,
+            aiBundle: null,
+            aiRecommendations: [], // for backwards compatibility
+            aiChatMessages: [
+                {
+                    sender: 'ai',
+                    text: '{{ $vendor->getAiWaiterName() }}: Ողջույն! Ես պատրաստ եմ պատասխանել մեր մենյուի վերաբերյալ ցանկացած հարցի:'
+                }
+            ],
+            aiChatInput: '',
+            aiChatLoading: false,
+            aiAllowedLanguages: @json($vendor->getAiWaiterLanguages()),
             toast: {
                 show: false,
                 message: '',
@@ -941,44 +963,376 @@
                 @if($vendor->ai_waiter_enabled)
                 const welcomed = localStorage.getItem('ai_waiter_welcomed_{{ $vendor->slug }}');
                 if (!welcomed) {
-                    this.showWelcomeModal = true;
+                    this.openAiWaiter('intro');
                 }
                 @endif
             },
 
-            startAiWaiter() {
-                localStorage.setItem('ai_waiter_welcomed_{{ $vendor->slug }}', 'true');
-                this.showWelcomeModal = false;
-                this.openAiWaiter();
-            },
-
-            skipToMenu() {
-                localStorage.setItem('ai_waiter_welcomed_{{ $vendor->slug }}', 'true');
-                this.showWelcomeModal = false;
-            },
-
-            openAiWaiter() {
+            openAiWaiter(step = null) {
                 this.showAiWaiter = true;
-                if (this.aiRecommendations.length === 0 && !this.aiLoading) {
-                    this.fetchAiRecommendations();
+                if (step) {
+                    this.aiStep = step;
+                }
+                if (!this.aiSessionId) {
+                    this.startAiSession();
                 }
             },
 
             closeAiWaiter() {
                 this.showAiWaiter = false;
+                localStorage.setItem('ai_waiter_welcomed_{{ $vendor->slug }}', 'true');
+            },
+
+            skipToMenu() {
+                this.closeAiWaiter();
+                this.showWelcomeModal = false;
+            },
+
+            async startAiSession() {
+                try {
+                    const res = await fetch('{{ route("client.ai_waiter.session.start", ["vendor_slug" => $vendor->slug]) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            lang: this.selectedLang,
+                            location_id: {{ $location?->id ?? 'null' }},
+                            table_number: this.tableNumber || null
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.aiSessionId = data.session_id;
+                        this.aiSessionToken = data.session_token;
+                        if (data.allowed_languages && data.allowed_languages.length) {
+                            this.aiAllowedLanguages = data.allowed_languages;
+                        }
+                        this.aiCurrentQuestion = data.next_question;
+                    }
+                } catch (e) {
+                    console.error('Failed to start AI session:', e);
+                }
+            },
+
+            async selectAiLanguage(lang) {
+                this.selectedLang = lang;
+                localStorage.setItem('qrmenu_locale_{{ $vendor->slug }}', lang);
+
+                if (this.aiSessionId) {
+                    try {
+                        const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/language';
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ language: lang })
+                        });
+                        const data = await res.json();
+                        if (data.success && data.next_question) {
+                            this.aiCurrentQuestion = data.next_question;
+                        }
+                    } catch (e) {
+                        console.error('Failed to update AI session language:', e);
+                    }
+                }
+                this.aiStep = 'greeting';
+            },
+
+            startAiQuestions() {
+                if (!this.aiCurrentQuestion && this.aiSessionId) {
+                    this.fetchNextQuestion();
+                }
+                this.aiStep = 'question';
+            },
+
+            async fetchNextQuestion() {
+                if (!this.aiSessionId) return;
+                try {
+                    const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/next-question';
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ lang: this.selectedLang })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        if (data.is_ready_for_recommendations || !data.next_question) {
+                            await this.runAiAnalysisAnimation();
+                        } else {
+                            this.aiCurrentQuestion = data.next_question;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch next question:', e);
+                }
+            },
+
+            async submitAiAnswer(questionKey, optionValue = null, freeText = null) {
+                if (!questionKey && this.aiCurrentQuestion) {
+                    questionKey = this.aiCurrentQuestion.key;
+                }
+                const answerText = freeText || this.aiFreeTextInput;
+                if (!optionValue && (!answerText || !answerText.trim())) {
+                    return;
+                }
+
+                if (this.aiCurrentQuestion) {
+                    this.aiQuestionHistory.push(JSON.parse(JSON.stringify(this.aiCurrentQuestion)));
+                }
+
+                this.aiFreeTextInput = '';
+                this.aiLoading = true;
+
+                try {
+                    if (!this.aiSessionId) {
+                        await this.startAiSession();
+                    }
+
+                    const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/answer';
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            question_key: questionKey,
+                            answer_value: optionValue,
+                            free_text: answerText || null,
+                            lang: this.selectedLang
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        if (data.is_ready_for_recommendations || !data.next_question) {
+                            await this.runAiAnalysisAnimation();
+                        } else {
+                            this.aiCurrentQuestion = data.next_question;
+                            this.aiStep = 'question';
+                        }
+                    } else {
+                        await this.runAiAnalysisAnimation();
+                    }
+                } catch (e) {
+                    console.error('Error submitting answer:', e);
+                    await this.runAiAnalysisAnimation();
+                } finally {
+                    this.aiLoading = false;
+                }
+            },
+
+            backAiQuestion() {
+                if (this.aiQuestionHistory.length > 0) {
+                    this.aiCurrentQuestion = this.aiQuestionHistory.pop();
+                    this.aiStep = 'question';
+                } else {
+                    this.aiStep = 'greeting';
+                }
+            },
+
+            skipAiQuestion() {
+                if (this.aiCurrentQuestion) {
+                    this.submitAiAnswer(this.aiCurrentQuestion.key, 'skip', null);
+                } else {
+                    this.runAiAnalysisAnimation();
+                }
+            },
+
+            async runAiAnalysisAnimation() {
+                this.aiStep = 'analyzing';
+                this.aiAnalysisStep = 1;
+
+                // Step sequence animation for 1.4s
+                setTimeout(() => { this.aiAnalysisStep = 2; }, 350);
+                setTimeout(() => { this.aiAnalysisStep = 3; }, 750);
+                setTimeout(() => { this.aiAnalysisStep = 4; }, 1150);
+
+                // Fetch recommendations in parallel
+                await this.fetchPersonalizedRecommendations();
+
+                setTimeout(() => {
+                    this.aiStep = 'recommendations';
+                }, 1450);
+            },
+
+            async fetchPersonalizedRecommendations() {
+                this.aiLoading = true;
+                try {
+                    if (!this.aiSessionId) {
+                        await this.startAiSession();
+                    }
+                    const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/recommendations';
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            lang: this.selectedLang,
+                            location_id: {{ $location?->id ?? 'null' }}
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.aiCommentary = data.commentary || '';
+                        this.aiMainRecommendations = data.main_recommendations || [];
+                        this.aiSecondaryRecommendations = data.secondary_recommendations || [];
+                        this.aiPairingDrink = data.pairing_drink || null;
+                        this.aiBundle = data.bundle || null;
+                        this.aiRecommendations = data.main_recommendations || [];
+                    }
+                } catch (e) {
+                    console.error('Error fetching recommendations:', e);
+                } finally {
+                    this.aiLoading = false;
+                }
+            },
+
+            async addAiDishToCart(dish) {
+                if (!dish) return;
+                const price = Number(dish.price || dish.base_price || 0);
+                this.addToCart(dish.id, dish.name, price, 'Standard', null, 1);
+
+                if (this.aiSessionId) {
+                    try {
+                        const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/add-to-cart';
+                        await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ product_id: dish.id })
+                        });
+                    } catch (e) {}
+                }
+            },
+
+            async addAiBundleToCart() {
+                if (!this.aiBundle || !this.aiBundle.items || this.aiBundle.items.length === 0) return;
+
+                this.aiBundle.items.forEach(item => {
+                    const price = Number(item.price || 0);
+                    this.addToCart(item.id, item.name, price, 'Standard', null, 1);
+                });
+
+                if (this.aiSessionId) {
+                    try {
+                        const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/add-to-cart';
+                        await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ bundle: this.aiBundle })
+                        });
+                    } catch (e) {}
+                }
+
+                const bundleToast = this.selectedLang === 'en' 
+                    ? '✨ Complete Smart Bundle added to cart!' 
+                    : (this.selectedLang === 'ru' ? '✨ Полный комбо-набор добавлен в корзину!' : '✨ Ամբողջ առաջարկված փաթեթն ավելացվել է զամբյուղ:');
+                this.triggerToast(bundleToast, 'success', 'fa-solid fa-wand-magic-sparkles');
+            },
+
+            openAiChat() {
+                this.showAiChatDrawer = true;
+            },
+
+            closeAiChat() {
+                this.showAiChatDrawer = false;
+            },
+
+            async sendAiChatMessage(customText = null) {
+                const message = (customText || this.aiChatInput || '').trim();
+                if (!message) return;
+
+                this.aiChatMessages.push({
+                    sender: 'user',
+                    text: message,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+
+                this.aiChatInput = '';
+                this.aiChatLoading = true;
+
+                this.$nextTick(() => {
+                    const chatBox = document.getElementById('aiChatMessagesBox');
+                    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                });
+
+                try {
+                    if (!this.aiSessionId) {
+                        await this.startAiSession();
+                    }
+                    const url = '{{ url("/api/m/" . $vendor->slug . "/ai-waiter/session") }}/' + this.aiSessionId + '/chat';
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            lang: this.selectedLang,
+                            location_id: {{ $location?->id ?? 'null' }}
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.aiChatMessages.push({
+                            sender: 'ai',
+                            text: data.reply,
+                            products: data.suggested_products || [],
+                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        });
+                    } else {
+                        this.aiChatMessages.push({
+                            sender: 'ai',
+                            text: this.selectedLang === 'en' 
+                                ? 'I am here to help you choose delicious dishes from our menu! What would you like to taste?' 
+                                : (this.selectedLang === 'ru' ? 'Я с радостью помогу вам с выбором блюд из меню! Что вам подсказать?' : 'Սիրով կօգնեմ ընտրել Ձեր ճաշակին համապատասխան ուտեստ մեր մենյուից:'),
+                            products: [],
+                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        });
+                    }
+                } catch (e) {
+                    console.error('Chat query error:', e);
+                } finally {
+                    this.aiChatLoading = false;
+                    this.$nextTick(() => {
+                        const chatBox = document.getElementById('aiChatMessagesBox');
+                        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                    });
+                }
             },
 
             resetAiQuiz() {
-                this.aiPreferences = {
-                    craving: null,
-                    occasion: null,
-                    drink_preference: null,
-                    dietary: []
-                };
-                this.aiPromptInput = '';
-                this.fetchAiRecommendations();
+                this.aiQuestionHistory = [];
+                this.aiPreferences = {};
+                this.aiFreeTextInput = '';
+                this.aiStep = 'intro';
+                this.startAiSession();
             },
 
+            // Backwards compatibility methods
             selectQuizOption(category, value) {
                 if (this.aiPreferences[category] === value) {
                     this.aiPreferences[category] = null;
@@ -998,35 +1352,7 @@
             },
 
             async fetchAiRecommendations() {
-                this.aiLoading = true;
-                try {
-                    const res = await fetch('{{ route("client.ai_waiter.recommend", ["vendor_slug" => $vendor->slug]) }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            craving: this.aiPreferences.craving,
-                            occasion: this.aiPreferences.occasion,
-                            drink_preference: this.aiPreferences.drink_preference,
-                            dietary: this.aiPreferences.dietary,
-                            prompt: this.aiPromptInput,
-                            lang: this.selectedLang,
-                            location_id: {{ $location?->id ?? 'null' }}
-                        })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        this.aiCommentary = data.commentary || '';
-                        this.aiRecommendations = data.recommendations || [];
-                    }
-                } catch (e) {
-                    console.error('AI Waiter recommendation error:', e);
-                } finally {
-                    this.aiLoading = false;
-                }
+                await this.fetchPersonalizedRecommendations();
             }
         };
     }

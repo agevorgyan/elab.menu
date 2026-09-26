@@ -81,6 +81,13 @@ class Product extends Model
         'fat_g',
         'preparation_time_min',
         'is_featured',
+        'ai_priority',
+        'ai_priority_level',
+        'ai_group',
+        'ai_tags',
+        'ai_spicy_level',
+        'ai_pairs_with',
+        'ai_enabled',
         'is_available',
         'sort_order',
     ];
@@ -98,6 +105,12 @@ class Product extends Model
         'carbs_g' => 'decimal:1',
         'fat_g' => 'decimal:1',
         'is_featured' => 'boolean',
+        'ai_priority' => 'boolean',
+        'ai_priority_level' => 'integer',
+        'ai_tags' => 'array',
+        'ai_spicy_level' => 'integer',
+        'ai_pairs_with' => 'array',
+        'ai_enabled' => 'boolean',
         'is_available' => 'boolean',
     ];
 

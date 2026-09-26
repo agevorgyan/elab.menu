@@ -106,6 +106,13 @@ class MenuManagementService
             'fat_g' => $data['fat_g'] ?? null,
             'preparation_time_min' => $data['preparation_time_min'] ?? null,
             'is_featured' => ! empty($data['is_featured']),
+            'ai_priority' => ! empty($data['ai_priority']),
+            'ai_priority_level' => (int) ($data['ai_priority_level'] ?? 0),
+            'ai_group' => ! empty($data['ai_group']) ? $data['ai_group'] : null,
+            'ai_tags' => $data['ai_tags'] ?? [],
+            'ai_spicy_level' => (int) ($data['ai_spicy_level'] ?? 0),
+            'ai_pairs_with' => $data['ai_pairs_with'] ?? [],
+            'ai_enabled' => array_key_exists('ai_enabled', $data) ? (bool) $data['ai_enabled'] : true,
             'is_available' => true,
             'sort_order' => (int) (Product::where('category_id', $data['category_id'])->max('sort_order') ?? 0) + 1,
         ]);
@@ -215,6 +222,28 @@ class MenuManagementService
             'preparation_time_min' => $data['preparation_time_min'] ?? null,
             'is_featured' => ! empty($data['is_featured']),
         ];
+
+        if (array_key_exists('ai_priority', $data)) {
+            $updatePayload['ai_priority'] = (bool) $data['ai_priority'];
+        }
+        if (array_key_exists('ai_priority_level', $data)) {
+            $updatePayload['ai_priority_level'] = (int) $data['ai_priority_level'];
+        }
+        if (array_key_exists('ai_group', $data)) {
+            $updatePayload['ai_group'] = ! empty($data['ai_group']) ? $data['ai_group'] : null;
+        }
+        if (array_key_exists('ai_tags', $data)) {
+            $updatePayload['ai_tags'] = (array) $data['ai_tags'];
+        }
+        if (array_key_exists('ai_spicy_level', $data)) {
+            $updatePayload['ai_spicy_level'] = (int) $data['ai_spicy_level'];
+        }
+        if (array_key_exists('ai_pairs_with', $data)) {
+            $updatePayload['ai_pairs_with'] = (array) $data['ai_pairs_with'];
+        }
+        if (array_key_exists('ai_enabled', $data)) {
+            $updatePayload['ai_enabled'] = (bool) $data['ai_enabled'];
+        }
 
         if (array_key_exists('is_available', $data)) {
             $updatePayload['is_available'] = (bool) $data['is_available'];

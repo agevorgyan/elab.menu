@@ -30,6 +30,26 @@ class StoreProductRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $merge = [];
+        if ($this->has('ai_tags') && is_string($this->input('ai_tags'))) {
+            $merge['ai_tags'] = array_values(array_filter(array_map('trim', explode(',', $this->input('ai_tags')))));
+        }
+        if ($this->has('ai_priority')) {
+            $merge['ai_priority'] = $this->boolean('ai_priority');
+        }
+        if ($this->has('ai_enabled')) {
+            $merge['ai_enabled'] = $this->boolean('ai_enabled');
+        }
+        if (! empty($merge)) {
+            $this->merge($merge);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -72,6 +92,13 @@ class StoreProductRequest extends FormRequest
             'fat_g' => 'nullable|numeric',
             'preparation_time_min' => 'nullable|integer',
             'is_featured' => 'nullable|boolean',
+            'ai_priority' => 'nullable|boolean',
+            'ai_priority_level' => 'nullable|integer|min:0|max:100',
+            'ai_group' => 'nullable|string|max:50',
+            'ai_tags' => 'nullable|array',
+            'ai_spicy_level' => 'nullable|integer|min:0|max:3',
+            'ai_pairs_with' => 'nullable|array',
+            'ai_enabled' => 'nullable|boolean',
             'variations' => 'nullable|array',
             'variations.*.id' => 'nullable|integer',
             'variations.*.name' => 'nullable|string|max:255',

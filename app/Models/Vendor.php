@@ -76,6 +76,7 @@ class Vendor extends Model
         'ai_waiter_priority_ingredients',
         'ai_waiter_welcome_text',
         'ai_waiter_featured_product_ids',
+        'ai_waiter_config',
         'ai_settings',
         'payment_settings',
         'crm_settings',
@@ -100,6 +101,7 @@ class Vendor extends Model
         'featured_dish_enabled' => 'boolean',
         'ai_waiter_enabled' => 'boolean',
         'ai_waiter_featured_product_ids' => 'array',
+        'ai_waiter_config' => 'array',
         'ai_settings' => 'array',
         'payment_settings' => 'array',
         'crm_settings' => 'array',
@@ -254,6 +256,141 @@ class Vendor extends Model
     public function getAiWaiterName(): string
     {
         return ! empty($this->ai_waiter_name) ? $this->ai_waiter_name : 'AI Մատուցող';
+    }
+
+    /**
+     * Relationship to AI waiter sessions.
+     */
+    public function aiWaiterSessions()
+    {
+        return $this->hasMany(AiWaiterSession::class);
+    }
+
+    /**
+     * Get AI Waiter configuration array with defaults.
+     */
+    public function getAiWaiterConfig(): array
+    {
+        $defaultConfig = [
+            'languages' => ['hy', 'en', 'ru'],
+            'personality' => 'friendly',
+            'max_recommendations' => 3,
+            'free_text_enabled' => true,
+            'ai_chat_enabled' => true,
+            'auto_popup' => true,
+            'promoted_products' => [], // array of ['product_id' => int, 'priority' => int, 'active' => bool]
+            'preferred_ingredients' => [], // array of ['ingredient' => string, 'priority' => int, 'active' => bool]
+            'preferred_categories' => [], // array of ['category_id' => int, 'priority' => int]
+            'group_priorities' => [
+                'bestseller' => 90,
+                'chef_recommendation' => 85,
+                'high_margin' => 75,
+                'new_products' => 65,
+            ],
+            'tag_priorities' => [
+                'bestseller' => 90,
+                'signature' => 85,
+                'chef-choice' => 80,
+                'high-margin' => 75,
+                'popular' => 70,
+                'seasonal' => 65,
+            ],
+            'scoring_weights' => [
+                'restaurant_priority' => 30,
+                'preferred_ingredient' => 20,
+                'customer_preference' => 25,
+                'dietary_compatibility' => 10,
+                'taste_spiciness' => 5,
+                'occasion' => 5,
+                'budget' => 5,
+            ],
+            'questions' => [
+                'mood' => ['enabled' => true, 'priority' => 1],
+                'preference' => ['enabled' => true, 'priority' => 2],
+                'spiciness' => ['enabled' => true, 'priority' => 3],
+                'occasion' => ['enabled' => true, 'priority' => 4],
+                'budget' => ['enabled' => true, 'priority' => 5],
+                'drink' => ['enabled' => true, 'priority' => 6],
+            ],
+        ];
+
+        $saved = $this->ai_waiter_config ?? [];
+
+        return array_replace_recursive($defaultConfig, $saved);
+    }
+
+    /**
+     * Get list of promoted products configured by vendor.
+     *
+     * @return array<int, array{product_id: int, priority: int, active: bool}>
+     */
+    public function getAiPromotedProductsList(): array
+    {
+        $config = $this->getAiWaiterConfig();
+
+        return array_values(array_filter($config['promoted_products'] ?? [], fn ($p) => ! empty($p['active'])));
+    }
+
+    /**
+     * Get preferred ingredients with priorities.
+     *
+     * @return array<int, array{ingredient: string, priority: int, active: bool}>
+     */
+    public function getAiPreferredIngredients(): array
+    {
+        $config = $this->getAiWaiterConfig();
+        $list = array_values(array_filter($config['preferred_ingredients'] ?? [], fn ($i) => ! empty($i['active'])));
+
+        // Merge backwards-compatible text list if structured list is empty
+        if (empty($list) && ! empty($this->ai_waiter_priority_ingredients)) {
+            $legacy = $this->getAiWaiterPriorityIngredientsList();
+            foreach ($legacy as $ing) {
+                $list[] = [
+                    'ingredient' => $ing,
+                    'priority' => 90,
+                    'active' => true,
+                ];
+            }
+        }
+
+        return $list;
+    }
+
+    /**
+     * Get scoring weights.
+     */
+    public function getAiScoringWeights(): array
+    {
+        $config = $this->getAiWaiterConfig();
+
+        return $config['scoring_weights'] ?? [
+            'restaurant_priority' => 30,
+            'preferred_ingredient' => 20,
+            'customer_preference' => 25,
+            'dietary_compatibility' => 10,
+            'taste_spiciness' => 5,
+            'occasion' => 5,
+            'budget' => 5,
+        ];
+    }
+
+    /**
+     * Get allowed languages for AI waiter.
+     */
+    public function getAiWaiterLanguages(): array
+    {
+        $config = $this->getAiWaiterConfig();
+        $allowed = $config['languages'] ?? ['hy', 'en', 'ru'];
+        $vendorSupported = array_map(fn ($l) => strtolower($l['code'] ?? ''), $this->getSupportedLanguages());
+
+        if (! empty($vendorSupported)) {
+            $allowed = array_values(array_intersect($allowed, $vendorSupported));
+            if (empty($allowed)) {
+                $allowed = [$vendorSupported[0]];
+            }
+        }
+
+        return ! empty($allowed) ? $allowed : ['hy', 'en', 'ru'];
     }
 
     public function featuredProduct()

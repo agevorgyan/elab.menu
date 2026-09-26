@@ -1,29 +1,29 @@
 @extends('layouts.app')
 
-@section('title', __('AI Կարգավորումներ & AI Մատուցող') . ' - ' . $vendor->name)
+@section('title', __('AI Կարգավորումներ & AI Waiter') . ' - ' . $vendor->name)
 
 @section('content')
-<div style="max-width: 1050px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+<div style="max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;">
     <!-- Page Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
         <div style="min-width: 0; flex: 1;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem;">
                 <a href="{{ route('admin.settings.index') }}" style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
                     <i class="fa-solid fa-arrow-left"></i> {{ __('Կարգավորումներ') }}
                 </a>
                 <span style="color: var(--text-muted);">/</span>
-                <span style="color: var(--primary); font-weight: 700;">AI Control Center</span>
+                <span style="color: var(--primary); font-weight: 700;">{{ __('AI Կարգավորումներ & Մոդելներ') }}</span>
             </div>
 
             <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <span style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); color: #8b5cf6; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);">
-                    <i class="fa-solid fa-robot"></i>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </span>
-                <span>{{ __('AI Կարգավորումներ & Մոդելներ') }}</span>
-                <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 0.04em;">MULTI-PROVIDER</span>
+                <span>{{ __('AI Waiter & Խոհարարական Ինտելեկտ') }}</span>
+                <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 0.04em;">PRO SUITE</span>
             </h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0 0; word-break: break-word;">
-                {{ __('Ընտրեք AI պրովայդերին (Gemini, OpenAI, Claude, DeepSeek, Groq և այլն), նշեք Ձեր API բանալին և կարգավորեք AI Մատուցող խորհրդատուին') }}
+                {{ __('Կառավարեք AI մատուցողին, ռեստորանի առաջնահերթ ապրանքներն ու բաղադրիչները, հարցերի հաջորդականությունը և AI պրովայդերներին:') }}
             </p>
         </div>
 
@@ -32,7 +32,7 @@
                 <i class="fa-solid fa-sliders"></i> {{ __('Ընդհանուր կարգավորումներ') }}
             </a>
             <button type="submit" form="aiSettingsForm" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; color: #fff;">
-                <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել Կարգավորումները') }}
+                <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել Բոլոր Փոփոխությունները') }}
             </button>
         </div>
     </div>
@@ -57,116 +57,695 @@
         </div>
     @endif
 
-    @php
-        $activeProviderKey = old('ai_provider', $vendor->getAiProvider());
-        $activeModel = old('ai_model', $vendor->getAiModel());
-        $savedApiKey = $vendor->getAiApiKey();
-        $hasCustomKey = !empty($savedApiKey);
-        $savedBaseUrl = $vendor->getAiBaseUrl();
-    @endphp
-
-    <!-- Top Status Banner -->
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.2rem 1.5rem; margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; box-shadow: var(--shadow-card);">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.25); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #8b5cf6;">
-                <i class="fa-solid fa-microchip"></i>
-            </div>
-            <div>
-                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
-                    {{ __('Ընթացիկ Ակտիվ AI Շարժիչ') }}
+    <!-- 1. AI WAITER ANALYTICS & CONVERSION FUNNEL (Specification Section 28) -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.75rem; box-shadow: var(--shadow-card);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-chart-line"></i>
                 </div>
-                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem;">
-                    <span id="headerProviderName">{{ $providers[$activeProviderKey]['name'] ?? 'Google Gemini' }}</span>
-                    <span style="font-size: 0.82rem; font-weight: 600; color: #8b5cf6; background: rgba(139, 92, 246, 0.1); padding: 0.15rem 0.5rem; border-radius: 6px;" id="headerModelName">
-                        {{ $activeModel }}
+                <div>
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin: 0;">
+                        {{ __('AI Waiter Վերլուծություն & Կոնվերսիա (Analytics)') }}
+                    </h3>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">
+                        {{ __('Հաճախորդների փոխազդեցություն, առաջարկների դիտումներ և իրական պատվերներ') }}
                     </span>
                 </div>
             </div>
+
+            <!-- Language Distribution Badges -->
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('Լեզուներ՝') }}</span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                    🇦🇲 {{ $analytics['languages']['hy'] ?? 0 }}
+                </span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                    🇬🇧 {{ $analytics['languages']['en'] ?? 0 }}
+                </span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                    🇷🇺 {{ $analytics['languages']['ru'] ?? 0 }}
+                </span>
+            </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            @if($hasCustomKey)
-                <span style="font-size: 0.8rem; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-key"></i> {{ __('Գործընկերոջ Սեփական API Key') }}
-                </span>
-            @else
-                <span style="font-size: 0.8rem; font-weight: 700; background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-cloud"></i> {{ __('Համակարգային Լռելյայն Ռեժիմ') }}
-                </span>
-            @endif
+        <!-- 4 Metric Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <!-- Total Sessions -->
+            <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+                    {{ __('AI Սեսիաներ') }}
+                </div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: var(--text-main);">
+                    {{ number_format($analytics['total_sessions']) }}
+                </div>
+                <div style="font-size: 0.75rem; color: #8b5cf6; margin-top: 0.25rem; font-weight: 600;">
+                    <i class="fa-solid fa-users"></i> {{ __('Բոլոր սկանավորումները') }}
+                </div>
+            </div>
 
-            @if($vendor->ai_waiter_enabled)
-                <span style="font-size: 0.8rem; font-weight: 700; background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('AI Մատուցող՝ Ակտիվ') }}
-                </span>
-            @else
-                <span style="font-size: 0.8rem; font-weight: 700; background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.3); border-radius: 8px; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-pause"></i> {{ __('AI Մատուցող՝ Անջատված') }}
-                </span>
-            @endif
+            <!-- Recommendations Viewed -->
+            <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+                    {{ __('Առաջարկներ Ստացած') }}
+                </div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #3b82f6;">
+                    {{ number_format($analytics['recommended_count']) }}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    {{ $analytics['total_sessions'] > 0 ? round(($analytics['recommended_count'] / $analytics['total_sessions']) * 100, 1) : 0 }}% {{ __('անցում հարցերից') }}
+                </div>
+            </div>
+
+            <!-- Added to Cart -->
+            <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+                    {{ __('Ավելացրել են Զամբյուղ') }}
+                </div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #10b981;">
+                    {{ number_format($analytics['added_to_cart_count']) }}
+                </div>
+                <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem; font-weight: 600;">
+                    <i class="fa-solid fa-cart-shopping"></i> {{ __('Ակտիվ հետաքրքրություն') }}
+                </div>
+            </div>
+
+            <!-- Orders & Revenue -->
+            <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+                    {{ __('AI Պատվերներ & Հասույթ') }}
+                </div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #f59e0b;">
+                    {{ number_format($analytics['total_revenue']) }} <span style="font-size: 0.95rem;">{{ $vendor->currency }}</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #f59e0b; margin-top: 0.25rem; font-weight: 600;">
+                    {{ $analytics['ordered_count'] }} {{ __('պատվեր') }} • {{ $analytics['conversion_rate'] }}% {{ __('կոնվերսիա') }}
+                </div>
+            </div>
         </div>
+
+        <!-- Conversion Funnel Bar -->
+        <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                {{ __('Կոնվերսիոն Ձագար (Conversion Funnel)') }}
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 140px; background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; padding: 0.5rem 0.75rem; border-radius: 8px;">
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">1. QR Scan</div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['total_sessions'] }}</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
+                <div style="flex: 1; min-width: 140px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; padding: 0.5rem 0.75rem; border-radius: 8px;">
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">2. Առաջարկներ</div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['recommended_count'] }}</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
+                <div style="flex: 1; min-width: 140px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 0.5rem 0.75rem; border-radius: 8px;">
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">3. Զամբյուղ</div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['added_to_cart_count'] }}</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
+                <div style="flex: 1; min-width: 140px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 0.5rem 0.75rem; border-radius: 8px;">
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">4. Պատվեր</div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['ordered_count'] }} ({{ $analytics['conversion_rate'] }}%)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN CONFIGURATION TABS -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; overflow-x: auto;">
+        <button type="button" class="tab-btn active-tab" onclick="switchAiTab('tab-general', this)">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('AI Մատուցող Խորհրդատու') }}
+        </button>
+        <button type="button" class="tab-btn" onclick="switchAiTab('tab-priorities', this)">
+            <i class="fa-solid fa-award"></i> {{ __('Առաջնահերթություններ & Ranking') }}
+        </button>
+        <button type="button" class="tab-btn" onclick="switchAiTab('tab-questions', this)">
+            <i class="fa-solid fa-list-check"></i> {{ __('Հարցաշարի Շարժիչ') }}
+        </button>
+        <button type="button" class="tab-btn" onclick="switchAiTab('tab-provider', this)">
+            <i class="fa-solid fa-microchip"></i> {{ __('AI Provider & API Engine') }}
+        </button>
     </div>
 
     <form action="{{ route('admin.settings.ai.update') }}" method="POST" id="aiSettingsForm">
         @csrf
 
-        <div style="display: grid; grid-template-columns: 1fr; gap: 1.75rem;">
+        <!-- ================= TAB 1: GENERAL AI WAITER SETTINGS ================= -->
+        <div id="tab-general" class="ai-tab-pane" style="display: block;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.2rem;">
+                    <div>
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-robot" style="color: #8b5cf6;"></i>
+                            <span>{{ __('AI Մատուցողի Հիմնական Կարգավորումներ') }}</span>
+                        </h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            {{ __('Կարգավորեք անվանումը, ողջույնի հաղորդագրությունը, լեզուները և աշխատանքի ռեժիմը') }}
+                        </p>
+                    </div>
 
-            <!-- SECTION 1: AI SERVICE PROVIDERS & INTEGRATION -->
-            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card); position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
-                            <i class="fa-solid fa-brain"></i>
+                    <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.55rem 1rem; border-radius: 12px;">
+                        <input type="checkbox" name="ai_waiter_enabled" value="1" id="aiWaiterToggle" {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
+                        <span style="font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
+                            {{ __('Միացնել AI Մատուցողը') }}
                         </span>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('1. AI Համակարգի Ընտրություն (AI Providers)') }}
-                            </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Ընտրեք այն AI ծառայությունը, որը պետք է աշխատեցնի AI Մատուցողը, Մենյուի Իմպորտը և Թարգմանությունը') }}
-                            </p>
-                        </div>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('AI Մատուցողի Անունը / Կերպարը') }}
+                        </label>
+                        <input type="text" name="ai_waiter_name" id="aiWaiterNameInput" value="{{ old('ai_waiter_name', $vendor->ai_waiter_name ?? 'AI Մատուցող') }}" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
+                        <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
+                            {{ __('Այս անունով AI-ն կներկայանա հաճախորդին ողջույնի և խորհրդատվության ժամանակ') }}
+                        </small>
+                    </div>
+
+                    <!-- Personality / Tone -->
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                            {{ __('AI Մատուցողի Բնավորություն / Տոն (Personality)') }}
+                        </label>
+                        <select name="ai_waiter_personality" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.92rem; font-weight: 600;">
+                            <option value="friendly" {{ ($aiWaiterConfig['personality'] ?? '') === 'friendly' ? 'selected' : '' }}>😊 Ջերմ և ընկերական (Friendly - Լռելյայն)</option>
+                            <option value="professional" {{ ($aiWaiterConfig['personality'] ?? '') === 'professional' ? 'selected' : '' }}>🎩 Պրոֆեսիոնալ և հարգալից (Professional)</option>
+                            <option value="sommelier" {{ ($aiWaiterConfig['personality'] ?? '') === 'sommelier' ? 'selected' : '' }}>🍷 Էքսպերտ-սոմելյե (Sommelier & Gourmet)</option>
+                            <option value="concise" {{ ($aiWaiterConfig['personality'] ?? '') === 'concise' ? 'selected' : '' }}>⚡ Կարճ և արագ (Concise & Fast)</option>
+                        </select>
+                        <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
+                            {{ __('Սահմանում է խորհրդատվության և մեկնաբանությունների լեզվական ոճը') }}
+                        </small>
                     </div>
                 </div>
 
-                <!-- Provider Selector Cards Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+                <!-- Custom Welcome Greeting -->
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                        {{ __('Ողջույնի Հատուկ Ուղերձ (Intro Welcome Message)') }}
+                    </label>
+                    <textarea name="ai_waiter_welcome_text" id="aiWaiterWelcomeInput" rows="2" class="form-control" placeholder="Օրինակ՝ Բարի գալուստ, ես Ձեր AI մատուցողն եմ: Կօգնեմ ընտրել հենց այն, ինչ Ձեզ դուր կգա:" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.92rem; resize: vertical;">{{ old('ai_waiter_welcome_text', $vendor->ai_waiter_welcome_text) }}</textarea>
+                    <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
+                        {{ __('Եթե դատարկ է, համակարգը կօգտագործի լռելյայն պրեմիում ողջույնը ըստ ընտրված լեզվի') }}
+                    </small>
+                </div>
+
+                <!-- Languages & Feature Checkboxes -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                    <!-- Allowed Languages -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.15rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
+                            <i class="fa-solid fa-globe" style="color: #8b5cf6;"></i> {{ __('Հասանելի Լեզուներ AI-ի համար') }}
+                        </label>
+                        <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+                            @php
+                                $configuredLangs = $aiWaiterConfig['languages'] ?? ['hy', 'en', 'ru'];
+                            @endphp
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+                                <input type="checkbox" name="ai_waiter_languages[]" value="hy" {{ in_array('hy', $configuredLangs) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>🇦🇲 Հայերեն</span>
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+                                <input type="checkbox" name="ai_waiter_languages[]" value="en" {{ in_array('en', $configuredLangs) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>🇬🇧 English</span>
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+                                <input type="checkbox" name="ai_waiter_languages[]" value="ru" {{ in_array('ru', $configuredLangs) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>🇷🇺 Русский</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Behavior Toggles -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.15rem; display: flex; flex-direction: column; gap: 0.65rem;">
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                            <input type="checkbox" name="auto_popup" value="1" {{ !empty($aiWaiterConfig['auto_popup']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                            <span>{{ __('Ավտոմատ ցուցադրել Intro-ն առաջին QR սկանավորման ժամանակ') }}</span>
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                            <input type="checkbox" name="free_text_enabled" value="1" {{ !empty($aiWaiterConfig['free_text_enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                            <span>{{ __('Թույլատրել Ազատ Տեքստային պատասխան («Կամ գրեք Ձեր տարբերակը»)') }}</span>
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                            <input type="checkbox" name="ai_chat_enabled" value="1" {{ !empty($aiWaiterConfig['ai_chat_enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                            <span>{{ __('Միացնել ինտերակտիվ AI Չատը («💬 Հարցրեք AI մատուցողին»)') }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Live Widget Simulation Preview Card -->
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+                        <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
+                            <i class="fa-solid fa-eye" style="color: #8b5cf6;"></i> {{ __('Ինչպես է տեսնում հաճախորդը (Live Mobile Widget Preview)') }}
+                        </span>
+                        <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 6px;">
+                            {{ __('Storefront Preview') }}
+                        </span>
+                    </div>
+
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.25rem; max-width: 480px; margin: 0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);" id="previewWaiterName">
+                                    {{ $vendor->ai_waiter_name ?? 'AI Մատուցող' }}
+                                </div>
+                                <div style="font-size: 0.75rem; color: #10b981; display: flex; align-items: center; gap: 0.3rem;">
+                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                                    <span>{{ __('Օնլայն • Պատրաստ է առաջարկել') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-body); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.88rem; color: var(--text-main); line-height: 1.45; border-left: 3px solid #8b5cf6;" id="previewWelcomeMessage">
+                            {{ $vendor->ai_waiter_welcome_text ?: 'Բարի գալուստ: Ես Ձեր AI մատուցողն եմ: Կօգնեմ ընտրել հենց այն, ինչ Ձեզ դուր կգա:' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: PRIORITIES & RANKING RULES (Sections 46-58) ================= -->
+        <div id="tab-priorities" class="ai-tab-pane" style="display: none;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card);">
+                <div style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-award" style="color: #f59e0b;"></i>
+                        <span>{{ __('Ռեստորանի Առաջնահերթություններ & Ranking Շարժիչ (Priority Hierarchy)') }}</span>
+                    </h3>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                        {{ __('«AI understands the customer, but the restaurant controls what it wants AI to recommend.»') }}
+                    </p>
+                </div>
+
+                <!-- Priority 1: Explicitly Promoted Products Table -->
+                <div style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <strong style="font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
+                                <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.75rem;">Priority 1</span>
+                                {{ __('Հատուկ Առաջնահերթ Ուտեստներ (Promoted Products)') }}
+                            </strong>
+                            <small style="color: var(--text-muted); font-size: 0.78rem; display: block;">
+                                {{ __('Այս ուտեստները կստանան ամենաբարձր առաջնահերթությունը, եթե համապատասխանում են հաճախորդի պահանջներին:') }}
+                            </small>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addPromotedProductRow()" style="border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                            <i class="fa-solid fa-plus"></i> {{ __('Ավելացնել Ուտեստ') }}
+                        </button>
+                    </div>
+
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+                            <thead>
+                                <tr style="background: rgba(0,0,0,0.03); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">
+                                    <th style="padding: 0.75rem 1rem;">{{ __('Ուտեստ (Product)') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 140px;">{{ __('Առաջնահերթություն (1–100)') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 100px; text-align: center;">{{ __('Ակտիվ') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotedProductsTbody">
+                                @php
+                                    $promotedList = $aiWaiterConfig['promoted_products'] ?? [];
+                                @endphp
+                                @forelse($promotedList as $idx => $p)
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <td style="padding: 0.65rem 1rem;">
+                                            <select name="promoted_products[{{ $idx }}][product_id]" class="form-control" style="width: 100%; background: var(--bg-card); font-size: 0.88rem;">
+                                                @foreach($products as $prod)
+                                                    <option value="{{ $prod->id }}" {{ $p['product_id'] == $prod->id ? 'selected' : '' }}>
+                                                        {{ $prod->name }} ({{ number_format($prod->price) }} {{ $vendor->currency }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td style="padding: 0.65rem 1rem;">
+                                            <input type="number" name="promoted_products[{{ $idx }}][priority]" value="{{ $p['priority'] ?? 90 }}" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+                                        </td>
+                                        <td style="padding: 0.65rem 1rem; text-align: center;">
+                                            <input type="checkbox" name="promoted_products[{{ $idx }}][active]" value="1" {{ !empty($p['active']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                        </td>
+                                        <td style="padding: 0.65rem 1rem; text-align: right;">
+                                            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr id="emptyPromotedRow">
+                                        <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                            {{ __('Դեռ ոչ մի հատուկ ուտեստ ավելացված չէ: Սեղմեք «Ավելացնել Ուտեստ»:') }}
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Priority 2: Preferred Ingredients Table -->
+                <div style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <strong style="font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
+                                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.75rem;">Priority 2</span>
+                                {{ __('Նախընտրելի Բաղադրիչներ (Preferred Target Ingredients)') }}
+                            </strong>
+                            <small style="color: var(--text-muted); font-size: 0.78rem; display: block;">
+                                {{ __('Այս բաղադրիչները պարունակող ուտեստներին AI-ն կտա բարձր խթանում:') }}
+                            </small>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addPreferredIngredientRow()" style="border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                            <i class="fa-solid fa-plus"></i> {{ __('Ավելացնել Բաղադրիչ') }}
+                        </button>
+                    </div>
+
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+                            <thead>
+                                <tr style="background: rgba(0,0,0,0.03); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">
+                                    <th style="padding: 0.75rem 1rem;">{{ __('Բաղադրիչ (Ingredient Name)') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 140px;">{{ __('Առաջնահերթություն (1–100)') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 100px; text-align: center;">{{ __('Ակտիվ') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="preferredIngredientsTbody">
+                                @php
+                                    $ingredientList = $vendor->getAiPreferredIngredients();
+                                @endphp
+                                @forelse($ingredientList as $idx => $ing)
+                                    <tr style="border-bottom: 1px solid var(--border-color);">
+                                        <td style="padding: 0.65rem 1rem;">
+                                            <input type="text" name="preferred_ingredients[{{ $idx }}][ingredient]" value="{{ $ing['ingredient'] }}" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="background: var(--bg-card); width: 100%; font-weight: 600;">
+                                        </td>
+                                        <td style="padding: 0.65rem 1rem;">
+                                            <input type="number" name="preferred_ingredients[{{ $idx }}][priority]" value="{{ $ing['priority'] ?? 80 }}" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+                                        </td>
+                                        <td style="padding: 0.65rem 1rem; text-align: center;">
+                                            <input type="checkbox" name="preferred_ingredients[{{ $idx }}][active]" value="1" {{ !empty($ing['active']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                        </td>
+                                        <td style="padding: 0.65rem 1rem; text-align: right;">
+                                            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr id="emptyIngredientRow">
+                                        <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                            {{ __('Դեռ ոչ մի բաղադրիչ ավելացված չէ: Սեղմեք «Ավելացնել Բաղադրիչ»:') }}
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Priority 3 & 4: Product Groups & Tags Priorities -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+                    <!-- Group Priorities -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.2rem;">
+                        <strong style="font-size: 0.9rem; color: var(--text-main); display: block; margin-bottom: 0.75rem;">
+                            {{ __('Ուտեստների Խմբերի Առաջնահերթություն (AI Groups)') }}
+                        </strong>
+                        @php
+                            $gp = $aiWaiterConfig['group_priorities'] ?? [];
+                        @endphp
+                        <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.85rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>⭐ Bestseller</span>
+                                <input type="number" name="group_priorities[bestseller]" value="{{ $gp['bestseller'] ?? 90 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>👨‍🍳 Chef Recommendation</span>
+                                <input type="number" name="group_priorities[chef_recommendation]" value="{{ $gp['chef_recommendation'] ?? 85 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>💎 High Margin</span>
+                                <input type="number" name="group_priorities[high_margin]" value="{{ $gp['high_margin'] ?? 75 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>✨ New Products</span>
+                                <input type="number" name="group_priorities[new_products]" value="{{ $gp['new_products'] ?? 65 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configurable Scoring Weights (Section 49) -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.2rem;">
+                        <strong style="font-size: 0.9rem; color: var(--text-main); display: block; margin-bottom: 0.75rem;">
+                            {{ __('Scoring Շարժիչի Կշիռները (Recommendation Weights %)') }}
+                        </strong>
+                        @php
+                            $sw = $vendor->getAiScoringWeights();
+                        @endphp
+                        <div style="display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.82rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Restaurant Explicit Priority</span>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <input type="number" name="scoring_weights[restaurant_priority]" value="{{ $sw['restaurant_priority'] ?? 30 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Preferred Ingredient Match</span>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <input type="number" name="scoring_weights[preferred_ingredient]" value="{{ $sw['preferred_ingredient'] ?? 20 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Customer Preference Match</span>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <input type="number" name="scoring_weights[customer_preference]" value="{{ $sw['customer_preference'] ?? 25 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Dietary Compatibility</span>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <input type="number" name="scoring_weights[dietary_compatibility]" value="{{ $sw['dietary_compatibility'] ?? 10 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Taste & Flavor / Spiciness</span>
+                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                    <input type="number" name="scoring_weights[taste_spiciness]" value="{{ $sw['taste_spiciness'] ?? 5 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: QUESTION ENGINE ================= -->
+        <div id="tab-questions" class="ai-tab-pane" style="display: none;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card);">
+                <div style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-list-check" style="color: #8b5cf6;"></i>
+                        <span>{{ __('AI Հարցաշարի Շարժիչ (Question Engine Configuration)') }}</span>
+                    </h3>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                        {{ __('Կառավարեք ինտերակտիվ հարցերը, դրանց առաջնահերթությունը և ակտիվությունը') }}
+                    </p>
+                </div>
+
+                @php
+                    $qConfig = $aiWaiterConfig['questions'] ?? [];
+                @endphp
+
+                <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <!-- Question 1: Mood -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">🍽️</span>
+                            <div>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">1. Mood / Տրամադրություն</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Ի՞նչ տրամադրությամբ եք այսօր» (Մսային, Թեթև, Կծու, Թարմ, Քաղցր, Surprise me)</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                                <span>Priority:</span>
+                                <input type="number" name="questions[mood][priority]" value="{{ $qConfig['mood']['priority'] ?? 1 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                                <input type="checkbox" name="questions[mood][enabled]" value="1" {{ !empty($qConfig['mood']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>{{ __('Ակտիվ') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 2: Preference / Protein -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">🥩</span>
+                            <div>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">2. Preference / Հիմնական բաղադրիչ</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Ի՞նչ եք նախընտրում» (Միս, Հավ, Ձուկ, Բուսական, Ամեն ինչ)</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                                <span>Priority:</span>
+                                <input type="number" name="questions[preference][priority]" value="{{ $qConfig['preference']['priority'] ?? 2 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                                <input type="checkbox" name="questions[preference][enabled]" value="1" {{ !empty($qConfig['preference']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>{{ __('Ակտիվ') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 3: Spiciness -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">🌶️</span>
+                            <div>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">3. Spiciness / Կծվություն</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Որքա՞ն կծու եք սիրում» (Չեմ սիրում, Թեթև, Միջին, Շատ կծու)</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                                <span>Priority:</span>
+                                <input type="number" name="questions[spiciness][priority]" value="{{ $qConfig['spiciness']['priority'] ?? 3 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                                <input type="checkbox" name="questions[spiciness][enabled]" value="1" {{ !empty($qConfig['spiciness']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>{{ __('Ակտիվ') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 4: Occasion -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">🎉</span>
+                            <div>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">4. Occasion / Առիթ</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Այսօր ինչպիսի՞ առիթ է» (Միայն ինձ համար, Զույգով, Ընկերներով, Ընտանիքով, Տոնական)</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                                <span>Priority:</span>
+                                <input type="number" name="questions[occasion][priority]" value="{{ $qConfig['occasion']['priority'] ?? 4 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                                <input type="checkbox" name="questions[occasion][enabled]" value="1" {{ !empty($qConfig['occasion']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>{{ __('Ակտիվ') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 5: Budget -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">💵</span>
+                            <div>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">5. Budget / Բյուջե</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Մոտավորապես ի՞նչ բյուջե եք նախատեսում» (Մինչև 5000, 5000-10000, 10000-20000, Կարևոր չէ)</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                                <span>Priority:</span>
+                                <input type="number" name="questions[budget][priority]" value="{{ $qConfig['budget']['priority'] ?? 5 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                                <input type="checkbox" name="questions[budget][enabled]" value="1" {{ !empty($qConfig['budget']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>{{ __('Ակտիվ') }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question 6: Drink -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.5rem;">🍹</span>
+                            <div>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">6. Drink / Ըմպելիք</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Ի՞նչ կցանկանաք խմել» (Ջուր, Լիմոնադ, Կոկտեյլ, Գինի, Գարեջուր, Դու ընտրիր)</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                                <span>Priority:</span>
+                                <input type="number" name="questions[drink][priority]" value="{{ $qConfig['drink']['priority'] ?? 6 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                            </div>
+                            <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                                <input type="checkbox" name="questions[drink][enabled]" value="1" {{ !empty($qConfig['drink']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <span>{{ __('Ակտիվ') }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: AI PROVIDER & API ENGINE ================= -->
+        <div id="tab-provider" class="ai-tab-pane" style="display: none;">
+            @php
+                $activeProviderKey = old('ai_provider', $vendor->getAiProvider());
+                $activeModel = old('ai_model', $vendor->getAiModel());
+                $savedApiKey = $vendor->getAiApiKey();
+                $hasCustomKey = !empty($savedApiKey);
+                $savedBaseUrl = $vendor->getAiBaseUrl();
+            @endphp
+
+            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                    <div>
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-microchip" style="color: #4285F4;"></i>
+                            <span>{{ __('AI Պրովայդեր & Մոդելների Շարժիչ') }}</span>
+                        </h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            {{ __('Ընտրեք AI շարժիչը, որը կգեներացնի տեքստերն ու սոմելյեի մեկնաբանությունները') }}
+                        </p>
+                    </div>
+
+                    <!-- Live Connection Test Button -->
+                    <button type="button" id="btnTestConnection" class="btn btn-secondary" style="border-radius: 12px; font-weight: 700; font-size: 0.88rem; padding: 0.6rem 1.15rem; display: inline-flex; align-items: center; gap: 0.4rem; border-color: rgba(139, 92, 246, 0.4); color: #8b5cf6;">
+                        <i class="fa-solid fa-bolt" id="testIcon"></i>
+                        <span id="testBtnText">{{ __('Ստուգել Կապը (Test Connection)') }}</span>
+                    </button>
+                </div>
+
+                <!-- Test Result Notification Area -->
+                <div id="testResultBox" style="display: none; border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.88rem; font-weight: 600;"></div>
+
+                <!-- Providers Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                     @foreach($providers as $pKey => $pConfig)
                         @php
                             $isSelected = ($activeProviderKey === $pKey);
-                            $brandColor = match($pKey) {
-                                'gemini' => '#4285F4',
-                                'openai' => '#10a37f',
-                                'claude' => '#d97706',
-                                'deepseek' => '#2563eb',
-                                'groq' => '#ea580c',
-                                'openrouter' => '#7c3aed',
-                                'custom' => '#475569',
-                                default => '#8b5cf6'
-                            };
-                            $iconClass = match($pKey) {
-                                'gemini' => 'fa-brands fa-google',
-                                'openai' => 'fa-solid fa-cube',
-                                'claude' => 'fa-solid fa-shield-cat',
-                                'deepseek' => 'fa-solid fa-compass',
-                                'groq' => 'fa-solid fa-bolt',
-                                'openrouter' => 'fa-solid fa-route',
-                                'custom' => 'fa-solid fa-server',
-                                default => 'fa-solid fa-microchip'
-                            };
+                            $brandColor = $pConfig['color'] ?? '#8b5cf6';
                         @endphp
-                        <label class="provider-card" style="border: 2px solid {{ $isSelected ? $brandColor : 'var(--border-color)' }}; background: {{ $isSelected ? 'rgba('.hexdec(substr($brandColor, 1, 2)).', '.hexdec(substr($brandColor, 3, 2)).', '.hexdec(substr($brandColor, 5, 2)).', 0.06)' : 'var(--bg-body)' }}; border-radius: 16px; padding: 1.15rem; cursor: pointer; transition: all 0.2s ease; position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <span style="width: 38px; height: 38px; border-radius: 10px; background: {{ $brandColor }}1a; color: {{ $brandColor }}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
-                                        <i class="{{ $iconClass }}"></i>
+                        <label class="provider-card {{ $isSelected ? 'active-provider' : '' }}" style="display: flex; flex-direction: column; justify-content: space-between; border: 2px solid {{ $isSelected ? '#8b5cf6' : 'var(--border-color)' }}; border-radius: 16px; padding: 1.15rem; cursor: pointer; transition: all 0.2s; background: {{ $isSelected ? 'rgba(139, 92, 246, 0.08)' : 'var(--bg-body)' }}; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                    <span style="width: 38px; height: 38px; border-radius: 10px; background: {{ $brandColor }}15; color: {{ $brandColor }}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                        <i class="{{ $pConfig['icon'] }}"></i>
                                     </span>
                                     <div>
-                                        <div style="font-weight: 800; font-size: 1rem; color: var(--text-main);">
-                                            {{ $pConfig['name'] }}
-                                        </div>
-                                        <span style="font-size: 0.72rem; font-weight: 700; color: {{ $brandColor }}; background: {{ $brandColor }}15; padding: 0.15rem 0.45rem; border-radius: 5px; display: inline-block; margin-top: 0.15rem;">
+                                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ $pConfig['name'] }}</div>
+                                        <span style="font-size: 0.68rem; font-weight: 700; color: {{ $brandColor }}; background: {{ $brandColor }}18; padding: 0.1rem 0.4rem; border-radius: 4px;">
                                             {{ $pConfig['badge'] ?? strtoupper($pKey) }}
                                         </span>
                                     </div>
@@ -177,301 +756,170 @@
                             <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
                                 {{ $pConfig['description'] }}
                             </p>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 0.5rem; margin-top: 0.25rem;">
-                                <span style="color: var(--text-muted);">
-                                    <i class="fa-solid fa-layer-group"></i> {{ count($pConfig['models']) }} {{ __('մոդելներ') }}
-                                </span>
-                                @if(!empty($pConfig['doc_url']))
-                                    <a href="{{ $pConfig['doc_url'] }}" target="_blank" onclick="event.stopPropagation();" style="color: {{ $brandColor }}; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;">
-                                        {{ __('Console') }} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
-                                    </a>
-                                @endif
-                            </div>
                         </label>
                     @endforeach
                 </div>
 
-                <!-- Active Provider Detailed Fields Block -->
-                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.4rem; margin-bottom: 1.25rem;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-                        <h4 style="margin: 0; font-size: 1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fa-solid fa-sliders" style="color: #8b5cf6;"></i>
-                            <span>{{ __('Մոդելի և API Ինտեգրման Պարամետրեր') }}</span>
-                        </h4>
-
-                        <!-- Live Connection Test Button -->
-                        <button type="button" id="btnTestConnection" class="btn btn-secondary" style="border-radius: 10px; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem; display: inline-flex; align-items: center; gap: 0.4rem; border-color: rgba(139, 92, 246, 0.4); color: #8b5cf6;">
-                            <i class="fa-solid fa-bolt" id="testIcon"></i>
-                            <span id="testBtnText">{{ __('Ստուգել Կապը (Test)') }}</span>
-                        </button>
-                    </div>
-
-                    <!-- Test Result Notification Area -->
-                    <div id="testResultBox" style="display: none; border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.88rem; font-weight: 600;"></div>
-
+                <!-- Parameters Block -->
+                <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.4rem;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1.25rem;">
                         <!-- Model Selection Dropdown -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('AI Մոդել (Model Name)') }} <span style="color: #ef4444;">*</span>
                             </label>
-                            <div style="position: relative; display: flex; align-items: center;">
-                                <select name="ai_model" id="aiModelSelect" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                    <!-- Populated dynamically by JavaScript -->
-                                </select>
-                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
-                                    <i class="fa-solid fa-microchip"></i>
-                                </span>
-                            </div>
-                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;" id="modelHintText">
-                                {{ __('Ընտրեք նախընտրած մոդելը ըստ արագության և գնի') }}
-                            </span>
+                            <select name="ai_model" id="aiModelSelect" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
+                                <!-- Populated dynamically -->
+                            </select>
                         </div>
 
-                        <!-- Custom Model Input (shown if Custom selected) -->
+                        <!-- Custom Model Input -->
                         <div class="form-group" id="customModelGroup" style="display: none;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('Մոդելի Ճշգրիտ Կոդը (Custom Model Identifier)') }}
                             </label>
-                            <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="custom_model" id="customModelInput" value="{{ old('custom_model', $activeModel) }}" placeholder="օրինակ՝ deepseek-chat, gpt-4o, llama3.3:70b" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
-                                    <i class="fa-solid fa-terminal"></i>
-                                </span>
-                            </div>
-                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Նշեք մոդելի ճշգրիտ անունը համաձայն տվյալ պրովայդերի փաստաթղթերի') }}
-                            </span>
+                            <input type="text" name="custom_model" id="customModelInput" value="{{ old('custom_model', $activeModel) }}" placeholder="օրինակ՝ deepseek-chat, gpt-4o, llama3.3:70b" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
                         </div>
 
                         <!-- API Key Input -->
                         <div class="form-group" style="grid-column: 1 / -1;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin: 0;">
-                                    {{ __('API Բանալի (API Key / Secret Token)') }}
-                                </label>
-                                <span id="providerDocLinkWrapper">
-                                    <a href="#" id="providerDocLink" target="_blank" style="font-size: 0.78rem; font-weight: 600; color: #8b5cf6; text-decoration: none;">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> <span id="providerDocText">{{ __('Ստանալ API Key') }}</span>
-                                    </a>
-                                </span>
-                            </div>
-
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                {{ __('API Key') }}
+                            </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" name="ai_api_key" id="aiApiKeyInput" value="{{ old('ai_api_key', $savedApiKey) }}" placeholder="{{ $hasCustomKey ? '••••••••••••••••••••••••••••••••' : 'Տեղադրեք Ձեր API բանալին (օր․՝ sk-... կամ AIzaSy...)' }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 3.5rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
-                                    <i class="fa-solid fa-key"></i>
-                                </span>
-
-                                <button type="button" id="toggleApiKeyVisibility" style="position: absolute; right: 1rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 0.25rem;">
+                                <input type="password" name="ai_api_key" id="aiApiKeyInput" value="{{ old('ai_api_key', $savedApiKey) }}" placeholder="{{ $hasCustomKey ? '••••••••••••••••••••••••••••••••' : 'Լրացրեք սեփական API Key-ը կամ թողեք դատարկ համակարգայինի համար' }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 3rem 0.75rem 1rem; font-size: 0.95rem; font-family: monospace;">
+                                <button type="button" id="toggleApiKeyVisibility" style="position: absolute; right: 0.75rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem;">
                                     <i class="fa-solid fa-eye" id="eyeIcon"></i>
                                 </button>
                             </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.45rem; flex-wrap: wrap; gap: 0.5rem;">
-                                <span style="font-size: 0.78rem; color: var(--text-muted);" id="apiKeyNote">
-                                    @if($hasCustomKey)
-                                        <span style="color: #10b981; font-weight: 700;">✓ API Key-ը պահպանված է:</span> Նոր բանալի մուտքագրելու դեպքում այն կթարմացվի:
-                                    @else
-                                        Եթե բանալի չնշեք Gemini-ի դեպքում, կօգտագործվի համակարգային լռելյայն բանալին:
-                                    @endif
-                                </span>
-
-                                @if($hasCustomKey)
-                                    <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #ef4444; cursor: pointer;">
-                                        <input type="checkbox" name="clear_api_key" value="1" style="accent-color: #ef4444;">
-                                        <span>{{ __('Մաքրել պահպանված բանալին') }}</span>
-                                    </label>
-                                @endif
-                            </div>
                         </div>
 
-                        <!-- Base URL (Required for Custom/Ollama or optional for others) -->
-                        <div class="form-group" id="baseUrlGroup" style="grid-column: 1 / -1; display: none;">
+                        <!-- Base URL Input -->
+                        <div class="form-group" id="baseUrlGroup" style="grid-column: 1 / -1;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('API Base URL (Endpoint)') }}
+                                {{ __('Custom API Base URL (Ollama, vLLM կամ Proxy)') }}
                             </label>
-                            <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="ai_base_url" id="aiBaseUrlInput" value="{{ old('ai_base_url', $savedBaseUrl) }}" placeholder="օրինակ՝ http://localhost:11434/v1 կամ https://api.together.xyz/v1" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
-                                    <i class="fa-solid fa-network-wired"></i>
-                                </span>
-                            </div>
-                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Նշեք հատուկ սերվերի կամ տեղային Ollama/vLLM հասցեն (OpenAI-compatible /chat/completions):') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Informational Architecture Card -->
-                <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), rgba(59, 130, 246, 0.05)); border: 1px dashed rgba(139, 92, 246, 0.25); border-radius: 14px; padding: 1rem 1.25rem;">
-                    <div style="display: flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.35rem;">
-                        <i class="fa-solid fa-shield-halved" style="color: #8b5cf6;"></i>
-                        {{ __('Ինչպե՞ս է ապահովվում AI-ի անխափան աշխատանքը') }}
-                    </div>
-                    <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
-                        {{ __('• Եթե Ձեր ընտրած պրովայդերի քվոտան ավարտվի կամ ցանցային սխալ առաջանա, համակարգը չի խափանվի. AI Մատուցողն ու Մենյուի գեներատորն ավտոմատ կերպով կանցնեն համակարգային կրկնօրինակման (Fallback):') }}<br>
-                        {{ __('• Ֆայլերի և նկարների ճանաչման (Vision OCR) ժամանակ տեքստային պրովայդերների դեպքում համակարգն ավտոմատ կերպով օգտագործում է բարձր ճշգրտության Gemini Multimodal շարժիչը:') }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- SECTION 2: AI WAITER ADVISOR CONFIGURATION (MOVED HERE) -->
-            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card); position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);"></div>
-
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.9rem;">
-                        <span style="width: 44px; height: 44px; border-radius: 12px; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        </span>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                <span>{{ __('2. AI Մատուցող Խորհրդատու (AI Waiter & Sommelier)') }}</span>
-                                <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff; padding: 0.15rem 0.5rem; border-radius: 6px;">AI SOMMELIER</span>
-                            </h3>
-                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Անհատական խոհարարական առաջարկություններ, համահունչ խմիչքների զուգորդում և ինտերակտիվ ընտրություն հաճախորդի համար') }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.55rem 0.95rem; border-radius: 12px;">
-                        <input type="checkbox" name="ai_waiter_enabled" value="1" id="aiWaiterToggle" {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                        <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">
-                            {{ __('Միացնել AI Մատուցողը') }}
-                        </span>
-                    </label>
-                </div>
-
-                <div id="aiWaiterOptionsBlock" style="display: {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'block' : 'none' }};">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
-                        <!-- AI Մատուցողի անվանումը -->
-                        <div class="form-group">
-                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('AI Մատուցողի Անունը / Կերպարը') }}
-                            </label>
-                            <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="ai_waiter_name" id="aiWaiterNameInput" value="{{ old('ai_waiter_name', $vendor->ai_waiter_name ?? 'AI Մատուցող') }}" placeholder="Օրինակ՝ Ալեքս կամ Շեֆ Խորհրդատու" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
-                                    <i class="fa-solid fa-user-tie"></i>
-                                </span>
-                            </div>
-                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Այս անունով AI-ն կներկայանա հաճախորդին ողջույնի և խորհրդատվության ժամանակ') }}
-                            </span>
-                        </div>
-
-                        <!-- Ողջույնի տեքստ -->
-                        <div class="form-group">
-                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Ողջույնի Հատուկ Ուղերձ (ոչ պարտադիր)') }}
-                            </label>
-                            <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="ai_waiter_welcome_text" id="aiWaiterWelcomeInput" value="{{ old('ai_waiter_welcome_text', $vendor->ai_waiter_welcome_text) }}" placeholder="Օրինակ՝ Բարի գալուստ, ուրախ ենք Ձեզ տեսնել: Կօգնե՞մ ընտրել լավագույն ուտեստը:" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                <span style="position: absolute; left: 1rem; color: #8b5cf6; font-size: 1rem;">
-                                    <i class="fa-solid fa-comment-dots"></i>
-                                </span>
-                            </div>
-                            <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Եթե դատարկ է, կօգտագործվի ստանդարտ ջերմ ողջույնը') }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Առաջնահերթ Ինգրիդիենտներ (Priority Ingredients) -->
-                    <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
-                            <span>
-                                <i class="fa-solid fa-pepper-hot" style="color: #ef4444; margin-right: 0.35rem;"></i>
-                                {{ __('Առաջնահերթ Ինգրիդիենտներ (Բաղադրիչներ)') }}
-                            </span>
-                            <span style="font-size: 0.76rem; font-weight: 600; color: #8b5cf6; background: rgba(139, 92, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 6px;">
-                                {{ __('Խթանում AI Առաջարկներում') }}
-                            </span>
-                        </label>
-                        <textarea name="ai_waiter_priority_ingredients" id="aiWaiterPriorityInput" rows="3" class="form-control" placeholder="Օրինակ՝ Սաղմոն, Տրյուֆել, Black Angus, Ծովախեցգետին, Պիստակ, Ավոկադո" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.92rem; font-weight: 500; resize: vertical;">{{ old('ai_waiter_priority_ingredients', $vendor->ai_waiter_priority_ingredients) }}</textarea>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">
-                                <i class="fa-solid fa-circle-info" style="color: #8b5cf6;"></i>
-                                {{ __('Մուտքագրեք ստորակետով անջատված: Այս բաղադրիչներով պատրաստված ուտեստներին AI-ն կտա բարձր առաջնահերթություն:') }}
-                            </span>
-                            @if(!empty($vendor->getAiWaiterPriorityIngredientsList()))
-                                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-                                    @foreach($vendor->getAiWaiterPriorityIngredientsList() as $ing)
-                                        <span style="font-size: 0.72rem; font-weight: 700; background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; padding: 0.15rem 0.45rem;">
-                                            #{{ $ing }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Live Waiter Preview Simulation Card -->
-                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                            <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
-                                <i class="fa-solid fa-eye" style="color: #8b5cf6;"></i> {{ __('Ինչպես է տեսնում հաճախորդը (Live Preview)') }}
-                            </span>
-                            <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 6px;">
-                                {{ __('Մենյուի Վիջեթ') }}
-                            </span>
-                        </div>
-
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.15rem; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                                <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);">
-                                    <i class="fa-solid fa-sparkles"></i>
-                                </div>
-                                <div>
-                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);" id="previewWaiterName">
-                                        {{ $vendor->ai_waiter_name ?? 'AI Մատուցող' }}
-                                    </div>
-                                    <div style="font-size: 0.75rem; color: #10b981; display: flex; align-items: center; gap: 0.3rem;">
-                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                                        <span>{{ __('Օնլայն • Պատրաստ է առաջարկել') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="background: var(--bg-body); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.88rem; color: var(--text-main); line-height: 1.45; border-left: 3px solid #8b5cf6;" id="previewWelcomeMessage">
-                                {{ $vendor->ai_waiter_welcome_text ?: 'Բարի գալուստ: Ես Ձեր խելացի մատուցողն եմ: Ի՞նչ կցանկանայիք փորձել այսօր:' }}
-                            </div>
-
-                            <div style="display: flex; gap: 0.4rem; margin-top: 0.75rem; flex-wrap: wrap;">
-                                <span style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 0.25rem 0.6rem; border-radius: 999px; font-weight: 600;">
-                                    🥩 Մսային ուտեստներ
-                                </span>
-                                <span style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 0.25rem 0.6rem; border-radius: 999px; font-weight: 600;">
-                                    🥗 Թեթև & Դիետիկ
-                                </span>
-                                <span style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 0.25rem 0.6rem; border-radius: 999px; font-weight: 600;">
-                                    🍷 Խմիչքների ընտրություն
-                                </span>
-                            </div>
+                            <input type="url" name="ai_base_url" id="aiBaseUrlInput" value="{{ old('ai_base_url', $savedBaseUrl) }}" placeholder="http://localhost:11434/v1" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.92rem; font-family: monospace;">
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Bottom Action Bar -->
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; padding: 1rem 0; margin-bottom: 2rem;">
-                <a href="{{ route('admin.settings.index') }}" class="btn btn-secondary" style="border-radius: 12px; padding: 0.75rem 1.4rem; font-weight: 600;">
-                    {{ __('Չեղարկել') }}
-                </a>
-                <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.75rem 1.75rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; color: #fff;">
-                    <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել AI Կարգավորումները') }}
-                </button>
-            </div>
+        <!-- Sticky Save Bar -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; padding: 1.25rem 0; margin-bottom: 2rem;">
+            <a href="{{ route('admin.settings.index') }}" class="btn btn-secondary" style="border-radius: 12px; padding: 0.75rem 1.4rem; font-weight: 600;">
+                {{ __('Չեղարկել') }}
+            </a>
+            <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.75rem 1.75rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; color: #fff;">
+                <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել AI Կարգավորումները') }}
+            </button>
         </div>
     </form>
 </div>
 
-<!-- Dynamic Script for Provider Switching, Model Selection, and Live Connection Testing -->
+<style>
+.tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.65rem 1rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+.tab-btn:hover {
+    color: var(--text-main);
+}
+.tab-btn.active-tab {
+    color: #8b5cf6;
+    border-bottom-color: #8b5cf6;
+}
+</style>
+
 <script>
+function switchAiTab(tabId, btn) {
+    document.querySelectorAll('.ai-tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active-tab'));
+    const target = document.getElementById(tabId);
+    if (target) target.style.display = 'block';
+    if (btn) btn.classList.add('active-tab');
+}
+
+// Add Promoted Product Row
+let promotedIdx = {{ count($aiWaiterConfig['promoted_products'] ?? []) }};
+const productsList = @json($products);
+function addPromotedProductRow() {
+    const emptyRow = document.getElementById('emptyPromotedRow');
+    if (emptyRow) emptyRow.remove();
+
+    const tbody = document.getElementById('promotedProductsTbody');
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border-color)';
+
+    let opts = '';
+    productsList.forEach(p => {
+        opts += `<option value="${p.id}">${p.name} (${Number(p.price).toLocaleString()} {{ $vendor->currency }})</option>`;
+    });
+
+    tr.innerHTML = `
+        <td style="padding: 0.65rem 1rem;">
+            <select name="promoted_products[${promotedIdx}][product_id]" class="form-control" style="width: 100%; background: var(--bg-card); font-size: 0.88rem;">
+                ${opts}
+            </select>
+        </td>
+        <td style="padding: 0.65rem 1rem;">
+            <input type="number" name="promoted_products[${promotedIdx}][priority]" value="90" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+        </td>
+        <td style="padding: 0.65rem 1rem; text-align: center;">
+            <input type="checkbox" name="promoted_products[${promotedIdx}][active]" value="1" checked style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+        </td>
+        <td style="padding: 0.65rem 1rem; text-align: right;">
+            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    promotedIdx++;
+}
+
+// Add Preferred Ingredient Row
+let ingredientIdx = {{ count($vendor->getAiPreferredIngredients()) }};
+function addPreferredIngredientRow() {
+    const emptyRow = document.getElementById('emptyIngredientRow');
+    if (emptyRow) emptyRow.remove();
+
+    const tbody = document.getElementById('preferredIngredientsTbody');
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border-color)';
+
+    tr.innerHTML = `
+        <td style="padding: 0.65rem 1rem;">
+            <input type="text" name="preferred_ingredients[${ingredientIdx}][ingredient]" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="background: var(--bg-card); width: 100%; font-weight: 600;">
+        </td>
+        <td style="padding: 0.65rem 1rem;">
+            <input type="number" name="preferred_ingredients[${ingredientIdx}][priority]" value="80" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+        </td>
+        <td style="padding: 0.65rem 1rem; text-align: center;">
+            <input type="checkbox" name="preferred_ingredients[${ingredientIdx}][active]" value="1" checked style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+        </td>
+        <td style="padding: 0.65rem 1rem; text-align: right;">
+            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    ingredientIdx++;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const providersData = @json($providers);
     let currentProvider = "{{ $activeProviderKey }}";
@@ -484,25 +932,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const baseUrlGroup = document.getElementById('baseUrlGroup');
     const baseUrlInput = document.getElementById('aiBaseUrlInput');
     const apiKeyInput = document.getElementById('aiApiKeyInput');
-    const providerDocLink = document.getElementById('providerDocLink');
-    const providerDocText = document.getElementById('providerDocText');
-    const providerDocLinkWrapper = document.getElementById('providerDocLinkWrapper');
-    const headerProviderName = document.getElementById('headerProviderName');
-    const headerModelName = document.getElementById('headerModelName');
 
-    // AI Waiter Toggle and Live Preview
-    const aiWaiterToggle = document.getElementById('aiWaiterToggle');
-    const aiWaiterOptionsBlock = document.getElementById('aiWaiterOptionsBlock');
     const aiWaiterNameInput = document.getElementById('aiWaiterNameInput');
     const aiWaiterWelcomeInput = document.getElementById('aiWaiterWelcomeInput');
     const previewWaiterName = document.getElementById('previewWaiterName');
     const previewWelcomeMessage = document.getElementById('previewWelcomeMessage');
-
-    if (aiWaiterToggle && aiWaiterOptionsBlock) {
-        aiWaiterToggle.addEventListener('change', function() {
-            aiWaiterOptionsBlock.style.display = this.checked ? 'block' : 'none';
-        });
-    }
 
     if (aiWaiterNameInput && previewWaiterName) {
         aiWaiterNameInput.addEventListener('input', function() {
@@ -512,11 +946,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (aiWaiterWelcomeInput && previewWelcomeMessage) {
         aiWaiterWelcomeInput.addEventListener('input', function() {
-            previewWelcomeMessage.textContent = this.value.trim() || 'Բարի գալուստ: Ես Ձեր խելացի մատուցողն եմ: Ի՞նչ կցանկանայիք փորձել այսօր:';
+            previewWelcomeMessage.textContent = this.value.trim() || 'Բարի գալուստ: Ես Ձեր AI մատուցողն եմ: Կօգնեմ ընտրել հենց այն, ինչ Ձեզ դուր կգա:';
         });
     }
 
-    // Toggle API Key visibility
     const toggleApiKeyVisibility = document.getElementById('toggleApiKeyVisibility');
     const eyeIcon = document.getElementById('eyeIcon');
     if (toggleApiKeyVisibility && apiKeyInput) {
@@ -531,15 +964,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Render models for selected provider
     function updateProviderUI(providerKey, keepExistingModel = false) {
         const config = providersData[providerKey];
         if (!config) return;
 
         currentProvider = providerKey;
-        if (headerProviderName) headerProviderName.textContent = config.name;
 
-        // Update provider cards styles
         document.querySelectorAll('.provider-card').forEach(card => {
             const radio = card.querySelector('.provider-radio');
             if (radio && radio.value === providerKey) {
@@ -551,8 +981,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Populate models dropdown
         modelSelect.innerHTML = '';
+        let foundSelected = false;
         Object.entries(config.models).forEach(([mCode, mLabel]) => {
             const opt = document.createElement('option');
             opt.value = mCode;
@@ -567,56 +997,37 @@ document.addEventListener('DOMContentLoaded', function() {
             modelSelect.appendChild(opt);
         });
 
-        // Add Custom Model option
         const customOpt = document.createElement('option');
         customOpt.value = 'custom';
         customOpt.textContent = '✨ Այլ մոդել (Custom Model)...';
         if (keepExistingModel && !foundSelected && currentModel) {
             customOpt.selected = true;
             customModelInput.value = currentModel;
-            foundSelected = true;
         }
         modelSelect.appendChild(customOpt);
 
         handleModelSelectChange();
 
-        // Doc link
-        if (config.doc_url) {
-            providerDocLinkWrapper.style.display = 'inline-block';
-            providerDocLink.href = config.doc_url;
-            providerDocText.textContent = 'Ստանալ ' + config.name + ' API Key';
-        } else {
-            providerDocLinkWrapper.style.display = 'none';
-        }
-
-        // Show/hide Base URL input (Custom, or optional override)
         if (providerKey === 'custom') {
             baseUrlGroup.style.display = 'block';
             if (!baseUrlInput.value) {
-                baseUrlInput.value = config.base_url || 'http://localhost:11434/v1';
+                baseUrlInput.value = config.default_base_url || 'http://localhost:11434/v1';
             }
         } else {
             baseUrlGroup.style.display = 'block';
-            baseUrlInput.placeholder = config.base_url ? `Լռելյայն՝ ${config.base_url}` : 'Լռելյայն API host';
+            baseUrlInput.placeholder = config.default_base_url ? `Լռելյայն՝ ${config.default_base_url}` : 'Լռելյայն API host';
         }
     }
 
     function handleModelSelectChange() {
         if (modelSelect.value === 'custom') {
             customModelGroup.style.display = 'block';
-            if (headerModelName) headerModelName.textContent = customModelInput.value.trim() || 'Custom';
         } else {
             customModelGroup.style.display = 'none';
-            if (headerModelName) headerModelName.textContent = modelSelect.value;
         }
     }
 
     modelSelect.addEventListener('change', handleModelSelectChange);
-    customModelInput.addEventListener('input', function() {
-        if (modelSelect.value === 'custom' && headerModelName) {
-            headerModelName.textContent = this.value.trim() || 'Custom';
-        }
-    });
 
     providerRadios.forEach(radio => {
         radio.addEventListener('change', function() {
@@ -626,7 +1037,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize UI on load
     updateProviderUI(currentProvider, true);
 
     // Live Connection Test AJAX
@@ -644,7 +1054,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const apiKey = apiKeyInput.value.trim();
         const baseUrl = baseUrlInput.value.trim();
 
-        // UI Loading state
         btnTest.disabled = true;
         testIcon.className = 'fa-solid fa-spinner fa-spin';
         testBtnText.textContent = 'Ստուգվում է...';
@@ -668,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             btnTest.disabled = false;
             testIcon.className = 'fa-solid fa-bolt';
-            testBtnText.textContent = 'Ստուգել Կապը (Test)';
+            testBtnText.textContent = 'Ստուգել Կապը (Test Connection)';
 
             testResultBox.style.display = 'block';
             if (data.success) {
@@ -704,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => {
             btnTest.disabled = false;
             testIcon.className = 'fa-solid fa-bolt';
-            testBtnText.textContent = 'Ստուգել Կապը (Test)';
+            testBtnText.textContent = 'Ստուգել Կապը (Test Connection)';
 
             testResultBox.style.display = 'block';
             testResultBox.style.background = 'rgba(239, 68, 68, 0.12)';

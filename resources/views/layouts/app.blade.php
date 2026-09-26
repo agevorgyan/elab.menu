@@ -106,6 +106,15 @@
             -webkit-text-size-adjust: 100%;
         }
 
+        /* SVG & Pagination Containment */
+        nav[role="navigation"] svg, svg.w-5, svg.h-5 {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+            max-width: 20px !important;
+            max-height: 20px !important;
+            display: inline-block;
+        }
+
         body {
             background-color: var(--bg-body);
             color: var(--text-main);

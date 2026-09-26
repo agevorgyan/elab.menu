@@ -57,6 +57,19 @@
     </button>
 </div>
 
+<!-- Audio Permission / Activation Prompt (Shown only if browser requires user gesture to allow sound) -->
+<div id="audioUnlockBanner" style="display: none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); color: #f59e0b; padding: 0.75rem 1.25rem; border-radius: 14px; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-volume-high" style="font-size: 1.1rem;"></i>
+        <div style="font-size: 0.85rem;">
+            <strong>Ծանուցումների ձայն․</strong> Բրաուզերում նոր պատվերների ձայնն ակտիվացնելու համար սեղմեք կոճակը։
+        </div>
+    </div>
+    <button type="button" onclick="enableAndTestAudio()" class="btn btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.8rem; border-radius: 10px;">
+        <i class="fa-solid fa-bell"></i> Ակտիվացնել Ձայնը
+    </button>
+</div>
+
 <!-- Filters Bar -->
 <div class="card" style="padding: 0.85rem 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
     <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
@@ -192,56 +205,103 @@ function toggleKitchenSound() {
     }
 }
 
+// Audio Context Setup with Autoplay Safeguards
+function getAudioContext() {
+    if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    return audioCtx;
+}
+
+function unlockAudio() {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+            const banner = document.getElementById('audioUnlockBanner');
+            if (banner) banner.style.display = 'none';
+        }).catch(err => {
+            console.warn('Audio resume note:', err);
+        });
+    } else if (ctx && ctx.state === 'running') {
+        const banner = document.getElementById('audioUnlockBanner');
+        if (banner) banner.style.display = 'none';
+    }
+}
+
+function checkAudioStatus() {
+    try {
+        const ctx = getAudioContext();
+        if (ctx && ctx.state === 'suspended') {
+            const banner = document.getElementById('audioUnlockBanner');
+            if (banner) banner.style.display = 'flex';
+        }
+    } catch (e) {
+        console.warn('Audio status check:', e);
+    }
+}
+
+function enableAndTestAudio() {
+    unlockAudio();
+    playKitchenChime(true);
+    const banner = document.getElementById('audioUnlockBanner');
+    if (banner) banner.style.display = 'none';
+}
+
+// Unlock audio on any user gesture anywhere on screen
+['click', 'touchstart', 'pointerdown', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, unlockAudio, { passive: true });
+});
+
 // Crisp Restaurant Bell Chime using Web Audio API (No external file needed)
 function playKitchenChime(force = false) {
     if (!isSoundEnabled && !force) return;
 
     try {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) return;
+        const ctx = getAudioContext();
+        if (!ctx) return;
 
-        if (!audioCtx) {
-            audioCtx = new AudioContextClass();
-        }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
         }
 
-        const now = audioCtx.currentTime;
+        const now = ctx.currentTime;
 
         // Tone 1: High crisp chime (E5 - 659.25Hz)
-        const osc1 = audioCtx.createOscillator();
-        const gain1 = audioCtx.createGain();
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
         osc1.type = 'sine';
         osc1.frequency.setValueAtTime(659.25, now);
         gain1.gain.setValueAtTime(0.4, now);
         gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
         osc1.connect(gain1);
-        gain1.connect(audioCtx.destination);
+        gain1.connect(ctx.destination);
         osc1.start(now);
         osc1.stop(now + 0.9);
 
         // Tone 2: Harmonic Brass Ding (B5 - 987.77Hz)
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
         osc2.type = 'triangle';
         osc2.frequency.setValueAtTime(987.77, now + 0.12);
         gain2.gain.setValueAtTime(0.5, now + 0.12);
         gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
         osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
+        gain2.connect(ctx.destination);
         osc2.start(now + 0.12);
         osc2.stop(now + 1.4);
 
         // Tone 3: Rich Octave resonance (E6 - 1318.5Hz)
-        const osc3 = audioCtx.createOscillator();
-        const gain3 = audioCtx.createGain();
+        const osc3 = ctx.createOscillator();
+        const gain3 = ctx.createGain();
         osc3.type = 'sine';
         osc3.frequency.setValueAtTime(1318.5, now + 0.25);
         gain3.gain.setValueAtTime(0.35, now + 0.25);
         gain3.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
         osc3.connect(gain3);
-        gain3.connect(audioCtx.destination);
+        gain3.connect(ctx.destination);
         osc3.start(now + 0.25);
         osc3.stop(now + 1.6);
 
@@ -249,17 +309,6 @@ function playKitchenChime(force = false) {
         console.warn('Audio Context notification failed:', e);
     }
 }
-
-// Unlock audio on first user click anywhere on page
-document.addEventListener('click', function unlockAudio() {
-    if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) audioCtx = new AudioContextClass();
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
-}, { once: true });
 
 function dismissNewOrderBanner() {
     document.getElementById('newOrderBanner').style.display = 'none';
@@ -614,41 +663,33 @@ function printViaBrowser() {
     if (!currentReceiptText) return;
 
     const printWin = window.open('', '_blank', 'width=380,height=600');
-    printWin.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Receipt ${currentReceiptOrderNumber}</title>
-            <style>
-                @page { margin: 0; size: auto; }
-                body {
-                    font-family: 'Courier New', Courier, monospace;
-                    font-size: 12px;
-                    line-height: 1.35;
-                    margin: 8px;
-                    padding: 0;
-                    color: #000;
-                    width: 76mm;
-                }
-                pre {
-                    white-space: pre-wrap;
-                    word-break: break-word;
-                    margin: 0;
-                }
-            </style>
-        </head>
-        <body>
-            <pre>${currentReceiptText}</pre>
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() { window.close(); }, 500);
-                };
-            <\/script>
-        </body>
-        </html>
-    `);
-    printWin.document.close();
+    if (!printWin) {
+        alert('Խնդրում ենք թույլատրել pop-up պատուհանները տպելու համար:');
+        return;
+    }
+
+    try {
+        printWin.document.title = 'Receipt ' + (currentReceiptOrderNumber || '');
+        const style = printWin.document.createElement('style');
+        style.textContent = '@page { margin: 0; size: auto; } body { font-family: "Courier New", Courier, monospace; font-size: 12px; line-height: 1.35; margin: 8px; padding: 0; color: #000; width: 76mm; } pre { white-space: pre-wrap; word-break: break-word; margin: 0; }';
+        printWin.document.head.appendChild(style);
+
+        const pre = printWin.document.createElement('pre');
+        pre.textContent = currentReceiptText;
+        printWin.document.body.appendChild(pre);
+
+        printWin.focus();
+        setTimeout(() => {
+            try {
+                printWin.print();
+                printWin.close();
+            } catch (e) {
+                console.error('Print dialog error:', e);
+            }
+        }, 400);
+    } catch (e) {
+        console.error('Failed to prepare print window:', e);
+    }
 }
 
 async function printViaBluetooth() {
@@ -710,6 +751,7 @@ async function printViaBluetooth() {
 document.addEventListener('DOMContentLoaded', () => {
     initEcho();
     startPollingTimer();
+    checkAudioStatus();
 });
 </script>
 @endsection

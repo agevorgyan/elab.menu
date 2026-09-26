@@ -45,7 +45,7 @@ class OrderController extends Controller
         $orders = $this->orderService->getOrders($activeLocationId, $status);
         $latestOrderId = $this->orderService->getLatestOrderId($activeLocationId);
         $pendingCount = $this->orderService->getPendingOrdersCount($activeLocationId);
-        
+
         $waiterCalls = $this->orderService->getPendingWaiterCalls($activeLocationId);
         $waiterCallsCount = $waiterCalls->count();
         $waiterCallsHtml = view('admin.orders.partials.waiter_call_cards', compact('waiterCalls'))->render();

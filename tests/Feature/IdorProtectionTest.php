@@ -2,11 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\MenuBuilderController;
-use App\Http\Controllers\OrderController;
-use App\Http\Requests\UpdateCategoryRequest;
-use App\Http\Requests\UpdateOrderStatusRequest;
-use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\Order;
@@ -16,8 +11,6 @@ use App\Models\User;
 use App\Models\Vendor;
 use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class IdorProtectionTest extends TestCase
@@ -217,4 +210,3 @@ class IdorProtectionTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'staff@test.com']);
     }
 }
-

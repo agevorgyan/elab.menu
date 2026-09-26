@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\BelongsToVendor;
+use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -165,7 +166,7 @@ class Product extends Model
         if ($timezone) {
             $tz = $timezone;
         } else {
-            $tenant = app(\App\Services\TenantContext::class)->getTenant();
+            $tenant = app(TenantContext::class)->getTenant();
             if ($tenant && $tenant->id === $this->vendor_id) {
                 $tz = $tenant->timezone ?? 'Asia/Yerevan';
             } else {

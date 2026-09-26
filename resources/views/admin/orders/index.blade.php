@@ -283,6 +283,12 @@ async function fetchKitchenFeed(silent = false) {
         });
 
         if (res.ok) {
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") === -1) {
+                console.warn('Session expired or HTML returned, reloading...');
+                window.location.reload();
+                return;
+            }
             const data = await res.json();
             if (data.success) {
                 // If new order arrived
@@ -298,9 +304,9 @@ async function fetchKitchenFeed(silent = false) {
                     }
 
                     // Update Title with Alert
-                    document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ! - {{ $vendor->name }}`;
+                    document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ! - ${@json($vendor->name)}`;
                     setTimeout(() => {
-                        document.title = 'Live Kitchen Orders - {{ $vendor->name }}';
+                        document.title = 'Live Kitchen Orders - ' + @json($vendor->name);
                     }, 8000);
                 }
 
@@ -419,11 +425,11 @@ function initEcho() {
             return;
         }
 
-        const reverbKey = '{{ config("broadcasting.connections.reverb.key") ?? env("REVERB_APP_KEY", "") }}';
+        const reverbKey = @json(config("broadcasting.connections.reverb.key") ?? env("REVERB_APP_KEY", ""));
         // Auto-match browser hostname (handles localhost, 127.0.0.1, or remote domain seamlessly)
-        const reverbHost = window.location.hostname || '{{ config("broadcasting.connections.reverb.options.host") ?? env("REVERB_HOST", "localhost") }}';
+        const reverbHost = window.location.hostname || @json(config("broadcasting.connections.reverb.options.host") ?? env("REVERB_HOST", "localhost"));
         const reverbPort = {{ config("broadcasting.connections.reverb.options.port") ?? env("REVERB_PORT", 8080) }};
-        const reverbScheme = window.location.protocol === 'https:' ? 'https' : '{{ config("broadcasting.connections.reverb.options.scheme") ?? env("REVERB_SCHEME", "http") }}';
+        const reverbScheme = window.location.protocol === 'https:' ? 'https' : @json(config("broadcasting.connections.reverb.options.scheme") ?? env("REVERB_SCHEME", "http"));
 
         window.Echo = new Echo({
             broadcaster: 'reverb',
@@ -443,7 +449,7 @@ function initEcho() {
         });
 
         // Listen on vendor's private channel
-        window.Echo.private('vendor.{{ $vendor->id }}')
+        window.Echo.private(`vendor.${@json($vendor->id)}`)
             .listen('.OrderCreated', (data) => {
                 handleWebSocketOrderCreated(data);
             })
@@ -543,7 +549,7 @@ function handleWebSocketOrderCreated(data) {
     }
     document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ #${data.order_number}!`;
     setTimeout(() => {
-        document.title = 'Live Kitchen Orders - {{ $vendor->name }}';
+        document.title = 'Live Kitchen Orders - ' + @json($vendor->name);
     }, 8000);
     @if(!empty($vendor->getThermalPrinterSettings()['auto_print_live_orders']))
     if (data.order_id) {
@@ -575,6 +581,11 @@ async function printOrderReceipt(orderId, isAuto = false) {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") === -1) {
+            alert('Session expired or error occurred.');
+            return;
+        }
         const data = await res.json();
         if (data.success) {
             currentReceiptText = data.receipt_text;

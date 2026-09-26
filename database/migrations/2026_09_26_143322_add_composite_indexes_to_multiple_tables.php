@@ -15,10 +15,10 @@ return new class extends Migration
 
         foreach ($tables as $tableName) {
             if (Schema::hasTable($tableName)) {
-                Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                Schema::table($tableName, function (Blueprint $table) {
                     try {
                         $table->index(['vendor_id', 'location_id']);
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // Index might already exist
                     }
                 });
@@ -35,10 +35,10 @@ return new class extends Migration
 
         foreach ($tables as $tableName) {
             if (Schema::hasTable($tableName)) {
-                Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                Schema::table($tableName, function (Blueprint $table) {
                     try {
                         $table->dropIndex(['vendor_id', 'location_id']);
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // Index might not exist
                     }
                 });

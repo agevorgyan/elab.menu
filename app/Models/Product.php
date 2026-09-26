@@ -18,6 +18,15 @@ class Product extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Product $product) {
+            if ($product->category_id && $product->vendor_id) {
+                $category = Category::withoutGlobalScopes()->find($product->category_id);
+                if ($category && (int) $category->vendor_id !== (int) $product->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor category assignment forbidden.');
+                }
+            }
+        });
+
         static::deleting(function (Product $product) {
             $product->deleteImageFile();
         });
@@ -30,7 +39,15 @@ class Product extends Model
     {
         $raw = $this->getRawOriginal('image');
         if (! empty($raw) && ! str_contains($raw, 'default-dish') && ! str_starts_with($raw, 'http://') && ! str_starts_with($raw, 'https://')) {
+            if (str_contains($raw, '..')) {
+                return;
+            }
+
             $path = ltrim(str_replace('/storage/', '', $raw), '/');
+            if (! str_starts_with($path, 'products/')) {
+                return;
+            }
+
             if (! empty($path) && Storage::disk('public')->exists($path)) {
                 Storage::disk('public')->delete($path);
             }

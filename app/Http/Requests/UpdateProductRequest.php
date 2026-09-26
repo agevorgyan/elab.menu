@@ -7,6 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -20,13 +21,13 @@ class UpdateProductRequest extends FormRequest
         }
 
         $product = $this->route('product');
-        if ($product && $product->vendor_id !== Auth::user()->vendor_id) {
+        if ($product && (int) $product->vendor_id !== (int) Auth::user()->vendor_id) {
             return false;
         }
 
         if ($this->filled('category_id')) {
-            $category = Category::withoutGlobalScopes()->find($this->input('category_id'));
-            if (! $category || $category->vendor_id !== Auth::user()->vendor_id) {
+            $category = Category::find($this->input('category_id'));
+            if (! $category || (int) $category->vendor_id !== (int) Auth::user()->vendor_id) {
                 return false;
             }
         }
@@ -73,7 +74,7 @@ class UpdateProductRequest extends FormRequest
             }];
 
         return [
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => ['required', Rule::exists('categories', 'id')->where('vendor_id', Auth::user()?->vendor_id)],
             'name' => 'required|string|max:255',
             'hy_name' => 'nullable|string',
             'ru_name' => 'nullable|string',

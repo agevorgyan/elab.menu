@@ -45,6 +45,18 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->location_id && $user->vendor_id) {
+                $location = Location::withoutGlobalScopes()->find($user->location_id);
+                if ($location && (int) $location->vendor_id !== (int) $user->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor location assigned to user.');
+                }
+            }
+        });
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

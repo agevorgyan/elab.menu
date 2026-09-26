@@ -19,10 +19,20 @@ trait BelongsToVendor
         static::addGlobalScope(new TenantScope);
 
         static::creating(function (Model $model) {
-            if (empty($model->vendor_id)) {
-                $tenantId = app(TenantContext::class)->getTenantId();
-                if ($tenantId !== null) {
-                    $model->vendor_id = $tenantId;
+            $tenantId = app(TenantContext::class)->getTenantId();
+            if ($tenantId !== null) {
+                if (! empty($model->vendor_id) && (int) $model->vendor_id !== (int) $tenantId) {
+                    throw new \InvalidArgumentException('Cross-tenant entity creation forbidden.');
+                }
+                $model->vendor_id = $tenantId;
+            }
+        });
+
+        static::updating(function (Model $model) {
+            $tenantId = app(TenantContext::class)->getTenantId();
+            if ($tenantId !== null && $model->isDirty('vendor_id')) {
+                if ((int) $model->vendor_id !== (int) $tenantId) {
+                    throw new \InvalidArgumentException('Cross-tenant entity transfer forbidden.');
                 }
             }
         });

@@ -35,6 +35,13 @@ class TwoFactorController extends Controller
         }
 
         $customVendor = $tenantContext->getTenant();
+        if ($customVendor && ! $user->isSuperAdmin() && (int) $user->vendor_id !== (int) $customVendor->id) {
+            session()->forget(['login.2fa.user_id', 'login.2fa.remember']);
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Այս կառավարման վահանակը նախատեսված է միայն '.$customVendor->name.' ռեստորանի անձնակազմի համար։',
+            ]);
+        }
 
         return view('auth.two_factor_challenge', compact('user', 'customVendor'));
     }

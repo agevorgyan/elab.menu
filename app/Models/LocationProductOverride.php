@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToVendor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 class LocationProductOverride extends Model
 {
-    use HasFactory;
+    use BelongsToVendor, HasFactory;
 
     protected $fillable = [
+        'vendor_id',
         'location_id',
         'product_id',
         'override_price',
@@ -20,6 +23,33 @@ class LocationProductOverride extends Model
         'override_price' => 'decimal:2',
         'is_available' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (LocationProductOverride $override): void {
+            $product = $override->product ?? Product::withoutGlobalScopes()->find($override->product_id);
+            $location = $override->location ?? Location::withoutGlobalScopes()->find($override->location_id);
+
+            if ($product && empty($override->vendor_id)) {
+                $override->vendor_id = $product->vendor_id;
+            }
+
+            if ($location && empty($override->vendor_id)) {
+                $override->vendor_id = $location->vendor_id;
+            }
+
+            if ($product && $location) {
+                if (
+                    (int) $product->vendor_id !== (int) $location->vendor_id ||
+                    (int) $override->vendor_id !== (int) $product->vendor_id
+                ) {
+                    throw new InvalidArgumentException(
+                        "Tenant isolation violation: LocationProductOverride vendor_id ({$override->vendor_id}), location vendor_id ({$location->vendor_id}), and product vendor_id ({$product->vendor_id}) must match."
+                    );
+                }
+            }
+        });
+    }
 
     public function location()
     {

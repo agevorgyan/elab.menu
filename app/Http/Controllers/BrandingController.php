@@ -14,6 +14,8 @@ class BrandingController extends Controller
     public function index()
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
+
         $templates = MenuTemplate::where('is_active', true)->get();
 
         return view('admin.branding.index', compact('vendor', 'templates'));
@@ -22,6 +24,7 @@ class BrandingController extends Controller
     public function update(Request $request)
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
 
         $imageRule = extension_loaded('fileinfo')
             ? ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120']
@@ -57,9 +60,9 @@ class BrandingController extends Controller
 
         if ($request->hasFile('logo_file') && $request->file('logo_file')->isValid()) {
             try {
-                if (! empty($vendor->logo) && ! str_starts_with($vendor->logo, 'http://') && ! str_starts_with($vendor->logo, 'https://')) {
+                if (! empty($vendor->logo) && ! str_starts_with($vendor->logo, 'http://') && ! str_starts_with($vendor->logo, 'https://') && ! str_contains($vendor->logo, '..')) {
                     $oldLogoPath = ltrim(str_replace('/storage/', '', $vendor->logo), '/');
-                    if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
+                    if ($oldLogoPath && str_starts_with($oldLogoPath, 'branding/') && Storage::disk('public')->exists($oldLogoPath)) {
                         Storage::disk('public')->delete($oldLogoPath);
                     }
                 }
@@ -76,9 +79,9 @@ class BrandingController extends Controller
 
         if ($request->hasFile('cover_file') && $request->file('cover_file')->isValid()) {
             try {
-                if (! empty($vendor->cover_image) && ! str_starts_with($vendor->cover_image, 'http://') && ! str_starts_with($vendor->cover_image, 'https://')) {
+                if (! empty($vendor->cover_image) && ! str_starts_with($vendor->cover_image, 'http://') && ! str_starts_with($vendor->cover_image, 'https://') && ! str_contains($vendor->cover_image, '..')) {
                     $oldCoverPath = ltrim(str_replace('/storage/', '', $vendor->cover_image), '/');
-                    if ($oldCoverPath && Storage::disk('public')->exists($oldCoverPath)) {
+                    if ($oldCoverPath && str_starts_with($oldCoverPath, 'branding/') && Storage::disk('public')->exists($oldCoverPath)) {
                         Storage::disk('public')->delete($oldCoverPath);
                     }
                 }

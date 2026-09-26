@@ -53,6 +53,22 @@ class PaymentAttempt extends Model
                 $attempt->expires_at = now()->addMinutes(30);
             }
         });
+
+        static::saving(function (PaymentAttempt $attempt): void {
+            if ($attempt->order_id && $attempt->vendor_id) {
+                $order = Order::withoutGlobalScopes()->find($attempt->order_id);
+                if ($order && (int) $order->vendor_id !== (int) $attempt->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor order attached to payment attempt.');
+                }
+            }
+
+            if ($attempt->subscription_id && $attempt->vendor_id) {
+                $sub = SubscriptionPayment::withoutGlobalScopes()->find($attempt->subscription_id);
+                if ($sub && (int) $sub->vendor_id !== (int) $attempt->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor subscription attached to payment attempt.');
+                }
+            }
+        });
     }
 
     public function vendor(): BelongsTo

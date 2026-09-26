@@ -45,6 +45,25 @@ class Order extends Model
         'marketing_opt_in' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Order $order) {
+            if ($order->location_id && $order->vendor_id) {
+                $location = Location::withoutGlobalScopes()->find($order->location_id);
+                if ($location && (int) $location->vendor_id !== (int) $order->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor location assigned to order.');
+                }
+            }
+
+            if ($order->customer_id && $order->vendor_id) {
+                $customer = Customer::withoutGlobalScopes()->find($order->customer_id);
+                if ($customer && (int) $customer->vendor_id !== (int) $order->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor customer attached to order.');
+                }
+            }
+        });
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

@@ -8,12 +8,12 @@ use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Allergen;
 use App\Models\Category;
-use App\Models\Location;
 use App\Models\Product;
 use App\Services\MenuManagementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class MenuBuilderController extends Controller
@@ -38,6 +38,8 @@ class MenuBuilderController extends Controller
 
     public function storeCategory(StoreCategoryRequest $request)
     {
+        $this->authorize('create', Category::class);
+
         $validated = $request->validated();
 
         $this->menuService->createCategory(Auth::user()->vendor, $validated);
@@ -47,6 +49,7 @@ class MenuBuilderController extends Controller
 
     public function updateCategory(UpdateCategoryRequest $request, Category $category)
     {
+        $this->authorize('update', $category);
 
         $validated = $request->validated();
 
@@ -57,6 +60,7 @@ class MenuBuilderController extends Controller
 
     public function destroyCategory(Category $category)
     {
+        $this->authorize('delete', $category);
 
         $this->menuService->deleteCategory($category);
 
@@ -65,6 +69,8 @@ class MenuBuilderController extends Controller
 
     public function storeProduct(StoreProductRequest $request)
     {
+        $this->authorize('create', Product::class);
+
         $validated = $request->validated();
 
         try {
@@ -82,6 +88,7 @@ class MenuBuilderController extends Controller
 
     public function updateProduct(UpdateProductRequest $request, Product $product)
     {
+        $this->authorize('update', $product);
 
         $validated = $request->validated();
 
@@ -100,6 +107,7 @@ class MenuBuilderController extends Controller
 
     public function toggleAvailability(Request $request, Product $product)
     {
+        $this->authorize('update', $product);
 
         $isAvailable = $this->menuService->toggleProductAvailability($product);
 
@@ -112,14 +120,13 @@ class MenuBuilderController extends Controller
 
     public function saveOverride(Request $request, Product $product)
     {
+        $this->authorize('update', $product);
 
         $validated = $request->validate([
-            'location_id' => 'required|exists:locations,id',
+            'location_id' => ['required', Rule::exists('locations', 'id')->where('vendor_id', Auth::user()?->vendor_id)],
             'override_price' => 'nullable|numeric',
             'is_available' => 'required|boolean',
         ]);
-
-        $location = Location::find($validated['location_id']);
 
         $this->menuService->saveLocationOverride($product, $validated);
 
@@ -128,6 +135,7 @@ class MenuBuilderController extends Controller
 
     public function destroyProduct(Product $product)
     {
+        $this->authorize('delete', $product);
 
         $this->menuService->deleteProduct($product);
 

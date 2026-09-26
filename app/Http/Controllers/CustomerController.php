@@ -9,6 +9,7 @@ use App\Services\CrmAutomationService;
 use App\Services\CustomerSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -18,6 +19,8 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Customer::class);
+
         $vendor = Auth::user()->vendor;
         $locations = $vendor->locations;
 
@@ -101,11 +104,9 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        $vendor = Auth::user()->vendor;
-        if ($customer->vendor_id !== $vendor->id) {
-            abort(403);
-        }
+        $this->authorize('view', $customer);
 
+        $vendor = Auth::user()->vendor;
         $customer->load('location');
         $this->customerService->recalculateStats($customer);
         $orders = $customer->orders()->with('items', 'location')->paginate(20);
@@ -115,11 +116,13 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Customer::class);
+
         $vendor = Auth::user()->vendor;
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'location_id' => 'nullable|exists:locations,id',
+            'location_id' => ['nullable', Rule::exists('locations', 'id')->where('vendor_id', $vendor->id)],
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'birthdate' => 'nullable|date',
@@ -130,7 +133,10 @@ class CustomerController extends Controller
 
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
         $payload = $validated;
-        $payload['location_id'] = $validated['location_id'] ?? $activeLocationId;
+        if (! isset($payload['location_id'])) {
+            $fallbackLoc = $vendor->locations()->find($activeLocationId);
+            $payload['location_id'] = $fallbackLoc?->id;
+        }
 
         $this->customerService->createCustomer($vendor, $payload, $request->has('marketing_opt_in'));
 
@@ -139,14 +145,13 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer)
     {
+        $this->authorize('update', $customer);
+
         $vendor = Auth::user()->vendor;
-        if ($customer->vendor_id !== $vendor->id) {
-            abort(403);
-        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'location_id' => 'nullable|exists:locations,id',
+            'location_id' => ['nullable', Rule::exists('locations', 'id')->where('vendor_id', $vendor->id)],
             'phone' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'birthdate' => 'nullable|date',
@@ -162,10 +167,7 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
-        $vendor = Auth::user()->vendor;
-        if ($customer->vendor_id !== $vendor->id) {
-            abort(403);
-        }
+        $this->authorize('delete', $customer);
 
         $this->customerService->deleteCustomer($customer);
 
@@ -174,6 +176,8 @@ class CustomerController extends Controller
 
     public function export(Request $request)
     {
+        $this->authorize('export', Customer::class);
+
         $vendor = Auth::user()->vendor;
         $activeLocationId = session('active_location_id');
 
@@ -251,10 +255,9 @@ class CustomerController extends Controller
      */
     public function sendBirthdayGreeting(Customer $customer, CrmAutomationService $crmService)
     {
+        $this->authorize('update', $customer);
+
         $vendor = Auth::user()->vendor;
-        if ($customer->vendor_id !== $vendor->id) {
-            abort(403);
-        }
 
         if (empty($customer->phone)) {
             return back()->with('error', 'Հաճախորդի հեռախոսահամարը նշված չէ։');

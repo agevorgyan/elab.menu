@@ -26,12 +26,14 @@ class VendorAdminController extends Controller
             abort(404, 'Vendor not found for user.');
         }
 
+        $this->authorize('view', $vendor);
+
         $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
         if ($activeLocationId) {
             session(['active_location_id' => $activeLocationId]);
         }
 
-        $location = Location::find($activeLocationId);
+        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
 
         // Stats
         $ordersQuery = Order::where('vendor_id', $vendor->id);
@@ -113,18 +115,19 @@ class VendorAdminController extends Controller
     public function storeTeamMember(Request $request)
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('update', $vendor);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'role' => 'required|string|in:manager,staff',
-            'location_id' => 'nullable|exists:locations,id',
+            'location_id' => 'nullable|integer',
             'password' => 'required|string|min:6',
         ]);
 
         if (! empty($validated['location_id'])) {
-            $loc = Location::find($validated['location_id']);
-            if (! $loc || $loc->vendor_id !== $vendor->id) {
+            $loc = $vendor->locations()->find($validated['location_id']);
+            if (! $loc) {
                 abort(403, 'Unauthorized location assignment.');
             }
         }
@@ -144,6 +147,8 @@ class VendorAdminController extends Controller
     public function subscriptionIndex()
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageBilling', $vendor);
+
         $vendor->load('plan', 'payments');
         $allPlans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
 
@@ -156,6 +161,8 @@ class VendorAdminController extends Controller
     public function renewSubscription(RenewSubscriptionRequest $request, PaymentGatewayService $paymentService)
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageBilling', $vendor);
+
         $validated = $request->validated();
 
         $plan = SubscriptionPlan::findOrFail($validated['subscription_plan_id']);

@@ -64,6 +64,9 @@ class AiWaiterController extends Controller
 
         $lang = $this->resolveLanguage($request, $vendor);
         $locationId = $request->input('location_id') ? (int) $request->input('location_id') : null;
+        if ($locationId && ! $vendor->locations()->where('id', $locationId)->exists()) {
+            $locationId = null;
+        }
         $tableNumber = $request->input('table_number');
 
         $session = AiWaiterSession::create([

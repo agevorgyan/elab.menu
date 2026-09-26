@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToVendor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SubscriptionPayment extends Model
 {
-    use HasFactory;
+    use BelongsToVendor, HasFactory;
 
     protected $fillable = [
         'vendor_id',

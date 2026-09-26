@@ -32,6 +32,18 @@ class Customer extends Model
         'birthdate' => 'date',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Customer $customer) {
+            if ($customer->location_id && $customer->vendor_id) {
+                $location = Location::withoutGlobalScopes()->find($customer->location_id);
+                if ($location && (int) $location->vendor_id !== (int) $customer->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor location assigned to customer.');
+                }
+            }
+        });
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

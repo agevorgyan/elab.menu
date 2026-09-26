@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Location;
 use App\Models\Order;
 use App\Models\WaiterCall;
 use Illuminate\Http\JsonResponse;
@@ -19,8 +18,9 @@ class FloorPlanController extends Controller
     public function index(Request $request): View
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('view', $vendor);
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
-        $location = Location::find($activeLocationId) ?? $vendor->locations->first();
+        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
 
         $floorPlanData = $vendor->getFloorPlanData();
         $halls = $floorPlanData['halls'] ?? [];
@@ -132,6 +132,7 @@ class FloorPlanController extends Controller
     public function saveFloorPlan(Request $request): JsonResponse
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
 
         $validated = $request->validate([
             'halls' => 'nullable|array',

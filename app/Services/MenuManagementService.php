@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Models\Location;
 use App\Models\LocationProductOverride;
 use App\Models\Product;
 use App\Models\ProductVariation;
@@ -334,9 +335,16 @@ class MenuManagementService
      */
     public function saveLocationOverride(Product $product, array $data): LocationProductOverride
     {
+        $location = Location::findOrFail($data['location_id']);
+
+        if ((int) $location->vendor_id !== (int) $product->vendor_id) {
+            throw new \InvalidArgumentException('Cross-vendor override attempt: location and product do not belong to the same vendor.');
+        }
+
         return LocationProductOverride::updateOrCreate(
             [
-                'location_id' => $data['location_id'],
+                'vendor_id' => $product->vendor_id,
+                'location_id' => $location->id,
                 'product_id' => $product->id,
             ],
             [

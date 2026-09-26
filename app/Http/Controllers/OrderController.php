@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Events\OrderStatusUpdated;
 use App\Http\Requests\UpdateOrderStatusRequest;
-use App\Models\Location;
 use App\Models\Order;
 use App\Models\WaiterCall;
 use App\Services\OrderService;
@@ -24,29 +23,34 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Order::class);
+
         $vendor = Auth::user()->vendor;
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
         $status = $request->get('status', 'all');
 
-        $orders = $this->orderService->getOrders($activeLocationId, $status);
-        $location = Location::find($activeLocationId);
-        $waiterCalls = $this->orderService->getPendingWaiterCalls($activeLocationId);
+        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations()->first();
+        $orders = $this->orderService->getOrders($location?->id, $status);
+        $waiterCalls = $this->orderService->getPendingWaiterCalls($location?->id);
 
         return view('admin.orders.index', compact('vendor', 'orders', 'location', 'status', 'waiterCalls'));
     }
 
     public function feed(Request $request)
     {
+        $this->authorize('viewAny', Order::class);
+
         $vendor = Auth::user()->vendor;
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations()->first();
         $status = $request->get('status', 'all');
         $lastOrderId = (int) $request->get('last_order_id', 0);
 
-        $orders = $this->orderService->getOrders($activeLocationId, $status);
-        $latestOrderId = $this->orderService->getLatestOrderId($activeLocationId);
-        $pendingCount = $this->orderService->getPendingOrdersCount($activeLocationId);
+        $orders = $this->orderService->getOrders($location?->id, $status);
+        $latestOrderId = $this->orderService->getLatestOrderId($location?->id);
+        $pendingCount = $this->orderService->getPendingOrdersCount($location?->id);
 
-        $waiterCalls = $this->orderService->getPendingWaiterCalls($activeLocationId);
+        $waiterCalls = $this->orderService->getPendingWaiterCalls($location?->id);
         $waiterCallsCount = $waiterCalls->count();
         $waiterCallsHtml = view('admin.orders.partials.waiter_call_cards', compact('waiterCalls'))->render();
 
@@ -67,6 +71,8 @@ class OrderController extends Controller
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
     {
+        $this->authorize('update', $order);
+
         $validated = $request->validated();
 
         $order->update(['status' => $validated['status']]);
@@ -87,6 +93,8 @@ class OrderController extends Controller
 
     public function updateWaiterCallStatus(Request $request, WaiterCall $waiterCall)
     {
+        $this->authorize('update', $waiterCall);
+
         $status = $request->input('status', 'attended');
         if (! in_array($status, ['pending', 'attended', 'cancelled'])) {
             $status = 'attended';
@@ -110,6 +118,8 @@ class OrderController extends Controller
      */
     public function receiptText(Order $order, ThermalPrinterService $printerService)
     {
+        $this->authorize('view', $order);
+
         $order->load(['items.product', 'location', 'vendor']);
 
         $receiptText = $printerService->generateReceiptText($order);

@@ -9,7 +9,12 @@ class RenewSubscriptionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->user()->vendor !== null;
+        $user = $this->user();
+        if (! $user || ! $user->vendor) {
+            return false;
+        }
+
+        return $user->can('manageBilling', $user->vendor);
     }
 
     /**

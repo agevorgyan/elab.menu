@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class VendorSettingsController extends Controller
@@ -24,6 +25,7 @@ class VendorSettingsController extends Controller
     public function index(Request $request): View
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
         $vendor->load('featuredProduct');
 
         $products = $vendor->products()
@@ -44,6 +46,7 @@ class VendorSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
 
         $validated = $request->validate([
             // Branch / Storefront Details
@@ -85,7 +88,7 @@ class VendorSettingsController extends Controller
 
             // Featured Dish / Dish of the Day
             'featured_dish_enabled' => 'nullable|boolean',
-            'featured_product_id' => 'nullable|integer|exists:products,id',
+            'featured_product_id' => ['nullable', 'integer', Rule::exists('products', 'id')->where('vendor_id', $vendor->id)],
             'featured_dish_badge' => 'nullable|string|max:100',
             'featured_dish_subtitle' => 'nullable|string|max:255',
 

@@ -18,6 +18,17 @@ class CallWaiterRequest extends FormRequest
     }
 
     /**
+     * Sanitize inputs to prevent XSS.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'notes' => $this->notes ? strip_tags($this->notes) : null,
+            'table_number' => $this->table_number ? strip_tags($this->table_number) : null,
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>

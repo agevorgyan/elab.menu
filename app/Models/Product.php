@@ -162,8 +162,23 @@ class Product extends Model
             return false;
         }
 
-        $tz = $timezone ?: ($this->vendor?->timezone ?? 'Asia/Yerevan');
-        $now = Carbon::now($tz);
+        if ($timezone) {
+            $tz = $timezone;
+        } else {
+            $tenant = app(\App\Services\TenantContext::class)->getTenant();
+            if ($tenant && $tenant->id === $this->vendor_id) {
+                $tz = $tenant->timezone ?? 'Asia/Yerevan';
+            } else {
+                $tz = $this->vendor?->timezone ?? 'Asia/Yerevan';
+            }
+        }
+
+        try {
+            $now = Carbon::now($tz);
+        } catch (\Exception $e) {
+            $tz = 'UTC';
+            $now = Carbon::now($tz);
+        }
 
         // 1. Check days of week if specified (e.g. ['mon', 'tue', 'wed', 'thu', 'fri'] or ['monday', ...])
         if (! empty($this->discount_days) && is_array($this->discount_days)) {

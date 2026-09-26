@@ -18,6 +18,19 @@ class SubmitOrderRequest extends FormRequest
     }
 
     /**
+     * Sanitize inputs to prevent XSS.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'notes' => $this->notes ? strip_tags($this->notes) : null,
+            'customer_name' => $this->customer_name ? strip_tags($this->customer_name) : null,
+            'table_number' => $this->table_number ? strip_tags($this->table_number) : null,
+            'delivery_address' => $this->delivery_address ? strip_tags($this->delivery_address) : null,
+        ]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>

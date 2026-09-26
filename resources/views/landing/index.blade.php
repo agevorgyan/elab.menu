@@ -88,6 +88,12 @@
             scroll-behavior: smooth;
         }
 
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
         html {
             scroll-padding-top: 110px;
         }
@@ -97,7 +103,6 @@
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             line-height: 1.6;
-            overflow-x: hidden;
             position: relative;
         }
 

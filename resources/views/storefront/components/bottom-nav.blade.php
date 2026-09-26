@@ -249,9 +249,10 @@
     /* Active Order Floating Pill */
     .active-order-floating-pill {
         pointer-events: auto;
-        max-width: calc(var(--desktop-max-width, 600px) - 2rem);
+        box-sizing: border-box;
+        max-width: calc(var(--desktop-max-width, 600px) - 1.5rem);
         margin: 0 auto 0.6rem auto;
-        width: calc(100% - 2rem);
+        width: calc(100% - 1.5rem);
         background: var(--bg-glass);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
@@ -407,7 +408,7 @@
         transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .ai-waiter-floating-bubble.has-active-order-pill {
-        bottom: calc(142px + max(0.5rem, env(safe-area-inset-bottom)));
+        bottom: calc(150px + max(0.5rem, env(safe-area-inset-bottom)));
     }
     .ai-waiter-floating-bubble:hover {
         transform: scale(1.05);

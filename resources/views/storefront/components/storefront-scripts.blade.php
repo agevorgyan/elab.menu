@@ -259,6 +259,18 @@
                 return this.cartSubtotal;
             },
 
+            formatCurrency(val) {
+                const num = Number(val || 0);
+                return num.toLocaleString() + ' ' + (this.currency || '{{ $vendor->currency }}');
+            },
+
+            getCartItemQty(dishId) {
+                if (!this.cart || !this.cart.length) return 0;
+                return this.cart
+                    .filter(c => Number(c.id) === Number(dishId))
+                    .reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+            },
+
             get calculatedServiceFee() {
                 if (this.orderType !== 'dine_in' || !this.serviceFeeEnabled) {
                     return 0;
@@ -1367,4 +1379,14 @@
     function vibrantGlassApp() {
         return createStorefrontApp();
     }
+
+    // Global subtle tactile haptic feedback on interactive clicks
+    document.addEventListener('click', function(e) {
+        const el = e.target.closest('button, a, [role="button"], input[type="submit"], input[type="button"], .payment-method-tile, .cart-type-btn, .quiz-chip-btn, .lang-pill-btn, .prompt-preset-chip, .ai-question-opt-btn, .ai-action-btn, .category-chip, .order-pill-open-btn');
+        if (el && window.navigator && typeof window.navigator.vibrate === 'function') {
+            try {
+                window.navigator.vibrate(25);
+            } catch(err) {}
+        }
+    }, { passive: true });
 </script>

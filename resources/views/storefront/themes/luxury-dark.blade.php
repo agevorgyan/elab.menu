@@ -199,7 +199,7 @@
             left: 0;
             right: 0;
             width: 100%;
-            z-index: 300;
+            z-index: 100000;
             background: var(--bg-card);
             color: var(--text-main);
             border-bottom: 2px solid var(--primary);

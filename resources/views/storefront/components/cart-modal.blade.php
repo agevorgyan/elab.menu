@@ -421,54 +421,89 @@
                         <span>{{ __('menu.payment_method') ?? 'Վճարման Եղանակ' }}</span>
                     </label>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem;">
+                    <div class="cart-payment-grid">
                         @if($cashEnabled)
-                        <div class="payment-method-tile" :style="paymentMethod === 'cash' ? 'border: 2px solid var(--primary); background: rgba(245, 158, 11, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'cash'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                            <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">💵</div>
-                            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">{{ __('Կանխիկ տեղում') }}</div>
+                        <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'cash' }" @click="paymentMethod = 'cash'">
+                            <span class="payment-tile-icon-wrap" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                            </span>
+                            <span class="payment-tile-label">{{ __('Կանխիկ տեղում') }}</span>
+                            <template x-if="paymentMethod === 'cash'">
+                                <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                            </template>
                         </div>
                         @endif
 
                         @if($posEnabled)
-                        <div class="payment-method-tile" :style="paymentMethod === 'pos_terminal' ? 'border: 2px solid var(--primary); background: rgba(245, 158, 11, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'pos_terminal'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                            <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">💳</div>
-                            <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">{{ __('POS Տերմինալ') }}</div>
+                        <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'pos_terminal' }" @click="paymentMethod = 'pos_terminal'">
+                            <span class="payment-tile-icon-wrap" style="color: #3b82f6; background: rgba(59, 130, 246, 0.12);">
+                                <i class="fa-solid fa-credit-card"></i>
+                            </span>
+                            <span class="payment-tile-label">{{ __('POS Տերմինալ') }}</span>
+                            <template x-if="paymentMethod === 'pos_terminal'">
+                                <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                            </template>
                         </div>
                         @endif
 
                         @if($onlineEnabled)
                             @if(!empty($gateways['idram']['enabled']))
-                            <div class="payment-method-tile" :style="paymentMethod === 'idram' ? 'border: 2px solid #ff6f00; background: rgba(255, 111, 0, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'idram'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🧡</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Idram</div>
+                            <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'idram' }" @click="paymentMethod = 'idram'">
+                                <span class="payment-tile-icon-wrap" style="color: #ffffff; background: #ff6f00; font-weight: 900; font-size: 0.8rem;">
+                                    Id
+                                </span>
+                                <span class="payment-tile-label">Idram</span>
+                                <template x-if="paymentMethod === 'idram'">
+                                    <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                                </template>
                             </div>
                             @endif
 
                             @if(!empty($gateways['telcell']['enabled']))
-                            <div class="payment-method-tile" :style="paymentMethod === 'telcell' ? 'border: 2px solid #e11d48; background: rgba(225, 29, 72, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'telcell'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">💛</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Telcell</div>
+                            <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'telcell' }" @click="paymentMethod = 'telcell'">
+                                <span class="payment-tile-icon-wrap" style="color: #ffffff; background: #e11d48; font-weight: 900; font-size: 0.8rem;">
+                                    Tc
+                                </span>
+                                <span class="payment-tile-label">Telcell</span>
+                                <template x-if="paymentMethod === 'telcell'">
+                                    <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                                </template>
                             </div>
                             @endif
 
                             @if(!empty($gateways['fastshift']['enabled']))
-                            <div class="payment-method-tile" :style="paymentMethod === 'fastshift' ? 'border: 2px solid #2563eb; background: rgba(37, 99, 235, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'fastshift'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">⚡</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">FastShift</div>
+                            <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'fastshift' }" @click="paymentMethod = 'fastshift'">
+                                <span class="payment-tile-icon-wrap" style="color: #ffffff; background: #2563eb; font-weight: 900; font-size: 0.8rem;">
+                                    Fs
+                                </span>
+                                <span class="payment-tile-label">FastShift</span>
+                                <template x-if="paymentMethod === 'fastshift'">
+                                    <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                                </template>
                             </div>
                             @endif
 
                             @if(!empty($gateways['arca']['enabled']))
-                            <div class="payment-method-tile" :style="paymentMethod === 'arca' ? 'border: 2px solid #059669; background: rgba(5, 150, 105, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'arca'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🏦</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">ArCa / Bank</div>
+                            <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'arca' }" @click="paymentMethod = 'arca'">
+                                <span class="payment-tile-icon-wrap" style="color: #ffffff; background: #059669; font-weight: 900; font-size: 0.8rem;">
+                                    Ar
+                                </span>
+                                <span class="payment-tile-label">ArCa / Bank</span>
+                                <template x-if="paymentMethod === 'arca'">
+                                    <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                                </template>
                             </div>
                             @endif
 
                             @if(!empty($gateways['stripe']['enabled']))
-                            <div class="payment-method-tile" :style="paymentMethod === 'stripe' ? 'border: 2px solid #6366f1; background: rgba(99, 102, 241, 0.08);' : 'border: 1.5px solid var(--border-color); background: var(--bg-body);'" @click="paymentMethod = 'stripe'" style="cursor: pointer; border-radius: 12px; padding: 0.75rem 0.5rem; text-align: center; transition: all 0.2s;">
-                                <div style="font-size: 1.25rem; margin-bottom: 0.25rem;">🌐</div>
-                                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main);">Stripe</div>
+                            <div class="payment-method-tile" :class="{ 'is-active': paymentMethod === 'stripe' }" @click="paymentMethod = 'stripe'">
+                                <span class="payment-tile-icon-wrap" style="color: #ffffff; background: #6366f1; font-size: 0.95rem;">
+                                    <i class="fa-brands fa-stripe-s"></i>
+                                </span>
+                                <span class="payment-tile-label">Stripe</span>
+                                <template x-if="paymentMethod === 'stripe'">
+                                    <span class="payment-tile-check"><i class="fa-solid fa-check"></i></span>
+                                </template>
                             </div>
                             @endif
                         @endif
@@ -1261,6 +1296,87 @@
         background: var(--primary);
         color: #ffffff;
         box-shadow: 0 4px 15px color-mix(in srgb, var(--primary) 35%, transparent);
+    }
+
+    /* Modern Payment Method Tiles */
+    .cart-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 0.65rem;
+    }
+
+    .payment-method-tile {
+        position: relative;
+        background: var(--bg-body);
+        border: 1.5px solid var(--border-color);
+        border-radius: 14px;
+        padding: 0.85rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        text-align: center;
+    }
+
+    .payment-method-tile:hover {
+        border-color: color-mix(in srgb, var(--primary) 40%, var(--border-color));
+        transform: translateY(-1px);
+    }
+
+    .payment-method-tile.is-active {
+        border-color: var(--primary) !important;
+        background: color-mix(in srgb, var(--primary) 9%, var(--bg-card)) !important;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+
+    .payment-tile-icon-wrap {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .payment-method-tile.is-active .payment-tile-icon-wrap {
+        transform: scale(1.08);
+    }
+
+    .payment-tile-label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-main);
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .payment-tile-check {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: #ffffff;
+        font-size: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        animation: popCheck 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes popCheck {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
     }
 
     /* Delivery Address Field */

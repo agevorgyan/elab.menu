@@ -379,7 +379,7 @@
                                 @forelse($promotedList as $idx => $p)
                                     <tr style="border-bottom: 1px solid var(--border-color);">
                                         <td style="padding: 0.65rem 1rem;">
-                                            <select name="promoted_products[{{ $idx }}][product_id]" class="form-control" style="width: 100%; background: var(--bg-card); font-size: 0.88rem;">
+                                            <select name="promoted_products[{{ $idx }}][product_id]" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
                                                 @foreach($products as $prod)
                                                     <option value="{{ $prod->id }}" {{ $p['product_id'] == $prod->id ? 'selected' : '' }}>
                                                         {{ $prod->name }} ({{ number_format($prod->price) }} {{ $vendor->currency }})
@@ -388,13 +388,13 @@
                                             </select>
                                         </td>
                                         <td style="padding: 0.65rem 1rem;">
-                                            <input type="number" name="promoted_products[{{ $idx }}][priority]" value="{{ $p['priority'] ?? 90 }}" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+                                            <input type="number" name="promoted_products[{{ $idx }}][priority]" value="{{ $p['priority'] ?? 90 }}" min="1" max="100" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.92rem; font-weight: 700; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;">
                                         </td>
                                         <td style="padding: 0.65rem 1rem; text-align: center;">
-                                            <input type="checkbox" name="promoted_products[{{ $idx }}][active]" value="1" {{ !empty($p['active']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                            <input type="checkbox" name="promoted_products[{{ $idx }}][active]" value="1" {{ !empty($p['active']) ? 'checked' : '' }} style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;">
                                         </td>
                                         <td style="padding: 0.65rem 1rem; text-align: right;">
-                                            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+                                            <button type="button" onclick="this.closest('tr').remove()" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.95rem; transition: background 0.15s ease;">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </td>
@@ -445,16 +445,16 @@
                                 @forelse($ingredientList as $idx => $ing)
                                     <tr style="border-bottom: 1px solid var(--border-color);">
                                         <td style="padding: 0.65rem 1rem;">
-                                            <input type="text" name="preferred_ingredients[{{ $idx }}][ingredient]" value="{{ $ing['ingredient'] }}" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="background: var(--bg-card); width: 100%; font-weight: 600;">
+                                            <input type="text" name="preferred_ingredients[{{ $idx }}][ingredient]" value="{{ $ing['ingredient'] }}" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
                                         </td>
                                         <td style="padding: 0.65rem 1rem;">
-                                            <input type="number" name="preferred_ingredients[{{ $idx }}][priority]" value="{{ $ing['priority'] ?? 80 }}" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+                                            <input type="number" name="preferred_ingredients[{{ $idx }}][priority]" value="{{ $ing['priority'] ?? 80 }}" min="1" max="100" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.92rem; font-weight: 700; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;">
                                         </td>
                                         <td style="padding: 0.65rem 1rem; text-align: center;">
-                                            <input type="checkbox" name="preferred_ingredients[{{ $idx }}][active]" value="1" {{ !empty($ing['active']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                                            <input type="checkbox" name="preferred_ingredients[{{ $idx }}][active]" value="1" {{ !empty($ing['active']) ? 'checked' : '' }} style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;">
                                         </td>
                                         <td style="padding: 0.65rem 1rem; text-align: right;">
-                                            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+                                            <button type="button" onclick="this.closest('tr').remove()" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.95rem; transition: background 0.15s ease;">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </td>
@@ -483,20 +483,20 @@
                         @endphp
                         <div style="display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.85rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>⭐ Bestseller</span>
-                                <input type="number" name="group_priorities[bestseller]" value="{{ $gp['bestseller'] ?? 90 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                                <span style="font-weight: 600; color: var(--text-main);">⭐ Bestseller</span>
+                                <input type="number" name="group_priorities[bestseller]" value="{{ $gp['bestseller'] ?? 90 }}" min="1" max="100" style="width: 75px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>👨‍🍳 Chef Recommendation</span>
-                                <input type="number" name="group_priorities[chef_recommendation]" value="{{ $gp['chef_recommendation'] ?? 85 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                                <span style="font-weight: 600; color: var(--text-main);">👨‍🍳 Chef Recommendation</span>
+                                <input type="number" name="group_priorities[chef_recommendation]" value="{{ $gp['chef_recommendation'] ?? 85 }}" min="1" max="100" style="width: 75px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>💎 High Margin</span>
-                                <input type="number" name="group_priorities[high_margin]" value="{{ $gp['high_margin'] ?? 75 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                                <span style="font-weight: 600; color: var(--text-main);">💎 High Margin</span>
+                                <input type="number" name="group_priorities[high_margin]" value="{{ $gp['high_margin'] ?? 75 }}" min="1" max="100" style="width: 75px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>✨ New Products</span>
-                                <input type="number" name="group_priorities[new_products]" value="{{ $gp['new_products'] ?? 65 }}" min="1" max="100" style="width: 70px; text-align: center; font-weight: 700; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.25rem;">
+                                <span style="font-weight: 600; color: var(--text-main);">✨ New Products</span>
+                                <input type="number" name="group_priorities[new_products]" value="{{ $gp['new_products'] ?? 65 }}" min="1" max="100" style="width: 75px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
                             </div>
                         </div>
                     </div>
@@ -511,38 +511,38 @@
                         @endphp
                         <div style="display: flex; flex-direction: column; gap: 0.55rem; font-size: 0.82rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Restaurant Explicit Priority</span>
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <input type="number" name="scoring_weights[restaurant_priority]" value="{{ $sw['restaurant_priority'] ?? 30 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
-                                    <span>%</span>
+                                <span style="font-weight: 600; color: var(--text-main);">Restaurant Explicit Priority</span>
+                                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                    <input type="number" name="scoring_weights[restaurant_priority]" value="{{ $sw['restaurant_priority'] ?? 30 }}" min="0" max="100" style="width: 65px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
+                                    <span style="font-weight: 700; color: var(--text-muted);">%</span>
                                 </div>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Preferred Ingredient Match</span>
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <input type="number" name="scoring_weights[preferred_ingredient]" value="{{ $sw['preferred_ingredient'] ?? 20 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
-                                    <span>%</span>
+                                <span style="font-weight: 600; color: var(--text-main);">Preferred Ingredient Match</span>
+                                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                    <input type="number" name="scoring_weights[preferred_ingredient]" value="{{ $sw['preferred_ingredient'] ?? 20 }}" min="0" max="100" style="width: 65px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
+                                    <span style="font-weight: 700; color: var(--text-muted);">%</span>
                                 </div>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Customer Preference Match</span>
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <input type="number" name="scoring_weights[customer_preference]" value="{{ $sw['customer_preference'] ?? 25 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
-                                    <span>%</span>
+                                <span style="font-weight: 600; color: var(--text-main);">Customer Preference Match</span>
+                                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                    <input type="number" name="scoring_weights[customer_preference]" value="{{ $sw['customer_preference'] ?? 25 }}" min="0" max="100" style="width: 65px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
+                                    <span style="font-weight: 700; color: var(--text-muted);">%</span>
                                 </div>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Dietary Compatibility</span>
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <input type="number" name="scoring_weights[dietary_compatibility]" value="{{ $sw['dietary_compatibility'] ?? 10 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
-                                    <span>%</span>
+                                <span style="font-weight: 600; color: var(--text-main);">Dietary Compatibility</span>
+                                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                    <input type="number" name="scoring_weights[dietary_compatibility]" value="{{ $sw['dietary_compatibility'] ?? 10 }}" min="0" max="100" style="width: 65px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
+                                    <span style="font-weight: 700; color: var(--text-muted);">%</span>
                                 </div>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span>Taste & Flavor / Spiciness</span>
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <input type="number" name="scoring_weights[taste_spiciness]" value="{{ $sw['taste_spiciness'] ?? 5 }}" min="0" max="100" style="width: 60px; text-align: center; font-weight: 700; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); padding: 0.2rem;">
-                                    <span>%</span>
+                                <span style="font-weight: 600; color: var(--text-main);">Taste & Flavor / Spiciness</span>
+                                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                    <input type="number" name="scoring_weights[taste_spiciness]" value="{{ $sw['taste_spiciness'] ?? 5 }}" min="0" max="100" style="width: 65px; text-align: center; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.45rem 0.5rem; font-size: 0.92rem;">
+                                    <span style="font-weight: 700; color: var(--text-muted);">%</span>
                                 </div>
                             </div>
                         </div>
@@ -579,12 +579,12 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
                                 <span>Priority:</span>
-                                <input type="number" name="questions[mood][priority]" value="{{ $qConfig['mood']['priority'] ?? 1 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                                <input type="number" name="questions[mood][priority]" value="{{ $qConfig['mood']['priority'] ?? 1 }}" min="1" max="10" style="width: 55px; text-align: center; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.35rem 0.4rem; font-size: 0.9rem;">
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
-                                <input type="checkbox" name="questions[mood][enabled]" value="1" {{ !empty($qConfig['mood']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <input type="checkbox" name="questions[mood][enabled]" value="1" {{ !empty($qConfig['mood']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                                 <span>{{ __('Ակտիվ') }}</span>
                             </label>
                         </div>
@@ -600,12 +600,12 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
                                 <span>Priority:</span>
-                                <input type="number" name="questions[preference][priority]" value="{{ $qConfig['preference']['priority'] ?? 2 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                                <input type="number" name="questions[preference][priority]" value="{{ $qConfig['preference']['priority'] ?? 2 }}" min="1" max="10" style="width: 55px; text-align: center; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.35rem 0.4rem; font-size: 0.9rem;">
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
-                                <input type="checkbox" name="questions[preference][enabled]" value="1" {{ !empty($qConfig['preference']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <input type="checkbox" name="questions[preference][enabled]" value="1" {{ !empty($qConfig['preference']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                                 <span>{{ __('Ակտիվ') }}</span>
                             </label>
                         </div>
@@ -621,12 +621,12 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
                                 <span>Priority:</span>
-                                <input type="number" name="questions[spiciness][priority]" value="{{ $qConfig['spiciness']['priority'] ?? 3 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                                <input type="number" name="questions[spiciness][priority]" value="{{ $qConfig['spiciness']['priority'] ?? 3 }}" min="1" max="10" style="width: 55px; text-align: center; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.35rem 0.4rem; font-size: 0.9rem;">
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
-                                <input type="checkbox" name="questions[spiciness][enabled]" value="1" {{ !empty($qConfig['spiciness']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <input type="checkbox" name="questions[spiciness][enabled]" value="1" {{ !empty($qConfig['spiciness']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                                 <span>{{ __('Ակտիվ') }}</span>
                             </label>
                         </div>
@@ -642,12 +642,12 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
                                 <span>Priority:</span>
-                                <input type="number" name="questions[occasion][priority]" value="{{ $qConfig['occasion']['priority'] ?? 4 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                                <input type="number" name="questions[occasion][priority]" value="{{ $qConfig['occasion']['priority'] ?? 4 }}" min="1" max="10" style="width: 55px; text-align: center; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.35rem 0.4rem; font-size: 0.9rem;">
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
-                                <input type="checkbox" name="questions[occasion][enabled]" value="1" {{ !empty($qConfig['occasion']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <input type="checkbox" name="questions[occasion][enabled]" value="1" {{ !empty($qConfig['occasion']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                                 <span>{{ __('Ակտիվ') }}</span>
                             </label>
                         </div>
@@ -663,12 +663,12 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
                                 <span>Priority:</span>
-                                <input type="number" name="questions[budget][priority]" value="{{ $qConfig['budget']['priority'] ?? 5 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                                <input type="number" name="questions[budget][priority]" value="{{ $qConfig['budget']['priority'] ?? 5 }}" min="1" max="10" style="width: 55px; text-align: center; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.35rem 0.4rem; font-size: 0.9rem;">
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
-                                <input type="checkbox" name="questions[budget][enabled]" value="1" {{ !empty($qConfig['budget']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <input type="checkbox" name="questions[budget][enabled]" value="1" {{ !empty($qConfig['budget']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                                 <span>{{ __('Ակտիվ') }}</span>
                             </label>
                         </div>
@@ -684,12 +684,12 @@
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
                                 <span>Priority:</span>
-                                <input type="number" name="questions[drink][priority]" value="{{ $qConfig['drink']['priority'] ?? 6 }}" min="1" max="10" style="width: 50px; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); padding: 0.2rem;">
+                                <input type="number" name="questions[drink][priority]" value="{{ $qConfig['drink']['priority'] ?? 6 }}" min="1" max="10" style="width: 55px; text-align: center; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-card); color: var(--text-main); padding: 0.35rem 0.4rem; font-size: 0.9rem;">
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
-                                <input type="checkbox" name="questions[drink][enabled]" value="1" {{ !empty($qConfig['drink']['enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
+                                <input type="checkbox" name="questions[drink][enabled]" value="1" {{ !empty($qConfig['drink']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                                 <span>{{ __('Ակտիվ') }}</span>
                             </label>
                         </div>
@@ -841,6 +841,33 @@
     color: #8b5cf6;
     border-bottom-color: #8b5cf6;
 }
+
+.form-control {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-main);
+    box-sizing: border-box;
+    border-radius: 12px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.form-control:focus {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+    outline: none;
+}
+select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238b5cf6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 1.1rem;
+    padding-right: 2.2rem;
+    cursor: pointer;
+}
 </style>
 
 <script>
@@ -870,18 +897,18 @@ function addPromotedProductRow() {
 
     tr.innerHTML = `
         <td style="padding: 0.65rem 1rem;">
-            <select name="promoted_products[${promotedIdx}][product_id]" class="form-control" style="width: 100%; background: var(--bg-card); font-size: 0.88rem;">
+            <select name="promoted_products[${promotedIdx}][product_id]" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
                 ${opts}
             </select>
         </td>
         <td style="padding: 0.65rem 1rem;">
-            <input type="number" name="promoted_products[${promotedIdx}][priority]" value="90" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+            <input type="number" name="promoted_products[${promotedIdx}][priority]" value="90" min="1" max="100" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.92rem; font-weight: 700; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;">
         </td>
         <td style="padding: 0.65rem 1rem; text-align: center;">
-            <input type="checkbox" name="promoted_products[${promotedIdx}][active]" value="1" checked style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+            <input type="checkbox" name="promoted_products[${promotedIdx}][active]" value="1" checked style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;">
         </td>
         <td style="padding: 0.65rem 1rem; text-align: right;">
-            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+            <button type="button" onclick="this.closest('tr').remove()" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.95rem; transition: background 0.15s ease;">
                 <i class="fa-solid fa-trash-can"></i>
             </button>
         </td>
@@ -902,16 +929,16 @@ function addPreferredIngredientRow() {
 
     tr.innerHTML = `
         <td style="padding: 0.65rem 1rem;">
-            <input type="text" name="preferred_ingredients[${ingredientIdx}][ingredient]" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="background: var(--bg-card); width: 100%; font-weight: 600;">
+            <input type="text" name="preferred_ingredients[${ingredientIdx}][ingredient]" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
         </td>
         <td style="padding: 0.65rem 1rem;">
-            <input type="number" name="preferred_ingredients[${ingredientIdx}][priority]" value="80" min="1" max="100" class="form-control" style="background: var(--bg-card); width: 100%; text-align: center; font-weight: 700;">
+            <input type="number" name="preferred_ingredients[${ingredientIdx}][priority]" value="80" min="1" max="100" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.92rem; font-weight: 700; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;">
         </td>
         <td style="padding: 0.65rem 1rem; text-align: center;">
-            <input type="checkbox" name="preferred_ingredients[${ingredientIdx}][active]" value="1" checked style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+            <input type="checkbox" name="preferred_ingredients[${ingredientIdx}][active]" value="1" checked style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;">
         </td>
         <td style="padding: 0.65rem 1rem; text-align: right;">
-            <button type="button" onclick="this.closest('tr').remove()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.95rem;">
+            <button type="button" onclick="this.closest('tr').remove()" style="background: rgba(239, 68, 68, 0.1); border: none; color: #ef4444; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.95rem; transition: background 0.15s ease;">
                 <i class="fa-solid fa-trash-can"></i>
             </button>
         </td>

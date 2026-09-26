@@ -536,6 +536,16 @@
                                 <span x-text="rec.match_score + '% Match'"></span>
                             </div>
 
+                            <!-- In-cart quantity badge -->
+                            <template x-if="getCartItemQty(rec.id) > 0">
+                                <div style="position: absolute; top: 1.15rem; left: 1.15rem; z-index: 2; background: #10b981; color: #ffffff; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.74rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.35rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span x-show="selectedLang === 'hy'" x-text="getCartItemQty(rec.id) + ' հատ զամբյուղում'"></span>
+                                    <span x-show="selectedLang === 'en'" x-text="getCartItemQty(rec.id) + ' in cart'"></span>
+                                    <span x-show="selectedLang === 'ru'" x-text="getCartItemQty(rec.id) + ' в корзине'"></span>
+                                </div>
+                            </template>
+
                             <div style="display: flex; gap: 1rem; align-items: flex-start;">
                                 <img :src="rec.image || '{{ asset('images/default-dish.png') }}'" 
                                      x-on:error="$event.target.src = '{{ asset('images/default-dish.png') }}'" 
@@ -564,11 +574,24 @@
                                 <button type="button" 
                                         @click="addAiDishToCart(rec)"
                                         class="ai-action-btn"
-                                        style="background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #ffffff; border: none; border-radius: 14px; padding: 0.65rem 1.15rem; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);">
-                                    <i class="fa-solid fa-cart-plus"></i>
-                                    <span x-show="selectedLang === 'hy'">+ Ավելացնել պատվերին</span>
-                                    <span x-show="selectedLang === 'en'">+ Add to Order</span>
-                                    <span x-show="selectedLang === 'ru'">+ Добавить к заказу</span>
+                                        :style="getCartItemQty(rec.id) > 0 ? 'background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);' : 'background: linear-gradient(135deg, #8b5cf6, #d946ef); box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);'"
+                                        style="color: #ffffff; border: none; border-radius: 14px; padding: 0.65rem 1.15rem; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+                                    <template x-if="getCartItemQty(rec.id) === 0">
+                                        <span style="display: flex; align-items: center; gap: 0.45rem;">
+                                            <i class="fa-solid fa-cart-plus"></i>
+                                            <span x-show="selectedLang === 'hy'">+ Ավելացնել պատվերին</span>
+                                            <span x-show="selectedLang === 'en'">+ Add to Order</span>
+                                            <span x-show="selectedLang === 'ru'">+ Добавить к заказу</span>
+                                        </span>
+                                    </template>
+                                    <template x-if="getCartItemQty(rec.id) > 0">
+                                        <span style="display: flex; align-items: center; gap: 0.45rem;">
+                                            <i class="fa-solid fa-check"></i>
+                                            <span x-show="selectedLang === 'hy'" x-text="'Զամբյուղում է (' + getCartItemQty(rec.id) + ') +1'"></span>
+                                            <span x-show="selectedLang === 'en'" x-text="'In Cart (' + getCartItemQty(rec.id) + ') +1'"></span>
+                                            <span x-show="selectedLang === 'ru'" x-text="'В корзине (' + getCartItemQty(rec.id) + ') +1'"></span>
+                                        </span>
+                                    </template>
                                 </button>
                             </div>
 
@@ -677,9 +700,11 @@
 
                                         <button type="button" 
                                                 @click="addAiDishToCart(alt)"
-                                                title="Ավելացնել"
-                                                style="width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-card); color: #8b5cf6; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: transform 0.15s;">
-                                            <i class="fa-solid fa-plus"></i>
+                                                :title="getCartItemQty(alt.id) > 0 ? 'Զամբյուղում է (' + getCartItemQty(alt.id) + ')' : 'Ավելացնել'"
+                                                :style="getCartItemQty(alt.id) > 0 ? 'background: #10b981; color: #fff; border-color: #10b981; min-width: 44px; padding: 0 0.4rem;' : 'background: var(--bg-card); color: #8b5cf6; border-color: var(--border-color); width: 34px;'"
+                                                style="height: 34px; border-radius: 10px; border: 1px solid; display: flex; align-items: center; justify-content: center; gap: 0.25rem; cursor: pointer; flex-shrink: 0; font-size: 0.8rem; font-weight: 700; transition: all 0.2s;">
+                                            <i :class="getCartItemQty(alt.id) > 0 ? 'fa-solid fa-check' : 'fa-solid fa-plus'"></i>
+                                            <span x-show="getCartItemQty(alt.id) > 0" x-text="getCartItemQty(alt.id)"></span>
                                         </button>
                                     </div>
                                 </template>
@@ -710,9 +735,11 @@
 
                                 <button type="button" 
                                         @click="addAiDishToCart(aiPairingDrink)"
-                                        title="Ավելացնել"
-                                        style="width: 36px; height: 36px; border-radius: 12px; border: none; background: #8b5cf6; color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 10px rgba(139,92,246,0.3);">
-                                    <i class="fa-solid fa-plus"></i>
+                                        :title="getCartItemQty(aiPairingDrink.id) > 0 ? 'Զամբյուղում է (' + getCartItemQty(aiPairingDrink.id) + ')' : 'Ավելացնել'"
+                                        :style="getCartItemQty(aiPairingDrink.id) > 0 ? 'background: #10b981; min-width: 46px; padding: 0 0.5rem;' : 'background: #8b5cf6; width: 36px;'"
+                                        style="height: 36px; border-radius: 12px; border: none; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 0.3rem; cursor: pointer; flex-shrink: 0; font-size: 0.82rem; font-weight: 800; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s;">
+                                    <i :class="getCartItemQty(aiPairingDrink.id) > 0 ? 'fa-solid fa-check' : 'fa-solid fa-plus'"></i>
+                                    <span x-show="getCartItemQty(aiPairingDrink.id) > 0" x-text="getCartItemQty(aiPairingDrink.id)"></span>
                                 </button>
                             </div>
                         </div>
@@ -764,15 +791,23 @@
             <!-- Sticky Cart summary & direct checkout trigger -->
             <button type="button" 
                     @click="closeAiWaiter(); showCartModal = true"
-                    style="background: var(--primary); color: #ffffff; border: none; border-radius: 16px; padding: 0.7rem 1.35rem; font-size: 0.95rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.18); transition: transform 0.15s;">
+                    :class="{ 'cart-bump': cartBump }"
+                    :style="cartTotalCount > 0 ? 'background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45);' : 'background: var(--primary);'"
+                    style="color: #ffffff; border: none; border-radius: 16px; padding: 0.7rem 1.35rem; font-size: 0.95rem; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.18); transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
                 <i class="fa-solid fa-basket-shopping"></i>
                 <span x-show="cartTotalCount === 0">
                     <span x-show="selectedLang === 'hy'">Զամբյուղ</span>
                     <span x-show="selectedLang === 'en'">Cart</span>
                     <span x-show="selectedLang === 'ru'">Корзина</span>
                 </span>
-                <span x-show="cartTotalCount > 0" 
-                      x-text="'🛒 ' + cartTotalCount + ' ապրանք · ' + formatCurrency(cartTotalPrice)"></span>
+                <span x-show="cartTotalCount > 0" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: rgba(255, 255, 255, 0.25); border-radius: 999px; padding: 0.1rem 0.5rem; font-size: 0.82rem;" x-text="cartTotalCount"></span>
+                    <span x-text="formatCurrency(cartTotalPrice)"></span>
+                    <span style="opacity: 0.85; font-size: 0.85rem;">•</span>
+                    <span x-show="selectedLang === 'hy'">Դեպի Զամբյուղ</span>
+                    <span x-show="selectedLang === 'en'">View Cart</span>
+                    <span x-show="selectedLang === 'ru'">В Корзину</span>
+                </span>
                 <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i>
             </button>
         </div>
@@ -875,9 +910,11 @@
 
                                                     <button type="button" 
                                                             @click="addAiDishToCart(p)"
-                                                            title="Ավելացնել զամբյուղ"
-                                                            style="width: 30px; height: 30px; border-radius: 8px; border: none; background: #8b5cf6; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
-                                                        <i class="fa-solid fa-plus" style="font-size: 0.75rem;"></i>
+                                                            :title="getCartItemQty(p.id) > 0 ? 'Զամբյուղում է (' + getCartItemQty(p.id) + ')' : 'Ավելացնել զամբյուղ'"
+                                                            :style="getCartItemQty(p.id) > 0 ? 'background: #10b981; min-width: 40px; padding: 0 0.35rem;' : 'background: #8b5cf6; width: 30px;'"
+                                                            style="height: 30px; border-radius: 8px; border: none; color: #fff; display: flex; align-items: center; justify-content: center; gap: 0.25rem; cursor: pointer; flex-shrink: 0; font-size: 0.75rem; font-weight: 700; transition: all 0.2s;">
+                                                        <i :class="getCartItemQty(p.id) > 0 ? 'fa-solid fa-check' : 'fa-solid fa-plus'"></i>
+                                                        <span x-show="getCartItemQty(p.id) > 0" x-text="getCartItemQty(p.id)"></span>
                                                     </button>
                                                 </div>
                                             </template>

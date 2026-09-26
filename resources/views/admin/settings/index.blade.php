@@ -947,11 +947,11 @@
                                     <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
                                 </label>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                                <input type="text" name="payment_settings[gateways][idram][merchant_id]" value="{{ $paymentSettings['gateways']['idram']['merchant_id'] ?? '' }}" placeholder="Receiver / Merchant ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
-                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="{{ $paymentSettings['gateways']['idram']['secret_key'] ?? '' }}" placeholder="Secret Key" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                                <input type="text" name="payment_settings[gateways][idram][merchant_id]" value="{{ $paymentSettings['gateways']['idram']['merchant_id'] ?? '' }}" placeholder="Receiver / Merchant ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="{{ $paymentSettings['gateways']['idram']['secret_key'] ?? '' }}" placeholder="Secret Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-                                    <input type="checkbox" name="payment_settings[gateways][idram][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['idram']['sandbox']) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="payment_settings[gateways][idram][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['idram']['sandbox']) ? 'checked' : '' }} style="accent-color: #ff6f00;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
                                 </label>
                             </div>
@@ -969,11 +969,11 @@
                                     <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
                                 </label>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                                <input type="text" name="payment_settings[gateways][telcell][shop_id]" value="{{ $paymentSettings['gateways']['telcell']['shop_id'] ?? '' }}" placeholder="Shop ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
-                                <input type="password" name="payment_settings[gateways][telcell][key]" value="{{ $paymentSettings['gateways']['telcell']['key'] ?? '' }}" placeholder="Security Key" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                                <input type="text" name="payment_settings[gateways][telcell][shop_id]" value="{{ $paymentSettings['gateways']['telcell']['shop_id'] ?? '' }}" placeholder="Shop ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][telcell][key]" value="{{ $paymentSettings['gateways']['telcell']['key'] ?? '' }}" placeholder="Security Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-                                    <input type="checkbox" name="payment_settings[gateways][telcell][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['telcell']['sandbox']) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="payment_settings[gateways][telcell][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['telcell']['sandbox']) ? 'checked' : '' }} style="accent-color: #e11d48;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
                                 </label>
                             </div>
@@ -991,11 +991,11 @@
                                     <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
                                 </label>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                                <input type="text" name="payment_settings[gateways][fastshift][merchant_id]" value="{{ $paymentSettings['gateways']['fastshift']['merchant_id'] ?? '' }}" placeholder="Merchant ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
-                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="{{ $paymentSettings['gateways']['fastshift']['api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                                <input type="text" name="payment_settings[gateways][fastshift][merchant_id]" value="{{ $paymentSettings['gateways']['fastshift']['merchant_id'] ?? '' }}" placeholder="Merchant ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="{{ $paymentSettings['gateways']['fastshift']['api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-                                    <input type="checkbox" name="payment_settings[gateways][fastshift][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['fastshift']['sandbox']) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="payment_settings[gateways][fastshift][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['fastshift']['sandbox']) ? 'checked' : '' }} style="accent-color: #2563eb;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
                                 </label>
                             </div>
@@ -1013,11 +1013,11 @@
                                     <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
                                 </label>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                                <input type="text" name="payment_settings[gateways][arca][merchant_id]" value="{{ $paymentSettings['gateways']['arca']['merchant_id'] ?? '' }}" placeholder="Merchant / Client ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
-                                <input type="text" name="payment_settings[gateways][arca][terminal_id]" value="{{ $paymentSettings['gateways']['arca']['terminal_id'] ?? '' }}" placeholder="Terminal ID" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                                <input type="text" name="payment_settings[gateways][arca][merchant_id]" value="{{ $paymentSettings['gateways']['arca']['merchant_id'] ?? '' }}" placeholder="Merchant / Client ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="text" name="payment_settings[gateways][arca][terminal_id]" value="{{ $paymentSettings['gateways']['arca']['terminal_id'] ?? '' }}" placeholder="Terminal ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-                                    <input type="checkbox" name="payment_settings[gateways][arca][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['arca']['sandbox']) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="payment_settings[gateways][arca][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['arca']['sandbox']) ? 'checked' : '' }} style="accent-color: #059669;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
                                 </label>
                             </div>
@@ -1041,11 +1041,11 @@
                                     <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px;"></span>
                                 </label>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                                <input type="text" name="payment_settings[gateways][stripe][publishable_key]" value="{{ $paymentSettings['gateways']['stripe']['publishable_key'] ?? '' }}" placeholder="Publishable Key (pk_test_...)" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
-                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="{{ $paymentSettings['gateways']['stripe']['secret_key'] ?? '' }}" placeholder="Secret Key (sk_test_...)" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                                <input type="text" name="payment_settings[gateways][stripe][publishable_key]" value="{{ $paymentSettings['gateways']['stripe']['publishable_key'] ?? '' }}" placeholder="Publishable Key (pk_test_...)" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="{{ $paymentSettings['gateways']['stripe']['secret_key'] ?? '' }}" placeholder="Secret Key (sk_test_...)" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-                                    <input type="checkbox" name="payment_settings[gateways][stripe][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['stripe']['sandbox']) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="payment_settings[gateways][stripe][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['stripe']['sandbox']) ? 'checked' : '' }} style="accent-color: #6366f1;">
                                     <span>{{ __('Test Mode (pk_test / sk_test)') }}</span>
                                 </label>
                             </div>
@@ -1082,7 +1082,7 @@
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                             {{ __('Թղթի Լայնություն') }}
                         </label>
-                        <select name="thermal_printer_settings[paper_width]" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                        <select name="thermal_printer_settings[paper_width]" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                             <option value="80mm" {{ ($printerSettings['paper_width'] ?? '80mm') === '80mm' ? 'selected' : '' }}>80 մմ (Ստանդարտ ռեստորանային չափ)</option>
                             <option value="58mm" {{ ($printerSettings['paper_width'] ?? '') === '58mm' ? 'selected' : '' }}>58 մմ (Կոմպակտ չափ)</option>
                         </select>
@@ -1092,14 +1092,14 @@
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                             {{ __('Տպվող Օրինակների Քանակ') }}
                         </label>
-                        <input type="number" min="1" max="5" name="thermal_printer_settings[copies]" value="{{ $printerSettings['copies'] ?? 1 }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                        <input type="number" min="1" max="5" name="thermal_printer_settings[copies]" value="{{ $printerSettings['copies'] ?? 1 }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                             {{ __('Կտրոնի Վերնագիր') }}
                         </label>
-                        <input type="text" name="thermal_printer_settings[header_title]" value="{{ $printerSettings['header_title'] ?? $vendor->name }}" placeholder="Ռեստորանի անուն" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                        <input type="text" name="thermal_printer_settings[header_title]" value="{{ $printerSettings['header_title'] ?? $vendor->name }}" placeholder="Ռեստորանի անուն" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                     </div>
                 </div>
 
@@ -1118,7 +1118,7 @@
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                         {{ __('Կտրոնի Ստորոտ (Footer Text)') }}
                     </label>
-                    <input type="text" name="thermal_printer_settings[footer_text]" value="{{ $printerSettings['footer_text'] ?? 'Շնորհակալություն այցելության համար!' }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px;">
+                    <input type="text" name="thermal_printer_settings[footer_text]" value="{{ $printerSettings['footer_text'] ?? 'Շնորհակալություն այցելության համար!' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                 </div>
             </div>
 
@@ -1152,7 +1152,7 @@
                                 {{ __('Ծննդյան Զեղչի Չափ (%)') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" min="0" max="100" step="1" name="crm_settings[birthday_discount_percent]" value="{{ $crmSettings['birthday_discount_percent'] ?? 15 }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.2rem; border-radius: 12px; font-weight: 700; color: #10b981;">
+                                <input type="number" min="0" max="100" step="1" name="crm_settings[birthday_discount_percent]" value="{{ $crmSettings['birthday_discount_percent'] ?? 15 }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: #10b981; padding: 0.7rem 1rem 0.7rem 2.2rem; border-radius: 12px; font-weight: 700; font-size: 0.95rem;">
                                 <span style="position: absolute; left: 0.9rem; color: var(--text-muted); font-weight: 700;">%</span>
                             </div>
                         </div>
@@ -1161,7 +1161,7 @@
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('Գործողության Ժամկետ (օր)') }}
                             </label>
-                            <input type="number" min="0" max="30" name="crm_settings[birthday_validity_days]" value="{{ $crmSettings['birthday_validity_days'] ?? 3 }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                            <input type="number" min="0" max="30" name="crm_settings[birthday_validity_days]" value="{{ $crmSettings['birthday_validity_days'] ?? 3 }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                             <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Զեղչը կգործի ծննդյան օրվանից ± նշված օրերին') }}</span>
                         </div>
 
@@ -1169,7 +1169,7 @@
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('SMS Պրովայդեր') }}
                             </label>
-                            <select name="crm_settings[sms_provider]" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-weight: 600;">
+                            <select name="crm_settings[sms_provider]" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                                 <option value="mobipace" {{ ($crmSettings['sms_provider'] ?? '') === 'mobipace' ? 'selected' : '' }}>Mobipace SMS (Հայաստան)</option>
                                 <option value="smsam" {{ ($crmSettings['sms_provider'] ?? '') === 'smsam' ? 'selected' : '' }}>SMS.am (Հայաստան)</option>
                                 <option value="twilio" {{ ($crmSettings['sms_provider'] ?? '') === 'twilio' ? 'selected' : '' }}>Twilio (International)</option>
@@ -1183,14 +1183,14 @@
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('SMS API Key / Token') }}
                             </label>
-                            <input type="password" name="crm_settings[sms_api_key]" value="{{ $crmSettings['sms_api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px;">
+                            <input type="password" name="crm_settings[sms_api_key]" value="{{ $crmSettings['sms_api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.92rem;">
                         </div>
 
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 {{ __('SMS Sender ID (Անվանում)') }}
                             </label>
-                            <input type="text" name="crm_settings[sms_sender_id]" value="{{ $crmSettings['sms_sender_id'] ?? 'QRMENU' }}" placeholder="Օր․ QRMENU կամ Ռեստորան" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px;">
+                            <input type="text" name="crm_settings[sms_sender_id]" value="{{ $crmSettings['sms_sender_id'] ?? 'QRMENU' }}" placeholder="Օր․ QRMENU կամ Ռեստորան" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                         </div>
 
                         <div style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
@@ -1205,7 +1205,7 @@
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                             {{ __('Շնորհավորական SMS-ի Տեքստը') }}
                         </label>
-                        <textarea name="crm_settings[birthday_sms_template]" rows="2" class="form-control" style="width: 100%; padding: 0.65rem 1rem; border-radius: 12px; font-size: 0.88rem;">{{ $crmSettings['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։' }}</textarea>
+                        <textarea name="crm_settings[birthday_sms_template]" rows="2" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.9rem; resize: vertical;">{{ $crmSettings['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։' }}</textarea>
                         <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Հասանելի փոխարինիչներ՝ {NAME} - հաճախորդի անուն, {DISCOUNT} - զեղչի %, {VENDOR} - ռեստորանի անվանում') }}</span>
                     </div>
                 </div>
@@ -1269,7 +1269,7 @@
                                 {{ __('Telegram Chat ID / Group ID / Channel') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="telegram_settings[chat_id]" id="telegramChatId" value="{{ old('telegram_settings.chat_id', $tgChatId) }}" placeholder="Օր․ -100123456789 կամ @restaurant_alerts" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.4rem; border-radius: 12px; font-weight: 600; font-family: monospace;">
+                                <input type="text" name="telegram_settings[chat_id]" id="telegramChatId" value="{{ old('telegram_settings.chat_id', $tgChatId) }}" placeholder="Օր․ -100123456789 կամ @restaurant_alerts" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-weight: 600; font-family: monospace; font-size: 0.92rem;">
                                 <span style="position: absolute; left: 0.85rem; color: #229ed9; font-size: 1rem;">
                                     <i class="fa-solid fa-hashtag"></i>
                                 </span>
@@ -1290,7 +1290,7 @@
                                 @endif
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="{{ old('telegram_settings.bot_token', $tgBotToken) }}" placeholder="{{ $platformBotConfigured ? 'Լռելյայն օգտագործվում է QR Menu բոտը' : '123456789:AA... (@BotFather)' }}" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
+                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="{{ old('telegram_settings.bot_token', $tgBotToken) }}" placeholder="{{ $platformBotConfigured ? 'Լռելյայն օգտագործվում է QR Menu բոտը' : '123456789:AA... (@BotFather)' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
                                 <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
                                     <i class="fa-solid fa-robot"></i>
                                 </span>
@@ -1306,7 +1306,7 @@
                                 {{ __('Forum Topic / Thread ID (ըստ ցանկության)') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" name="telegram_settings[topic_id]" id="telegramTopicId" value="{{ old('telegram_settings.topic_id', $tgTopicId) }}" placeholder="Օր․ 42" class="form-control" style="width: 100%; padding: 0.65rem 1rem 0.65rem 2.4rem; border-radius: 12px; font-weight: 600;">
+                                <input type="number" name="telegram_settings[topic_id]" id="telegramTopicId" value="{{ old('telegram_settings.topic_id', $tgTopicId) }}" placeholder="Օր․ 42" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                                 <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
                                     <i class="fa-solid fa-comments"></i>
                                 </span>
@@ -1327,7 +1327,7 @@
                                 </span>
                             </div>
                             <div style="flex: 1; max-width: 320px; min-width: 200px;">
-                                <input type="text" name="telegram_chat_id" value="{{ old('telegram_chat_id', $location->telegram_chat_id) }}" placeholder="{{ __('Թողեք դատարկ՝ ընդհանուրը կիրառելու համար') }}" class="form-control" style="font-size: 0.82rem; padding: 0.45rem 0.75rem; border-radius: 8px; font-family: monospace;">
+                                <input type="text" name="telegram_chat_id" value="{{ old('telegram_chat_id', $location->telegram_chat_id) }}" placeholder="{{ __('Թողեք դատարկ՝ ընդհանուրը կիրառելու համար') }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; padding: 0.5rem 0.85rem; border-radius: 10px; font-family: monospace;">
                             </div>
                         </div>
                     @endif
@@ -1441,6 +1441,13 @@
 .settings-card:hover {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
+.form-control {
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
 .form-control:focus {
     border-color: var(--primary) !important;
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
@@ -1453,6 +1460,49 @@
     border-color: var(--primary) !important;
     background: rgba(245, 158, 11, 0.12) !important;
     color: var(--primary) !important;
+}
+
+/* Modern iOS-style toggle switches */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 25px;
+    flex-shrink: 0;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.slider.round {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: var(--border-color, #cbd5e1);
+    transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 34px;
+    border: 1px solid var(--border-color);
+}
+.slider.round:before {
+    position: absolute;
+    content: "";
+    height: 19px;
+    width: 19px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff;
+    transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+.switch input:checked + .slider.round {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+.switch input:checked + .slider.round:before {
+    transform: translateX(21px);
 }
 </style>
 

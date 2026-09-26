@@ -48,6 +48,7 @@
             border-left: 1px solid var(--border-color);
             border-right: 1px solid var(--border-color);
             box-sizing: border-box;
+            z-index: 100000 !important;
         }
         .toast-anim-start {
             transform: translate(-50%, -100%) !important;
@@ -57,6 +58,14 @@
         }
 
         /* Fixed Bottom Navigation & Trackers */
+        .storefront-bottom-nav-container {
+            max-width: var(--desktop-max-width) !important;
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            width: 100% !important;
+        }
+
         .storefront-bottom-nav {
             max-width: var(--desktop-max-width) !important;
             border-left: 1px solid var(--border-color);
@@ -65,10 +74,10 @@
         }
 
         .active-order-floating-pill {
-            max-width: calc(var(--desktop-max-width) - 2rem) !important;
-            left: 50% !important;
-            right: auto !important;
-            transform: translateX(-50%) !important;
+            max-width: calc(var(--desktop-max-width) - 1.5rem) !important;
+            margin: 0 auto 0.6rem auto !important;
+            left: auto !important;
+            transform: none !important;
         }
 
         .ai-waiter-floating-bubble {

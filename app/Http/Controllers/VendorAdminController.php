@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RenewSubscriptionRequest;
 use App\Models\AnalyticsLog;
 use App\Models\Location;
 use App\Models\Order;
@@ -152,24 +153,22 @@ class VendorAdminController extends Controller
     /**
      * Renew or upgrade vendor SaaS subscription via selected payment gateway.
      */
-    public function renewSubscription(Request $request, PaymentGatewayService $paymentService)
+    public function renewSubscription(RenewSubscriptionRequest $request, PaymentGatewayService $paymentService)
     {
         $vendor = Auth::user()->vendor;
-
-        $validated = $request->validate([
-            'subscription_plan_id' => 'required|integer|exists:subscription_plans,id',
-            'period_months' => 'required|integer|in:1,3,6,12',
-            'payment_method' => 'required|string|in:idram,telcell,fastshift,arca,stripe,bank_transfer,cash',
-        ]);
+        $validated = $request->validated();
 
         $plan = SubscriptionPlan::findOrFail($validated['subscription_plan_id']);
 
-        $payment = $paymentService->processSubscriptionRenewal(
+        $renewalData = $paymentService->initiateSubscriptionRenewal(
             $vendor,
             $plan,
             (int) $validated['period_months'],
             $validated['payment_method']
         );
+
+        $payment = $renewalData['payment'];
+        $result = $renewalData['result'];
 
         $methodNames = [
             'idram' => 'Idram Wallet / QR',
@@ -182,9 +181,16 @@ class VendorAdminController extends Controller
         ];
         $selectedMethodName = $methodNames[$validated['payment_method']] ?? strtoupper($validated['payment_method']);
 
+        if ($result->type === 'redirect' && $result->redirectUrl) {
+            return redirect($result->redirectUrl)->with(
+                'info',
+                "Վճարման հարցումը ստեղծված է ({$selectedMethodName})։ Հաշիվ-ապրանքագիր: {$payment->invoice_number}։"
+            );
+        }
+
         return back()->with(
             'success',
-            "✨ Շնորհավորում ենք։ Ձեր բաժանորդագրությունը հաջողությամբ երկարաձգվեց {$validated['period_months']} ամսով ({$selectedMethodName})։ Հաշիվ-ապրանքագիր: {$payment->invoice_number}։"
+            "Հաշիվ-ապրանքագիրը ստեղծված է ({$selectedMethodName})։ Հաշիվ-ապրանքագիր: {$payment->invoice_number}։ Վճարման հաստատումից հետո բաժանորդագրությունը կակտիվանա։"
         );
     }
 }

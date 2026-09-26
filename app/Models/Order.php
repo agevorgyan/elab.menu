@@ -64,4 +64,14 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function paymentAttempts()
+    {
+        return $this->hasMany(PaymentAttempt::class);
+    }
+
+    public function latestPaymentAttempt()
+    {
+        return $this->hasOne(PaymentAttempt::class)->latestOfMany();
+    }
 }

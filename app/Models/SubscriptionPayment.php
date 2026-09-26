@@ -37,4 +37,14 @@ class SubscriptionPayment extends Model
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
+
+    public function paymentAttempts()
+    {
+        return $this->hasMany(PaymentAttempt::class, 'subscription_id');
+    }
+
+    public function latestPaymentAttempt()
+    {
+        return $this->hasOne(PaymentAttempt::class, 'subscription_id')->latestOfMany();
+    }
 }

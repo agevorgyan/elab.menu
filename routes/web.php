@@ -12,6 +12,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MenuBuilderController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\ProfileSecurityController;
 use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\RegisterController;
@@ -58,8 +59,13 @@ Route::get('/api/m/{vendor_slug}/order/{order_number}/status', [ClientStorefront
     ->middleware('throttle:60,1')
     ->name('client.order.status');
 
-Route::get('/payment/callback/{vendor_slug}/{order_id}', [ClientStorefrontController::class, 'paymentCallback'])
+Route::get('/payment/callback/{vendor_slug}/{reference}', [ClientStorefrontController::class, 'paymentCallback'])
     ->name('client.payment.callback');
+
+// Payment Webhook endpoint for asynchronous server-to-server notifications
+Route::match(['get', 'post'], '/api/webhooks/payment/{gateway}', [PaymentWebhookController::class, 'handleWebhook'])
+    ->name('api.webhooks.payment')
+    ->middleware('throttle:60,1');
 
 // AI Waiter Advisor Endpoints
 Route::prefix('/api/m/{vendor_slug}/ai-waiter')->group(function () {

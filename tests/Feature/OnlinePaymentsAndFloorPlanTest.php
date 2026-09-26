@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -95,8 +96,31 @@ class OnlinePaymentsAndFloorPlanTest extends TestCase
                 'payment_method' => 'arca',
             ]);
 
-        $response->assertRedirect(route('admin.subscription'));
-        $response->assertSessionHas('success');
+        $response->assertRedirect();
+
+        // Subscription payment and attempt are pending before verification
+        $this->assertDatabaseHas('subscription_payments', [
+            'vendor_id' => $this->vendor->id,
+            'subscription_plan_id' => $this->plan->id,
+            'status' => 'pending',
+            'payment_method' => 'arca',
+        ]);
+
+        $this->assertDatabaseHas('payment_attempts', [
+            'vendor_id' => $this->vendor->id,
+            'status' => 'pending',
+            'gateway' => 'arca',
+        ]);
+
+        // Complete payment via ArCa webhook
+        $attempt = PaymentAttempt::where('vendor_id', $this->vendor->id)->latest()->first();
+        $webhookRes = $this->post(route('api.webhooks.payment', ['gateway' => 'arca']), [
+            'orderNumber' => $attempt->merchant_reference,
+            'orderId' => 'ARCA-TXN-123456',
+            'status' => 2,
+            'amount' => ((int) round($attempt->amount)) * 100,
+        ]);
+        $webhookRes->assertStatus(200);
 
         $this->vendor->refresh();
         $this->assertTrue($this->vendor->subscription_expires_at->gt($oldExpiresAt));
@@ -220,9 +244,29 @@ class OnlinePaymentsAndFloorPlanTest extends TestCase
         $this->assertEquals('idram', $order->payment_method);
         $this->assertEquals('pending', $order->payment_status);
 
-        // Process payment callback
+        // Process payment callback: client browser callback is untrusted, so order remains pending
         $callbackResponse = $this->get("/payment/callback/{$this->vendor->slug}/{$order->id}?status=success&trx=TRX-998877");
         $callbackResponse->assertRedirect();
+
+        $order->refresh();
+        $this->assertEquals('pending', $order->payment_status);
+
+        // Server-to-server webhook confirmation from Idram
+        $attempt = $order->latestPaymentAttempt;
+        $recAccount = $attempt->request_payload['EDP_REC_ACCOUNT'] ?? '100000000';
+        $settings = $this->vendor->getPaymentSettings()['gateways']['idram'] ?? [];
+        $secretKey = $settings['secret_key'] ?? '';
+        $formattedAmount = number_format((float) $attempt->amount, 2, '.', '');
+        $checksum = strtoupper(md5("{$recAccount}:{$formattedAmount}:{$secretKey}:{$attempt->merchant_reference}:TRX-998877"));
+
+        $webhookRes = $this->post(route('api.webhooks.payment', ['gateway' => 'idram']), [
+            'EDP_BILL_NO' => $attempt->merchant_reference,
+            'EDP_REC_ACCOUNT' => $recAccount,
+            'EDP_AMOUNT' => $formattedAmount,
+            'EDP_TRANS_ID' => 'TRX-998877',
+            'EDP_CHECKSUM' => $checksum,
+        ]);
+        $webhookRes->assertStatus(200);
 
         $order->refresh();
         $this->assertEquals('paid', $order->payment_status);

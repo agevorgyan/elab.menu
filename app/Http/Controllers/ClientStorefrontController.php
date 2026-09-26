@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateOrderAction;
 use App\DTOs\CreateOrderDTO;
+use App\Enums\PaymentStatus;
 use App\Events\WaiterCalled;
 use App\Http\Requests\CallWaiterRequest;
 use App\Http\Requests\SubmitOrderRequest;
@@ -12,11 +13,12 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\MenuTemplate;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\Product;
 use App\Models\Vendor;
 use App\Models\WaiterCall;
 use App\Services\PaymentGatewayService;
-use App\Services\TelegramNotificationService;
+use App\Services\Payments\PaymentVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -269,33 +271,90 @@ self.addEventListener('fetch', event => {
     }
 
     /**
-     * Handle payment gateway success callback.
+     * Handle payment gateway callback.
+     * Never trusts browser parameters as proof of payment.
+     * Only returns success if payment has been server-verified with the provider.
      */
-    public function paymentCallback(string $vendor_slug, int $order_id, Request $request)
-    {
+    public function paymentCallback(
+        string $vendor_slug,
+        string $reference,
+        Request $request,
+        PaymentVerificationService $verificationService
+    ) {
         $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
-        $order = Order::where('vendor_id', $vendor->id)->findOrFail($order_id);
 
-        $gateway = $request->get('gateway', $order->payment_method ?? 'online');
-        $token = $request->get('token') ?? $request->get('trx') ?? $request->get('transaction_id') ?? $order->payment_transaction_id;
+        // Find attempt by merchant reference, uuid, or order ID
+        $attempt = PaymentAttempt::where('vendor_id', $vendor->id)
+            ->where(function ($query) use ($reference) {
+                $query->where('merchant_reference', $reference)
+                    ->orWhere('uuid', $reference);
+                if (is_numeric($reference)) {
+                    $query->orWhere('order_id', (int) $reference);
+                }
+            })
+            ->latest()
+            ->first();
 
-        $order->update([
-            'payment_status' => 'paid',
-            'payment_transaction_id' => $token,
-        ]);
+        if (! $attempt) {
+            // Fallback for direct order reference
+            $order = is_numeric($reference)
+                ? Order::where('vendor_id', $vendor->id)->find((int) $reference)
+                : null;
 
-        try {
-            app(TelegramNotificationService::class)->sendPaymentNotification($order, (string) $gateway);
-        } catch (\Throwable $e) {
-            Log::warning('Telegram payment notification failed: '.$e->getMessage());
+            if ($order && $order->payment_status === 'paid') {
+                return redirect()->route('client.menu', [
+                    'vendor_slug' => $vendor->slug,
+                    'order_placed' => $order->order_number,
+                    'payment_success' => 1,
+                ])->with('success', 'Վճարումը հաջողությամբ կատարվել է։ Պատվերը փոխանցվել է խոհանոց։');
+            }
+
+            return redirect()->route('client.menu', [
+                'vendor_slug' => $vendor->slug,
+            ])->with('error', 'Վճարման գրառումը չի գտնվել։');
+        }
+
+        $order = $attempt->order;
+
+        // 1. If already verified by server-to-server webhook
+        if ($attempt->status === PaymentStatus::Paid) {
+            return redirect()->route('client.menu', [
+                'vendor_slug' => $vendor->slug,
+                'order_placed' => $order?->order_number,
+                'payment_success' => 1,
+                'gateway' => $attempt->gateway,
+            ])->with('success', 'Վճարումը հաջողությամբ կատարվել է։ Պատվերը փոխանցվել է խոհանոց։');
+        }
+
+        // 2. Perform server-side provider verification
+        $result = $verificationService->verifyAndFinalizeAttempt($attempt, $request->all(), $request->headers->all());
+
+        if ($result->success && $result->status === PaymentStatus::Paid) {
+            $order?->refresh();
+
+            return redirect()->route('client.menu', [
+                'vendor_slug' => $vendor->slug,
+                'order_placed' => $order?->order_number,
+                'payment_success' => 1,
+                'gateway' => $attempt->gateway,
+            ])->with('success', 'Վճարումը հաջողությամբ կատարվել է։ Պատվերը փոխանցվել է խոհանոց։');
+        }
+
+        if ($result->status === PaymentStatus::Failed) {
+            return redirect()->route('client.menu', [
+                'vendor_slug' => $vendor->slug,
+                'order_placed' => $order?->order_number,
+                'payment_failed' => 1,
+                'gateway' => $attempt->gateway,
+            ])->with('error', 'Վճարումը մերժվել է կամ տեղի է ունեցել սխալ։');
         }
 
         return redirect()->route('client.menu', [
             'vendor_slug' => $vendor->slug,
-            'order_placed' => $order->order_number,
-            'payment_success' => 1,
-            'gateway' => $gateway,
-        ])->with('success', 'Վճարումը հաջողությամբ կատարվել է։ Պատվերը փոխանցվել է խոհանոց։');
+            'order_placed' => $order?->order_number,
+            'payment_pending' => 1,
+            'gateway' => $attempt->gateway,
+        ])->with('info', 'Վճարումը մշակման փուլում է։ Խնդրում ենք սպասել հաստատմանը։');
     }
 
     public function orderStatus(string $vendor_slug, string $order_number)

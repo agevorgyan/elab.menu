@@ -3,16 +3,25 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Vendor;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use App\Services\Payments\DTOs\PaymentInitiationResult;
+use App\Services\Payments\PaymentService;
+use App\Services\Payments\PaymentVerificationService;
 
 class PaymentGatewayService
 {
+    public function __construct(
+        protected PaymentService $paymentService,
+        protected PaymentVerificationService $verificationService
+    ) {}
+
     /**
      * Available supported gateways and descriptions.
+     *
+     * @return array<string, array<string, string>>
      */
     public static function getSupportedGateways(): array
     {
@@ -69,153 +78,73 @@ class PaymentGatewayService
     }
 
     /**
-     * Initiate customer order online payment.
-     * Returns redirection URL or payment transaction payload.
+     * Initiate customer order payment via PaymentService.
+     *
+     * @return array{success: bool, type: string, gateway: string, transaction_id: ?string, redirect_url: ?string, message?: string}
      */
     public function initiateOrderPayment(Order $order, string $gateway): array
     {
-        $vendor = $order->vendor;
-        $settings = $vendor->getPaymentSettings();
-        $gwConfig = $settings['gateways'][$gateway] ?? [];
-        $isSandbox = ! empty($gwConfig['sandbox']);
-        $transactionId = 'TXN-ORD-'.strtoupper(Str::random(10));
+        $result = $this->paymentService->initiateOrderPayment($order, $gateway);
 
-        $order->update([
-            'payment_method' => $gateway,
-            'payment_status' => ($gateway === 'cash' || $gateway === 'pos_terminal') ? 'unpaid' : 'pending',
-            'payment_transaction_id' => $transactionId,
-        ]);
-
-        if ($gateway === 'cash' || $gateway === 'pos_terminal') {
+        if ($result->type === 'offline') {
             return [
                 'success' => true,
                 'type' => 'offline',
+                'gateway' => $gateway,
+                'transaction_id' => $result->merchantReference,
                 'message' => 'Վճարումը կկատարվի տեղում (սեղանի մոտ կամ ստանալիս)։',
                 'redirect_url' => null,
             ];
         }
 
-        // Mock/Sandbox or Live Dispatcher
-        switch ($gateway) {
-            case 'idram':
-                return [
-                    'success' => true,
-                    'type' => 'redirect',
-                    'gateway' => 'idram',
-                    'transaction_id' => $transactionId,
-                    'redirect_url' => route('client.payment.callback', [
-                        'vendor_slug' => $vendor->slug,
-                        'order_id' => $order->id,
-                        'gateway' => 'idram',
-                        'token' => $transactionId,
-                    ]),
-                    'sandbox' => $isSandbox,
-                ];
-
-            case 'telcell':
-                return [
-                    'success' => true,
-                    'type' => 'redirect',
-                    'gateway' => 'telcell',
-                    'transaction_id' => $transactionId,
-                    'redirect_url' => route('client.payment.callback', [
-                        'vendor_slug' => $vendor->slug,
-                        'order_id' => $order->id,
-                        'gateway' => 'telcell',
-                        'token' => $transactionId,
-                    ]),
-                    'sandbox' => $isSandbox,
-                ];
-
-            case 'fastshift':
-            case 'arca':
-            case 'stripe':
-            default:
-                return [
-                    'success' => true,
-                    'type' => 'redirect',
-                    'gateway' => $gateway,
-                    'transaction_id' => $transactionId,
-                    'redirect_url' => route('client.payment.callback', [
-                        'vendor_slug' => $vendor->slug,
-                        'order_id' => $order->id,
-                        'gateway' => $gateway,
-                        'token' => $transactionId,
-                    ]),
-                    'sandbox' => $isSandbox,
-                ];
-        }
+        return [
+            'success' => $result->success,
+            'type' => $result->type,
+            'gateway' => $gateway,
+            'transaction_id' => $result->merchantReference,
+            'redirect_url' => $result->redirectUrl,
+        ];
     }
 
     /**
-     * Process order payment callback / confirmation.
+     * Finalize order payment via verified attempt.
      */
     public function finalizeOrderPayment(Order $order, string $gateway, string $token): bool
     {
-        $order->update([
-            'payment_status' => 'paid',
-            'payment_method' => $gateway,
-            'payment_transaction_id' => $token,
+        $attempt = PaymentAttempt::where('order_id', $order->id)
+            ->where('gateway', $gateway)
+            ->latest()
+            ->first();
+
+        if (! $attempt) {
+            return false;
+        }
+
+        $result = $this->verificationService->verifyAndFinalizeAttempt($attempt, [
+            'token' => $token,
+            'gateway' => $gateway,
         ]);
 
-        Log::info("Order #{$order->order_number} marked as paid via gateway {$gateway}");
-
-        return true;
+        return $result->success;
     }
 
     /**
-     * Initiate and process vendor SaaS subscription renewal.
+     * Initiate vendor SaaS subscription renewal via PaymentService.
+     * Does NOT mark payment as completed upfront.
+     *
+     * @return array{payment: SubscriptionPayment, attempt: PaymentAttempt, result: PaymentInitiationResult}
      */
-    public function processSubscriptionRenewal(
+    public function initiateSubscriptionRenewal(
         Vendor $vendor,
         SubscriptionPlan $plan,
         int $monthsCount,
         string $paymentMethod
-    ): SubscriptionPayment {
-        // Base monthly price * months
-        $basePrice = (float) $plan->price;
-        $totalAmount = $basePrice * $monthsCount;
-
-        // Discount for longer periods
-        if ($monthsCount >= 12) {
-            $totalAmount = $totalAmount * 0.80; // 20% discount for 1 year
-        } elseif ($monthsCount >= 6) {
-            $totalAmount = $totalAmount * 0.90; // 10% discount for 6 months
-        }
-
-        $now = now();
-        $currentExpiry = ($vendor->subscription_expires_at && $vendor->subscription_expires_at->isFuture())
-            ? $vendor->subscription_expires_at
-            : $now;
-
-        $newExpiry = (clone $currentExpiry)->addMonths($monthsCount);
-        $invoiceNumber = 'INV-'.strtoupper(Str::random(4)).'-'.date('Ymd');
-
-        // Create payment record
-        $payment = SubscriptionPayment::create([
-            'vendor_id' => $vendor->id,
-            'subscription_plan_id' => $plan->id,
-            'amount' => $totalAmount,
-            'currency' => $plan->currency ?? 'AMD',
-            'payment_method' => $paymentMethod,
-            'invoice_number' => $invoiceNumber,
-            'period_start' => $currentExpiry->format('Y-m-d'),
-            'period_end' => $newExpiry->format('Y-m-d'),
-            'status' => 'completed',
-            'notes' => "Երկարաձգում {$monthsCount} ամսով ({$plan->name} փաթեթ)",
-        ]);
-
-        // Update vendor subscription status and dates
-        $vendor->update([
-            'subscription_plan' => $plan->slug,
-            'subscription_plan_id' => $plan->id,
-            'subscription_status' => 'active',
-            'is_active' => true,
-            'subscription_expires_at' => $newExpiry,
-        ]);
-
-        Log::info("Vendor {$vendor->name} subscription renewed for {$monthsCount} months until {$newExpiry->toDateString()}");
-
-        return $payment;
+    ): array {
+        return $this->paymentService->initiateSubscriptionRenewal(
+            $vendor,
+            $plan,
+            $monthsCount,
+            $paymentMethod
+        );
     }
 }

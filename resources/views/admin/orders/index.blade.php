@@ -567,7 +567,7 @@ function updateConnectionStatus(connected) {
         }
         if (text) text.innerHTML = '⚡ WebSockets (Reverb) Ակտիվ է';
         if (pollInfo) {
-            pollInfo.innerHTML = '<span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-bolt text-xs"></i> <span>Իրական ժամանակ (WebSockets)</span></span>';
+            pollInfo.innerHTML = '<span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-bolt text-xs"><\/i> <span>Իրական ժամանակ (WebSockets)<\/span><\/span>';
         }
         pollSecondsRemaining = 120;
     } else {
@@ -582,7 +582,7 @@ function updateConnectionStatus(connected) {
         }
         if (text) text.innerHTML = '⚠️ Պահուստային ռեժիմ (Polling)';
         if (pollInfo) {
-            pollInfo.innerHTML = '<span style="color: #f59e0b; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-rotate text-xs"></i> <span>Պահուստային թարմացում՝ <strong id="pollCounter">' + pollSecondsRemaining + '</strong>վ</span></span>';
+            pollInfo.innerHTML = '<span style="color: #f59e0b; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-rotate text-xs"><\/i> <span>Պահուստային թարմացում՝ <strong id="pollCounter">' + pollSecondsRemaining + '<\/strong>վ<\/span><\/span>';
         }
         pollSecondsRemaining = 6;
     }
@@ -677,23 +677,26 @@ function printViaBrowser() {
 
     try {
         const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Receipt ${currentReceiptOrderNumber || ''}</title>
-                <style>
-                    @page { margin: 0; size: auto; }
-                    body { font-family: "Courier New", Courier, monospace; font-size: 12px; line-height: 1.35; margin: 8px; padding: 0; color: #000; width: 76mm; }
-                    pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; }
-                </style>
-            </head>
-            <body>
-                <pre>${currentReceiptText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-            </body>
-            </html>
-        `);
+        const safeReceipt = (currentReceiptText || '')
+            .replace(new RegExp('<', 'g'), '&lt;')
+            .replace(new RegExp('>', 'g'), '&gt;');
+
+        doc.write([
+            '<!DOCTYPE html>',
+            '<html>',
+            '<head>',
+            '<title>Receipt ' + (currentReceiptOrderNumber || '') + '<\/title>',
+            '<style>',
+            '@page { margin: 0; size: auto; }',
+            'body { font-family: "Courier New", Courier, monospace; font-size: 12px; line-height: 1.35; margin: 8px; padding: 0; color: #000; width: 76mm; }',
+            'pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; }',
+            '<\/style>',
+            '<\/head>',
+            '<body>',
+            '<pre>' + safeReceipt + '<\/pre>',
+            '<\/body>',
+            '<\/html>'
+        ].join(''));
         doc.close();
 
         setTimeout(() => {
@@ -717,7 +720,7 @@ async function printViaBluetooth() {
 
     const btn = document.getElementById('btnBluetoothPrint');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Միացում...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"><\/i> Միացում...';
 
     try {
         const device = await navigator.bluetooth.requestDevice({
@@ -761,7 +764,7 @@ async function printViaBluetooth() {
         }
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-brands fa-bluetooth-b"></i> Web Bluetooth';
+        btn.innerHTML = '<i class="fa-brands fa-bluetooth-b"><\/i> Web Bluetooth';
     }
 }
 

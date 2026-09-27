@@ -1367,11 +1367,23 @@
         };
     }
 
-    // Expose globally
+    // Expose globally on window
     window.createStorefrontApp = createStorefrontApp;
     window.modernBistroApp = function(cfg) { return createStorefrontApp(cfg); };
     window.storefrontApp = function(cfg) { return createStorefrontApp(cfg); };
     window.vibrantGlassApp = function(cfg) { return createStorefrontApp(cfg); };
+
+    function bindAlpineComponents() {
+        if (window.Alpine && typeof window.Alpine.data === 'function') {
+            window.Alpine.data('storefrontApp', function(cfg) { return createStorefrontApp(cfg); });
+            window.Alpine.data('modernBistroApp', function(cfg) { return createStorefrontApp(cfg); });
+            window.Alpine.data('vibrantGlassApp', function(cfg) { return createStorefrontApp(cfg); });
+            window.Alpine.data('createStorefrontApp', function(cfg) { return createStorefrontApp(cfg); });
+        }
+    }
+
+    bindAlpineComponents();
+    document.addEventListener('alpine:init', bindAlpineComponents);
 
     // Haptic feedback listener
     document.addEventListener('click', function(e) {

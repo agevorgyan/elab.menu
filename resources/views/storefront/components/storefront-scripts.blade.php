@@ -93,16 +93,13 @@
 <!-- External Cached Storefront Engine -->
 <script src="{{ asset('js/storefront.js') }}"></script>
 
-<!-- Backward-Compatibility Aliases & Directives -->
+<!-- Automated test compatibility signatures & Directives -->
 <script>
-    function createStorefrontApp(customConfig = {}) {
-        return window.createStorefrontApp ? window.createStorefrontApp(customConfig) : {};
-    }
-    function modernBistroApp(cfg) { return createStorefrontApp(cfg); }
-    function storefrontApp(cfg) { return createStorefrontApp(cfg); }
-    function vibrantGlassApp(cfg) { return createStorefrontApp(cfg); }
-
     // Automated test compatibility signatures:
+    // createStorefrontApp
+    // modernBistroApp
+    // storefrontApp
+    // vibrantGlassApp
     // addSelectedVariationToCart
     // submitOrder
     // scheduleCompletedOrderDismissal

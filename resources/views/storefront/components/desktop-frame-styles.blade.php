@@ -10,17 +10,6 @@
         --desktop-max-width: {{ $maxWidth }};
     }
 
-    /* Content Visibility Performance Optimization for Large Menus (150+ Dishes) */
-    .category-section {
-        content-visibility: auto;
-        contain-intrinsic-size: auto 600px;
-    }
-
-    .dish-card, .glass-card {
-        content-visibility: auto;
-        contain-intrinsic-size: auto 130px;
-    }
-
     /* Responsive Multi-Column Grid on Tablet & Desktop */
     @media (min-width: 768px) {
         .dishes-grid {

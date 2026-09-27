@@ -15,9 +15,11 @@
             {{ __('Հրավիրեք մենեջերների և սպասարկող անձնակազմին՝ ըստ մասնաճյուղերի սահմանված հասանելիության իրավունքներով') }}
         </p>
     </div>
+    @can('team.manage')
     <button class="btn btn-primary" onclick="document.getElementById('newMemberModal').style.display='flex'" style="font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
         <i class="fa-solid fa-user-plus"></i> + {{ __('Հրավիրել Անդամ') }}
     </button>
+    @endcan
 </div>
 
 <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 0; overflow: hidden; box-shadow: var(--shadow-card);">
@@ -54,6 +56,14 @@
                             @elseif($member->role == 'manager')
                                 <span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.25rem 0.65rem; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
                                     <i class="fa-solid fa-user-tie"></i> {{ __('Մենեջեր') }}
+                                </span>
+                            @elseif($member->role == 'chef')
+                                <span style="background: rgba(234, 88, 12, 0.15); color: #ea580c; border: 1px solid rgba(234, 88, 12, 0.3); padding: 0.25rem 0.65rem; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-fire-burner"></i> {{ __('Խոհարար') }}
+                                </span>
+                            @elseif($member->role == 'cashier')
+                                <span style="background: rgba(14, 165, 233, 0.15); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3); padding: 0.25rem 0.65rem; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <i class="fa-solid fa-cash-register"></i> {{ __('Գանձապահ') }}
                                 </span>
                             @else
                                 <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.65rem; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -112,8 +122,10 @@
                 <div>
                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">{{ __('Դեր (Role)') }} <span style="color: #ef4444;">*</span></label>
                     <select name="role" required style="width: 100%; box-sizing: border-box; padding: 0.75rem 1rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); font-size: 0.95rem; outline: none; font-weight: 600;">
-                        <option value="manager">{{ __('Մասնաճյուղի Մենեջեր') }}</option>
-                        <option value="staff">{{ __('Խոհանոց / Մատուցող') }}</option>
+                        <option value="manager">{{ __('Մասնաճյուղի Մենեջեր (Manager)') }}</option>
+                        <option value="staff">{{ __('Սպասարկող Անձնակազմ (Staff)') }}</option>
+                        <option value="chef">{{ __('Խոհարար (Chef)') }}</option>
+                        <option value="cashier">{{ __('Գանձապահ (Cashier)') }}</option>
                     </select>
                 </div>
                 <div>

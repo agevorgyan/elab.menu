@@ -24,6 +24,8 @@ class MenuBuilderController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Category::class);
+
         $vendor = Auth::user()->vendor;
         $categories = Category::where('vendor_id', $vendor->id)
             ->with(['products.variations', 'products.allergens', 'products.overrides'])

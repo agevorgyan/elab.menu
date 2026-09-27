@@ -28,9 +28,16 @@ class VendorAdminController extends Controller
 
         $this->authorize('view', $vendor);
 
-        $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
-        if ($activeLocationId) {
-            session(['active_location_id' => $activeLocationId]);
+        if ($user->location_id) {
+            $activeLocationId = $user->location_id;
+            if ($request->has('location_id') && (int) $request->get('location_id') !== (int) $user->location_id) {
+                abort(403, 'Unauthorized access to other branch location.');
+            }
+        } else {
+            $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
+            if ($activeLocationId) {
+                session(['active_location_id' => $activeLocationId]);
+            }
         }
 
         $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
@@ -69,6 +76,8 @@ class VendorAdminController extends Controller
 
     public function locationsIndex()
     {
+        $this->authorize('locations.view');
+
         $vendor = Auth::user()->vendor;
         $locations = $vendor->locations;
 
@@ -77,6 +86,8 @@ class VendorAdminController extends Controller
 
     public function storeLocation(Request $request)
     {
+        $this->authorize('locations.manage');
+
         $vendor = Auth::user()->vendor;
 
         $validated = $request->validate([
@@ -105,6 +116,8 @@ class VendorAdminController extends Controller
 
     public function teamIndex()
     {
+        $this->authorize('team.view');
+
         $vendor = Auth::user()->vendor;
         $team = User::where('vendor_id', $vendor->id)->get();
         $locations = $vendor->locations;
@@ -114,13 +127,14 @@ class VendorAdminController extends Controller
 
     public function storeTeamMember(Request $request)
     {
+        $this->authorize('team.manage');
+
         $vendor = Auth::user()->vendor;
-        $this->authorize('update', $vendor);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|string|in:manager,staff',
+            'role' => 'required|string|in:manager,staff,chef,cashier',
             'location_id' => 'nullable|integer',
             'password' => 'required|string|min:6',
         ]);
@@ -146,8 +160,9 @@ class VendorAdminController extends Controller
 
     public function subscriptionIndex()
     {
+        $this->authorize('billing.view');
+
         $vendor = Auth::user()->vendor;
-        $this->authorize('manageBilling', $vendor);
 
         $vendor->load('plan', 'payments');
         $allPlans = SubscriptionPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();

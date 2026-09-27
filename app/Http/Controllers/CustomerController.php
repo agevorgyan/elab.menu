@@ -21,12 +21,20 @@ class CustomerController extends Controller
     {
         $this->authorize('viewAny', Customer::class);
 
-        $vendor = Auth::user()->vendor;
+        $user = Auth::user();
+        $vendor = $user->vendor;
         $locations = $vendor->locations;
 
-        $activeLocationId = $request->get('location_id', session('active_location_id', $locations->first()?->id));
-        if ($request->has('location_id')) {
-            session(['active_location_id' => $activeLocationId]);
+        if ($user->location_id) {
+            $activeLocationId = $user->location_id;
+            if ($request->has('location_id') && (int) $request->get('location_id') !== (int) $user->location_id) {
+                abort(403, 'Unauthorized access to other branch customers.');
+            }
+        } else {
+            $activeLocationId = $request->get('location_id', session('active_location_id', $locations->first()?->id));
+            if ($request->has('location_id')) {
+                session(['active_location_id' => $activeLocationId]);
+            }
         }
 
         $selectedLocation = ($activeLocationId && $activeLocationId !== 'all')

@@ -7,6 +7,7 @@ use Database\Factories\AiWaiterSessionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AiWaiterSession extends Model
 {
@@ -67,5 +68,47 @@ class AiWaiterSession extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function usageLogs(): HasMany
+    {
+        return $this->hasMany(AiUsageLog::class, 'session_id');
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'session_token';
+    }
+
+    /**
+     * Resolve model by ID or opaque session_token seamlessly.
+     */
+    public static function find($id, $columns = ['*'])
+    {
+        if (is_string($id) && ! ctype_digit($id)) {
+            return static::query()->where('session_token', $id)->first($columns);
+        }
+
+        return static::query()->find($id, $columns);
+    }
+
+    /**
+     * Resolve model by ID or opaque session_token seamlessly, or fail.
+     */
+    public static function findOrFail($id, $columns = ['*'])
+    {
+        if (is_string($id) && ! ctype_digit($id)) {
+            return static::query()->where('session_token', $id)->firstOrFail($columns);
+        }
+
+        return static::query()->findOrFail($id, $columns);
+    }
+
+    /**
+     * Generate a cryptographically random, unguessable session token.
+     */
+    public static function generateSecureToken(): string
+    {
+        return 'ais_'.bin2hex(random_bytes(24));
     }
 }

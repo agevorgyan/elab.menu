@@ -237,7 +237,7 @@ class AiWaiterSystemTest extends TestCase
 
         $sessionId = $response->json('session_id');
         $this->assertDatabaseHas('ai_waiter_sessions', [
-            'id' => $sessionId,
+            'session_token' => $sessionId,
             'vendor_id' => $this->vendor->id,
             'table_number' => 'Table 7',
             'language' => 'hy',
@@ -256,7 +256,7 @@ class AiWaiterSystemTest extends TestCase
 
         $response = $this->postJson(route('client.ai_waiter.session.language', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]), [
             'language' => 'en',
         ]);
@@ -283,7 +283,7 @@ class AiWaiterSystemTest extends TestCase
         // Customer inputs free text indicating craving meat, budget 10000 and not spicy
         $response = $this->postJson(route('client.ai_waiter.session.answer', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]), [
             'question_key' => 'mood',
             'answer_value' => 'meat',
@@ -312,7 +312,7 @@ class AiWaiterSystemTest extends TestCase
 
         $response = $this->postJson(route('client.ai_waiter.session.recommendations', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]));
 
         $response->assertOk();
@@ -343,7 +343,7 @@ class AiWaiterSystemTest extends TestCase
 
         $response = $this->postJson(route('client.ai_waiter.session.recommendations', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]));
 
         $response->assertOk();
@@ -371,7 +371,7 @@ class AiWaiterSystemTest extends TestCase
 
         $response = $this->postJson(route('client.ai_waiter.session.recommendations', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]));
 
         $response->assertOk();
@@ -398,7 +398,7 @@ class AiWaiterSystemTest extends TestCase
 
         $response = $this->postJson(route('client.ai_waiter.session.recommendations', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]));
 
         $response->assertOk();
@@ -420,7 +420,7 @@ class AiWaiterSystemTest extends TestCase
 
         $response = $this->postJson(route('client.ai_waiter.session.chat', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]), [
             'message' => 'Ի՞նչ ունեք առանց մսի։',
         ]);
@@ -455,7 +455,7 @@ class AiWaiterSystemTest extends TestCase
         // 1. Add product to session cart
         $cartResponse = $this->postJson(route('client.ai_waiter.session.add_to_cart', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]), [
             'product_id' => $this->khinkaliProduct->id,
         ]);
@@ -475,7 +475,7 @@ class AiWaiterSystemTest extends TestCase
 
         $completeResponse = $this->postJson(route('client.ai_waiter.session.complete', [
             'vendor_slug' => $this->vendor->slug,
-            'id' => $session->id,
+            'token' => $session->session_token,
         ]), [
             'order_id' => $order->id,
         ]);

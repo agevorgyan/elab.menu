@@ -78,9 +78,9 @@ class ProductImageUploadTest extends TestCase
         $this->assertEquals('Delicious Pasta Updated', $this->product->name);
         $this->assertEquals(3800, (int) $this->product->price);
 
-        // Check image was stored
+        // Check image was stored in vendor isolated namespace
         $rawImage = $this->product->getRawOriginal('image');
-        $this->assertStringStartsWith('/storage/products/', $rawImage);
+        $this->assertStringStartsWith("/storage/vendors/{$this->vendor->uuid}/products/", $rawImage);
         $storedPath = str_replace('/storage/', '', $rawImage);
         Storage::disk('public')->assertExists($storedPath);
     }

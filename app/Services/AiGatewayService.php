@@ -132,6 +132,12 @@ class AiGatewayService
         ],
     ];
 
+    public function __construct(
+        protected ?AiQuotaService $quotaService = null
+    ) {
+        $this->quotaService = $quotaService ?? app(AiQuotaService::class);
+    }
+
     /**
      * Generate plain text using vendor configured AI provider.
      */
@@ -142,19 +148,71 @@ class AiGatewayService
         $apiKey = $vendor->getAiApiKey();
         $baseUrl = $vendor->getAiBaseUrl();
         $timeout = $options['timeout'] ?? 15;
+        $session = $options['session'] ?? null;
 
         if (empty($apiKey) && $provider !== 'custom') {
             return '';
         }
 
+        // 1. Quota Enforcement: Prevent uncontrolled AI costs
+        $quotaCheck = $this->quotaService->checkQuotas($vendor);
+        if (! $quotaCheck['allowed']) {
+            Log::warning("AI request blocked by quota [vendor: {$vendor->id}]: {$quotaCheck['reason']}");
+            $this->quotaService->logUsage(
+                $vendor,
+                $session,
+                $provider,
+                $model,
+                $this->quotaService->estimateTokens($prompt),
+                0,
+                0,
+                'quota_exceeded',
+                $quotaCheck['reason']
+            );
+
+            return '';
+        }
+
+        $startTime = microtime(true);
+
         try {
-            return match ($provider) {
+            $result = match ($provider) {
                 'gemini' => $this->callGeminiText($apiKey, $model, $prompt, $timeout),
                 'claude' => $this->callClaudeText($apiKey, $model, $prompt, $timeout),
                 default => $this->callOpenAiCompatibleText($provider, $apiKey, $model, $prompt, $baseUrl, $timeout),
             };
+
+            $latency = (int) round((microtime(true) - $startTime) * 1000);
+            $inputTokens = $this->quotaService->estimateTokens($prompt);
+            $outputTokens = $this->quotaService->estimateTokens($result);
+
+            $this->quotaService->logUsage(
+                $vendor,
+                $session,
+                $provider,
+                $model,
+                $inputTokens,
+                $outputTokens,
+                $latency,
+                'success'
+            );
+
+            return $result;
         } catch (\Throwable $e) {
+            $latency = (int) round((microtime(true) - $startTime) * 1000);
             Log::warning("AiGateway generateText failed [{$provider}/{$model}]: ".$e->getMessage());
+
+            $this->quotaService->logUsage(
+                $vendor,
+                $session,
+                $provider,
+                $model,
+                $this->quotaService->estimateTokens($prompt),
+                0,
+                $latency,
+                'failed',
+                $e->getMessage()
+            );
 
             return '';
         }
@@ -398,10 +456,11 @@ class AiGatewayService
             ];
         } catch (\Throwable $e) {
             $latency = (int) round((microtime(true) - $startTime) * 1000);
+            $cleanMsg = app(CredentialService::class)->redactString($e->getMessage(), array_filter([(string) $apiKey]));
 
             return [
                 'success' => false,
-                'message' => 'Սխալ: '.$e->getMessage(),
+                'message' => 'Սխալ: '.$cleanMsg,
                 'latency_ms' => $latency,
             ];
         }

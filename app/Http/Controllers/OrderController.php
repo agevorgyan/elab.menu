@@ -25,8 +25,21 @@ class OrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-        $vendor = Auth::user()->vendor;
-        $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $user = Auth::user();
+        $vendor = $user->vendor;
+
+        if ($user->location_id) {
+            $activeLocationId = $user->location_id;
+            if ($request->has('location_id') && (int) $request->get('location_id') !== (int) $user->location_id) {
+                abort(403, 'Unauthorized access to other branch orders.');
+            }
+        } else {
+            $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
+            if ($activeLocationId) {
+                session(['active_location_id' => $activeLocationId]);
+            }
+        }
+
         $status = $request->get('status', 'all');
 
         $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations()->first();
@@ -40,8 +53,18 @@ class OrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-        $vendor = Auth::user()->vendor;
-        $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $user = Auth::user();
+        $vendor = $user->vendor;
+
+        if ($user->location_id) {
+            $activeLocationId = $user->location_id;
+            if ($request->has('location_id') && (int) $request->get('location_id') !== (int) $user->location_id) {
+                abort(403, 'Unauthorized access to other branch orders.');
+            }
+        } else {
+            $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
+        }
+
         $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations()->first();
         $status = $request->get('status', 'all');
         $lastOrderId = (int) $request->get('last_order_id', 0);
@@ -71,9 +94,16 @@ class OrderController extends Controller
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order)
     {
-        $this->authorize('update', $order);
-
         $validated = $request->validated();
+        $newStatus = $validated['status'];
+
+        if ($newStatus === 'cancelled') {
+            $this->authorize('cancel', $order);
+        } elseif ($newStatus === 'refunded') {
+            $this->authorize('refund', $order);
+        } else {
+            $this->authorize('update', $order);
+        }
 
         $order->update(['status' => $validated['status']]);
 

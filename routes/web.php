@@ -72,13 +72,13 @@ Route::prefix('/api/m/{vendor_slug}/ai-waiter')->group(function () {
     Route::get('/config', [AiWaiterController::class, 'config'])->name('client.ai_waiter.config');
     Route::get('/questions', [AiWaiterController::class, 'questions'])->name('client.ai_waiter.questions');
     Route::post('/session', [AiWaiterController::class, 'startSession'])->name('client.ai_waiter.session.start');
-    Route::post('/session/{id}/language', [AiWaiterController::class, 'setLanguage'])->name('client.ai_waiter.session.language');
-    Route::post('/session/{id}/answer', [AiWaiterController::class, 'submitAnswer'])->name('client.ai_waiter.session.answer');
-    Route::post('/session/{id}/next-question', [AiWaiterController::class, 'nextQuestion'])->name('client.ai_waiter.session.next_question');
-    Route::post('/session/{id}/recommendations', [AiWaiterController::class, 'recommendations'])->name('client.ai_waiter.session.recommendations');
-    Route::post('/session/{id}/chat', [AiWaiterController::class, 'chat'])->name('client.ai_waiter.session.chat');
-    Route::post('/session/{id}/add-to-cart', [AiWaiterController::class, 'addToCart'])->name('client.ai_waiter.session.add_to_cart');
-    Route::post('/session/{id}/complete', [AiWaiterController::class, 'complete'])->name('client.ai_waiter.session.complete');
+    Route::post('/session/{token}/language', [AiWaiterController::class, 'setLanguage'])->name('client.ai_waiter.session.language');
+    Route::post('/session/{token}/answer', [AiWaiterController::class, 'submitAnswer'])->name('client.ai_waiter.session.answer');
+    Route::post('/session/{token}/next-question', [AiWaiterController::class, 'nextQuestion'])->name('client.ai_waiter.session.next_question');
+    Route::post('/session/{token}/recommendations', [AiWaiterController::class, 'recommendations'])->name('client.ai_waiter.session.recommendations');
+    Route::post('/session/{token}/chat', [AiWaiterController::class, 'chat'])->name('client.ai_waiter.session.chat');
+    Route::post('/session/{token}/add-to-cart', [AiWaiterController::class, 'addToCart'])->name('client.ai_waiter.session.add_to_cart');
+    Route::post('/session/{token}/complete', [AiWaiterController::class, 'complete'])->name('client.ai_waiter.session.complete');
 
     // Legacy endpoints
     Route::post('/recommend', [AiWaiterController::class, 'recommend'])->name('client.ai_waiter.recommend');
@@ -182,7 +182,7 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
 });
 
 // 4. Vendor Admin Panel (/admin)
-Route::middleware(['auth', 'role:vendor_owner,manager,staff', EnsureSubscriptionIsActive::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:vendor_owner,manager,staff,chef,cashier', EnsureSubscriptionIsActive::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [VendorAdminController::class, 'dashboard'])->name('dashboard');
 
     // Vendor Subscription Status & Payment History

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Security\Permission;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,6 +17,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'custom_permissions',
         'vendor_id',
         'location_id',
         'phone',
@@ -39,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'custom_permissions' => 'array',
             'two_factor_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_email_expires_at' => 'datetime',
@@ -80,6 +83,166 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isManager(): bool
     {
         return in_array($this->role, ['vendor_owner', 'manager']);
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
+    }
+
+    public function isChef(): bool
+    {
+        return $this->role === 'chef';
+    }
+
+    public function isCashier(): bool
+    {
+        return $this->role === 'cashier';
+    }
+
+    /**
+     * Get all active permissions for this user (role defaults + custom overrides).
+     */
+    public function getPermissions(): array
+    {
+        $roleDefaults = Permission::forRole($this->role ?? '');
+
+        $custom = $this->custom_permissions ?? [];
+        $granted = $custom['granted'] ?? [];
+        $denied = $custom['denied'] ?? [];
+
+        $effective = array_unique(array_merge($roleDefaults, $granted));
+
+        if (! empty($denied)) {
+            $effective = array_values(array_diff($effective, $denied));
+        }
+
+        return $effective;
+    }
+
+    /**
+     * Check if user has a specific permission.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // Explicit platform permissions for superadmin
+        if ($this->isSuperAdmin()) {
+            $perms = $this->getPermissions();
+
+            return in_array($permission, $perms, true);
+        }
+
+        return in_array($permission, $this->getPermissions(), true);
+    }
+
+    /**
+     * Check if user has any of the given permissions.
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user has all of the given permissions.
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (! $this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Explicitly grant a custom permission override.
+     */
+    public function givePermission(string $permission): self
+    {
+        $custom = $this->custom_permissions ?? ['granted' => [], 'denied' => []];
+        $granted = $custom['granted'] ?? [];
+        $denied = $custom['denied'] ?? [];
+
+        if (! in_array($permission, $granted, true)) {
+            $granted[] = $permission;
+        }
+
+        $denied = array_values(array_diff($denied, [$permission]));
+
+        $this->custom_permissions = [
+            'granted' => $granted,
+            'denied' => $denied,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Explicitly revoke/deny a custom permission override.
+     */
+    public function revokePermission(string $permission): self
+    {
+        $custom = $this->custom_permissions ?? ['granted' => [], 'denied' => []];
+        $granted = $custom['granted'] ?? [];
+        $denied = $custom['denied'] ?? [];
+
+        if (! in_array($permission, $denied, true)) {
+            $denied[] = $permission;
+        }
+
+        $granted = array_values(array_diff($granted, [$permission]));
+
+        $this->custom_permissions = [
+            'granted' => $granted,
+            'denied' => $denied,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Check if the user is authorized to access a given Location model.
+     */
+    public function canAccessLocation(?Location $location): bool
+    {
+        if (! $location) {
+            return true;
+        }
+
+        if ((int) $this->vendor_id !== (int) $location->vendor_id) {
+            return false;
+        }
+
+        if ($this->location_id !== null) {
+            return (int) $this->location_id === (int) $location->id;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the user is authorized to access a given location ID.
+     */
+    public function canAccessLocationId(?int $locationId): bool
+    {
+        if ($locationId === null) {
+            return true;
+        }
+
+        if ($this->location_id !== null) {
+            return (int) $this->location_id === (int) $locationId;
+        }
+
+        return true;
     }
 
     public function hasTwoFactorEnabled(): bool

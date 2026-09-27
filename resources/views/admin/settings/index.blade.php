@@ -884,8 +884,8 @@
             </div>
 
             @php
-                $paymentSettings = $vendor->getPaymentSettings();
-                $crmSettings = $vendor->getCrmSettings();
+                $paymentSettings = $vendor->getSafePaymentSettings();
+                $crmSettings = $vendor->getSafeCrmSettings();
                 $printerSettings = $vendor->getThermalPrinterSettings();
             @endphp
 
@@ -949,7 +949,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][idram][merchant_id]" value="{{ $paymentSettings['gateways']['idram']['merchant_id'] ?? '' }}" placeholder="Receiver / Merchant ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="{{ $paymentSettings['gateways']['idram']['secret_key'] ?? '' }}" placeholder="Secret Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['idram']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['idram']['masked'] ?? 'Կարգավորված է') . ')' : 'Secret Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][idram][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['idram']['sandbox']) ? 'checked' : '' }} style="accent-color: #ff6f00;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
@@ -971,7 +971,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][telcell][shop_id]" value="{{ $paymentSettings['gateways']['telcell']['shop_id'] ?? '' }}" placeholder="Shop ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][telcell][key]" value="{{ $paymentSettings['gateways']['telcell']['key'] ?? '' }}" placeholder="Security Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][telcell][key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['telcell']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['telcell']['masked'] ?? 'Կարգավորված է') . ')' : 'Security Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][telcell][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['telcell']['sandbox']) ? 'checked' : '' }} style="accent-color: #e11d48;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
@@ -993,7 +993,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][fastshift][merchant_id]" value="{{ $paymentSettings['gateways']['fastshift']['merchant_id'] ?? '' }}" placeholder="Merchant ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="{{ $paymentSettings['gateways']['fastshift']['api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['fastshift']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['fastshift']['masked'] ?? 'Կարգավորված է') . ')' : 'API Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][fastshift][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['fastshift']['sandbox']) ? 'checked' : '' }} style="accent-color: #2563eb;">
                                     <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
@@ -1043,7 +1043,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][stripe][publishable_key]" value="{{ $paymentSettings['gateways']['stripe']['publishable_key'] ?? '' }}" placeholder="Publishable Key (pk_test_...)" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="{{ $paymentSettings['gateways']['stripe']['secret_key'] ?? '' }}" placeholder="Secret Key (sk_test_...)" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['stripe']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['stripe']['masked'] ?? 'Կարգավորված է') . ')' : 'Secret Key (sk_test_...)' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][stripe][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['stripe']['sandbox']) ? 'checked' : '' }} style="accent-color: #6366f1;">
                                     <span>{{ __('Test Mode (pk_test / sk_test)') }}</span>
@@ -1180,10 +1180,13 @@
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
                         <div>
-                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('SMS API Key / Token') }}
+                            <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                <span>{{ __('SMS API Key / Token') }}</span>
+                                @if(!empty($crmSettings['configured']))
+                                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">✓ {{ __('Կարգավորված է') }}</span>
+                                @endif
                             </label>
-                            <input type="password" name="crm_settings[sms_api_key]" value="{{ $crmSettings['sms_api_key'] ?? '' }}" placeholder="API Key" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.92rem;">
+                            <input type="password" name="crm_settings[sms_api_key]" value="" placeholder="{{ !empty($crmSettings['configured']) ? '•••••••• (' . ($crmSettings['masked'] ?? 'Կարգավորված է') . ')' : 'API Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.92rem;">
                         </div>
 
                         <div>
@@ -1215,7 +1218,8 @@
             @php
                 $tgSettings = $vendor->telegram_settings ?? [];
                 $tgEnabled = !empty($tgSettings['enabled']);
-                $tgBotToken = $tgSettings['bot_token'] ?? '';
+                $tgConfigured = app(\App\Services\CredentialService::class)->has($vendor, 'telegram', 'bot_token');
+                $tgMasked = app(\App\Services\CredentialService::class)->mask($vendor, 'telegram', 'bot_token');
                 $tgChatId = $tgSettings['chat_id'] ?? '';
                 $tgTopicId = $tgSettings['topic_id'] ?? '';
                 $tgNotifyOrders = !empty($tgSettings['notify_orders']) || !isset($tgSettings['notify_orders']);
@@ -1283,20 +1287,24 @@
                         <div>
                             <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 <span>{{ __('Սեփական Bot Token (ըստ ցանկության)') }}</span>
-                                @if($platformBotConfigured)
+                                @if($tgConfigured)
+                                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">
+                                        ✓ {{ __('Կարգավորված է') }}
+                                    </span>
+                                @elseif($platformBotConfigured)
                                     <span style="font-size: 0.72rem; color: #10b981; font-weight: 600;">
                                         <i class="fa-solid fa-check"></i> {{ __('Հարթակի բոտը հասանելի է') }}
                                     </span>
                                 @endif
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="{{ old('telegram_settings.bot_token', $tgBotToken) }}" placeholder="{{ $platformBotConfigured ? 'Լռելյայն օգտագործվում է QR Menu բոտը' : '123456789:AA... (@BotFather)' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
+                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="" placeholder="{{ $tgConfigured ? '•••••••• (' . ($tgMasked ?: 'Կարգավորված է') . ')' : ($platformBotConfigured ? 'Լռելյայն օգտագործվում է QR Menu բոտը' : '123456789:AA... (@BotFather)') }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
                                 <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
                                     <i class="fa-solid fa-robot"></i>
                                 </span>
                             </div>
                             <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Թողեք դատարկ՝ համակարգի լռելյայն բոտն օգտագործելու համար, կամ նշեք @BotFather-ից ստացած սեփական Token-ը։') }}
+                                {{ __('Թողեք դատարկ՝ նախկինը պահպանելու կամ համակարգի բոտն օգտագործելու համար, կամ նշեք @BotFather-ից ստացած նոր Token-ը։') }}
                             </span>
                         </div>
 

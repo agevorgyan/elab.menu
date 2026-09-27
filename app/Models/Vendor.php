@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Services\CredentialService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 
 class Vendor extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $attributes = [
         'takeaway_enabled' => true,
@@ -83,12 +88,28 @@ class Vendor extends Model
         'thermal_printer_settings',
         'floor_plan_data',
         'telegram_settings',
+        'uuid',
+        'storage_limit_bytes',
+        'storage_used_bytes',
+        'storage_files_count',
+        'lifecycle_status',
+        'termination_requested_at',
+        'termination_requested_by',
+        'termination_reason',
+        'retention_ends_at',
+        'deletion_queued_at',
     ];
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
         'subscription_expires_at' => 'datetime',
+        'termination_requested_at' => 'datetime',
+        'retention_ends_at' => 'datetime',
+        'deletion_queued_at' => 'datetime',
         'is_active' => 'boolean',
+        'storage_limit_bytes' => 'integer',
+        'storage_used_bytes' => 'integer',
+        'storage_files_count' => 'integer',
         'service_fee_enabled' => 'boolean',
         'service_fee_value' => 'decimal:2',
         'service_fee_min_order' => 'decimal:2',
@@ -113,6 +134,32 @@ class Vendor extends Model
     ];
 
     /**
+     * Transparently decrypt Wi-Fi password when retrieved, falling back to plaintext for legacy rows.
+     */
+    public function getWifiPasswordAttribute($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
+
+    /**
+     * Transparently encrypt Wi-Fi password when stored at rest in the database.
+     */
+    public function setWifiPasswordAttribute(?string $value): void
+    {
+        $this->attributes['wifi_password'] = ($value !== null && $value !== '')
+            ? Crypt::encryptString($value)
+            : null;
+    }
+
+    /**
      * Check if Telegram notifications are enabled for this vendor.
      */
     public function hasTelegramEnabled(): bool
@@ -122,11 +169,13 @@ class Vendor extends Model
 
     /**
      * Get configured Telegram Bot Token or fallback to platform settings / env.
+     * Checks dedicated encrypted vendor_credentials first.
      */
     public function getTelegramBotToken(): ?string
     {
-        if (! empty($this->telegram_settings['bot_token'])) {
-            return trim($this->telegram_settings['bot_token']);
+        $token = app(CredentialService::class)->get($this, 'telegram', 'bot_token');
+        if (! empty($token)) {
+            return trim($token);
         }
 
         return SystemSetting::get('telegram_bot_token')
@@ -201,11 +250,13 @@ class Vendor extends Model
 
     /**
      * Get configured vendor AI API Key or fallback to system key.
+     * Checks dedicated encrypted vendor_credentials first.
      */
     public function getAiApiKey(): ?string
     {
-        if (! empty($this->ai_settings['api_key'])) {
-            return $this->ai_settings['api_key'];
+        $apiKey = app(CredentialService::class)->get($this, 'ai', 'api_key');
+        if (! empty($apiKey)) {
+            return trim($apiKey);
         }
 
         // Fallback to system key for gemini
@@ -229,7 +280,9 @@ class Vendor extends Model
      */
     public function hasCustomAiConfig(): bool
     {
-        return ! empty($this->ai_settings['api_key']) || ! empty($this->ai_settings['provider']);
+        return app(CredentialService::class)->has($this, 'ai', 'api_key')
+            || ! empty($this->ai_settings['api_key'])
+            || ! empty($this->ai_settings['provider']);
     }
 
     /**
@@ -267,6 +320,14 @@ class Vendor extends Model
     }
 
     /**
+     * Relationship to AI usage logs.
+     */
+    public function aiUsageLogs()
+    {
+        return $this->hasMany(AiUsageLog::class);
+    }
+
+    /**
      * Get AI Waiter configuration array with defaults.
      */
     public function getAiWaiterConfig(): array
@@ -278,6 +339,15 @@ class Vendor extends Model
             'free_text_enabled' => true,
             'ai_chat_enabled' => true,
             'auto_popup' => true,
+            'quotas' => [
+                'requests_per_minute' => 30,
+                'requests_per_hour' => 300,
+                'daily_requests' => 1000,
+                'monthly_requests' => 15000,
+                'daily_tokens' => null,
+                'monthly_tokens' => null,
+                'spending_limit' => null,
+            ],
             'promoted_products' => [], // array of ['product_id' => int, 'priority' => int, 'active' => bool]
             'preferred_ingredients' => [], // array of ['ingredient' => string, 'priority' => int, 'active' => bool]
             'preferred_categories' => [], // array of ['category_id' => int, 'priority' => int]
@@ -317,6 +387,16 @@ class Vendor extends Model
         $saved = $this->ai_waiter_config ?? [];
 
         return array_replace_recursive($defaultConfig, $saved);
+    }
+
+    /**
+     * Get configured AI quotas for this vendor.
+     *
+     * @return array<string, mixed>
+     */
+    public function getAiQuotas(): array
+    {
+        return $this->getAiWaiterConfig()['quotas'] ?? [];
     }
 
     /**
@@ -408,6 +488,11 @@ class Vendor extends Model
         return $this->hasMany(Location::class);
     }
 
+    public function credentials(): HasMany
+    {
+        return $this->hasMany(VendorCredential::class);
+    }
+
     public function categories()
     {
         return $this->hasMany(Category::class)->orderBy('sort_order', 'asc');
@@ -446,6 +531,68 @@ class Vendor extends Model
     public function payments()
     {
         return $this->hasMany(SubscriptionPayment::class)->latest();
+    }
+
+    public function storageFiles()
+    {
+        return $this->hasMany(VendorStorageFile::class, 'vendor_id');
+    }
+
+    public function deletionJobs()
+    {
+        return $this->hasMany(VendorDeletionJob::class, 'vendor_id');
+    }
+
+    public function lifecycleLogs()
+    {
+        return $this->hasMany(VendorLifecycleLog::class, 'vendor_id');
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->lifecycle_status === 'suspended' || ! $this->is_active;
+    }
+
+    public function isInRetention(): bool
+    {
+        return $this->lifecycle_status === 'retention';
+    }
+
+    public function isDeleting(): bool
+    {
+        return in_array($this->lifecycle_status, ['deletion_queued', 'deleting'], true);
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->lifecycle_status === 'deleted' || $this->trashed();
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Vendor $vendor): void {
+            if (empty($vendor->uuid)) {
+                $vendor->uuid = (string) Str::uuid();
+            }
+            if ($vendor->storage_limit_bytes === null) {
+                $vendor->storage_limit_bytes = $vendor->resolveStorageLimit();
+            }
+        });
+    }
+
+    /**
+     * Resolve default storage quota limit based on subscription plan.
+     */
+    public function resolveStorageLimit(): int
+    {
+        $planSlug = $this->plan?->slug ?? $this->subscription_plan ?? 'basic';
+
+        return match ($planSlug) {
+            'pro' => 524288000,          // 500 MB
+            'business' => 2147483648,    // 2 GB
+            'custom' => 10737418240,     // 10 GB
+            default => 104857600,        // 100 MB (Basic / default)
+        };
     }
 
     public function isTrialing(): bool
@@ -626,7 +773,7 @@ class Vendor extends Model
      */
     public function getPaymentSettings(): array
     {
-        return array_merge([
+        $defaults = [
             'cash_enabled' => true,
             'pos_terminal_enabled' => true,
             'online_enabled' => true,
@@ -658,6 +805,7 @@ class Vendor extends Model
                     'title' => 'ArCa / Ameriabank vPOS',
                     'merchant_id' => '',
                     'terminal_id' => '',
+                    'secret_key' => '',
                     'sandbox' => true,
                 ],
                 'stripe' => [
@@ -668,7 +816,44 @@ class Vendor extends Model
                     'sandbox' => true,
                 ],
             ],
-        ], $this->payment_settings ?? []);
+        ];
+
+        $merged = array_replace_recursive($defaults, $this->payment_settings ?? []);
+
+        // Decrypt / inject credentials from CredentialService for server-side processing
+        $service = app(CredentialService::class);
+        foreach (['idram' => 'secret_key', 'telcell' => 'key', 'fastshift' => 'api_key', 'arca' => 'secret_key', 'stripe' => 'secret_key'] as $gw => $type) {
+            $secret = $service->get($this, $gw, $type);
+            if ($secret !== null) {
+                $merged['gateways'][$gw][$type] = $secret;
+            }
+        }
+        $stripePub = $service->get($this, 'stripe', 'publishable_key');
+        if ($stripePub !== null) {
+            $merged['gateways']['stripe']['publishable_key'] = $stripePub;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Get payment settings scrubbed of secrets for frontend/views.
+     */
+    public function getSafePaymentSettings(): array
+    {
+        $settings = $this->getPaymentSettings();
+        $service = app(CredentialService::class);
+
+        foreach (['idram' => 'secret_key', 'telcell' => 'key', 'fastshift' => 'api_key', 'arca' => 'secret_key', 'stripe' => 'secret_key'] as $gw => $type) {
+            if (isset($settings['gateways'][$gw])) {
+                $isConfigured = $service->has($this, $gw, $type);
+                $settings['gateways'][$gw]['configured'] = $isConfigured;
+                $settings['gateways'][$gw]['masked'] = $service->mask($this, $gw, $type);
+                $settings['gateways'][$gw][$type] = ''; // Scrubbed
+            }
+        }
+
+        return $settings;
     }
 
     /**
@@ -716,7 +901,7 @@ class Vendor extends Model
      */
     public function getCrmSettings(): array
     {
-        return array_merge([
+        $defaults = [
             'birthday_discount_enabled' => true,
             'birthday_discount_percent' => 15,
             'birthday_validity_days' => 3, // ±3 days from birthday
@@ -726,7 +911,30 @@ class Vendor extends Model
             'sms_provider' => 'mobipace', // mobipace, smsam, twilio, log
             'sms_api_key' => '',
             'sms_sender_id' => 'QRMENU',
-        ], $this->crm_settings ?? []);
+        ];
+
+        $merged = array_merge($defaults, $this->crm_settings ?? []);
+
+        $secret = app(CredentialService::class)->get($this, 'sms', 'api_key');
+        if ($secret !== null) {
+            $merged['sms_api_key'] = $secret;
+        }
+
+        return $merged;
+    }
+
+    /**
+     * Get CRM settings scrubbed of secrets for frontend/views.
+     */
+    public function getSafeCrmSettings(): array
+    {
+        $settings = $this->getCrmSettings();
+        $service = app(CredentialService::class);
+        $settings['configured'] = $service->has($this, 'sms', 'api_key');
+        $settings['masked'] = $service->mask($this, 'sms', 'api_key');
+        $settings['sms_api_key'] = ''; // Scrubbed
+
+        return $settings;
     }
 
     /**

@@ -4,16 +4,17 @@ namespace App\Policies;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Security\Permission;
 
 class OrderPolicy
 {
     /**
-     * Superadmin bypasses all policy checks.
+     * Superadmin checks explicit platform permission rather than uncontrolled bypass.
      */
     public function before(User $user, string $ability): ?bool
     {
         if ($user->isSuperAdmin()) {
-            return true;
+            return $user->hasPermission(Permission::PLATFORM_VENDORS);
         }
 
         return null;
@@ -21,31 +22,51 @@ class OrderPolicy
 
     public function viewAny(User $user): bool
     {
-        return ! empty($user->vendor_id);
+        return ! empty($user->vendor_id) && $user->hasPermission(Permission::ORDERS_VIEW);
     }
 
     public function view(User $user, Order $order): bool
     {
-        return (int) $user->vendor_id === (int) $order->vendor_id;
+        return (int) $user->vendor_id === (int) $order->vendor_id
+            && $user->canAccessLocationId($order->location_id)
+            && $user->hasPermission(Permission::ORDERS_VIEW);
     }
 
     public function create(User $user): bool
     {
-        return ! empty($user->vendor_id);
+        return ! empty($user->vendor_id) && $user->hasPermission(Permission::ORDERS_UPDATE);
     }
 
     public function update(User $user, Order $order): bool
     {
-        return (int) $user->vendor_id === (int) $order->vendor_id;
+        return (int) $user->vendor_id === (int) $order->vendor_id
+            && $user->canAccessLocationId($order->location_id)
+            && $user->hasPermission(Permission::ORDERS_UPDATE);
+    }
+
+    public function cancel(User $user, Order $order): bool
+    {
+        return (int) $user->vendor_id === (int) $order->vendor_id
+            && $user->canAccessLocationId($order->location_id)
+            && $user->hasPermission(Permission::ORDERS_CANCEL);
+    }
+
+    public function refund(User $user, Order $order): bool
+    {
+        return (int) $user->vendor_id === (int) $order->vendor_id
+            && $user->canAccessLocationId($order->location_id)
+            && $user->hasPermission(Permission::ORDERS_REFUND);
     }
 
     public function delete(User $user, Order $order): bool
     {
-        return (int) $user->vendor_id === (int) $order->vendor_id && in_array($user->role, ['vendor_owner', 'manager']);
+        return (int) $user->vendor_id === (int) $order->vendor_id
+            && $user->canAccessLocationId($order->location_id)
+            && $user->hasPermission(Permission::ORDERS_CANCEL);
     }
 
     public function export(User $user): bool
     {
-        return ! empty($user->vendor_id) && in_array($user->role, ['vendor_owner', 'manager']);
+        return ! empty($user->vendor_id) && $user->hasPermission(Permission::REPORTS_EXPORT);
     }
 }

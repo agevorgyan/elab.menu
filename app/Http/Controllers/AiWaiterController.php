@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\AiWaiterSession;
+use App\Models\LocationProductOverride;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Vendor;
+use App\Services\AiQuotaService;
 use App\Services\AiWaiterService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class AiWaiterController extends Controller
 {
     public function __construct(
-        public AiWaiterService $aiWaiterService
+        public AiWaiterService $aiWaiterService,
+        public AiQuotaService $quotaService
     ) {}
 
     /**
@@ -57,10 +59,12 @@ class AiWaiterController extends Controller
 
     /**
      * Start an AI Waiter session.
+     * Uses cryptographically random opaque tokens.
      */
     public function startSession(Request $request, string $vendor_slug): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
+        $this->enforceRateLimits($request, $vendor, null);
 
         $lang = $this->resolveLanguage($request, $vendor);
         $locationId = $request->input('location_id') ? (int) $request->input('location_id') : null;
@@ -72,7 +76,7 @@ class AiWaiterController extends Controller
         $session = AiWaiterSession::create([
             'vendor_id' => $vendor->id,
             'location_id' => $locationId,
-            'session_token' => (string) Str::uuid(),
+            'session_token' => AiWaiterSession::generateSecureToken(),
             'table_number' => $tableNumber,
             'language' => $lang,
             'status' => 'started',
@@ -87,7 +91,7 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
             'session_token' => $session->session_token,
             'language' => $lang,
             'allowed_languages' => $vendor->getAiWaiterLanguages(),
@@ -99,10 +103,11 @@ class AiWaiterController extends Controller
     /**
      * Set language on session.
      */
-    public function setLanguage(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function setLanguage(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $lang = strtolower((string) $request->input('language', 'hy'));
         $allowed = $vendor->getAiWaiterLanguages();
@@ -129,7 +134,8 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'language' => $lang,
             'next_question' => $nextQuestion,
         ]);
@@ -138,10 +144,11 @@ class AiWaiterController extends Controller
     /**
      * Submit an answer to a question.
      */
-    public function submitAnswer(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function submitAnswer(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $questionKey = (string) $request->input('question_key');
         $answerValue = $request->input('answer_value');
@@ -190,7 +197,8 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'is_ready_for_recommendations' => $nextQuestion === null,
             'next_question' => $nextQuestion,
             'preferences' => $preferences,
@@ -200,10 +208,11 @@ class AiWaiterController extends Controller
     /**
      * Get next question for this session.
      */
-    public function nextQuestion(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function nextQuestion(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $lang = $session->language ?? $this->resolveLanguage($request, $vendor);
         $next = $this->aiWaiterService->getNextQuestion(
@@ -215,7 +224,8 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'is_ready_for_recommendations' => $next === null,
             'next_question' => $next,
         ]);
@@ -224,10 +234,12 @@ class AiWaiterController extends Controller
     /**
      * Generate and retrieve personalized recommendations for the session.
      */
-    public function recommendations(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function recommendations(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $this->enforceQuotas($vendor);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $lang = $session->language ?? $this->resolveLanguage($request, $vendor);
         $locationId = $session->location_id ?: ($request->input('location_id') ? (int) $request->input('location_id') : null);
@@ -252,7 +264,8 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'waiter_name' => $vendor->getAiWaiterName(),
             'commentary' => $result['commentary'],
             'main_recommendations' => $result['main_recommendations'],
@@ -267,10 +280,12 @@ class AiWaiterController extends Controller
     /**
      * Conversational Q&A chat grounded strictly in menu items.
      */
-    public function chat(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function chat(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $this->enforceQuotas($vendor);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $message = trim((string) $request->input('message'));
         if ($message === '') {
@@ -293,6 +308,8 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'reply' => $chatResponse['reply'],
             'suggested_products' => $chatResponse['suggested_products'],
         ]);
@@ -300,28 +317,113 @@ class AiWaiterController extends Controller
 
     /**
      * Track item or bundle addition to cart.
+     * Validates vendor ownership, availability, location overrides, and server-side pricing.
      */
-    public function addToCart(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function addToCart(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $productId = $request->input('product_id');
         $bundle = $request->input('bundle');
         $items = (array) ($session->cart_items ?? []);
 
         if (! empty($productId)) {
+            $product = Product::withoutGlobalScopes()->where('id', $productId)->first();
+            if (! $product) {
+                return response()->json(['success' => false, 'message' => 'Product not found.'], 404);
+            }
+
+            // Defense: Validate vendor ownership (prevent cross-vendor injection)
+            if ((int) $product->vendor_id !== (int) $vendor->id) {
+                return response()->json(['success' => false, 'message' => 'Product does not belong to this vendor.'], 422);
+            }
+
+            // Defense: Validate product availability
+            if (! $product->is_available) {
+                return response()->json(['success' => false, 'message' => 'Product is currently unavailable.'], 422);
+            }
+
+            // Defense: Resolve location override and calculate authoritative server-side price
+            $authoritativePrice = (float) $product->price;
+            if ($session->location_id) {
+                $override = LocationProductOverride::where('vendor_id', $vendor->id)
+                    ->where('location_id', $session->location_id)
+                    ->where('product_id', $product->id)
+                    ->first();
+
+                if ($override) {
+                    if (! $override->is_available) {
+                        return response()->json(['success' => false, 'message' => 'Product is unavailable at this location.'], 422);
+                    }
+                    if ($override->override_price !== null) {
+                        $authoritativePrice = (float) $override->override_price;
+                    }
+                }
+            }
+
             $items[] = [
                 'type' => 'product',
-                'product_id' => $productId,
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'price' => $authoritativePrice,
+                'authoritative_price' => $authoritativePrice,
+                'location_id' => $session->location_id,
                 'added_at' => now()->toISOString(),
             ];
-        } elseif (! empty($bundle)) {
-            $items[] = [
-                'type' => 'bundle',
-                'bundle_data' => $bundle,
-                'added_at' => now()->toISOString(),
-            ];
+        } elseif (! empty($bundle) && is_array($bundle)) {
+            // Defense: Validate every item in the bundle against vendor ownership and availability
+            $rawItems = (array) ($bundle['items'] ?? []);
+            $validatedItems = [];
+            $authoritativeBundleTotal = 0.0;
+
+            foreach ($rawItems as $rawItem) {
+                $bId = $rawItem['id'] ?? $rawItem['product_id'] ?? null;
+                if (! $bId) {
+                    continue;
+                }
+                $bProd = Product::withoutGlobalScopes()->where('id', $bId)->first();
+                if (! $bProd || (int) $bProd->vendor_id !== (int) $vendor->id || ! $bProd->is_available) {
+                    continue;
+                }
+
+                $bPrice = (float) $bProd->price;
+                if ($session->location_id) {
+                    $bOverride = LocationProductOverride::where('vendor_id', $vendor->id)
+                        ->where('location_id', $session->location_id)
+                        ->where('product_id', $bProd->id)
+                        ->first();
+
+                    if ($bOverride) {
+                        if (! $bOverride->is_available) {
+                            continue;
+                        }
+                        if ($bOverride->override_price !== null) {
+                            $bPrice = (float) $bOverride->override_price;
+                        }
+                    }
+                }
+
+                $validatedItems[] = [
+                    'id' => $bProd->id,
+                    'name' => $bProd->name,
+                    'price' => $bPrice,
+                ];
+                $authoritativeBundleTotal += $bPrice;
+            }
+
+            if (! empty($validatedItems)) {
+                $items[] = [
+                    'type' => 'bundle',
+                    'bundle_data' => [
+                        'title' => $bundle['title'] ?? 'Bundle',
+                        'items' => $validatedItems,
+                        'total_price' => $authoritativeBundleTotal,
+                    ],
+                    'added_at' => now()->toISOString(),
+                ];
+            }
         }
 
         $session->update([
@@ -331,42 +433,67 @@ class AiWaiterController extends Controller
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'cart_items_count' => count($items),
         ]);
     }
 
     /**
      * Mark AI session as completed or converted to an order.
+     * Never trusts client for order totals or payment status.
      */
-    public function complete(Request $request, string $vendor_slug, int $id): JsonResponse
+    public function complete(Request $request, string $vendor_slug, string $token): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
-        $session = AiWaiterSession::where('vendor_id', $vendor->id)->findOrFail($id);
+        $this->enforceRateLimits($request, $vendor, $token);
+        $session = $this->resolveSession($vendor, $token, $request);
 
         $orderId = $request->input('order_id');
         $orderNumber = $request->input('order_number');
-        $orderAmount = (float) $request->input('total_amount', 0);
+        $authoritativeOrderAmount = 0.0;
 
-        if (! empty($orderNumber) && empty($orderId)) {
+        // Verify order strictly belongs to this vendor
+        if (! empty($orderId)) {
+            $order = Order::where('vendor_id', $vendor->id)->find($orderId);
+            if ($order) {
+                $authoritativeOrderAmount = (float) $order->total_amount;
+            } else {
+                $orderId = null;
+            }
+        } elseif (! empty($orderNumber)) {
             $order = Order::where('vendor_id', $vendor->id)->where('order_number', $orderNumber)->first();
             if ($order) {
                 $orderId = $order->id;
-                $orderAmount = (float) $order->total_amount;
+                $authoritativeOrderAmount = (float) $order->total_amount;
+            }
+        }
+
+        // If no verified order was linked, compute authoritative total from session cart items
+        if (! $orderId) {
+            $cartItems = (array) ($session->cart_items ?? []);
+            foreach ($cartItems as $item) {
+                if (($item['type'] ?? '') === 'product') {
+                    $authoritativeOrderAmount += (float) ($item['price'] ?? 0);
+                } elseif (($item['type'] ?? '') === 'bundle') {
+                    $authoritativeOrderAmount += (float) ($item['bundle_data']['total_price'] ?? 0);
+                }
             }
         }
 
         $session->update([
             'status' => $orderId ? 'order_placed' : 'completed',
             'order_id' => $orderId,
-            'total_order_amount' => $orderAmount,
+            'total_order_amount' => $authoritativeOrderAmount,
             'completed_at' => now(),
         ]);
 
         return response()->json([
             'success' => true,
-            'session_id' => $session->id,
+            'session_id' => $session->session_token,
+            'session_token' => $session->session_token,
             'status' => $session->status,
+            'authoritative_total' => $authoritativeOrderAmount,
         ]);
     }
 
@@ -376,6 +503,8 @@ class AiWaiterController extends Controller
     public function recommend(Request $request, string $vendor_slug): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
+        $this->enforceRateLimits($request, $vendor, null);
+        $this->enforceQuotas($vendor);
 
         $preferences = [
             'craving' => $request->input('craving'),
@@ -414,6 +543,9 @@ class AiWaiterController extends Controller
     public function pairings(Request $request, string $vendor_slug, int $productId): JsonResponse
     {
         $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
+        $this->enforceRateLimits($request, $vendor, null);
+        $this->enforceQuotas($vendor);
+
         $product = Product::where('vendor_id', $vendor->id)
             ->where('id', $productId)
             ->where('is_available', true)
@@ -421,11 +553,6 @@ class AiWaiterController extends Controller
 
         $lang = $this->resolveLanguage($request, $vendor);
         $locationId = $request->input('location_id') ? (int) $request->input('location_id') : null;
-
-        $allProducts = Product::where('vendor_id', $vendor->id)
-            ->where('is_available', true)
-            ->with(['category', 'variations', 'overrides'])
-            ->get();
 
         $result = $this->aiWaiterService->recommendDishes(
             $vendor,
@@ -444,6 +571,69 @@ class AiWaiterController extends Controller
                 'pairing_note' => $result['commentary'] ?? '',
             ],
         ]);
+    }
+
+    /**
+     * Resolve session by cryptographically random opaque token.
+     * Prevents sequential enumeration attacks (e.g. /session/1/...).
+     */
+    protected function resolveSession(Vendor $vendor, string $token, ?Request $request = null): AiWaiterSession
+    {
+        $resolvedToken = $request?->header('X-Session-Token') ?? $token;
+
+        $session = AiWaiterSession::where('vendor_id', $vendor->id)
+            ->where('session_token', $resolvedToken)
+            ->first();
+
+        if (! $session) {
+            abort(404, 'AI Waiter session not found.');
+        }
+
+        return $session;
+    }
+
+    /**
+     * Multi-tier rate limiting enforcement:
+     * - IP level
+     * - Session level
+     * - Vendor level
+     */
+    protected function enforceRateLimits(Request $request, Vendor $vendor, ?string $token): void
+    {
+        $ip = $request->ip() ?: '127.0.0.1';
+        $result = $this->quotaService->checkRateLimits($vendor, $token, $ip);
+
+        if (! $result['allowed']) {
+            abort(response()->json([
+                'success' => false,
+                'message' => $result['reason'] ?? 'Rate limit exceeded.',
+                'tier' => $result['tier'] ?? 'rate_limit',
+                'retry_after' => $result['retry_after'] ?? 60,
+            ], 429, [
+                'Retry-After' => (string) ($result['retry_after'] ?? 60),
+            ]));
+        }
+
+        $this->quotaService->hitRateLimits($vendor, $token, $ip);
+    }
+
+    /**
+     * Quota enforcement before generative AI calls:
+     * - Requests per min/hour/day/month
+     * - Token limits
+     * - Cost/spending limits
+     */
+    protected function enforceQuotas(Vendor $vendor): void
+    {
+        $check = $this->quotaService->checkQuotas($vendor);
+
+        if (! $check['allowed']) {
+            abort(response()->json([
+                'success' => false,
+                'message' => $check['reason'] ?? 'AI usage quota exceeded.',
+                'tier' => $check['tier'] ?? 'quota',
+            ], 429));
+        }
     }
 
     /**

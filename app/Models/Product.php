@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\BelongsToVendor;
+use App\Services\StorageService;
 use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,13 +44,18 @@ class Product extends Model
                 return;
             }
 
-            $path = ltrim(str_replace('/storage/', '', $raw), '/');
-            if (! str_starts_with($path, 'products/')) {
-                return;
-            }
-
-            if (! empty($path) && Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
+            try {
+                $storageService = app(StorageService::class);
+                $cleanPath = $storageService->cleanPath($raw);
+                if ($this->vendor && $storageService->isVendorScopedPath($cleanPath, $this->vendor)) {
+                    $storageService->delete($cleanPath, $this->vendor);
+                } elseif (str_starts_with($cleanPath, 'products/')) {
+                    if (Storage::disk('public')->exists($cleanPath)) {
+                        Storage::disk('public')->delete($cleanPath);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Silently handle cleanup error
             }
         }
     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\BelongsToVendor;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 
 class Location extends Model
 {
@@ -35,6 +36,32 @@ class Location extends Model
         'allow_whatsapp_orders' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Transparently decrypt Wi-Fi password when retrieved, falling back to plaintext for legacy rows.
+     */
+    public function getWifiPasswordAttribute($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
+
+    /**
+     * Transparently encrypt Wi-Fi password when stored at rest in the database.
+     */
+    public function setWifiPasswordAttribute(?string $value): void
+    {
+        $this->attributes['wifi_password'] = ($value !== null && $value !== '')
+            ? Crypt::encryptString($value)
+            : null;
+    }
 
     public function vendor()
     {

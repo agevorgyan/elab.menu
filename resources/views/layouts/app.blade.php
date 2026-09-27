@@ -792,6 +792,7 @@
                 <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-gauge-high" style="color: #f59e0b;"></i> <span>{{ __('Dashboard') }}</span>
                 </a>
+                @can('orders.view')
                 <a href="{{ route('admin.orders.index') }}" class="nav-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fa-solid fa-bell-concierge" style="color: #ef4444;"></i> <span>{{ __('Kitchen Orders') }}</span>
@@ -800,6 +801,9 @@
                         <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
                     @endif
                 </a>
+                @endcan
+
+                @can('locations.view')
                 <a href="{{ route('admin.floor_plan.index') }}" class="nav-item {{ request()->routeIs('admin.floor_plan.*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fa-solid fa-map-location-dot" style="color: #3b82f6;"></i> <span>{{ __('Սեղանների Քարտեզ') }}</span>
@@ -808,22 +812,32 @@
                         <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
                     @endif
                 </a>
+                @endcan
 
+                @can('menu.view')
                 <div class="menu-category">{{ __('Menu & Content') }}</div>
                 <a href="{{ route('admin.menu.index') }}" class="nav-item {{ request()->routeIs('admin.menu.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-utensils" style="color: #10b981;"></i> <span>{{ __('Menu Builder') }}</span>
                 </a>
+                @endcan
+
+                @can('ai.view')
                 <a href="{{ route('admin.ai.import') }}" class="nav-item {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wand-magic-sparkles" style="color: #8b5cf6;"></i> <span>{{ __('AI Menu & Translate') }}</span>
                 </a>
+                @endcan
 
                 <div class="menu-category">{{ __('Storefront & Growth') }}</div>
+                @can('settings.view')
                 <a href="{{ route('admin.branding.index') }}" class="nav-item {{ request()->routeIs('admin.branding.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-palette" style="color: #ec4899;"></i> <span>{{ __('Theme Customizer') }}</span>
                 </a>
                 <a href="{{ route('admin.qr.index') }}" class="nav-item {{ request()->routeIs('admin.qr.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-qrcode" style="color: #06b6d4;"></i> <span>{{ __('Table QR Studio') }}</span>
                 </a>
+                @endcan
+
+                @can('customers.view')
                 <a href="{{ route('admin.customers.index') }}" class="nav-item {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fa-solid fa-users-gear" style="color: #3b82f6;"></i> <span>{{ __('Customers & CRM') }}</span>
@@ -832,26 +846,41 @@
                         <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
                     @endif
                 </a>
+                @endcan
+
+                @can('reports.view')
                 <a href="{{ route('admin.analytics.index') }}" class="nav-item {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-chart-pie" style="color: #f97316;"></i> <span>{{ __('Analytics & Traffic') }}</span>
                 </a>
+                @endcan
 
                 <div class="menu-category">{{ __('Settings & Administration') }}</div>
                 <a href="{{ route('admin.profile') }}" class="nav-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                     <i class="fa-solid fa-user-shield" style="color: #10b981;"></i> <span>{{ __('Անվտանգություն & 2FA') }}</span>
                 </a>
+
+                @can('settings.view')
                 <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders" style="color: #64748b;"></i> <span>{{ __('Կարգավորումներ') }}</span>
                 </a>
+                @endcan
+
+                @can('ai.view')
                 <a href="{{ route('admin.settings.ai') }}" class="nav-item {{ request()->routeIs('admin.settings.ai*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fa-solid fa-robot" style="color: #8b5cf6;"></i> <span>{{ __('AI Կարգավորումներ') }}</span>
                     </span>
                     <span style="font-size: 0.65rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); color: #8b5cf6; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">AI</span>
                 </a>
+                @endcan
+
+                @can('billing.view')
                 <a href="{{ route('admin.subscription') }}" class="nav-item {{ request()->routeIs('admin.subscription') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-invoice-dollar" style="color: #f59e0b;"></i> <span>{{ __('Subscription') }}</span>
                 </a>
+                @endcan
+
+                @can('locations.view')
                 <a href="{{ route('admin.locations.index') }}" class="nav-item {{ request()->routeIs('admin.locations.*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fa-solid fa-location-dot" style="color: #14b8a6;"></i> <span>{{ __('Multi-Locations') }}</span>
@@ -860,6 +889,9 @@
                         <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 BIZ</span>
                     @endif
                 </a>
+                @endcan
+
+                @can('team.view')
                 <a href="{{ route('admin.team.index') }}" class="nav-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fa-solid fa-users" style="color: #0ea5e9;"></i> <span>{{ __('Team & Staff') }}</span>
@@ -868,6 +900,7 @@
                         <span style="font-size: 0.65rem; background: rgba(6, 182, 212, 0.2); color: #06b6d4; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 BIZ</span>
                     @endif
                 </a>
+                @endcan
 
                 @if(Auth::user()?->vendor)
                     <div style="padding: 0.75rem 0.65rem 0.25rem;">

@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\StorageQuotaExceededException;
 use App\Models\MenuTemplate;
+use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class BrandingController extends Controller
 {
     public function index()
     {
         $vendor = Auth::user()->vendor;
-        $this->authorize('manageSettings', $vendor);
+        $this->authorize('viewSettings', $vendor);
 
         $templates = MenuTemplate::where('is_active', true)->get();
 
         return view('admin.branding.index', compact('vendor', 'templates'));
     }
 
-    public function update(Request $request)
+    public function update(Request $request, StorageService $storageService)
     {
         $vendor = Auth::user()->vendor;
         $this->authorize('manageSettings', $vendor);
@@ -53,23 +54,18 @@ class BrandingController extends Controller
             'custom_css' => 'nullable|string',
         ]);
 
-        $brandingDir = storage_path('app/public/branding');
-        if (! is_dir($brandingDir)) {
-            @mkdir($brandingDir, 0775, true);
-        }
-
         if ($request->hasFile('logo_file') && $request->file('logo_file')->isValid()) {
             try {
-                if (! empty($vendor->logo) && ! str_starts_with($vendor->logo, 'http://') && ! str_starts_with($vendor->logo, 'https://') && ! str_contains($vendor->logo, '..')) {
-                    $oldLogoPath = ltrim(str_replace('/storage/', '', $vendor->logo), '/');
-                    if ($oldLogoPath && str_starts_with($oldLogoPath, 'branding/') && Storage::disk('public')->exists($oldLogoPath)) {
-                        Storage::disk('public')->delete($oldLogoPath);
-                    }
-                }
-                $path = $request->file('logo_file')->store('branding', 'public');
-                if ($path) {
-                    $validated['logo'] = '/storage/'.$path;
-                }
+                $storageFile = $storageService->replace(
+                    oldPathOrUuid: $vendor->logo,
+                    newFile: $request->file('logo_file'),
+                    namespace: 'branding',
+                    vendor: $vendor,
+                    entity: $vendor
+                );
+                $validated['logo'] = $storageFile->getUrl();
+            } catch (StorageQuotaExceededException $e) {
+                return back()->withInput()->with('error', $e->getMessage());
             } catch (\Throwable $e) {
                 Log::error('Branding logo upload failed: '.$e->getMessage(), ['exception' => $e]);
 
@@ -79,16 +75,16 @@ class BrandingController extends Controller
 
         if ($request->hasFile('cover_file') && $request->file('cover_file')->isValid()) {
             try {
-                if (! empty($vendor->cover_image) && ! str_starts_with($vendor->cover_image, 'http://') && ! str_starts_with($vendor->cover_image, 'https://') && ! str_contains($vendor->cover_image, '..')) {
-                    $oldCoverPath = ltrim(str_replace('/storage/', '', $vendor->cover_image), '/');
-                    if ($oldCoverPath && str_starts_with($oldCoverPath, 'branding/') && Storage::disk('public')->exists($oldCoverPath)) {
-                        Storage::disk('public')->delete($oldCoverPath);
-                    }
-                }
-                $path = $request->file('cover_file')->store('branding', 'public');
-                if ($path) {
-                    $validated['cover_image'] = '/storage/'.$path;
-                }
+                $storageFile = $storageService->replace(
+                    oldPathOrUuid: $vendor->cover_image,
+                    newFile: $request->file('cover_file'),
+                    namespace: 'branding',
+                    vendor: $vendor,
+                    entity: $vendor
+                );
+                $validated['cover_image'] = $storageFile->getUrl();
+            } catch (StorageQuotaExceededException $e) {
+                return back()->withInput()->with('error', $e->getMessage());
             } catch (\Throwable $e) {
                 Log::error('Branding cover upload failed: '.$e->getMessage(), ['exception' => $e]);
 

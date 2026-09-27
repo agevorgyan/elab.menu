@@ -13,7 +13,9 @@ use App\Models\Location;
 use App\Models\LocationProductOverride;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\Vendor;
+use App\Models\VendorStorageFile;
 use App\Models\WaiterCall;
 use App\Policies\AiWaiterSessionPolicy;
 use App\Policies\CategoryPolicy;
@@ -22,8 +24,11 @@ use App\Policies\LocationPolicy;
 use App\Policies\LocationProductOverridePolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\UserPolicy;
 use App\Policies\VendorPolicy;
+use App\Policies\VendorStorageFilePolicy;
 use App\Policies\WaiterCallPolicy;
+use App\Security\Permission;
 use App\Services\TenantContext;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -65,5 +70,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(WaiterCall::class, WaiterCallPolicy::class);
         Gate::policy(LocationProductOverride::class, LocationProductOverridePolicy::class);
         Gate::policy(AiWaiterSession::class, AiWaiterSessionPolicy::class);
+        Gate::policy(VendorStorageFile::class, VendorStorageFilePolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+
+        // Register Gates for all granular permissions
+        foreach (Permission::all() as $permission) {
+            Gate::define($permission, function (User $user) use ($permission): bool {
+                return $user->hasPermission($permission);
+            });
+        }
     }
 }

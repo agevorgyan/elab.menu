@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\StorageQuotaExceededException;
 use App\Models\Category;
 use App\Models\Location;
 use App\Models\LocationProductOverride;
@@ -10,14 +11,18 @@ use App\Models\ProductVariation;
 use App\Models\Vendor;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class MenuManagementService
 {
-    /**
-     * Create a new category for a vendor.
-     */
+    protected StorageService $storageService;
+
+    public function __construct(
+        ?StorageService $storageService = null
+    ) {
+        $this->storageService = $storageService ?? app(StorageService::class);
+    }
+
     public function createCategory(Vendor $vendor, array $data): Category
     {
         $name = $data['name'];
@@ -71,6 +76,7 @@ class MenuManagementService
     {
         $imageUrl = $this->resolveProductImage(
             imageFile: $imageFile,
+            vendor: $vendor,
             fallbackUrl: $data['image'] ?? null,
             defaultUrl: Product::DEFAULT_IMAGE
         );
@@ -171,24 +177,29 @@ class MenuManagementService
      */
     public function updateProduct(Product $product, array $data, ?UploadedFile $imageFile = null): Product
     {
-        $oldImage = $product->image;
-
-        $imageUrl = $this->resolveProductImage(
-            imageFile: $imageFile,
-            fallbackUrl: $data['image'] ?? null,
-            defaultUrl: $product->image ?: Product::DEFAULT_IMAGE
-        );
-
-        // If a new image was set and the old image was stored locally, purge the old file safely
-        if ($oldImage && $imageUrl !== $oldImage && ! str_starts_with($oldImage, 'http://') && ! str_starts_with($oldImage, 'https://')) {
+        if ($imageFile && $imageFile->isValid()) {
             try {
-                $oldPath = ltrim(str_replace('/storage/', '', $oldImage), '/');
-                if (! empty($oldPath) && Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
+                $storageFile = $this->storageService->replace(
+                    oldPathOrUuid: $product->image,
+                    newFile: $imageFile,
+                    namespace: 'products',
+                    vendor: $product->vendor,
+                    entity: $product
+                );
+                $imageUrl = $storageFile->getUrl();
+            } catch (StorageQuotaExceededException $e) {
+                throw ValidationException::withMessages([
+                    'image_file' => $e->getMessage(),
+                ]);
             } catch (\Throwable $e) {
-                Log::warning('Failed to purge old product image: '.$e->getMessage());
+                Log::error('Product image replacement failed: '.$e->getMessage(), ['exception' => $e]);
+
+                throw ValidationException::withMessages([
+                    'image_file' => 'Նկարի փոխարինումը ձախողվեց: '.$e->getMessage(),
+                ]);
             }
+        } else {
+            $imageUrl = ! empty($data['image']) ? $data['image'] : ($product->image ?: Product::DEFAULT_IMAGE);
         }
 
         $name = $data['name'];
@@ -366,21 +377,21 @@ class MenuManagementService
     /**
      * Helper to store uploaded file or return fallback image URL.
      */
-    protected function resolveProductImage(?UploadedFile $imageFile, ?string $fallbackUrl, ?string $defaultUrl): ?string
+    protected function resolveProductImage(?UploadedFile $imageFile, ?Vendor $vendor, ?string $fallbackUrl, ?string $defaultUrl): ?string
     {
         if ($imageFile && $imageFile->isValid()) {
             try {
-                $targetDir = storage_path('app/public/products');
-                if (! is_dir($targetDir)) {
-                    @mkdir($targetDir, 0775, true);
-                }
+                $storageFile = $this->storageService->store(
+                    file: $imageFile,
+                    namespace: 'products',
+                    vendor: $vendor
+                );
 
-                $path = $imageFile->store('products', 'public');
-                if ($path) {
-                    return '/storage/'.$path;
-                }
-
-                Log::warning('Product image store() returned false for file: '.$imageFile->getClientOriginalName());
+                return $storageFile->getUrl();
+            } catch (StorageQuotaExceededException $e) {
+                throw ValidationException::withMessages([
+                    'image_file' => $e->getMessage(),
+                ]);
             } catch (\Throwable $e) {
                 Log::error('Product image upload failed: '.$e->getMessage(), ['exception' => $e]);
 

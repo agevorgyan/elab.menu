@@ -703,8 +703,8 @@
             @php
                 $activeProviderKey = old('ai_provider', $vendor->getAiProvider());
                 $activeModel = old('ai_model', $vendor->getAiModel());
-                $savedApiKey = $vendor->getAiApiKey();
-                $hasCustomKey = !empty($savedApiKey);
+                $hasCustomKey = $vendor->hasCustomAiConfig();
+                $maskedApiKey = app(\App\Services\CredentialService::class)->mask($vendor, 'ai', 'api_key');
                 $savedBaseUrl = $vendor->getAiBaseUrl();
             @endphp
 
@@ -783,11 +783,16 @@
 
                         <!-- API Key Input -->
                         <div class="form-group" style="grid-column: 1 / -1;">
-                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('API Key') }}
+                            <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                <span>{{ __('API Key') }}</span>
+                                @if($hasCustomKey)
+                                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">
+                                        ✓ {{ __('Կարգավորված է (գաղտնագրված)') }}
+                                    </span>
+                                @endif
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" name="ai_api_key" id="aiApiKeyInput" value="{{ old('ai_api_key', $savedApiKey) }}" placeholder="{{ $hasCustomKey ? '••••••••••••••••••••••••••••••••' : 'Լրացրեք սեփական API Key-ը կամ թողեք դատարկ համակարգայինի համար' }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 3rem 0.75rem 1rem; font-size: 0.95rem; font-family: monospace;">
+                                <input type="password" name="ai_api_key" id="aiApiKeyInput" value="" placeholder="{{ $hasCustomKey ? '•••••••• (' . ($maskedApiKey ?: 'Կարգավորված է') . ')' : 'Լրացրեք սեփական API Key-ը կամ թողեք դատարկ համակարգայինի համար' }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 3rem 0.75rem 1rem; font-size: 0.95rem; font-family: monospace;">
                                 <button type="button" id="toggleApiKeyVisibility" style="position: absolute; right: 0.75rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem;">
                                     <i class="fa-solid fa-eye" id="eyeIcon"></i>
                                 </button>

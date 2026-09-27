@@ -4,16 +4,17 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Vendor;
+use App\Security\Permission;
 
 class MediaPolicy
 {
     /**
-     * Superadmin bypasses all policy checks.
+     * Superadmin checks explicit platform permission rather than uncontrolled bypass.
      */
     public function before(User $user, string $ability): ?bool
     {
         if ($user->isSuperAdmin()) {
-            return true;
+            return $user->hasPermission(Permission::PLATFORM_VENDORS);
         }
 
         return null;
@@ -21,11 +22,13 @@ class MediaPolicy
 
     public function manage(User $user, Vendor $vendor): bool
     {
-        return (int) $user->vendor_id === (int) $vendor->id && in_array($user->role, ['vendor_owner', 'manager']);
+        return (int) $user->vendor_id === (int) $vendor->id
+            && $user->hasPermission(Permission::STORAGE_MANAGE);
     }
 
     public function delete(User $user, Vendor $vendor): bool
     {
-        return (int) $user->vendor_id === (int) $vendor->id && in_array($user->role, ['vendor_owner', 'manager']);
+        return (int) $user->vendor_id === (int) $vendor->id
+            && $user->hasPermission(Permission::STORAGE_MANAGE);
     }
 }

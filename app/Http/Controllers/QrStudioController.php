@@ -10,7 +10,7 @@ class QrStudioController extends Controller
     public function index(Request $request)
     {
         $vendor = Auth::user()->vendor;
-        $this->authorize('view', $vendor);
+        $this->authorize('viewSettings', $vendor);
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
         $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
 

@@ -20,6 +20,8 @@ class AiMenuController extends Controller
 
     public function showImportForm()
     {
+        $this->authorize('ai.view');
+
         $vendor = Auth::user()->vendor;
 
         return view('admin.ai.import', compact('vendor'));
@@ -27,6 +29,7 @@ class AiMenuController extends Controller
 
     public function processImport(Request $request)
     {
+        $this->authorize('ai.manage');
         $request->validate([
             'import_source' => 'nullable|string|in:file,url,text',
             'website_url' => 'nullable|url|max:1000',
@@ -86,6 +89,8 @@ class AiMenuController extends Controller
 
     public function confirmImport(Request $request)
     {
+        $this->authorize('ai.manage');
+
         $vendor = Auth::user()->vendor;
         $categoriesData = $request->input('categories', []);
 
@@ -134,6 +139,8 @@ class AiMenuController extends Controller
 
     public function translateMenu(Request $request)
     {
+        $this->authorize('ai.manage');
+
         $vendor = Auth::user()->vendor;
         $validated = $request->validate([
             'target_language' => 'required|string|max:10',
@@ -178,6 +185,8 @@ class AiMenuController extends Controller
      */
     public function saveLanguage(Request $request)
     {
+        $this->authorize('settings.manage');
+
         $vendor = Auth::user()->vendor;
         $validated = $request->validate([
             'code' => 'required|string|regex:/^[a-zA-Z]{2,5}$/|max:5',
@@ -226,6 +235,8 @@ class AiMenuController extends Controller
      */
     public function deleteLanguage(string $code)
     {
+        $this->authorize('settings.manage');
+
         $vendor = Auth::user()->vendor;
         $languages = $vendor->getSupportedLanguages();
         $targetCode = strtolower(trim($code));

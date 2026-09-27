@@ -13,8 +13,11 @@ class AnalyticsController extends Controller
 {
     public function index(Request $request)
     {
-        $vendor = Auth::user()->vendor;
-        $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $this->authorize('reports.view');
+
+        $user = Auth::user();
+        $vendor = $user->vendor;
+        $activeLocationId = $user->location_id ?: session('active_location_id', $vendor->locations->first()?->id);
 
         $days = $request->get('range', 7);
         $startDate = Carbon::now()->subDays($days - 1)->startOfDay();

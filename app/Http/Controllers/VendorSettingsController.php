@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Product;
 use App\Models\Vendor;
 use App\Services\AiGatewayService;
+use App\Services\CredentialService;
 use App\Services\TelegramNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +26,7 @@ class VendorSettingsController extends Controller
     public function index(Request $request): View
     {
         $vendor = Auth::user()->vendor;
-        $this->authorize('manageSettings', $vendor);
+        $this->authorize('viewSettings', $vendor);
         $vendor->load('featuredProduct');
 
         $products = $vendor->products()
@@ -234,9 +235,33 @@ class VendorSettingsController extends Controller
             }
         }
 
+        $credentialService = app(CredentialService::class);
+
         // Payment Gateways Settings
         if ($request->has('payment_settings')) {
             $inputPayments = $request->input('payment_settings', []);
+
+            // Process secure credentials: store/rotate if provided
+            if (! empty($inputPayments['gateways']['idram']['secret_key'])) {
+                $credentialService->set($vendor, 'idram', 'secret_key', (string) $inputPayments['gateways']['idram']['secret_key']);
+            }
+            if (! empty($inputPayments['gateways']['telcell']['key'])) {
+                $credentialService->set($vendor, 'telcell', 'key', (string) $inputPayments['gateways']['telcell']['key']);
+            }
+            if (! empty($inputPayments['gateways']['fastshift']['api_key'])) {
+                $credentialService->set($vendor, 'fastshift', 'api_key', (string) $inputPayments['gateways']['fastshift']['api_key']);
+            }
+            if (! empty($inputPayments['gateways']['arca']['secret_key'])) {
+                $credentialService->set($vendor, 'arca', 'secret_key', (string) $inputPayments['gateways']['arca']['secret_key']);
+            }
+            if (! empty($inputPayments['gateways']['stripe']['secret_key'])) {
+                $credentialService->set($vendor, 'stripe', 'secret_key', (string) $inputPayments['gateways']['stripe']['secret_key']);
+            }
+            if (! empty($inputPayments['gateways']['stripe']['publishable_key'])) {
+                $credentialService->set($vendor, 'stripe', 'publishable_key', (string) $inputPayments['gateways']['stripe']['publishable_key']);
+            }
+
+            // Scrub secrets from stored JSON array - never store plaintext secrets in database
             $vendorUpdate['payment_settings'] = [
                 'online_enabled' => ! empty($inputPayments['online_enabled']),
                 'cash_enabled' => ! empty($inputPayments['cash_enabled']),
@@ -246,21 +271,21 @@ class VendorSettingsController extends Controller
                         'enabled' => ! empty($inputPayments['gateways']['idram']['enabled']),
                         'title' => 'Idram',
                         'merchant_id' => (string) ($inputPayments['gateways']['idram']['merchant_id'] ?? ''),
-                        'secret_key' => (string) ($inputPayments['gateways']['idram']['secret_key'] ?? ''),
+                        'secret_key' => '', // Stored securely in vendor_credentials
                         'sandbox' => ! empty($inputPayments['gateways']['idram']['sandbox']),
                     ],
                     'telcell' => [
                         'enabled' => ! empty($inputPayments['gateways']['telcell']['enabled']),
                         'title' => 'Telcell Wallet',
                         'shop_id' => (string) ($inputPayments['gateways']['telcell']['shop_id'] ?? ''),
-                        'key' => (string) ($inputPayments['gateways']['telcell']['key'] ?? ''),
+                        'key' => '', // Stored securely in vendor_credentials
                         'sandbox' => ! empty($inputPayments['gateways']['telcell']['sandbox']),
                     ],
                     'fastshift' => [
                         'enabled' => ! empty($inputPayments['gateways']['fastshift']['enabled']),
                         'title' => 'FastShift',
                         'merchant_id' => (string) ($inputPayments['gateways']['fastshift']['merchant_id'] ?? ''),
-                        'api_key' => (string) ($inputPayments['gateways']['fastshift']['api_key'] ?? ''),
+                        'api_key' => '', // Stored securely in vendor_credentials
                         'sandbox' => ! empty($inputPayments['gateways']['fastshift']['sandbox']),
                     ],
                     'arca' => [
@@ -268,13 +293,14 @@ class VendorSettingsController extends Controller
                         'title' => 'ArCa / Ameriabank vPOS',
                         'merchant_id' => (string) ($inputPayments['gateways']['arca']['merchant_id'] ?? ''),
                         'terminal_id' => (string) ($inputPayments['gateways']['arca']['terminal_id'] ?? ''),
+                        'secret_key' => '', // Stored securely in vendor_credentials
                         'sandbox' => ! empty($inputPayments['gateways']['arca']['sandbox']),
                     ],
                     'stripe' => [
                         'enabled' => ! empty($inputPayments['gateways']['stripe']['enabled']),
                         'title' => 'Stripe (Cards / Apple Pay)',
                         'publishable_key' => (string) ($inputPayments['gateways']['stripe']['publishable_key'] ?? ''),
-                        'secret_key' => (string) ($inputPayments['gateways']['stripe']['secret_key'] ?? ''),
+                        'secret_key' => '', // Stored securely in vendor_credentials
                         'sandbox' => ! empty($inputPayments['gateways']['stripe']['sandbox']),
                     ],
                 ],
@@ -284,6 +310,11 @@ class VendorSettingsController extends Controller
         // CRM Automation Settings
         if ($request->has('crm_settings')) {
             $crmInput = $request->input('crm_settings', []);
+
+            if (! empty($crmInput['sms_api_key'])) {
+                $credentialService->set($vendor, 'sms', 'api_key', (string) $crmInput['sms_api_key']);
+            }
+
             $vendorUpdate['crm_settings'] = [
                 'birthday_discount_enabled' => ! empty($crmInput['birthday_discount_enabled']),
                 'birthday_discount_percent' => floatval($crmInput['birthday_discount_percent'] ?? 15),
@@ -292,7 +323,7 @@ class VendorSettingsController extends Controller
                 'birthday_sms_template' => (string) ($crmInput['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։'),
                 'order_ready_sms_enabled' => ! empty($crmInput['order_ready_sms_enabled']),
                 'sms_provider' => (string) ($crmInput['sms_provider'] ?? 'mobipace'),
-                'sms_api_key' => (string) ($crmInput['sms_api_key'] ?? ''),
+                'sms_api_key' => '', // Stored securely in vendor_credentials
                 'sms_sender_id' => (string) ($crmInput['sms_sender_id'] ?? 'QRMENU'),
             ];
         }
@@ -314,9 +345,16 @@ class VendorSettingsController extends Controller
         // Telegram Notifications Settings
         if ($request->has('telegram_settings')) {
             $tgInput = $request->input('telegram_settings', []);
+
+            if ($request->boolean('clear_telegram_bot_token')) {
+                $credentialService->delete($vendor, 'telegram', 'bot_token');
+            } elseif (! empty($tgInput['bot_token'])) {
+                $credentialService->set($vendor, 'telegram', 'bot_token', trim((string) $tgInput['bot_token']));
+            }
+
             $vendorUpdate['telegram_settings'] = [
                 'enabled' => ! empty($tgInput['enabled']),
-                'bot_token' => ! empty($tgInput['bot_token']) ? trim((string) $tgInput['bot_token']) : null,
+                'bot_token' => null, // Stored securely in vendor_credentials
                 'chat_id' => ! empty($tgInput['chat_id']) ? trim((string) $tgInput['chat_id']) : null,
                 'topic_id' => ! empty($tgInput['topic_id']) ? (int) $tgInput['topic_id'] : null,
                 'notify_orders' => ! empty($tgInput['notify_orders']),
@@ -373,6 +411,8 @@ class VendorSettingsController extends Controller
     public function aiIndex(Request $request): View
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('viewAi', $vendor);
+
         $providers = AiGatewayService::PROVIDERS;
         $aiWaiterConfig = $vendor->getAiWaiterConfig();
 
@@ -435,6 +475,7 @@ class VendorSettingsController extends Controller
     public function aiUpdate(Request $request): RedirectResponse
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageAi', $vendor);
 
         $validated = $request->validate([
             // AI Waiter Configuration
@@ -471,19 +512,18 @@ class VendorSettingsController extends Controller
             $aiModel = ! empty($validated['custom_model']) ? trim((string) $validated['custom_model']) : ($aiModel ?: null);
         }
 
-        $currentSettings = $vendor->ai_settings ?? [];
-        $apiKey = $request->filled('ai_api_key')
-            ? trim((string) $validated['ai_api_key'])
-            : ($currentSettings['api_key'] ?? null);
+        $credentialService = app(CredentialService::class);
 
         if ($request->has('clear_api_key') && $request->boolean('clear_api_key')) {
-            $apiKey = null;
+            $credentialService->delete($vendor, 'ai', 'api_key');
+        } elseif ($request->filled('ai_api_key')) {
+            $credentialService->set($vendor, 'ai', 'api_key', trim((string) $validated['ai_api_key']));
         }
 
         $newAiSettings = [
             'provider' => $validated['ai_provider'] ?? 'gemini',
             'model' => $aiModel,
-            'api_key' => $apiKey,
+            'api_key' => null, // Stored securely in vendor_credentials table
             'base_url' => ! empty($validated['ai_base_url']) ? trim((string) $validated['ai_base_url']) : null,
         ];
 
@@ -553,6 +593,7 @@ class VendorSettingsController extends Controller
     public function testAiConnection(Request $request, AiGatewayService $gateway): JsonResponse
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageAi', $vendor);
 
         $provider = $request->input('ai_provider', 'gemini');
         $model = $request->input('ai_model');
@@ -562,7 +603,7 @@ class VendorSettingsController extends Controller
 
         $apiKey = $request->input('ai_api_key');
         if (empty($apiKey)) {
-            $apiKey = $vendor->ai_settings['api_key'] ?? null;
+            $apiKey = $vendor->getAiApiKey();
         }
 
         $baseUrl = $request->input('ai_base_url') ?: ($vendor->ai_settings['base_url'] ?? null);
@@ -574,6 +615,14 @@ class VendorSettingsController extends Controller
             baseUrl: $baseUrl
         );
 
+        if (isset($result['message'])) {
+            $result['message'] = app(CredentialService::class)->redactString($result['message'], array_filter([(string) $apiKey]));
+        }
+
+        if (! empty($result['success'])) {
+            app(CredentialService::class)->markVerified($vendor, 'ai', 'api_key');
+        }
+
         return response()->json($result);
     }
 
@@ -582,6 +631,8 @@ class VendorSettingsController extends Controller
      */
     public function checkDomainDns(Request $request): JsonResponse
     {
+        $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
         $domain = trim($request->input('domain', ''));
         $domain = preg_replace('#^https?://#i', '', $domain);
         $domain = explode('/', $domain)[0];
@@ -627,6 +678,7 @@ class VendorSettingsController extends Controller
     public function testTelegramConnection(Request $request, TelegramNotificationService $telegramService): JsonResponse
     {
         $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
 
         $chatId = $request->input('chat_id') ?: $vendor->getTelegramChatId();
         $botToken = $request->input('bot_token') ?: $vendor->getTelegramBotToken();
@@ -645,6 +697,14 @@ class VendorSettingsController extends Controller
             topicId: $topicId,
             sourceName: $vendor->name
         );
+
+        if (isset($result['message'])) {
+            $result['message'] = app(CredentialService::class)->redactString($result['message'], array_filter([(string) $botToken]));
+        }
+
+        if (! empty($result['success'])) {
+            app(CredentialService::class)->markVerified($vendor, 'telegram', 'bot_token');
+        }
 
         return response()->json($result);
     }

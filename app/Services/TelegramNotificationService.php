@@ -86,14 +86,14 @@ class TelegramNotificationService
                 'response' => $responseData,
             ];
         } catch (\Throwable $e) {
-            Log::error('Telegram sendMessage exception: '.$e->getMessage(), [
+            $sanitizedMessage = app(CredentialService::class)->redactString($e->getMessage(), array_filter([$token]));
+            Log::error('Telegram sendMessage exception: '.$sanitizedMessage, [
                 'chat_id' => $chatId,
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Կապի խափանում Telegram սերվերի հետ. '.$e->getMessage(),
+                'message' => 'Կապի խափանում Telegram սերվերի հետ. '.$sanitizedMessage,
                 'response' => null,
             ];
         }

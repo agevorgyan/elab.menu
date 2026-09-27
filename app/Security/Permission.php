@@ -1,0 +1,252 @@
+<?php
+
+namespace App\Security;
+
+class Permission
+{
+    // Menu permissions
+    public const MENU_VIEW = 'menu.view';
+
+    public const MENU_CREATE = 'menu.create';
+
+    public const MENU_UPDATE = 'menu.update';
+
+    public const MENU_DELETE = 'menu.delete';
+
+    // Orders permissions
+    public const ORDERS_VIEW = 'orders.view';
+
+    public const ORDERS_UPDATE = 'orders.update';
+
+    public const ORDERS_CANCEL = 'orders.cancel';
+
+    public const ORDERS_REFUND = 'orders.refund';
+
+    // Customers permissions
+    public const CUSTOMERS_VIEW = 'customers.view';
+
+    public const CUSTOMERS_EXPORT = 'customers.export';
+
+    // Locations permissions
+    public const LOCATIONS_VIEW = 'locations.view';
+
+    public const LOCATIONS_MANAGE = 'locations.manage';
+
+    // Team permissions
+    public const TEAM_VIEW = 'team.view';
+
+    public const TEAM_MANAGE = 'team.manage';
+
+    // Billing permissions
+    public const BILLING_VIEW = 'billing.view';
+
+    public const BILLING_MANAGE = 'billing.manage';
+
+    // AI permissions
+    public const AI_VIEW = 'ai.view';
+
+    public const AI_MANAGE = 'ai.manage';
+
+    // Settings permissions
+    public const SETTINGS_VIEW = 'settings.view';
+
+    public const SETTINGS_MANAGE = 'settings.manage';
+
+    // Storage permissions
+    public const STORAGE_VIEW = 'storage.view';
+
+    public const STORAGE_MANAGE = 'storage.manage';
+
+    // Reports permissions
+    public const REPORTS_VIEW = 'reports.view';
+
+    public const REPORTS_EXPORT = 'reports.export';
+
+    // Platform (SuperAdmin) permissions
+    public const PLATFORM_ACCESS = 'platform.access';
+
+    public const PLATFORM_VENDORS = 'platform.vendors';
+
+    public const PLATFORM_SUBSCRIPTIONS = 'platform.subscriptions';
+
+    public const PLATFORM_SETTINGS = 'platform.settings';
+
+    public const PLATFORM_LOGS = 'platform.logs';
+
+    /**
+     * Get all defined permissions in the system.
+     */
+    public static function all(): array
+    {
+        return [
+            self::MENU_VIEW,
+            self::MENU_CREATE,
+            self::MENU_UPDATE,
+            self::MENU_DELETE,
+            self::ORDERS_VIEW,
+            self::ORDERS_UPDATE,
+            self::ORDERS_CANCEL,
+            self::ORDERS_REFUND,
+            self::CUSTOMERS_VIEW,
+            self::CUSTOMERS_EXPORT,
+            self::LOCATIONS_VIEW,
+            self::LOCATIONS_MANAGE,
+            self::TEAM_VIEW,
+            self::TEAM_MANAGE,
+            self::BILLING_VIEW,
+            self::BILLING_MANAGE,
+            self::AI_VIEW,
+            self::AI_MANAGE,
+            self::SETTINGS_VIEW,
+            self::SETTINGS_MANAGE,
+            self::STORAGE_VIEW,
+            self::STORAGE_MANAGE,
+            self::REPORTS_VIEW,
+            self::REPORTS_EXPORT,
+            self::PLATFORM_ACCESS,
+            self::PLATFORM_VENDORS,
+            self::PLATFORM_SUBSCRIPTIONS,
+            self::PLATFORM_SETTINGS,
+            self::PLATFORM_LOGS,
+        ];
+    }
+
+    /**
+     * Default permission assignments for each system role.
+     */
+    public static function defaultRolePermissions(): array
+    {
+        return [
+            'superadmin' => [
+                self::PLATFORM_ACCESS,
+                self::PLATFORM_VENDORS,
+                self::PLATFORM_SUBSCRIPTIONS,
+                self::PLATFORM_SETTINGS,
+                self::PLATFORM_LOGS,
+                self::STORAGE_VIEW,
+                self::REPORTS_VIEW,
+                self::REPORTS_EXPORT,
+            ],
+            'vendor_owner' => [
+                self::MENU_VIEW,
+                self::MENU_CREATE,
+                self::MENU_UPDATE,
+                self::MENU_DELETE,
+                self::ORDERS_VIEW,
+                self::ORDERS_UPDATE,
+                self::ORDERS_CANCEL,
+                self::ORDERS_REFUND,
+                self::CUSTOMERS_VIEW,
+                self::CUSTOMERS_EXPORT,
+                self::LOCATIONS_VIEW,
+                self::LOCATIONS_MANAGE,
+                self::TEAM_VIEW,
+                self::TEAM_MANAGE,
+                self::BILLING_VIEW,
+                self::BILLING_MANAGE,
+                self::AI_VIEW,
+                self::AI_MANAGE,
+                self::SETTINGS_VIEW,
+                self::SETTINGS_MANAGE,
+                self::STORAGE_VIEW,
+                self::STORAGE_MANAGE,
+                self::REPORTS_VIEW,
+                self::REPORTS_EXPORT,
+            ],
+            'manager' => [
+                self::MENU_VIEW,
+                self::MENU_CREATE,
+                self::MENU_UPDATE,
+                self::MENU_DELETE,
+                self::ORDERS_VIEW,
+                self::ORDERS_UPDATE,
+                self::ORDERS_CANCEL,
+                self::ORDERS_REFUND,
+                self::CUSTOMERS_VIEW,
+                self::CUSTOMERS_EXPORT,
+                self::LOCATIONS_VIEW,
+                self::LOCATIONS_MANAGE,
+                self::TEAM_VIEW,
+                // Managers do NOT get team.manage (cannot invite/fire team members)
+                // Managers do NOT get billing.view or billing.manage
+                self::AI_VIEW,
+                // Managers do NOT get ai.manage (cannot change API keys)
+                self::SETTINGS_VIEW,
+                // Managers do NOT get settings.manage (cannot change payment secrets or credentials)
+                self::STORAGE_VIEW,
+                self::STORAGE_MANAGE,
+                self::REPORTS_VIEW,
+                self::REPORTS_EXPORT,
+            ],
+            'staff' => [
+                self::MENU_VIEW,
+                self::ORDERS_VIEW,
+                self::ORDERS_UPDATE,
+                self::CUSTOMERS_VIEW,
+                self::LOCATIONS_VIEW,
+                self::STORAGE_VIEW,
+                // Staff CANNOT:
+                // modify billing
+                // modify AI credentials
+                // modify security settings
+                // manage users
+                // cancel/refund orders without supervisor
+                // access another location unless explicitly permitted
+            ],
+            'chef' => [
+                self::MENU_VIEW,
+                self::ORDERS_VIEW,
+                self::ORDERS_UPDATE, // For kitchen prep status transitions (e.g. preparing -> ready)
+                self::LOCATIONS_VIEW,
+                // Chef CANNOT:
+                // cancel/refund orders
+                // manage menu
+                // view/manage customers
+                // view/manage team, billing, AI, settings, reports
+            ],
+            'cashier' => [
+                self::MENU_VIEW,
+                self::ORDERS_VIEW,
+                self::ORDERS_UPDATE,
+                self::ORDERS_CANCEL,
+                self::ORDERS_REFUND,
+                self::CUSTOMERS_VIEW,
+                self::LOCATIONS_VIEW,
+                self::REPORTS_VIEW,
+                // Cashier CANNOT:
+                // manage menu items
+                // export customer data
+                // manage locations, team, billing, AI, settings
+            ],
+        ];
+    }
+
+    /**
+     * Get default permissions for a specific role.
+     */
+    public static function forRole(string $role): array
+    {
+        return self::defaultRolePermissions()[$role] ?? [];
+    }
+
+    /**
+     * Check if a role is a valid recognized role in the system.
+     */
+    public static function isValidRole(string $role): bool
+    {
+        return array_key_exists($role, self::defaultRolePermissions());
+    }
+
+    /**
+     * Roles assignable by a tenant vendor owner/manager to team members.
+     */
+    public static function assignableTenantRoles(): array
+    {
+        return [
+            'manager',
+            'staff',
+            'chef',
+            'cashier',
+        ];
+    }
+}

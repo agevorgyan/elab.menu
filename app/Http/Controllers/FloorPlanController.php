@@ -17,9 +17,11 @@ class FloorPlanController extends Controller
      */
     public function index(Request $request): View
     {
-        $vendor = Auth::user()->vendor;
-        $this->authorize('view', $vendor);
-        $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
+        $this->authorize('locations.view');
+
+        $user = Auth::user();
+        $vendor = $user->vendor;
+        $activeLocationId = $user->location_id ?: session('active_location_id', $vendor->locations->first()?->id);
         $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
 
         $floorPlanData = $vendor->getFloorPlanData();
@@ -131,8 +133,9 @@ class FloorPlanController extends Controller
      */
     public function saveFloorPlan(Request $request): JsonResponse
     {
+        $this->authorize('locations.manage');
+
         $vendor = Auth::user()->vendor;
-        $this->authorize('manageSettings', $vendor);
 
         $validated = $request->validate([
             'halls' => 'nullable|array',

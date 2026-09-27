@@ -69,7 +69,7 @@ class ProductStorageCleanupTest extends TestCase
         );
 
         $this->assertNotNull($product->image);
-        $this->assertStringStartsWith('/storage/products/', $product->image);
+        $this->assertStringStartsWith("/storage/vendors/{$this->vendor->uuid}/products/", $product->image);
 
         $relativeDiskPath = str_replace('/storage/', '', $product->image);
         Storage::disk('public')->assertExists($relativeDiskPath);
@@ -178,6 +178,9 @@ class ProductStorageCleanupTest extends TestCase
         ]);
 
         $this->vendor->refresh();
+        $this->assertStringStartsWith("/storage/vendors/{$this->vendor->uuid}/branding/", $this->vendor->logo);
+        $this->assertStringStartsWith("/storage/vendors/{$this->vendor->uuid}/branding/", $this->vendor->cover_image);
+
         $oldLogo = str_replace('/storage/', '', $this->vendor->logo);
         $oldCover = str_replace('/storage/', '', $this->vendor->cover_image);
 

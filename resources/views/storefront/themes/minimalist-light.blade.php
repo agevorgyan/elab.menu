@@ -476,7 +476,7 @@
     <div class="controls-bar">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" x-model="search" placeholder="{{ __('menu.search_placeholder') }}" class="search-input">
+            <input type="text" x-model.debounce.250ms="search" placeholder="{{ __('menu.search_placeholder') }}" class="search-input">
         </div>
 
         <select onchange="window.location.href='?lang=' + this.value" class="lang-select" aria-label="Language selection">
@@ -541,7 +541,7 @@
 
                             @if(!empty($prod->image))
                                 <div class="dish-img-wrap">
-                                    <img src="{{ $prod->image }}" alt="{{ $prod->getTranslatedName($lang) }}" class="dish-img" loading="lazy">
+                                    <img src="{{ $prod->image }}" alt="{{ $prod->getTranslatedName($lang) }}" class="dish-img" loading="lazy" decoding="async">
                                     @if($prod->isDiscountActive())
                                         <span style="position: absolute; top: 6px; left: 6px; background: #ef4444; color: #ffffff; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px;">
                                             SALE

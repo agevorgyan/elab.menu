@@ -1,0 +1,96 @@
+/* AI Waiter Micro-Animations & Design System */
+@keyframes floatAvatar {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+@keyframes pulseAvatar {
+    0%, 100% { transform: scale(1); opacity: 0.65; }
+    50% { transform: scale(1.15); opacity: 0.25; }
+}
+@keyframes shimmerBar {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ai-primary-btn:active {
+    transform: scale(0.98);
+}
+.ai-action-btn:active {
+    transform: scale(0.96);
+}
+
+.ai-language-card {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border-radius: 18px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ai-language-card:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.12);
+}
+.ai-language-card.ai-lang-active {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.08);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+}
+
+.ai-question-opt-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.1rem 0.75rem;
+    border-radius: 18px;
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-body);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+.ai-question-opt-btn:hover {
+    border-color: #8b5cf6;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(139, 92, 246, 0.15);
+}
+.ai-question-opt-btn:active {
+    transform: scale(0.96);
+}
+
+.prompt-preset-chip {
+    padding: 0.4rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-body);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.prompt-preset-chip:hover {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+}
+
+@media (max-width: 480px) {
+    .hidden-xs { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-intro-avatar,
+    .ai-intro-glow,
+    .ai-hero-card {
+        animation: none !important;
+        transition: none !important;
+    }
+}

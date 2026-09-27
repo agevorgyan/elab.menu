@@ -53,3 +53,8 @@ Schedule::call(function () {
         });
     }
 })->hourly()->name('tenant-retention-cleanup');
+
+/**
+ * Enforce documented data retention periods and IP anonymization daily.
+ */
+Schedule::command('privacy:prune')->daily()->name('privacy-retention-prune');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\CaptchaService;
+use App\Services\SecurityAuditService;
 use App\Services\TenantContext;
 use App\Services\TwoFactorAuthService;
 use Illuminate\Http\Request;
@@ -98,6 +99,12 @@ class AuthController extends Controller
             $customVendor = $tenantContext->getTenant();
 
             if ($customVendor && ! $user->isSuperAdmin() && (int) $user->vendor_id !== (int) $customVendor->id) {
+                app(SecurityAuditService::class)->logFailedLogin(
+                    attemptedIdentifier: $credentials['email'],
+                    vendor: $customVendor,
+                    reason: "User does not belong to vendor [{$customVendor->name}]."
+                );
+
                 return back()->withErrors([
                     'email' => "Այս կառավարման վահանակ կարող են մուտք գործել միայն {$customVendor->name} ռեստորանի օգտատերերը։",
                 ])->onlyInput('email');
@@ -122,6 +129,13 @@ class AuthController extends Controller
 
             return $this->redirectUser($user, $customVendor);
         }
+
+        $customVendor = $tenantContext->getTenant();
+        app(SecurityAuditService::class)->logFailedLogin(
+            attemptedIdentifier: $credentials['email'],
+            vendor: $customVendor,
+            reason: 'The provided credentials do not match our records.'
+        );
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',

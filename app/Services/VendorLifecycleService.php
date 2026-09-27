@@ -55,6 +55,8 @@ class VendorLifecycleService
             actor: $actor
         );
 
+        app(SecurityAuditService::class)->logVendorSuspension($vendor, $reason, $actor);
+
         $this->flushVendorCache($vendor);
 
         return $vendor;
@@ -96,6 +98,8 @@ class VendorLifecycleService
             ],
             actor: $actor
         );
+
+        app(SecurityAuditService::class)->logVendorDeletion($vendor, 'requested', $reason, $actor);
 
         $this->flushVendorCache($vendor);
 
@@ -372,6 +376,8 @@ class VendorLifecycleService
                 'job_uuid' => $deletionJob?->uuid,
             ]
         );
+
+        app(SecurityAuditService::class)->logVendorDeletion($vendor, 'deleted', 'Pipeline execution finalized');
 
         $this->flushVendorCache($vendor);
     }

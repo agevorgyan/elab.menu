@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Security\Permission;
+use App\Services\SecurityAuditService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -56,6 +57,35 @@ class User extends Authenticatable implements MustVerifyEmail
                 if ($location && (int) $location->vendor_id !== (int) $user->vendor_id) {
                     throw new \InvalidArgumentException('Cross-vendor location assigned to user.');
                 }
+            }
+        });
+
+        static::updated(function (User $user) {
+            if ($user->wasChanged('role')) {
+                app(SecurityAuditService::class)->logRoleChange(
+                    user: $user,
+                    oldRole: (string) ($user->getOriginal('role') ?? 'none'),
+                    newRole: (string) $user->role,
+                    actor: auth()->user(),
+                    vendor: $user->vendor
+                );
+            }
+
+            if ($user->wasChanged('password')) {
+                app(SecurityAuditService::class)->logPasswordChange(
+                    user: $user,
+                    actor: auth()->user(),
+                    vendor: $user->vendor
+                );
+            }
+
+            if ($user->wasChanged('two_factor_enabled')) {
+                app(SecurityAuditService::class)->logTwoFactorChange(
+                    user: $user,
+                    actionType: $user->two_factor_enabled ? 'enabled' : 'disabled',
+                    type: $user->two_factor_type ?? 'authenticator',
+                    vendor: $user->vendor
+                );
             }
         });
     }

@@ -17,6 +17,7 @@ class AnalyticsLog extends Model
         'user_agent',
         'ip_address',
         'visit_date',
+        'created_at',
     ];
 
     protected $casts = [

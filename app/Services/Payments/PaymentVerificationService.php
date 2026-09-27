@@ -8,6 +8,7 @@ use App\Models\PaymentAttempt;
 use App\Models\SubscriptionPayment;
 use App\Models\Vendor;
 use App\Services\Payments\DTOs\PaymentVerificationResult;
+use App\Services\SecurityAuditService;
 use App\Services\SubscriptionService;
 use App\Services\TelegramNotificationService;
 use Illuminate\Support\Facades\DB;
@@ -273,11 +274,23 @@ class PaymentVerificationService
                     ->first();
 
                 if ($order && $order->payment_status !== 'paid') {
+                    $oldStatus = $order->payment_status;
                     $order->update([
                         'payment_status' => 'paid',
                         'payment_method' => $attempt->gateway,
                         'payment_transaction_id' => $attempt->provider_transaction_id,
                     ]);
+
+                    app(SecurityAuditService::class)->logPaymentStatusChange(
+                        orderOrPaymentId: $order->id,
+                        oldStatus: (string) $oldStatus,
+                        newStatus: 'paid',
+                        vendor: $order->vendor,
+                        metadata: [
+                            'gateway' => $attempt->gateway,
+                            'reference' => $attempt->provider_transaction_id,
+                        ]
+                    );
 
                     try {
                         app(TelegramNotificationService::class)->sendPaymentNotification($order, $attempt->gateway);

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SecurityAuditLog;
+use App\Services\SecurityAuditService;
 use App\Services\TwoFactorAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -115,6 +117,8 @@ class ProfileSecurityController extends Controller
             ]);
         }
 
+        app(SecurityAuditService::class)->logTwoFactorChange($user, 'enabled', $validated['type']);
+
         return back()->with('success', 'Երկփուլային նույնականացումը (2FA) հաջողությամբ ակտիվացվեց։');
     }
 
@@ -141,6 +145,8 @@ class ProfileSecurityController extends Controller
             'two_factor_email_code' => null,
             'two_factor_confirmed_at' => null,
         ]);
+
+        app(SecurityAuditService::class)->logTwoFactorChange($user, 'disabled');
 
         return back()->with('success', 'Երկփուլային նույնականացումը (2FA) հաջողությամբ անջատվեց։');
     }
@@ -180,6 +186,8 @@ class ProfileSecurityController extends Controller
         $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+
+        app(SecurityAuditService::class)->logPasswordChange($user, actor: $user);
 
         return back()->with('success', 'Ձեր գաղտնաբառը հաջողությամբ փոխվեց։');
     }
@@ -237,5 +245,25 @@ class ProfileSecurityController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Պրոֆիլի տվյալները հաջողությամբ պահպանվեցին։');
+    }
+
+    /**
+     * Get recent tenant-isolated security audit logs for the authenticated user / vendor.
+     */
+    public function auditLogs(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $vendor = $user->vendor;
+
+        $query = SecurityAuditLog::query()->latest('created_at');
+        if ($vendor) {
+            $query->where('vendor_id', $vendor->id);
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $logs = $query->paginate(25);
+
+        return response()->json($logs);
     }
 }

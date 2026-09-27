@@ -143,11 +143,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/security/2fa/disable', [ProfileSecurityController::class, 'disableTwoFactor'])->name('security.2fa.disable');
     Route::post('/security/password', [ProfileSecurityController::class, 'updatePassword'])->name('security.password.update');
     Route::post('/security/email', [ProfileSecurityController::class, 'updateEmail'])->name('security.email.update');
+    Route::get('/security/audit-logs', [ProfileSecurityController::class, 'auditLogs'])->name('security.audit_logs');
 });
 
 // 3. Super Admin Panel (/superadmin)
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])->name('audit_logs');
     Route::get('/vendors', [SuperAdminController::class, 'vendorsIndex'])->name('vendors.index');
     Route::post('/vendors', [SuperAdminController::class, 'storeVendor'])->name('vendors.store');
     Route::get('/vendors/{vendor}/edit', [SuperAdminController::class, 'editVendor'])->name('vendors.edit');

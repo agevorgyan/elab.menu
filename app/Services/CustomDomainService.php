@@ -49,7 +49,7 @@ class CustomDomainService
             CustomDomain::where('vendor_id', $vendor->id)->update(['is_primary' => false]);
         }
 
-        return CustomDomain::create([
+        $customDomain = CustomDomain::create([
             'vendor_id' => $vendor->id,
             'domain' => $rawDomain,
             'normalized_domain' => $normalized,
@@ -60,6 +60,15 @@ class CustomDomainService
             'dns_status' => CustomDomain::DNS_PENDING,
             'ssl_status' => CustomDomain::SSL_PENDING,
         ]);
+
+        app(SecurityAuditService::class)->logSecurityConfigChange(
+            vendor: $vendor,
+            configName: 'custom_domain',
+            summary: "Registered custom domain [{$normalized}]",
+            actor: auth()->user()
+        );
+
+        return $customDomain;
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Enums\SubscriptionStatus;
 use App\Models\Location;
 use App\Models\MenuTemplate;
 use App\Models\Order;
+use App\Models\SecurityAuditLog;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
@@ -912,5 +913,18 @@ class SuperAdminController extends Controller
         );
 
         return response()->json($result);
+    }
+
+    /**
+     * View cross-tenant platform security audit logs (metadata only, no exposed credentials).
+     */
+    public function auditLogs(Request $request): JsonResponse
+    {
+        $logs = SecurityAuditLog::withoutGlobalScopes()
+            ->with(['vendor:id,name,slug', 'user:id,name,email'])
+            ->latest('created_at')
+            ->paginate(50);
+
+        return response()->json($logs);
     }
 }

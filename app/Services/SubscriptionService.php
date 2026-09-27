@@ -438,6 +438,9 @@ class SubscriptionService
             return;
         }
 
+        $oldStatus = $vendor->subscription_status;
+        $newStatus = $subscription->status->value;
+
         $vendor->subscription_plan_id = $subscription->subscription_plan_id;
         $vendor->subscription_plan = $subscription->plan?->slug ?? 'pro';
         $vendor->subscription_status = $subscription->status->value;
@@ -449,5 +452,15 @@ class SubscriptionService
         $vendor->is_active = $subscription->allowsAccess();
 
         $vendor->saveQuietly();
+
+        if ($oldStatus !== $newStatus) {
+            app(SecurityAuditService::class)->logSubscriptionChange(
+                vendor: $vendor,
+                oldStatus: (string) ($oldStatus ?? 'none'),
+                newStatus: $newStatus,
+                planSlug: $subscription->plan?->slug,
+                actor: auth()->user()
+            );
+        }
     }
 }

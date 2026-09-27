@@ -567,6 +567,11 @@ class Vendor extends Model
         return $this->hasMany(VendorLifecycleLog::class, 'vendor_id');
     }
 
+    public function securityAuditLogs()
+    {
+        return $this->hasMany(SecurityAuditLog::class, 'vendor_id')->latest('created_at');
+    }
+
     public function isSuspended(): bool
     {
         return $this->lifecycle_status === 'suspended' || ! $this->is_active;

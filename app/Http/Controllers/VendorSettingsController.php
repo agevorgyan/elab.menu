@@ -11,6 +11,7 @@ use App\Models\Vendor;
 use App\Services\AiGatewayService;
 use App\Services\CredentialService;
 use App\Services\CustomDomainService;
+use App\Services\SecurityAuditService;
 use App\Services\TelegramNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -336,6 +337,13 @@ class VendorSettingsController extends Controller
         }
 
         $vendor->update($vendorUpdate);
+
+        app(SecurityAuditService::class)->logSecurityConfigChange(
+            vendor: $vendor,
+            configName: 'vendor_settings',
+            summary: 'Updated restaurant settings and security configuration',
+            actor: auth()->user()
+        );
 
         // Update Location (Branch)
         $locationId = $validated['location_id'] ?? $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));

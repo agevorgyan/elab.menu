@@ -29,7 +29,7 @@ class CredentialService
             return null;
         }
 
-        return DB::transaction(function () use ($vendor, $provider, $credentialType, $value, $metadata) {
+        $result = DB::transaction(function () use ($vendor, $provider, $credentialType, $value, $metadata) {
             /** @var VendorCredential|null $existing */
             $existing = VendorCredential::withoutGlobalScopes()
                 ->where('vendor_id', $vendor->id)
@@ -65,6 +65,18 @@ class CredentialService
                 'rotated_at' => null,
             ]);
         });
+
+        if ($result) {
+            app(SecurityAuditService::class)->logCredentialChange(
+                vendor: $vendor,
+                provider: $provider,
+                credentialType: $credentialType,
+                actionType: $result->wasRecentlyCreated ? 'created' : 'updated',
+                actor: auth()->user()
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -201,6 +213,14 @@ class CredentialService
             // Also scrub from legacy vendor JSON columns if present
             $this->scrubLegacyCredential($vendor, $provider, $credentialType);
         });
+
+        app(SecurityAuditService::class)->logCredentialChange(
+            vendor: $vendor,
+            provider: $provider,
+            credentialType: $credentialType,
+            actionType: 'deleted',
+            actor: auth()->user()
+        );
 
         return true;
     }

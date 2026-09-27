@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\OrderCreated;
 use App\Events\WaiterCalled;
+use App\Listeners\SecurityAuditAuthSubscriber;
 use App\Listeners\SendTelegramOrderNotification;
 use App\Listeners\SendTelegramWaiterCallNotification;
 use App\Models\AiWaiterSession;
@@ -81,6 +82,9 @@ class AppServiceProvider extends ServiceProvider
         // Register Telegram notification event listeners
         Event::listen(OrderCreated::class, SendTelegramOrderNotification::class);
         Event::listen(WaiterCalled::class, SendTelegramWaiterCallNotification::class);
+
+        // Register Security Audit Authentication Subscriber
+        Event::subscribe(SecurityAuditAuthSubscriber::class);
 
         // Register Multi-Tenant Security Policies
         Gate::policy(Vendor::class, VendorPolicy::class);

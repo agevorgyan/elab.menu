@@ -44,6 +44,27 @@
         </div>
     @endif
 
+    @if($vendor->locations->count() > 1)
+        <div style="background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: var(--shadow-card);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="width: 38px; height: 38px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-code-branch"></i>
+                </span>
+                <div>
+                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Ընթացիկ Մասնաճյուղ՝') }} <span style="color: var(--primary);">{{ $location?->name }}</span></div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ __('Կարգավորումները կիրառվում են ընտրված մասնաճյուղի համար') }}</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                @foreach($vendor->locations as $loc)
+                    <a href="{{ route('admin.settings.index', ['location_id' => $loc->id]) }}" class="btn {{ ($location?->id === $loc->id) ? 'btn-primary' : 'btn-secondary' }}" style="border-radius: 10px; font-size: 0.85rem; padding: 0.45rem 0.9rem; text-decoration: none; font-weight: 700;">
+                        <i class="fa-solid fa-location-dot"></i> {{ $loc->name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <form action="{{ route('admin.settings.update') }}" method="POST" id="vendorSettingsForm">
         @csrf
         @if($location)
@@ -230,7 +251,260 @@
                 </div>
             </div>
 
-            <!-- 2. CUSTOM DOMAIN & BRANDING URL (ՍԵՓԱԿԱՆ ԴՈՄԵՆ) -->
+            <!-- 2. OPERATING HOURS, KITCHEN & ORDER SCHEDULE CARD -->
+            @php
+                $hasMultipleLocations = $vendor->locations->count() > 1;
+                $locDineInEnabled = old('dine_in_schedule_enabled', $location ? (bool)$location->dine_in_schedule_enabled : (bool)$vendor->dine_in_schedule_enabled);
+                $locDineInStart = old('dine_in_start_time', $location?->dine_in_start_time ?? ($hasMultipleLocations ? '10:00' : ($vendor->dine_in_start_time ?? '10:00')));
+                $locDineInEnd = old('dine_in_end_time', $location?->dine_in_end_time ?? ($hasMultipleLocations ? '23:00' : ($vendor->dine_in_end_time ?? '23:00')));
+                $locDineInDays = old('dine_in_days', $location?->dine_in_days ?? ($hasMultipleLocations ? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] : ($vendor->dine_in_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])));
+                if (!is_array($locDineInDays)) $locDineInDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+                $locDeliveryEnabled = old('delivery_schedule_enabled', $location ? (bool)$location->delivery_schedule_enabled : (bool)$vendor->delivery_schedule_enabled);
+                $locDeliveryStart = old('delivery_start_time', $location?->delivery_start_time ?? ($hasMultipleLocations ? '11:00' : ($vendor->delivery_start_time ?? '11:00')));
+                $locDeliveryEnd = old('delivery_end_time', $location?->delivery_end_time ?? ($hasMultipleLocations ? '22:30' : ($vendor->delivery_end_time ?? '22:30')));
+                $locDeliveryDays = old('delivery_days', $location?->delivery_days ?? ($hasMultipleLocations ? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] : ($vendor->delivery_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])));
+                if (!is_array($locDeliveryDays)) $locDeliveryDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+                $locTakeawayEnabled = old('takeaway_schedule_enabled', $location ? (bool)$location->takeaway_schedule_enabled : (bool)$vendor->takeaway_schedule_enabled);
+                $locTakeawayStart = old('takeaway_start_time', $location?->takeaway_start_time ?? ($hasMultipleLocations ? '10:00' : ($vendor->takeaway_start_time ?? '10:00')));
+                $locTakeawayEnd = old('takeaway_end_time', $location?->takeaway_end_time ?? ($hasMultipleLocations ? '23:00' : ($vendor->takeaway_end_time ?? '23:00')));
+                $locTakeawayDays = old('takeaway_days', $location?->takeaway_days ?? ($hasMultipleLocations ? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] : ($vendor->takeaway_days ?? ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])));
+                if (!is_array($locTakeawayDays)) $locTakeawayDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+                $locWarningEnabled = old('closing_warning_enabled', $location ? (bool)$location->closing_warning_enabled : (bool)($vendor->closing_warning_enabled ?? true));
+                $locWarningMinutes = old('closing_warning_minutes', $location?->closing_warning_minutes ?? ($hasMultipleLocations ? 30 : ($vendor->closing_warning_minutes ?? 30)));
+                $locWarningMessage = old('closing_warning_message', $location?->closing_warning_message ?? ($hasMultipleLocations ? null : $vendor->closing_warning_message));
+
+                $dayNames = [
+                    'mon' => 'Երկ',
+                    'tue' => 'Երք',
+                    'wed' => 'Չոր',
+                    'thu' => 'Հնգ',
+                    'fri' => 'Ուրբ',
+                    'sat' => 'Շաբ',
+                    'sun' => 'Կիր',
+                ];
+            @endphp
+
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('Աշխատանքային Ժամեր, Խոհանոց & Պատվերների Ժամանակացույց') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Կարգավորեք խոհանոցի, առաքման և տանելու (takeaway) պատվերների ընդունման ժամերը, ինչպես նաև փակվելու մասին նախազգուշացումը') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                    <!-- A. KITCHEN & DINE-IN SCHEDULE -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <span style="font-size: 1.15rem; color: #ef4444;"><i class="fa-solid fa-utensils"></i></span>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Ռեստորանի Խոհանոց / Սրահ (Dine-in)') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Եթե միացված է, խոհանոցի փակվելուց հետո սրահի պատվերներ չեն ընդունվի') }}</div>
+                                </div>
+                            </div>
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" name="dine_in_schedule_enabled" value="1" id="dineInScheduleToggle" {{ $locDineInEnabled ? 'checked' : '' }} onchange="toggleScheduleBlock('dineIn')" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Սահմանափակել ժամերը') }}</span>
+                            </label>
+                        </div>
+
+                        <div id="dineInScheduleFields" style="{{ $locDineInEnabled ? '' : 'display: none;' }}">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                        <i class="fa-regular fa-clock"></i> {{ __('Բացվում է (Սկիզբ)') }}
+                                    </label>
+                                    <input type="time" name="dine_in_start_time" value="{{ substr($locDineInStart, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                        <i class="fa-regular fa-clock"></i> {{ __('Խոհանոցը փակվում է (Ավարտ)') }}
+                                    </label>
+                                    <input type="time" name="dine_in_end_time" value="{{ substr($locDineInEnd, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Աշխատանքային օրեր') }}</label>
+                                    <div style="display: flex; gap: 0.35rem;">
+                                        <button type="button" onclick="setChannelDays('dine_in', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Բոլորը') }}</button>
+                                        <button type="button" onclick="setChannelDays('dine_in', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Երկ-Ուրբ') }}</button>
+                                        <button type="button" onclick="setChannelDays('dine_in', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Շաբ-Կիր') }}</button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    @foreach($dayNames as $dayKey => $dayLabel)
+                                        <label style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 0.82rem; font-weight: 700; color: var(--text-main); cursor: pointer;">
+                                            <input type="checkbox" name="dine_in_days[]" value="{{ $dayKey }}" class="dine_in_day_cb" {{ in_array($dayKey, $locDineInDays) ? 'checked' : '' }} style="accent-color: var(--primary);">
+                                            <span>{{ $dayLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B. DELIVERY SCHEDULE -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <span style="font-size: 1.15rem; color: #3b82f6;"><i class="fa-solid fa-motorcycle"></i></span>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Առաքման Ծառայության Ժամեր') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Առաքման պատվերների ընդունման ժամանակացույց') }}</div>
+                                </div>
+                            </div>
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" name="delivery_schedule_enabled" value="1" id="deliveryScheduleToggle" {{ $locDeliveryEnabled ? 'checked' : '' }} onchange="toggleScheduleBlock('delivery')" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Սահմանափակել ժամերը') }}</span>
+                            </label>
+                        </div>
+
+                        <div id="deliveryScheduleFields" style="{{ $locDeliveryEnabled ? '' : 'display: none;' }}">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                        <i class="fa-regular fa-clock"></i> {{ __('Առաքման սկիզբ') }}
+                                    </label>
+                                    <input type="time" name="delivery_start_time" value="{{ substr($locDeliveryStart, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                        <i class="fa-regular fa-clock"></i> {{ __('Առաքման ավարտ') }}
+                                    </label>
+                                    <input type="time" name="delivery_end_time" value="{{ substr($locDeliveryEnd, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Առաքման աշխատանքային օրեր') }}</label>
+                                    <div style="display: flex; gap: 0.35rem;">
+                                        <button type="button" onclick="setChannelDays('delivery', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Բոլորը') }}</button>
+                                        <button type="button" onclick="setChannelDays('delivery', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Երկ-Ուրբ') }}</button>
+                                        <button type="button" onclick="setChannelDays('delivery', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Շաբ-Կիր') }}</button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    @foreach($dayNames as $dayKey => $dayLabel)
+                                        <label style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 0.82rem; font-weight: 700; color: var(--text-main); cursor: pointer;">
+                                            <input type="checkbox" name="delivery_days[]" value="{{ $dayKey }}" class="delivery_day_cb" {{ in_array($dayKey, $locDeliveryDays) ? 'checked' : '' }} style="accent-color: var(--primary);">
+                                            <span>{{ $dayLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- C. TAKEAWAY SCHEDULE -->
+                    <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <span style="font-size: 1.15rem; color: #10b981;"><i class="fa-solid fa-bag-shopping"></i></span>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Տանելու Պատվերների Ժամեր (Takeaway)') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Ինքնուրույն վերցնելու (տանելու) պատվերների ընդունման ժամեր') }}</div>
+                                </div>
+                            </div>
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" name="takeaway_schedule_enabled" value="1" id="takeawayScheduleToggle" {{ $locTakeawayEnabled ? 'checked' : '' }} onchange="toggleScheduleBlock('takeaway')" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Սահմանափակել ժամերը') }}</span>
+                            </label>
+                        </div>
+
+                        <div id="takeawayScheduleFields" style="{{ $locTakeawayEnabled ? '' : 'display: none;' }}">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                        <i class="fa-regular fa-clock"></i> {{ __('Տանելու սկիզբ') }}
+                                    </label>
+                                    <input type="time" name="takeaway_start_time" value="{{ substr($locTakeawayStart, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                        <i class="fa-regular fa-clock"></i> {{ __('Տանելու ավարտ') }}
+                                    </label>
+                                    <input type="time" name="takeaway_end_time" value="{{ substr($locTakeawayEnd, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Տանելու աշխատանքային օրեր') }}</label>
+                                    <div style="display: flex; gap: 0.35rem;">
+                                        <button type="button" onclick="setChannelDays('takeaway', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Բոլորը') }}</button>
+                                        <button type="button" onclick="setChannelDays('takeaway', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Երկ-Ուրբ') }}</button>
+                                        <button type="button" onclick="setChannelDays('takeaway', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Շաբ-Կիր') }}</button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    @foreach($dayNames as $dayKey => $dayLabel)
+                                        <label style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 0.82rem; font-weight: 700; color: var(--text-main); cursor: pointer;">
+                                            <input type="checkbox" name="takeaway_days[]" value="{{ $dayKey }}" class="takeaway_day_cb" {{ in_array($dayKey, $locTakeawayDays) ? 'checked' : '' }} style="accent-color: var(--primary);">
+                                            <span>{{ $dayLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- D. CLOSING NOTICE / WARNING -->
+                    <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px dashed rgba(245, 158, 11, 0.4); border-radius: 16px; padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <span style="font-size: 1.2rem; color: #f59e0b;"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Փակվելու Մասին Նախազգուշացում (Closing Warning)') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Հաճախորդներին մենյուում նախապես տեղեկացնել խոհանոցի կամ ռեստորանի փակվելու մասին') }}</div>
+                                </div>
+                            </div>
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
+                                <input type="checkbox" name="closing_warning_enabled" value="1" id="closingWarningToggle" {{ $locWarningEnabled ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Միացված է') }}</span>
+                            </label>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                    {{ __('Քանի րոպե առաջ ցուցադրել ծանուցումը') }}
+                                </label>
+                                <select name="closing_warning_minutes" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.92rem; font-weight: 700;">
+                                    <option value="15" {{ $locWarningMinutes == 15 ? 'selected' : '' }}>15 րոպե առաջ (15 mins)</option>
+                                    <option value="30" {{ $locWarningMinutes == 30 ? 'selected' : '' }}>30 րոպե առաջ (30 mins - Խորհուրդ է տրվում)</option>
+                                    <option value="45" {{ $locWarningMinutes == 45 ? 'selected' : '' }}>45 րոպե առաջ (45 mins)</option>
+                                    <option value="60" {{ $locWarningMinutes == 60 ? 'selected' : '' }}>60 րոպե առաջ (1 hour)</option>
+                                    <option value="90" {{ $locWarningMinutes == 90 ? 'selected' : '' }}>90 րոպե առաջ (1.5 hours)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
+                                    {{ __('Հատուկ նախազգուշացման տեքստ (կամայական)') }}
+                                </label>
+                                <input type="text" name="closing_warning_message" value="{{ $locWarningMessage }}" placeholder="Օրինակ՝ Խոհանոցը շուտով փակվում է, խնդրում ենք շտապել" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.92rem; font-weight: 600;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. CUSTOM DOMAIN & BRANDING URL (ՍԵՓԱԿԱՆ ԴՈՄԵՆ) -->
             <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
@@ -1975,6 +2249,29 @@ function testTelegramConnection() {
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = originalContent;
+}
+
+function toggleScheduleBlock(channel) {
+    const el = document.getElementById(channel + 'ScheduleFields');
+    const cb = document.getElementById(channel + 'ScheduleToggle');
+    if (el && cb) {
+        el.style.display = cb.checked ? 'block' : 'none';
+    }
+}
+
+function setChannelDays(channel, preset) {
+    const checkboxes = document.querySelectorAll('.' + channel + '_day_cb');
+    const weekdays = ['mon', 'tue', 'wed', 'thu', 'fri'];
+    const weekends = ['sat', 'sun'];
+
+    checkboxes.forEach(cb => {
+        if (preset === 'all') {
+            cb.checked = true;
+        } else if (preset === 'weekdays') {
+            cb.checked = weekdays.includes(cb.value);
+        } else if (preset === 'weekends') {
+            cb.checked = weekends.includes(cb.value);
+        }
     });
 }
 </script>

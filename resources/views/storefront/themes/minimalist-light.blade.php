@@ -504,6 +504,7 @@
 
     <!-- Menu Content -->
     <main class="menu-container">
+        @include('storefront.components.closing-banner')
         @include('storefront.components.featured-dish-banner')
 
         @foreach($categories as $cat)

@@ -13,6 +13,7 @@ use App\Services\CredentialService;
 use App\Services\CustomDomainService;
 use App\Services\SecurityAuditService;
 use App\Services\TelegramNotificationService;
+use App\Services\TenantCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,6 +103,29 @@ class VendorSettingsController extends Controller
             'ai_waiter_name' => 'nullable|string|max:100',
             'ai_waiter_priority_ingredients' => 'nullable|string|max:2000',
             'ai_waiter_welcome_text' => 'nullable|string|max:1000',
+
+            // Operating Schedules & Closing Warnings
+            'dine_in_schedule_enabled' => 'nullable|boolean',
+            'dine_in_start_time' => 'nullable|string|max:10',
+            'dine_in_end_time' => 'nullable|string|max:10',
+            'dine_in_days' => 'nullable|array',
+            'dine_in_days.*' => 'string|max:10',
+
+            'delivery_schedule_enabled' => 'nullable|boolean',
+            'delivery_start_time' => 'nullable|string|max:10',
+            'delivery_end_time' => 'nullable|string|max:10',
+            'delivery_days' => 'nullable|array',
+            'delivery_days.*' => 'string|max:10',
+
+            'takeaway_schedule_enabled' => 'nullable|boolean',
+            'takeaway_start_time' => 'nullable|string|max:10',
+            'takeaway_end_time' => 'nullable|string|max:10',
+            'takeaway_days' => 'nullable|array',
+            'takeaway_days.*' => 'string|max:10',
+
+            'closing_warning_enabled' => 'nullable|boolean',
+            'closing_warning_minutes' => 'nullable|integer|min:1|max:240',
+            'closing_warning_message' => 'nullable|string|max:500',
         ]);
 
         $validated['service_fee_enabled'] = $request->boolean('service_fee_enabled');
@@ -110,6 +134,12 @@ class VendorSettingsController extends Controller
         $validated['featured_dish_enabled'] = $request->boolean('featured_dish_enabled');
         $validated['ai_waiter_enabled'] = $request->boolean('ai_waiter_enabled');
         $validated['allow_whatsapp_orders'] = $request->boolean('allow_whatsapp_orders');
+        $validated['dine_in_schedule_enabled'] = $request->boolean('dine_in_schedule_enabled');
+        $validated['delivery_schedule_enabled'] = $request->boolean('delivery_schedule_enabled');
+        $validated['takeaway_schedule_enabled'] = $request->boolean('takeaway_schedule_enabled');
+        $validated['closing_warning_enabled'] = $request->boolean('closing_warning_enabled');
+
+        $hasMultipleLocations = $vendor->locations()->count() > 1;
 
         $vendorUpdate = [
             'service_fee_enabled' => $validated['service_fee_enabled'],
@@ -128,6 +158,24 @@ class VendorSettingsController extends Controller
             'ai_waiter_enabled' => $validated['ai_waiter_enabled'],
             'allow_whatsapp_orders' => $validated['allow_whatsapp_orders'],
         ];
+
+        if (! $hasMultipleLocations) {
+            $vendorUpdate['dine_in_schedule_enabled'] = $validated['dine_in_schedule_enabled'];
+            $vendorUpdate['dine_in_start_time'] = ! empty($validated['dine_in_start_time']) ? $validated['dine_in_start_time'] : null;
+            $vendorUpdate['dine_in_end_time'] = ! empty($validated['dine_in_end_time']) ? $validated['dine_in_end_time'] : null;
+            $vendorUpdate['dine_in_days'] = ! empty($validated['dine_in_days']) ? array_values($validated['dine_in_days']) : null;
+            $vendorUpdate['delivery_schedule_enabled'] = $validated['delivery_schedule_enabled'];
+            $vendorUpdate['delivery_start_time'] = ! empty($validated['delivery_start_time']) ? $validated['delivery_start_time'] : null;
+            $vendorUpdate['delivery_end_time'] = ! empty($validated['delivery_end_time']) ? $validated['delivery_end_time'] : null;
+            $vendorUpdate['delivery_days'] = ! empty($validated['delivery_days']) ? array_values($validated['delivery_days']) : null;
+            $vendorUpdate['takeaway_schedule_enabled'] = $validated['takeaway_schedule_enabled'];
+            $vendorUpdate['takeaway_start_time'] = ! empty($validated['takeaway_start_time']) ? $validated['takeaway_start_time'] : null;
+            $vendorUpdate['takeaway_end_time'] = ! empty($validated['takeaway_end_time']) ? $validated['takeaway_end_time'] : null;
+            $vendorUpdate['takeaway_days'] = ! empty($validated['takeaway_days']) ? array_values($validated['takeaway_days']) : null;
+            $vendorUpdate['closing_warning_enabled'] = $validated['closing_warning_enabled'];
+            $vendorUpdate['closing_warning_minutes'] = ! empty($validated['closing_warning_minutes']) ? (int) $validated['closing_warning_minutes'] : 30;
+            $vendorUpdate['closing_warning_message'] = ! empty($validated['closing_warning_message']) ? $validated['closing_warning_message'] : null;
+        }
 
         if (array_key_exists('ai_waiter_name', $validated)) {
             $vendorUpdate['ai_waiter_name'] = ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Մատուցող';
@@ -377,10 +425,29 @@ class VendorSettingsController extends Controller
             }
             $locationUpdate['allow_whatsapp_orders'] = $validated['allow_whatsapp_orders'];
 
+            // Operating Schedules for Location
+            $locationUpdate['dine_in_schedule_enabled'] = $validated['dine_in_schedule_enabled'];
+            $locationUpdate['dine_in_start_time'] = ! empty($validated['dine_in_start_time']) ? $validated['dine_in_start_time'] : null;
+            $locationUpdate['dine_in_end_time'] = ! empty($validated['dine_in_end_time']) ? $validated['dine_in_end_time'] : null;
+            $locationUpdate['dine_in_days'] = ! empty($validated['dine_in_days']) ? array_values($validated['dine_in_days']) : null;
+            $locationUpdate['delivery_schedule_enabled'] = $validated['delivery_schedule_enabled'];
+            $locationUpdate['delivery_start_time'] = ! empty($validated['delivery_start_time']) ? $validated['delivery_start_time'] : null;
+            $locationUpdate['delivery_end_time'] = ! empty($validated['delivery_end_time']) ? $validated['delivery_end_time'] : null;
+            $locationUpdate['delivery_days'] = ! empty($validated['delivery_days']) ? array_values($validated['delivery_days']) : null;
+            $locationUpdate['takeaway_schedule_enabled'] = $validated['takeaway_schedule_enabled'];
+            $locationUpdate['takeaway_start_time'] = ! empty($validated['takeaway_start_time']) ? $validated['takeaway_start_time'] : null;
+            $locationUpdate['takeaway_end_time'] = ! empty($validated['takeaway_end_time']) ? $validated['takeaway_end_time'] : null;
+            $locationUpdate['takeaway_days'] = ! empty($validated['takeaway_days']) ? array_values($validated['takeaway_days']) : null;
+            $locationUpdate['closing_warning_enabled'] = $validated['closing_warning_enabled'];
+            $locationUpdate['closing_warning_minutes'] = ! empty($validated['closing_warning_minutes']) ? (int) $validated['closing_warning_minutes'] : 30;
+            $locationUpdate['closing_warning_message'] = ! empty($validated['closing_warning_message']) ? $validated['closing_warning_message'] : null;
+
             if (! empty($locationUpdate)) {
                 $location->update($locationUpdate);
             }
         }
+
+        TenantCache::increment($vendor, 'menu_version');
 
         return back()->with('success', 'Կարգավորումները հաջողությամբ պահպանվեցին:');
     }

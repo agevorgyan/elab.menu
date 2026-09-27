@@ -114,6 +114,9 @@
             vendorSlug: vendor.slug || '',
             csrfToken: bootConfig.csrfToken || '',
             locationId: bootConfig.locationId || 1,
+            schedules: bootConfig.schedules || {},
+            closingNotice: bootConfig.closingNotice || {},
+            dismissedWarningBanner: false,
 
             // AI Waiter State
             showWelcomeModal: false,
@@ -173,6 +176,15 @@
                 if (this.customerPhone) {
                     this.phoneNationalNumber = this.customerPhone;
                     this.onPhoneInput();
+                }
+                if (this.closingNotice && this.closingNotice.enabled) {
+                    if (this.closingNotice.closing_soon && !this.closingNotice.is_closed) {
+                        setTimeout(() => {
+                            if (!this.dismissedWarningBanner) {
+                                this.triggerToast(this.closingNotice.message || 'Ուշադրություն: Խոհանոցը շուտով փակվում է:', 'info', 'fa-solid fa-clock');
+                            }
+                        }, 1200);
+                    }
                 }
             },
 
@@ -430,6 +442,23 @@
                 return Math.max(0, this.takeawayMinAmount - this.cartSubtotal);
             },
 
+            get currentSchedule() {
+                if (!this.schedules) return null;
+                return this.schedules[this.orderType] || null;
+            },
+
+            get isCurrentChannelOpen() {
+                const sched = this.currentSchedule;
+                if (!sched || !sched.enabled) return true;
+                return !!sched.is_open;
+            },
+
+            get isCurrentChannelClosingSoon() {
+                const notice = this.closingNotice;
+                if (!notice || !notice.enabled || !notice.closing_soon) return false;
+                return this.isCurrentChannelOpen && notice.channel === this.orderType;
+            },
+
             get isBirthdayEligible() {
                 if (!this.birthdayDiscountEnabled || !this.customerBirthdate) return false;
                 try {
@@ -542,6 +571,12 @@
 
             async submitOrder(channel) {
                 if (this.cart.length === 0) return;
+
+                if (!this.isCurrentChannelOpen) {
+                    const channelName = this.orderType === 'delivery' ? 'Առաքման ծառայությունը' : (this.orderType === 'takeaway' ? 'Տանելու պատվերների ծառայությունը' : 'Խոհանոցը');
+                    this.triggerToast(channelName + ' այս պահին փակ է: Պատվերներ չեն ընդունվում:', 'remove', 'fa-solid fa-clock');
+                    return;
+                }
 
                 if (this.orderType === 'dine_in') {
                     if (!this.isTableFixed && (!this.tableNumber || !this.tableNumber.trim())) {

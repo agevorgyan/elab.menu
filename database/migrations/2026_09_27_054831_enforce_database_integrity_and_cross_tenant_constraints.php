@@ -75,7 +75,7 @@ return new class extends Migration
                 $table->foreign(['customer_id', 'vendor_id'], 'orders_cust_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('customers')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 
@@ -84,7 +84,7 @@ return new class extends Migration
                 $table->foreign(['location_id', 'vendor_id'], 'categories_loc_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('locations')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 
@@ -107,7 +107,7 @@ return new class extends Migration
                 $table->foreign(['location_id', 'vendor_id'], 'waiter_calls_loc_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('locations')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 
@@ -116,12 +116,12 @@ return new class extends Migration
                 $table->foreign(['location_id', 'vendor_id'], 'ai_sessions_loc_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('locations')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
 
                 $table->foreign(['order_id', 'vendor_id'], 'ai_sessions_order_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('orders')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 
@@ -136,7 +136,7 @@ return new class extends Migration
                     $table->foreign(['subscription_id', 'vendor_id'], 'payment_attempts_sub_vendor_fk')
                         ->references(['id', 'vendor_id'])
                         ->on('subscription_payments')
-                        ->nullOnDelete();
+                        ->cascadeOnDelete();
                 }
             });
         }
@@ -146,7 +146,7 @@ return new class extends Migration
                 $table->foreign(['location_id', 'vendor_id'], 'customers_loc_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('locations')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 
@@ -155,7 +155,7 @@ return new class extends Migration
                 $table->foreign(['session_id', 'vendor_id'], 'ai_logs_session_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('ai_waiter_sessions')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 
@@ -182,7 +182,7 @@ return new class extends Migration
                 $table->foreign(['location_id', 'vendor_id'], 'users_loc_vendor_fk')
                     ->references(['id', 'vendor_id'])
                     ->on('locations')
-                    ->nullOnDelete();
+                    ->cascadeOnDelete();
             });
         }
 

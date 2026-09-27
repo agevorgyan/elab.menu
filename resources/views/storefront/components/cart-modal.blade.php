@@ -229,6 +229,39 @@
                     </template>
                 </div>
 
+                <!-- Channel Operating Hours & Closing Alert Banner -->
+                <template x-if="currentSchedule && currentSchedule.enabled">
+                    <div style="margin-top: 0.75rem;">
+                        <!-- Closed Alert -->
+                        <template x-if="!isCurrentChannelOpen">
+                            <div style="background: rgba(239, 68, 68, 0.12); border: 1.5px solid rgba(239, 68, 68, 0.35); border-radius: 14px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem; color: #ef4444; font-size: 0.85rem;">
+                                <i class="fa-solid fa-clock" style="font-size: 1.25rem; flex-shrink: 0;"></i>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 800; font-size: 0.88rem;">
+                                        <span x-text="orderType === 'delivery' ? '{{ __('menu.delivery_closed') ?? 'Առաքման ծառայությունը փակ է' }}' : (orderType === 'takeaway' ? '{{ __('menu.takeaway_closed') ?? 'Տանելու պատվերները փակ են' }}' : '{{ __('menu.kitchen_closed') ?? 'Խոհանոցը փակ է' }}')"></span>
+                                    </div>
+                                    <div style="font-size: 0.78rem; opacity: 0.9; margin-top: 0.2rem;">
+                                        {{ __('menu.operating_hours') ?? 'Աշխատանքային ժամեր' }}: <strong x-text="currentSchedule.start_time + ' - ' + currentSchedule.end_time"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Closing Soon Warning -->
+                        <template x-if="isCurrentChannelOpen && isCurrentChannelClosingSoon">
+                            <div style="background: rgba(245, 158, 11, 0.12); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 14px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem; color: #d97706; font-size: 0.85rem;">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.25rem; flex-shrink: 0; color: #f59e0b;"></i>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 800; font-size: 0.88rem; color: #b45309;" x-text="closingNotice.message || 'Ուշադրություն: Խոհանոցը շուտով փակվում է:'"></div>
+                                    <div style="font-size: 0.78rem; opacity: 0.9; margin-top: 0.2rem; color: #b45309;">
+                                        {{ __('menu.closing_time') ?? 'Փակման ժամ' }}: <strong x-text="currentSchedule.end_time"></strong> (<span x-text="closingNotice.minutes_left + ' {{ __('menu.minutes_left') ?? 'րոպեից' }}'"></span>)
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
                 <!-- Takeaway Notifications & Min Order Warning -->
                 <template x-if="orderType === 'takeaway'">
                     <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.75rem;">
@@ -721,14 +754,17 @@
                     <button type="button" 
                             @click="submitOrder(orderType)" 
                             class="cart-submit-btn"
-                            :disabled="(orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
-                            :style="((orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
-                            :class="{ 'is-delivery': orderType === 'delivery', 'is-takeaway': orderType === 'takeaway' }">
+                            :disabled="!isCurrentChannelOpen || (orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
+                            :style="(!isCurrentChannelOpen || (orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
+                            :class="{ 'is-delivery': orderType === 'delivery', 'is-takeaway': orderType === 'takeaway', 'is-closed': !isCurrentChannelOpen }">
                         <div class="cart-submit-left">
-                            <template x-if="activeOrder && !['completed', 'cancelled'].includes(activeOrder.status)">
+                            <template x-if="!isCurrentChannelOpen">
+                                <i class="fa-solid fa-clock" style="color: #ef4444;"></i>
+                            </template>
+                            <template x-if="isCurrentChannelOpen && activeOrder && !['completed', 'cancelled'].includes(activeOrder.status)">
                                 <i class="fa-solid fa-circle-plus" style="color: #10b981;"></i>
                             </template>
-                            <template x-if="!activeOrder || ['completed', 'cancelled'].includes(activeOrder.status)">
+                            <template x-if="isCurrentChannelOpen && (!activeOrder || ['completed', 'cancelled'].includes(activeOrder.status))">
                                 <span>
                                     <template x-if="orderType === 'delivery'">
                                         <i class="fa-solid fa-motorcycle"></i>
@@ -741,9 +777,11 @@
                                     </template>
                                 </span>
                             </template>
-                            <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
-                                ? ('{{ __('menu.append_to_active_order') }} (' + activeOrder.order_number + ')')
-                                : (orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway') }}' : '{{ __('menu.checkout') }}'))"></span>
+                            <span x-text="!isCurrentChannelOpen
+                                ? (orderType === 'delivery' ? '{{ __('menu.delivery_closed') ?? 'Առաքումը փակ է' }}' : (orderType === 'takeaway' ? '{{ __('menu.takeaway_closed') ?? 'Տանելու պատվերները փակ են' }}' : '{{ __('menu.kitchen_closed') ?? 'Խոհանոցը փակ է' }}'))
+                                : ((activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
+                                    ? ('{{ __('menu.append_to_active_order') }} (' + activeOrder.order_number + ')')
+                                    : (orderType === 'delivery' ? '{{ __('menu.order_delivery') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway') }}' : '{{ __('menu.checkout') }}')))"></span>
                         </div>
                         <div class="cart-submit-price-pill">
                             <span x-text="Number(cartFinalTotal).toLocaleString()"></span>
@@ -755,13 +793,15 @@
                     @if($vendor->hasWhatsAppOrdersEnabled($location ?? null))
                     <button type="button" 
                             @click="submitOrder('whatsapp')" 
-                            :disabled="(orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
-                            :style="((orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
+                            :disabled="!isCurrentChannelOpen || (orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)"
+                            :style="(!isCurrentChannelOpen || (orderType === 'delivery' && isBelowDeliveryMin) || (orderType === 'takeaway' && isBelowTakeawayMin)) ? 'opacity: 0.55; cursor: not-allowed;' : ''"
                             class="cart-whatsapp-btn cart-whatsapp-order-btn">
                         <i class="fa-brands fa-whatsapp cart-wa-icon"></i>
-                        <span x-text="(activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
-                            ? '{{ __('menu.append_to_active_order_wa') }}'
-                            : (orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}'))"></span>
+                        <span x-text="!isCurrentChannelOpen
+                            ? '{{ __('menu.orders_closed') ?? 'Պատվերներ չեն ընդունվում' }}'
+                            : ((activeOrder && !['completed', 'cancelled'].includes(activeOrder.status))
+                                ? '{{ __('menu.append_to_active_order_wa') }}'
+                                : (orderType === 'delivery' ? '{{ __('menu.order_delivery_via_whatsapp') }}' : (orderType === 'takeaway' ? '{{ __('menu.order_takeaway_via_whatsapp') }}' : '{{ __('menu.order_via_whatsapp') }}')))"></span>
                     </button>
                     @endif
                 </div>

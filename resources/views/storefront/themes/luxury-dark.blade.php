@@ -319,6 +319,7 @@
 
     <!-- Main Dishes List (Continuous scroll sections) -->
     <div style="padding: 1.25rem;">
+        @include('storefront.components.closing-banner')
         @include('storefront.components.featured-dish-banner')
 
         @foreach($categories as $cat)

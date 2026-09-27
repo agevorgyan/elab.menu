@@ -276,6 +276,7 @@
 
     <!-- Main List -->
     <div>
+        @include('storefront.components.closing-banner')
         @include('storefront.components.featured-dish-banner')
 
         @foreach($categories as $cat)

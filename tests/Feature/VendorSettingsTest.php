@@ -60,6 +60,50 @@ class VendorSettingsTest extends TestCase
         $response->assertSee('1000');
     }
 
+    public function test_vendor_with_multiple_locations_can_view_settings_and_switch_branches(): void
+    {
+        $plan = SubscriptionPlan::where('slug', 'pro')->first();
+
+        $vendor = Vendor::create([
+            'name' => 'Multi Branch Test',
+            'slug' => 'multi-branch-test',
+            'email' => 'multi@bistro.com',
+            'password' => bcrypt('password'),
+            'subscription_plan' => 'pro',
+            'subscription_plan_id' => $plan->id,
+            'subscription_expires_at' => now()->addDays(30),
+            'is_active' => true,
+        ]);
+
+        $loc1 = Location::create([
+            'vendor_id' => $vendor->id,
+            'name' => 'Downtown Branch',
+            'slug' => 'downtown',
+            'address' => 'Center 1',
+        ]);
+
+        $loc2 = Location::create([
+            'vendor_id' => $vendor->id,
+            'name' => 'Uptown Branch',
+            'slug' => 'uptown',
+            'address' => 'North 5',
+        ]);
+
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'multi@bistro.com',
+            'password' => bcrypt('password'),
+            'vendor_id' => $vendor->id,
+            'role' => 'vendor_owner',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.settings.index', ['location_id' => $loc2->id]));
+        $response->assertStatus(200);
+        $response->assertSee('Ընթացիկ Մասնաճյուղ՝');
+        $response->assertSee('Uptown Branch');
+        $response->assertSee('Downtown Branch');
+    }
+
     public function test_vendor_can_update_service_fee_and_delivery_settings(): void
     {
         $plan = SubscriptionPlan::where('slug', 'pro')->first();

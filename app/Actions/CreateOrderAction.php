@@ -71,6 +71,8 @@ class CreateOrderAction
      */
     protected function appendItemsToOrder(Vendor $vendor, Order $order, CreateOrderDTO $dto): array
     {
+        $this->validateChannelOperatingHours($vendor, (int) $dto->locationId, (string) $order->type);
+
         DB::transaction(function () use ($vendor, $order, $dto) {
             // Update customer link if provided
             if (! empty($dto->customerPhone) || ! empty($dto->customerEmail)) {
@@ -200,6 +202,8 @@ class CreateOrderAction
      */
     protected function createNewOrder(Vendor $vendor, CreateOrderDTO $dto): array
     {
+        $this->validateChannelOperatingHours($vendor, (int) $dto->locationId, (string) $dto->type);
+
         $order = null;
 
         DB::transaction(function () use ($vendor, $dto, &$order) {
@@ -565,6 +569,24 @@ class CreateOrderAction
             $curChannel = $channelNames[$orderType] ?? $orderType;
             throw ValidationException::withMessages([
                 'items' => "«{$product->name}» ուտեստը նախատեսված չէ {$curChannel} պատվերների համար:",
+            ]);
+        }
+    }
+
+    /**
+     * Validate that the order channel / kitchen is currently open according to operating schedule.
+     *
+     * @throws ValidationException
+     */
+    protected function validateChannelOperatingHours(Vendor $vendor, int $locationId, string $orderType): void
+    {
+        $location = $vendor->locations()->find($locationId);
+        $schedule = $vendor->resolveOperatingSchedule($orderType, $location);
+
+        if ($schedule['schedule_enabled'] && ! $schedule['is_open']) {
+            $msg = $schedule['notice_message'] ?? 'Տվյալ ծառայությունն այս պահին փակ է և պատվերներ չի ընդունում:';
+            throw ValidationException::withMessages([
+                'type' => $msg,
             ]);
         }
     }

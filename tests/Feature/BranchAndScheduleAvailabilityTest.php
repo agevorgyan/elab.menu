@@ -295,4 +295,248 @@ class BranchAndScheduleAvailabilityTest extends TestCase
         $this->assertTrue($product->isAvailableAtLocation($this->locationA->id));
         $this->assertTrue($product->isAvailableAtLocation($this->locationB->id));
     }
+
+    public function test_kitchen_operating_schedule_prevents_order_after_closing_time(): void
+    {
+        $product = Product::create([
+            'vendor_id' => $this->vendor->id,
+            'category_id' => $this->category->id,
+            'name' => 'Late Night Steak',
+            'price' => 5000,
+            'is_available' => true,
+        ]);
+
+        // Configure vendor kitchen operating schedule: 10:00 to 23:00
+        $this->vendor->update([
+            'dine_in_schedule_enabled' => true,
+            'dine_in_start_time' => '10:00',
+            'dine_in_end_time' => '23:00',
+            'dine_in_days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'closing_warning_enabled' => true,
+            'closing_warning_minutes' => 30,
+            'closing_warning_message' => 'Խոհանոցը փակվում է 30 րոպեից',
+        ]);
+
+        // Case 1: At 22:15 (Kitchen is OPEN, closing in 45m -> no warning yet if warning threshold is 30m)
+        Carbon::setTestNow(Carbon::parse('2026-09-28 22:15:00', 'Asia/Yerevan'));
+        $this->assertTrue($this->vendor->isChannelOpen('dine_in', $this->locationA));
+
+        $openRes = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationA->id,
+            'table_number' => '4',
+            'type' => 'dine_in',
+            'customer_name' => 'Armen',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $openRes->assertStatus(200);
+        $this->assertTrue($openRes->json('success'));
+
+        // Case 2: At 22:40 (Kitchen is OPEN, closing in 20m -> warning active)
+        Carbon::setTestNow(Carbon::parse('2026-09-28 22:40:00', 'Asia/Yerevan'));
+        $notice = $this->vendor->getClosingNotice('dine_in', $this->locationA);
+        $this->assertTrue($notice['enabled']);
+        $this->assertTrue($notice['closing_soon']);
+        $this->assertEquals(20, $notice['minutes_left']);
+        $this->assertFalse($notice['is_closed']);
+
+        // Order is still accepted before 23:00
+        $warningPeriodRes = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationA->id,
+            'table_number' => '4',
+            'type' => 'dine_in',
+            'customer_name' => 'Armen',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $warningPeriodRes->assertStatus(200);
+
+        // Case 3: At 23:01 (Kitchen is CLOSED -> orders rejected)
+        Carbon::setTestNow(Carbon::parse('2026-09-28 23:01:00', 'Asia/Yerevan'));
+        $this->assertFalse($this->vendor->isChannelOpen('dine_in', $this->locationA));
+
+        $closedNotice = $this->vendor->getClosingNotice('dine_in', $this->locationA);
+        $this->assertTrue($closedNotice['is_closed']);
+
+        $closedRes = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationA->id,
+            'table_number' => '4',
+            'type' => 'dine_in',
+            'customer_name' => 'Armen',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $closedRes->assertStatus(422);
+        $closedRes->assertJsonValidationErrors(['type']);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_delivery_and_takeaway_independent_operating_schedules(): void
+    {
+        $product = Product::create([
+            'vendor_id' => $this->vendor->id,
+            'category_id' => $this->category->id,
+            'name' => 'Pizza Margherita',
+            'price' => 3500,
+            'is_available' => true,
+        ]);
+
+        $this->vendor->update([
+            'dine_in_schedule_enabled' => false,
+            'delivery_schedule_enabled' => true,
+            'delivery_start_time' => '11:00',
+            'delivery_end_time' => '21:00',
+            'delivery_days' => ['mon', 'tue', 'wed', 'thu', 'fri'],
+            'takeaway_schedule_enabled' => true,
+            'takeaway_start_time' => '10:00',
+            'takeaway_end_time' => '22:00',
+            'takeaway_days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+        ]);
+
+        // At 21:30 Monday: Delivery is CLOSED, but Takeaway and Dine-in are OPEN
+        Carbon::setTestNow(Carbon::parse('2026-09-28 21:30:00', 'Asia/Yerevan'));
+        $this->assertFalse($this->vendor->isChannelOpen('delivery', $this->locationA));
+        $this->assertTrue($this->vendor->isChannelOpen('takeaway', $this->locationA));
+        $this->assertTrue($this->vendor->isChannelOpen('dine_in', $this->locationA));
+
+        // Delivery fails
+        $delivRes = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationA->id,
+            'type' => 'delivery',
+            'delivery_address' => 'Tumanyan 10',
+            'customer_name' => 'Davit',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $delivRes->assertStatus(422);
+        $delivRes->assertJsonValidationErrors(['type']);
+
+        // Takeaway succeeds
+        $takeawayRes = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationA->id,
+            'type' => 'takeaway',
+            'customer_name' => 'Davit',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $takeawayRes->assertStatus(200);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_admin_settings_updates_operating_schedules(): void
+    {
+        $res = $this->actingAs($this->user)->post(route('admin.settings.update'), [
+            'location_id' => $this->locationA->id,
+            'name' => 'Updated Multi-Branch Bistro',
+            'email' => 'bistro@example.com',
+            'currency' => 'AMD',
+            'service_fee_type' => 'percent',
+            'service_fee_value' => '10',
+            'delivery_fee' => '500',
+            'delivery_min_amount' => '2000',
+            'dine_in_schedule_enabled' => '1',
+            'dine_in_start_time' => '09:30',
+            'dine_in_end_time' => '23:30',
+            'dine_in_days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+            'delivery_schedule_enabled' => '1',
+            'delivery_start_time' => '11:00',
+            'delivery_end_time' => '22:00',
+            'delivery_days' => ['mon', 'tue', 'wed', 'thu', 'fri'],
+            'takeaway_schedule_enabled' => '1',
+            'takeaway_start_time' => '10:00',
+            'takeaway_end_time' => '23:00',
+            'takeaway_days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            'closing_warning_enabled' => '1',
+            'closing_warning_minutes' => 45,
+            'closing_warning_message' => 'Խոհանոցը փակվում է 45 րոպեից',
+        ]);
+
+        $res->assertRedirect();
+
+        $this->locationA->refresh();
+        $this->assertTrue((bool) $this->locationA->dine_in_schedule_enabled);
+        $this->assertEquals('09:30', $this->locationA->dine_in_start_time);
+        $this->assertEquals('23:30', $this->locationA->dine_in_end_time);
+        $this->assertEquals(45, (int) $this->locationA->closing_warning_minutes);
+        $this->assertEquals('Խոհանոցը փակվում է 45 րոպեից', $this->locationA->closing_warning_message);
+
+        // Branch B must NOT be affected!
+        $this->locationB->refresh();
+        $this->assertFalse((bool) $this->locationB->dine_in_schedule_enabled);
+    }
+
+    public function test_branch_specific_operating_schedules_are_completely_isolated(): void
+    {
+        $product = Product::create([
+            'vendor_id' => $this->vendor->id,
+            'category_id' => $this->category->id,
+            'name' => 'Signature Burger',
+            'price' => 3000,
+            'is_available' => true,
+        ]);
+
+        // Branch A: Kitchen closes at 22:00
+        $this->locationA->update([
+            'dine_in_schedule_enabled' => true,
+            'dine_in_start_time' => '10:00',
+            'dine_in_end_time' => '22:00',
+            'dine_in_days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+        ]);
+
+        // Branch B: Kitchen closes late at 02:00
+        $this->locationB->update([
+            'dine_in_schedule_enabled' => true,
+            'dine_in_start_time' => '12:00',
+            'dine_in_end_time' => '02:00',
+            'dine_in_days' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+        ]);
+
+        // Test at 22:30 Monday: Branch A is CLOSED, Branch B is OPEN
+        Carbon::setTestNow(Carbon::parse('2026-09-28 22:30:00', 'Asia/Yerevan'));
+
+        $this->assertFalse($this->locationA->isChannelOpen('dine_in'));
+        $this->assertTrue($this->locationB->isChannelOpen('dine_in'));
+
+        // Ordering at Branch A fails
+        $orderResA = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationA->id,
+            'table_number' => '1',
+            'type' => 'dine_in',
+            'customer_name' => 'Armen',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $orderResA->assertStatus(422);
+        $orderResA->assertJsonValidationErrors(['type']);
+
+        // Ordering at Branch B succeeds
+        $orderResB = $this->postJson(route('client.order.submit', ['vendor_slug' => $this->vendor->slug]), [
+            'location_id' => $this->locationB->id,
+            'table_number' => '5',
+            'type' => 'dine_in',
+            'customer_name' => 'Armen',
+            'customer_phone' => '091223344',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+        $orderResB->assertStatus(200);
+        $this->assertTrue($orderResB->json('success'));
+
+        Carbon::setTestNow();
+    }
 }

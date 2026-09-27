@@ -20,6 +20,15 @@
         });
     })->values()->toArray();
 
+    $channelSchedules = [
+        'dine_in' => $vendor->resolveOperatingSchedule('dine_in', $location),
+        'delivery' => $vendor->resolveOperatingSchedule('delivery', $location),
+        'takeaway' => $vendor->resolveOperatingSchedule('takeaway', $location),
+    ];
+
+    $initialOrderType = !empty($table) ? 'dine_in' : ($vendor->takeaway_enabled ? 'takeaway' : ($vendor->delivery_enabled ? 'delivery' : 'takeaway'));
+    $initialClosingNotice = $channelSchedules[$initialOrderType] ?? null;
+
     $storefrontBootstrap = [
         'vendor' => [
             'slug' => $vendor->slug,
@@ -36,6 +45,8 @@
         'lang' => $lang ?? 'hy',
         'csrfToken' => csrf_token(),
         'locationId' => $location?->id ?? 1,
+        'schedules' => $channelSchedules,
+        'closingNotice' => $initialClosingNotice,
         'routes' => [
             'sw' => route('client.sw', ['vendor_slug' => $vendor->slug]),
             'submitOrder' => route('client.order.submit', ['vendor_slug' => $vendor->slug]),
@@ -49,7 +60,7 @@
             'birthdayDiscountPercent' => (float) ($vendor->getCrmSettings()['birthday_discount_percent'] ?? 15),
             'birthdayDiscountEnabled' => !empty($vendor->getCrmSettings()['birthday_discount_enabled']),
             'birthdayValidityDays' => (int) ($vendor->getCrmSettings()['birthday_validity_days'] ?? 3),
-            'orderType' => !empty($table) ? 'dine_in' : ($vendor->takeaway_enabled ? 'takeaway' : ($vendor->delivery_enabled ? 'delivery' : 'takeaway')),
+            'orderType' => $initialOrderType,
             'serviceFeeEnabled' => (bool) $vendor->service_fee_enabled,
             'serviceFeeType' => $vendor->service_fee_type ?? 'percent',
             'serviceFeeValue' => (float) ($vendor->service_fee_value ?? 0),

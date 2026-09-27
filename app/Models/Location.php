@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\BelongsToVendor;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
@@ -28,6 +29,21 @@ class Location extends Model
         'allow_whatsapp_orders',
         'minimum_order_amount',
         'is_active',
+        'dine_in_schedule_enabled',
+        'dine_in_start_time',
+        'dine_in_end_time',
+        'dine_in_days',
+        'delivery_schedule_enabled',
+        'delivery_start_time',
+        'delivery_end_time',
+        'delivery_days',
+        'takeaway_schedule_enabled',
+        'takeaway_start_time',
+        'takeaway_end_time',
+        'takeaway_days',
+        'closing_warning_enabled',
+        'closing_warning_minutes',
+        'closing_warning_message',
     ];
 
     protected $casts = [
@@ -35,7 +51,30 @@ class Location extends Model
         'allow_dine_in_orders' => 'boolean',
         'allow_whatsapp_orders' => 'boolean',
         'is_active' => 'boolean',
+        'dine_in_schedule_enabled' => 'boolean',
+        'dine_in_days' => 'array',
+        'delivery_schedule_enabled' => 'boolean',
+        'delivery_days' => 'array',
+        'takeaway_schedule_enabled' => 'boolean',
+        'takeaway_days' => 'array',
+        'closing_warning_enabled' => 'boolean',
+        'closing_warning_minutes' => 'integer',
     ];
+
+    public function resolveOperatingSchedule(string $channel, ?Carbon $now = null): array
+    {
+        return $this->vendor->resolveOperatingSchedule($channel, $this, $now);
+    }
+
+    public function isChannelOpen(string $channel, ?Carbon $now = null): bool
+    {
+        return $this->vendor->isChannelOpen($channel, $this, $now);
+    }
+
+    public function getClosingNotice(string $channel, ?Carbon $now = null, ?string $lang = 'hy'): ?array
+    {
+        return $this->vendor->getClosingNotice($channel, $this, $now, $lang);
+    }
 
     /**
      * Transparently decrypt Wi-Fi password when retrieved, falling back to plaintext for legacy rows.

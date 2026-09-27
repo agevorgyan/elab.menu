@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\CredentialService;
 use App\Services\Security\CssSanitizer;
 use App\Services\TenantCache;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -94,6 +95,21 @@ class Vendor extends Model
         'thermal_printer_settings',
         'floor_plan_data',
         'telegram_settings',
+        'dine_in_schedule_enabled',
+        'dine_in_start_time',
+        'dine_in_end_time',
+        'dine_in_days',
+        'delivery_schedule_enabled',
+        'delivery_start_time',
+        'delivery_end_time',
+        'delivery_days',
+        'takeaway_schedule_enabled',
+        'takeaway_start_time',
+        'takeaway_end_time',
+        'takeaway_days',
+        'closing_warning_enabled',
+        'closing_warning_minutes',
+        'closing_warning_message',
         'uuid',
         'storage_limit_bytes',
         'storage_used_bytes',
@@ -140,7 +156,229 @@ class Vendor extends Model
         'telegram_settings' => 'array',
         'allow_whatsapp_orders' => 'boolean',
         'supported_languages' => 'array',
+        'dine_in_schedule_enabled' => 'boolean',
+        'dine_in_days' => 'array',
+        'delivery_schedule_enabled' => 'boolean',
+        'delivery_days' => 'array',
+        'takeaway_schedule_enabled' => 'boolean',
+        'takeaway_days' => 'array',
+        'closing_warning_enabled' => 'boolean',
+        'closing_warning_minutes' => 'integer',
     ];
+
+    /**
+     * Resolve operating schedule, open/closed status, and closing warning for a given channel (dine_in, delivery, takeaway).
+     *
+     * @return array{
+     *     channel: string,
+     *     schedule_enabled: bool,
+     *     is_open: bool,
+     *     start_time: ?string,
+     *     end_time: ?string,
+     *     days: ?array,
+     *     minutes_until_close: ?int,
+     *     is_warning_active: bool,
+     *     warning_minutes: int,
+     *     status: 'open'|'closed'|'closing_soon',
+     *     badge_text: string,
+     *     notice_title: ?string,
+     *     notice_message: ?string
+     * }
+     */
+    public function resolveOperatingSchedule(string $channel, ?Location $location = null, ?Carbon $now = null): array
+    {
+        $channel = in_array($channel, ['dine_in', 'delivery', 'takeaway']) ? $channel : 'dine_in';
+
+        // Extract settings with location override support
+        $scheduleEnabled = match ($channel) {
+            'dine_in' => ($location && $location->getRawOriginal('dine_in_schedule_enabled') !== null) ? (bool) $location->dine_in_schedule_enabled : (bool) $this->dine_in_schedule_enabled,
+            'delivery' => ($location && $location->getRawOriginal('delivery_schedule_enabled') !== null) ? (bool) $location->delivery_schedule_enabled : (bool) $this->delivery_schedule_enabled,
+            'takeaway' => ($location && $location->getRawOriginal('takeaway_schedule_enabled') !== null) ? (bool) $location->takeaway_schedule_enabled : (bool) $this->takeaway_schedule_enabled,
+        };
+
+        $startTime = match ($channel) {
+            'dine_in' => ($location && ! empty($location->dine_in_start_time)) ? $location->dine_in_start_time : $this->dine_in_start_time,
+            'delivery' => ($location && ! empty($location->delivery_start_time)) ? $location->delivery_start_time : $this->delivery_start_time,
+            'takeaway' => ($location && ! empty($location->takeaway_start_time)) ? $location->takeaway_start_time : $this->takeaway_start_time,
+        };
+
+        $endTime = match ($channel) {
+            'dine_in' => ($location && ! empty($location->dine_in_end_time)) ? $location->dine_in_end_time : $this->dine_in_end_time,
+            'delivery' => ($location && ! empty($location->delivery_end_time)) ? $location->delivery_end_time : $this->delivery_end_time,
+            'takeaway' => ($location && ! empty($location->takeaway_end_time)) ? $location->takeaway_end_time : $this->takeaway_end_time,
+        };
+
+        $days = match ($channel) {
+            'dine_in' => ($location && ! empty($location->dine_in_days)) ? $location->dine_in_days : $this->dine_in_days,
+            'delivery' => ($location && ! empty($location->delivery_days)) ? $location->delivery_days : $this->delivery_days,
+            'takeaway' => ($location && ! empty($location->takeaway_days)) ? $location->takeaway_days : $this->takeaway_days,
+        };
+
+        $warningEnabled = ($location && $location->getRawOriginal('closing_warning_enabled') !== null)
+            ? (bool) $location->closing_warning_enabled
+            : (bool) ($this->closing_warning_enabled ?? true);
+
+        $warningMinutes = ($location && $location->getRawOriginal('closing_warning_minutes') !== null)
+            ? (int) $location->closing_warning_minutes
+            : (int) ($this->closing_warning_minutes ?? 30);
+
+        $customMessage = $location && ! empty($location->closing_warning_message)
+            ? $location->closing_warning_message
+            : $this->closing_warning_message;
+
+        $tz = ! empty($this->timezone) ? $this->timezone : 'Asia/Yerevan';
+        $now = $now ? $now->copy()->setTimezone($tz) : Carbon::now($tz);
+
+        $channelNames = [
+            'dine_in' => 'Ռեստորանի խոհանոցը',
+            'delivery' => 'Առաքման ծառայությունը',
+            'takeaway' => 'Տանելու (Takeaway) ծառայությունը',
+        ];
+        $channelName = $channelNames[$channel] ?? 'Ծառայությունը';
+
+        // If schedule not enabled or no hours defined, it is open 24/7
+        if (! $scheduleEnabled || (empty($startTime) && empty($endTime) && empty($days))) {
+            return [
+                'channel' => $channel,
+                'enabled' => false,
+                'schedule_enabled' => false,
+                'is_open' => true,
+                'is_closed' => false,
+                'start_time' => null,
+                'end_time' => null,
+                'days' => null,
+                'minutes_left' => null,
+                'minutes_until_close' => null,
+                'closing_soon' => false,
+                'is_warning_active' => false,
+                'warning_minutes' => $warningMinutes,
+                'status' => 'open',
+                'badge_text' => 'Բաց է',
+                'title' => null,
+                'notice_title' => null,
+                'message' => null,
+                'notice_message' => null,
+            ];
+        }
+
+        $cleanStart = $startTime ? substr($startTime, 0, 5) : '00:00';
+        $cleanEnd = $endTime ? substr($endTime, 0, 5) : '23:59';
+
+        // 1. Day of week check
+        if (! empty($days) && is_array($days) && count($days) < 7) {
+            $currentDay = strtolower($now->format('D'));
+            $allowedDays = array_map(fn ($d) => substr(strtolower($d), 0, 3), $days);
+            if (! in_array($currentDay, $allowedDays)) {
+                return [
+                    'channel' => $channel,
+                    'enabled' => true,
+                    'schedule_enabled' => true,
+                    'is_open' => false,
+                    'is_closed' => true,
+                    'start_time' => $cleanStart,
+                    'end_time' => $cleanEnd,
+                    'days' => $days,
+                    'minutes_left' => null,
+                    'minutes_until_close' => null,
+                    'closing_soon' => false,
+                    'is_warning_active' => false,
+                    'warning_minutes' => $warningMinutes,
+                    'status' => 'closed',
+                    'badge_text' => 'Փակ է (ոչ աշխատանքային օր)',
+                    'title' => "{$channelName} այսօր չի աշխատում",
+                    'notice_title' => "{$channelName} այսօր չի աշխատում",
+                    'message' => "Այսօր {$channelName} հանգստյան օր է: Պատվերներ չեն ընդունվում:",
+                    'notice_message' => "Այսօր {$channelName} հանգստյան օր է: Պատվերներ չեն ընդունվում:",
+                ];
+            }
+        }
+
+        // 2. Time window check
+        $currentTime = $now->format('H:i:s');
+        $startSeconds = Carbon::parse($cleanStart, $tz)->format('H:i:s');
+        $endSeconds = Carbon::parse($cleanEnd, $tz)->format('H:i:s');
+
+        $isOpen = false;
+        $minutesUntilClose = null;
+
+        if ($startSeconds <= $endSeconds) {
+            // Normal intra-day schedule (e.g. 10:00 to 23:00)
+            if ($currentTime >= $startSeconds && $currentTime <= $endSeconds) {
+                $isOpen = true;
+                $closingDateTime = Carbon::parse($now->format('Y-m-d').' '.$cleanEnd.':00', $tz);
+                $minutesUntilClose = max(0, (int) $now->diffInMinutes($closingDateTime, false));
+            }
+        } else {
+            // Overnight shift (e.g. 18:00 to 02:00)
+            if ($currentTime >= $startSeconds) {
+                $isOpen = true;
+                $closingDateTime = Carbon::parse($now->format('Y-m-d').' '.$cleanEnd.':00', $tz)->addDay();
+                $minutesUntilClose = max(0, (int) $now->diffInMinutes($closingDateTime, false));
+            } elseif ($currentTime <= $endSeconds) {
+                $isOpen = true;
+                $closingDateTime = Carbon::parse($now->format('Y-m-d').' '.$cleanEnd.':00', $tz);
+                $minutesUntilClose = max(0, (int) $now->diffInMinutes($closingDateTime, false));
+            }
+        }
+
+        $isWarningActive = ($isOpen && $warningEnabled && $minutesUntilClose !== null && $minutesUntilClose <= $warningMinutes && $minutesUntilClose > 0);
+
+        if (! $isOpen) {
+            $status = 'closed';
+            $badgeText = "Փակ է (բացվում է {$cleanStart}-ին)";
+            $noticeTitle = "{$channelName} այս պահին փակ է";
+            $noticeMessage = "{$channelName} այս պահին փակ է (աշխատանքային ժամեր՝ {$cleanStart} - {$cleanEnd}): Պատվերներ չեն ընդունվում:";
+        } elseif ($isWarningActive) {
+            $status = 'closing_soon';
+            $badgeText = "Փակվում է {$minutesUntilClose} րոպեից";
+            $noticeTitle = "Ուշադրություն. {$channelName} փակվում է {$minutesUntilClose} րոպեից";
+            $noticeMessage = $customMessage ?: "Խնդրում ենք ձևակերպել Ձեր պատվերը մինչև {$cleanEnd}:";
+        } else {
+            $status = 'open';
+            $badgeText = "Բաց է մինչև {$cleanEnd}";
+            $noticeTitle = null;
+            $noticeMessage = null;
+        }
+
+        return [
+            'channel' => $channel,
+            'enabled' => true,
+            'schedule_enabled' => true,
+            'is_open' => $isOpen,
+            'is_closed' => ! $isOpen,
+            'start_time' => $cleanStart,
+            'end_time' => $cleanEnd,
+            'days' => $days,
+            'minutes_left' => $minutesUntilClose,
+            'minutes_until_close' => $minutesUntilClose,
+            'closing_soon' => $isWarningActive,
+            'is_warning_active' => $isWarningActive,
+            'warning_minutes' => $warningMinutes,
+            'status' => $status,
+            'badge_text' => $badgeText,
+            'title' => $noticeTitle,
+            'notice_title' => $noticeTitle,
+            'message' => $noticeMessage,
+            'notice_message' => $noticeMessage,
+        ];
+    }
+
+    public function isChannelOpen(string $channel, ?Location $location = null, ?Carbon $now = null): bool
+    {
+        $res = $this->resolveOperatingSchedule($channel, $location, $now);
+
+        return (bool) $res['is_open'];
+    }
+
+    public function getClosingNotice(string $channel, ?Location $location = null, ?Carbon $now = null, ?string $lang = 'hy'): ?array
+    {
+        $res = $this->resolveOperatingSchedule($channel, $location, $now);
+        if (! $res['is_open'] || $res['is_warning_active']) {
+            return $res;
+        }
+
+        return null;
+    }
 
     /**
      * Transparently decrypt Wi-Fi password when retrieved, falling back to plaintext for legacy rows.

@@ -30,8 +30,13 @@ use App\Policies\VendorStorageFilePolicy;
 use App\Policies\WaiterCallPolicy;
 use App\Security\Permission;
 use App\Services\TenantContext;
+use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -55,6 +60,23 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('production') || str_starts_with(config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        // Guarantee tenant context isolation across queue worker lifecycle
+        Queue::before(function (JobProcessing $event): void {
+            app(TenantContext::class)->clear();
+        });
+
+        Queue::after(function (JobProcessed $event): void {
+            app(TenantContext::class)->clear();
+        });
+
+        Queue::failing(function (JobFailed $event): void {
+            app(TenantContext::class)->clear();
+        });
+
+        Queue::exceptionOccurred(function (JobExceptionOccurred $event): void {
+            app(TenantContext::class)->clear();
+        });
 
         // Register Telegram notification event listeners
         Event::listen(OrderCreated::class, SendTelegramOrderNotification::class);

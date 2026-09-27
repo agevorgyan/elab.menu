@@ -123,7 +123,7 @@ class AiQuotaService
         // 1. Requests per minute
         if (! empty($quotas['requests_per_minute'])) {
             $rpmLimit = (int) $quotas['requests_per_minute'];
-            $minKey = "ai_q_rpm:{$vendorId}:".$now->format('YmdHi');
+            $minKey = TenantCache::key($vendor, 'ai_q_rpm:'.$now->format('YmdHi'));
             $currentMin = (int) Cache::get($minKey, 0);
             if ($currentMin >= $rpmLimit) {
                 return [
@@ -137,7 +137,7 @@ class AiQuotaService
         // 2. Requests per hour
         if (! empty($quotas['requests_per_hour'])) {
             $rphLimit = (int) $quotas['requests_per_hour'];
-            $hrKey = "ai_q_rph:{$vendorId}:".$now->format('YmdH');
+            $hrKey = TenantCache::key($vendor, 'ai_q_rph:'.$now->format('YmdH'));
             $currentHr = (int) Cache::get($hrKey, function () use ($vendorId, $now) {
                 return AiUsageLog::where('vendor_id', $vendorId)
                     ->where('created_at', '>=', $now->copy()->startOfHour())
@@ -155,7 +155,7 @@ class AiQuotaService
         // 3. Daily requests
         if (! empty($quotas['daily_requests'])) {
             $dailyLimit = (int) $quotas['daily_requests'];
-            $dayKey = "ai_q_day:{$vendorId}:".$now->format('Ymd');
+            $dayKey = TenantCache::key($vendor, 'ai_q_day:'.$now->format('Ymd'));
             $currentDay = (int) Cache::get($dayKey, function () use ($vendorId, $now) {
                 return AiUsageLog::where('vendor_id', $vendorId)
                     ->where('created_at', '>=', $now->copy()->startOfDay())
@@ -173,7 +173,7 @@ class AiQuotaService
         // 4. Monthly requests
         if (! empty($quotas['monthly_requests'])) {
             $monthlyLimit = (int) $quotas['monthly_requests'];
-            $monthKey = "ai_q_month:{$vendorId}:".$now->format('Ym');
+            $monthKey = TenantCache::key($vendor, 'ai_q_month:'.$now->format('Ym'));
             $currentMonth = (int) Cache::get($monthKey, function () use ($vendorId, $now) {
                 return AiUsageLog::where('vendor_id', $vendorId)
                     ->where('created_at', '>=', $now->copy()->startOfMonth())
@@ -192,7 +192,7 @@ class AiQuotaService
         $tokenLimit = $quotas['token_limit'] ?? $quotas['monthly_tokens'] ?? null;
         if (! empty($tokenLimit)) {
             $tokenLimitInt = (int) $tokenLimit;
-            $monthTokKey = "ai_q_tok_month:{$vendorId}:".$now->format('Ym');
+            $monthTokKey = TenantCache::key($vendor, 'ai_q_tok_month:'.$now->format('Ym'));
             $tokensUsed = (int) Cache::get($monthTokKey, function () use ($vendorId, $now) {
                 return (int) AiUsageLog::where('vendor_id', $vendorId)
                     ->where('created_at', '>=', $now->copy()->startOfMonth())
@@ -212,7 +212,7 @@ class AiQuotaService
         $spendingLimit = $quotas['spending_limit'] ?? null;
         if ($spendingLimit !== null && (float) $spendingLimit > 0) {
             $spendingLimitFloat = (float) $spendingLimit;
-            $monthCostKey = "ai_q_cost_month:{$vendorId}:".$now->format('Ym');
+            $monthCostKey = TenantCache::key($vendor, 'ai_q_cost_month:'.$now->format('Ym'));
             $costSpent = (float) Cache::get($monthCostKey, function () use ($vendorId, $now) {
                 return (float) AiUsageLog::where('vendor_id', $vendorId)
                     ->where('created_at', '>=', $now->copy()->startOfMonth())
@@ -292,27 +292,27 @@ class AiQuotaService
         $totalTokens = $inputTokens + $outputTokens;
 
         // RPM
-        $minKey = "ai_q_rpm:{$vendorId}:".$now->format('YmdHi');
+        $minKey = TenantCache::key($vendor, 'ai_q_rpm:'.$now->format('YmdHi'));
         Cache::increment($minKey);
         Cache::put($minKey, Cache::get($minKey), 120);
 
         // RPH
-        $hrKey = "ai_q_rph:{$vendorId}:".$now->format('YmdH');
+        $hrKey = TenantCache::key($vendor, 'ai_q_rph:'.$now->format('YmdH'));
         Cache::increment($hrKey);
         Cache::put($hrKey, Cache::get($hrKey), 7200);
 
         // Daily
-        $dayKey = "ai_q_day:{$vendorId}:".$now->format('Ymd');
+        $dayKey = TenantCache::key($vendor, 'ai_q_day:'.$now->format('Ymd'));
         Cache::increment($dayKey);
         Cache::put($dayKey, Cache::get($dayKey), 86400 * 2);
 
         // Monthly
-        $monthKey = "ai_q_month:{$vendorId}:".$now->format('Ym');
+        $monthKey = TenantCache::key($vendor, 'ai_q_month:'.$now->format('Ym'));
         Cache::increment($monthKey);
         Cache::put($monthKey, Cache::get($monthKey), 86400 * 35);
 
         // Tokens
-        $monthTokKey = "ai_q_tok_month:{$vendorId}:".$now->format('Ym');
+        $monthTokKey = TenantCache::key($vendor, 'ai_q_tok_month:'.$now->format('Ym'));
         if (Cache::has($monthTokKey)) {
             Cache::increment($monthTokKey, $totalTokens);
         } else {
@@ -320,7 +320,7 @@ class AiQuotaService
         }
 
         // Cost
-        $monthCostKey = "ai_q_cost_month:{$vendorId}:".$now->format('Ym');
+        $monthCostKey = TenantCache::key($vendor, 'ai_q_cost_month:'.$now->format('Ym'));
         $currentCost = (float) Cache::get($monthCostKey, 0);
         Cache::put($monthCostKey, $currentCost + $cost, 86400 * 35);
 

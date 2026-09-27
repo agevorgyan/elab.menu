@@ -9,6 +9,7 @@ use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
 use App\Models\Vendor;
 use App\Services\Payments\DTOs\PaymentInitiationResult;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Str;
 
 class PaymentService
@@ -92,9 +93,13 @@ class PaymentService
         $newExpiry = (clone $currentExpiry)->addMonths($monthsCount);
         $invoiceNumber = 'INV-'.Str::upper(Str::random(4)).'-'.date('Ymd');
 
+        $subscriptionService = app(SubscriptionService::class);
+        $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+
         // Create pending subscription payment record
         $subscriptionPayment = SubscriptionPayment::create([
             'vendor_id' => $vendor->id,
+            'subscription_id' => $subscription->id,
             'subscription_plan_id' => $plan->id,
             'amount' => $totalAmount,
             'currency' => $plan->currency ?? 'AMD',

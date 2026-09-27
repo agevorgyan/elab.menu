@@ -27,6 +27,10 @@ class LocationProductOverride extends Model
     protected static function booted(): void
     {
         static::saving(function (LocationProductOverride $override): void {
+            if ($override->override_price !== null && $override->override_price < 0) {
+                throw new InvalidArgumentException('Override price cannot be negative.');
+            }
+
             $product = $override->product ?? Product::withoutGlobalScopes()->find($override->product_id);
             $location = $override->location ?? Location::withoutGlobalScopes()->find($override->location_id);
 

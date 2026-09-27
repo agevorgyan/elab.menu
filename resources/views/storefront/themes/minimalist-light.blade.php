@@ -425,7 +425,9 @@
         }
     </style>
     @include('storefront.components.desktop-frame-styles')
-    {!! $vendor->custom_css ?? '' !!}
+    @if(!empty($vendor->sanitized_custom_css))
+        <style>{!! $vendor->sanitized_custom_css !!}</style>
+    @endif
 </head>
 <body x-data="createStorefrontApp({
     activeCat: 'cat-{{ $categories->first()?->id ?? 1 }}',

@@ -2,17 +2,25 @@
 
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\IdentifyTenant;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAppLocale;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\Authorize;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(SecurityHeaders::class);
         $middleware->web(append: [
             SetAppLocale::class,
             IdentifyTenant::class,
@@ -44,5 +53,32 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if ($request->is('api/m/*')) {
+                $status = 500;
+                if ($e instanceof HttpExceptionInterface) {
+                    $status = $e->getStatusCode();
+                } elseif ($e instanceof ValidationException) {
+                    $status = 422;
+                } elseif ($e instanceof AuthenticationException) {
+                    $status = 401;
+                } elseif ($e instanceof AuthorizationException) {
+                    $status = 403;
+                } elseif ($e instanceof ModelNotFoundException) {
+                    $status = 404;
+                }
+
+                if ($status === 500) {
+                    Log::error('Public API Error: '.$e->getMessage(), [
+                        'exception' => get_class($e),
+                        'path' => $request->path(),
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Սերվերի ժամանակավոր սխալ։ Խնդրում ենք փորձել մի փոքր ուշ։',
+                    ], 500);
+                }
+            }
+        });
     })->create();

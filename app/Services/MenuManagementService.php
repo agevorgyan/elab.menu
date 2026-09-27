@@ -27,7 +27,7 @@ class MenuManagementService
     {
         $name = $data['name'];
 
-        return Category::create([
+        $category = Category::create([
             'vendor_id' => $vendor->id,
             'name' => $name,
             'name_translations' => [
@@ -39,6 +39,10 @@ class MenuManagementService
             'sort_order' => (int) (Category::where('vendor_id', $vendor->id)->max('sort_order') ?? 0) + 1,
             'is_active' => true,
         ]);
+
+        TenantCache::forget($vendor, 'menu');
+
+        return $category;
     }
 
     /**
@@ -58,6 +62,8 @@ class MenuManagementService
             'description' => $data['description'] ?? null,
         ]);
 
+        TenantCache::forget($category->vendor_id, 'menu');
+
         return $category;
     }
 
@@ -66,7 +72,9 @@ class MenuManagementService
      */
     public function deleteCategory(Category $category): void
     {
+        $vendorId = $category->vendor_id;
         $category->delete();
+        TenantCache::forget($vendorId, 'menu');
     }
 
     /**
@@ -168,6 +176,8 @@ class MenuManagementService
                 'is_default' => true,
             ]);
         }
+
+        TenantCache::forget($vendor, 'menu');
 
         return $product;
     }
@@ -328,6 +338,8 @@ class MenuManagementService
             }
         }
 
+        TenantCache::forget($product->vendor_id, 'menu');
+
         return $product;
     }
 
@@ -337,6 +349,7 @@ class MenuManagementService
     public function toggleProductAvailability(Product $product): bool
     {
         $product->update(['is_available' => ! $product->is_available]);
+        TenantCache::forget($product->vendor_id, 'menu');
 
         return (bool) $product->is_available;
     }
@@ -352,7 +365,7 @@ class MenuManagementService
             throw new \InvalidArgumentException('Cross-vendor override attempt: location and product do not belong to the same vendor.');
         }
 
-        return LocationProductOverride::updateOrCreate(
+        $override = LocationProductOverride::updateOrCreate(
             [
                 'vendor_id' => $product->vendor_id,
                 'location_id' => $location->id,
@@ -363,6 +376,10 @@ class MenuManagementService
                 'is_available' => (bool) $data['is_available'],
             ]
         );
+
+        TenantCache::forget($product->vendor_id, 'menu');
+
+        return $override;
     }
 
     /**
@@ -370,8 +387,10 @@ class MenuManagementService
      */
     public function deleteProduct(Product $product): void
     {
+        $vendorId = $product->vendor_id;
         $product->deleteImageFile();
         $product->delete();
+        TenantCache::forget($vendorId, 'menu');
     }
 
     /**

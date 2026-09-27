@@ -19,6 +19,7 @@ use App\Models\Vendor;
 use App\Models\WaiterCall;
 use App\Services\PaymentGatewayService;
 use App\Services\Payments\PaymentVerificationService;
+use App\Services\TenantCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
@@ -57,15 +58,27 @@ class ClientStorefrontController extends Controller
         }
         $channel = $request->get('mode', 'dine_in'); // dine_in vs ordering
 
-        // Dispatch analytics visit asynchronously to background queue
-        RecordAnalyticsVisitJob::dispatch([
-            'vendor_id' => $vendor->id,
-            'location_id' => $location?->id,
-            'channel' => $channel,
-            'user_agent' => substr($request->userAgent() ?? '', 0, 255),
-            'ip_address' => $request->ip(),
-            'visit_date' => now()->format('Y-m-d'),
-        ]);
+        // Deduplicate analytics visit per IP/user-agent per hour to prevent metric inflation
+        $visitHash = md5($request->ip().'|'.($request->userAgent() ?? ''));
+        $visitCacheKey = TenantCache::key($vendor, "analytics_visit:{$visitHash}");
+
+        if (! cache()->has($visitCacheKey)) {
+            cache()->put($visitCacheKey, true, now()->addHours(1));
+
+            // Dispatch analytics visit asynchronously to background queue with tenant context
+            RecordAnalyticsVisitJob::dispatch(
+                data: [
+                    'vendor_id' => $vendor->id,
+                    'location_id' => $location?->id,
+                    'channel' => $channel,
+                    'user_agent' => substr($request->userAgent() ?? '', 0, 255),
+                    'ip_address' => $request->ip(),
+                    'visit_date' => now()->format('Y-m-d'),
+                ],
+                vendorId: $vendor->id,
+                idempotencyKey: "analytics_visit_{$vendor->id}_{$visitHash}"
+            );
+        }
 
         // Fetch categories and active products
         $categories = Category::where('vendor_id', $vendor->id)
@@ -238,11 +251,21 @@ self.addEventListener('fetch', event => {
             $paymentResult = $paymentService->initiateOrderPayment($result['order'], $chosenPayment);
         }
 
+        // Store order tracking authorization in customer session
+        session([
+            'placed_order_'.$result['order']->order_number => $result['order']->tracking_token,
+            'active_tracking_tokens' => array_unique(array_merge(
+                (array) session('active_tracking_tokens', []),
+                [$result['order']->tracking_token]
+            )),
+        ]);
+
         return response()->json([
             'success' => true,
             'is_appended' => $result['is_appended'] ?? false,
             'order_number' => $result['order']->order_number,
             'order_id' => $result['order']->id,
+            'tracking_token' => $result['order']->tracking_token,
             'status' => $result['order']->status,
             'status_label' => __('menu.status_'.$result['order']->status),
             'payment_method' => $result['order']->payment_method,
@@ -254,13 +277,13 @@ self.addEventListener('fetch', event => {
             'delivery_fee' => (float) ($result['order']->delivery_fee ?? 0),
             'total_amount' => (float) $result['order']->total_amount,
             'whatsapp_url' => $result['whatsapp_url'],
-            'items' => $result['order']->items->map(function ($item) {
+            'items' => $result['order']->items->map(function ($item, $idx) {
                 $unitPrice = (float) ($item->unit_price ?? $item->price ?? 0);
                 $subtotal = (float) ($item->subtotal ?? ($unitPrice * $item->quantity));
 
                 return [
-                    'id' => $item->id,
-                    'name' => $item->product_name ?? $item->product?->name ?? 'Dish #'.$item->product_id,
+                    'id' => 'item_'.($idx + 1),
+                    'name' => $item->product_name ?? $item->product?->name ?? 'Dish',
                     'variation_name' => $item->variation_name,
                     'quantity' => $item->quantity,
                     'price' => $unitPrice,
@@ -296,19 +319,6 @@ self.addEventListener('fetch', event => {
             ->first();
 
         if (! $attempt) {
-            // Fallback for direct order reference
-            $order = is_numeric($reference)
-                ? Order::where('vendor_id', $vendor->id)->find((int) $reference)
-                : null;
-
-            if ($order && $order->payment_status === 'paid') {
-                return redirect()->route('client.menu', [
-                    'vendor_slug' => $vendor->slug,
-                    'order_placed' => $order->order_number,
-                    'payment_success' => 1,
-                ])->with('success', 'Վճարումը հաջողությամբ կատարվել է։ Պատվերը փոխանցվել է խոհանոց։');
-            }
-
             return redirect()->route('client.menu', [
                 'vendor_slug' => $vendor->slug,
             ])->with('error', 'Վճարման գրառումը չի գտնվել։');
@@ -357,20 +367,69 @@ self.addEventListener('fetch', event => {
         ])->with('info', 'Վճարումը մշակման փուլում է։ Խնդրում ենք սպասել հաստատմանը։');
     }
 
-    public function orderStatus(string $vendor_slug, string $order_number)
+    public function orderStatus(Request $request, string $vendor_slug, string $order_number)
     {
         $vendor = Vendor::where('slug', $vendor_slug)->firstOrFail();
 
-        $order = Order::where('vendor_id', $vendor->id)
-            ->where('order_number', $order_number)
-            ->with(['items.product', 'location'])
-            ->first();
+        // 1. IP brute-force lockout check (prevents scraping and automated probing)
+        $ip = $request->ip() ?: '127.0.0.1';
+        $lockoutKey = "order_lookup_lockout:{$ip}";
+        if (cache()->has($lockoutKey)) {
+            $retryAfter = max(1, (int) cache()->get($lockoutKey) - now()->timestamp);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Չափազանց շատ անհաջող փորձեր։ Մուտքն արգելափակված է։',
+                'retry_after' => $retryAfter,
+            ], 429, ['Retry-After' => (string) $retryAfter]);
+        }
+
+        // 2. Identify order: either by tracking token (opaque secret) or order_number
+        $isTokenLookup = str_starts_with($order_number, 'trk_') || strlen($order_number) >= 32;
+
+        if ($isTokenLookup) {
+            $order = Order::where('vendor_id', $vendor->id)
+                ->where('tracking_token', $order_number)
+                ->with(['items.product', 'location'])
+                ->first();
+        } else {
+            $order = Order::where('vendor_id', $vendor->id)
+                ->where('order_number', $order_number)
+                ->with(['items.product', 'location'])
+                ->first();
+        }
 
         if (! $order) {
+            $this->recordFailedOrderLookup($ip);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Պատվերը չի գտնվել։',
             ], 404);
+        }
+
+        // 3. Authorization check: if queried by predictable order_number, verify proof of possession
+        if (! $isTokenLookup) {
+            $providedToken = $request->query('token')
+                ?? $request->header('X-Tracking-Token');
+
+            $sessionAuthorized = session('placed_order_'.$order->order_number) === $order->tracking_token
+                || in_array($order->tracking_token, (array) session('active_tracking_tokens', []), true);
+
+            $isStaff = $request->user() && (int) $request->user()->vendor_id === (int) $vendor->id;
+
+            $isAuthorized = ($providedToken && hash_equals($order->tracking_token, (string) $providedToken))
+                || $sessionAuthorized
+                || $isStaff;
+
+            if (! $isAuthorized) {
+                $this->recordFailedOrderLookup($ip);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Մուտքն արգելված է։ Պահանջվում է վավեր հետևման թոքեն (Tracking token)։',
+                ], 403);
+            }
         }
 
         $stepMap = [
@@ -429,7 +488,8 @@ self.addEventListener('fetch', event => {
         return response()->json([
             'success' => true,
             'order' => [
-                'id' => $order->id,
+                'id' => $order->tracking_token,
+                'tracking_token' => $order->tracking_token,
                 'order_number' => $order->order_number,
                 'table_number' => $order->table_number,
                 'type' => $order->type,
@@ -447,13 +507,13 @@ self.addEventListener('fetch', event => {
                 'created_at_human' => $order->created_at->diffForHumans(),
                 'created_at_time' => $order->created_at->format('H:i'),
                 'updated_at_timestamp' => $order->updated_at?->timestamp,
-                'items' => $order->items->map(function ($item) {
+                'items' => $order->items->map(function ($item, $idx) {
                     $unitPrice = (float) ($item->unit_price ?? $item->price ?? 0);
                     $subtotal = (float) ($item->subtotal ?? ($unitPrice * $item->quantity));
 
                     return [
-                        'id' => $item->id,
-                        'name' => $item->product_name ?? $item->product?->name ?? 'Dish #'.$item->product_id,
+                        'id' => 'item_'.($idx + 1),
+                        'name' => $item->product_name ?? $item->product?->name ?? 'Dish',
                         'variation_name' => $item->variation_name,
                         'quantity' => $item->quantity,
                         'price' => $unitPrice,
@@ -487,6 +547,23 @@ self.addEventListener('fetch', event => {
             }
         }
 
+        // Table-level anti-spam cooldown: 60 seconds
+        $recentTableCall = WaiterCall::where('vendor_id', $vendor->id)
+            ->where('table_number', $validated['table_number'])
+            ->where('status', 'pending')
+            ->where('created_at', '>=', now()->subSeconds(60))
+            ->first();
+
+        if ($recentTableCall) {
+            $retryAfter = max(1, 60 - now()->diffInSeconds($recentTableCall->created_at));
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Խնդրում ենք սպասել, Ձեր նախորդ կանչն արդեն փոխանցվել է մատուցողին։',
+                'retry_after' => $retryAfter,
+            ], 429, ['Retry-After' => (string) $retryAfter]);
+        }
+
         $locationId = $validated['location_id'] ?? $vendor->locations->first()?->id;
 
         $call = WaiterCall::create([
@@ -515,7 +592,8 @@ self.addEventListener('fetch', event => {
             'success' => true,
             'message' => $message,
             'call' => [
-                'id' => $call->id,
+                'id' => $call->call_token,
+                'call_token' => $call->call_token,
                 'table_number' => $call->table_number,
                 'type' => $call->type,
                 'type_label' => $call->getTypeLabel(),
@@ -523,5 +601,20 @@ self.addEventListener('fetch', event => {
                 'created_at' => $call->created_at->diffForHumans(),
             ],
         ]);
+    }
+
+    /**
+     * Record failed order lookup attempt and enforce 15-minute IP lockout after 5 failures.
+     */
+    protected function recordFailedOrderLookup(string $ip): void
+    {
+        $failKey = "order_lookup_failures:{$ip}";
+        $attempts = (int) cache()->get($failKey, 0) + 1;
+        cache()->put($failKey, $attempts, now()->addMinutes(10));
+
+        if ($attempts >= 5) {
+            cache()->put("order_lookup_lockout:{$ip}", now()->addMinutes(15)->timestamp, now()->addMinutes(15));
+            cache()->forget($failKey);
+        }
     }
 }

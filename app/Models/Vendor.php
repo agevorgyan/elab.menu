@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Services\CredentialService;
+use App\Services\Security\CssSanitizer;
+use App\Services\TenantCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -57,7 +60,10 @@ class Vendor extends Model
         'subscription_plan_id',
         'subscription_status',
         'trial_ends_at',
+        'current_period_start',
         'subscription_expires_at',
+        'grace_ends_at',
+        'cancelled_at',
         'custom_plan_notes',
         'is_active',
         'email_verified_at',
@@ -102,7 +108,10 @@ class Vendor extends Model
 
     protected $casts = [
         'trial_ends_at' => 'datetime',
+        'current_period_start' => 'datetime',
         'subscription_expires_at' => 'datetime',
+        'grace_ends_at' => 'datetime',
+        'cancelled_at' => 'datetime',
         'termination_requested_at' => 'datetime',
         'retention_ends_at' => 'datetime',
         'deletion_queued_at' => 'datetime',
@@ -528,6 +537,16 @@ class Vendor extends Model
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class)->latest();
+    }
+
     public function payments()
     {
         return $this->hasMany(SubscriptionPayment::class)->latest();
@@ -578,6 +597,85 @@ class Vendor extends Model
                 $vendor->storage_limit_bytes = $vendor->resolveStorageLimit();
             }
         });
+
+        static::saving(function (Vendor $vendor): void {
+            if ($vendor->isDirty('custom_css') && ! empty($vendor->custom_css)) {
+                $sanitizer = app(CssSanitizer::class);
+                $vendor->custom_css = $sanitizer->sanitize($vendor->custom_css);
+            }
+
+            // Phase 11: Single authoritative source of truth for subscription plan is subscription_plan_id.
+            // Avoid duplicated authoritative state.
+            if ($vendor->isDirty('subscription_plan_id') && $vendor->subscription_plan_id) {
+                $plan = SubscriptionPlan::find($vendor->subscription_plan_id);
+                if ($plan) {
+                    $vendor->attributes['subscription_plan'] = $plan->slug;
+                }
+            } elseif ($vendor->isDirty('subscription_plan') && ! empty($vendor->subscription_plan)) {
+                $plan = SubscriptionPlan::where('slug', $vendor->subscription_plan)->first();
+                if ($plan) {
+                    $vendor->attributes['subscription_plan_id'] = $plan->id;
+                    $vendor->attributes['subscription_plan'] = $plan->slug;
+                }
+            }
+        });
+    }
+
+    /**
+     * Get clean, injection-safe custom CSS for storefront rendering.
+     */
+    public function getSanitizedCustomCssAttribute(): string
+    {
+        return app(CssSanitizer::class)->sanitize($this->custom_css ?? '');
+    }
+
+    /**
+     * Generate tenant-sensitive cache key with vendor UUID.
+     */
+    public function cacheKey(string $suffix): string
+    {
+        return TenantCache::key($this, $suffix);
+    }
+
+    /**
+     * Get subscription plan slug dynamically derived from authoritative subscription_plan_id.
+     */
+    public function getSubscriptionPlanAttribute($value): string
+    {
+        return $this->plan?->slug ?? $value ?? 'pro';
+    }
+
+    /**
+     * Set subscription plan slug while keeping subscription_plan_id authoritative.
+     */
+    public function setSubscriptionPlanAttribute($value): void
+    {
+        $this->unsetRelation('plan');
+        if ($value) {
+            $plan = SubscriptionPlan::where('slug', $value)->first();
+            if ($plan) {
+                $this->attributes['subscription_plan_id'] = $plan->id;
+                $this->attributes['subscription_plan'] = $plan->slug;
+
+                return;
+            }
+        }
+        $this->attributes['subscription_plan'] = $value;
+    }
+
+    /**
+     * Set authoritative subscription_plan_id and synchronize plan slug.
+     */
+    public function setSubscriptionPlanIdAttribute($value): void
+    {
+        $this->attributes['subscription_plan_id'] = $value;
+        $this->unsetRelation('plan');
+        if ($value) {
+            $plan = SubscriptionPlan::find($value);
+            if ($plan) {
+                $this->attributes['subscription_plan'] = $plan->slug;
+            }
+        }
     }
 
     /**
@@ -595,8 +693,15 @@ class Vendor extends Model
         };
     }
 
+    /**
+     * Check if currently in a valid trial period.
+     */
     public function isTrialing(): bool
     {
+        if ($this->subscription) {
+            return $this->subscription->isTrialing();
+        }
+
         if ($this->subscription_status === 'trialing') {
             return $this->trial_ends_at ? $this->trial_ends_at->isFuture() : true;
         }
@@ -604,9 +709,38 @@ class Vendor extends Model
         return false;
     }
 
+    /**
+     * Check if currently in grace period.
+     */
+    public function isInGracePeriod(): bool
+    {
+        if ($this->subscription) {
+            return $this->subscription->isInGracePeriod();
+        }
+
+        return in_array($this->subscription_status, ['grace', 'past_due'], true)
+            && $this->grace_ends_at !== null
+            && $this->grace_ends_at->isFuture();
+    }
+
+    /**
+     * Check if subscription has expired.
+     */
     public function isExpired(): bool
     {
-        if (! $this->is_active || $this->subscription_status === 'expired') {
+        if ($this->subscription) {
+            return $this->subscription->isExpired();
+        }
+
+        if (! $this->is_active || in_array($this->subscription_status, ['expired', 'suspended', 'past_due'], true)) {
+            return true;
+        }
+
+        if ($this->isInGracePeriod()) {
+            return false;
+        }
+
+        if ($this->subscription_status === 'grace') {
             return true;
         }
 
@@ -621,14 +755,43 @@ class Vendor extends Model
         return false;
     }
 
-    public function hasActiveSubscription(): bool
+    /**
+     * Check if subscription allows access to system features.
+     */
+    public function allowsAccess(): bool
     {
-        return $this->is_active && ! $this->isExpired();
+        if ($this->subscription) {
+            return $this->subscription->allowsAccess();
+        }
+
+        if ($this->subscription_status === 'cancelled') {
+            return $this->subscription_expires_at ? $this->subscription_expires_at->isFuture() : false;
+        }
+
+        return ! $this->isExpired();
     }
 
+    /**
+     * Check if vendor has an active subscription.
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->is_active && $this->allowsAccess();
+    }
+
+    /**
+     * Days left in current subscription, trial, or grace period.
+     */
     public function daysLeft(): int
     {
-        $targetDate = $this->isTrialing() ? $this->trial_ends_at : $this->subscription_expires_at;
+        if ($this->subscription) {
+            return $this->subscription->daysLeft();
+        }
+
+        $targetDate = $this->isInGracePeriod()
+            ? $this->grace_ends_at
+            : ($this->isTrialing() ? $this->trial_ends_at : $this->subscription_expires_at);
+
         if (! $targetDate) {
             return 0;
         }
@@ -636,8 +799,17 @@ class Vendor extends Model
         return max(0, (int) ceil(now()->diffInHours($targetDate, false) / 24));
     }
 
+    /**
+     * Human-readable label for subscription status.
+     */
     public function getSubscriptionStatusLabelAttribute(): string
     {
+        if ($this->subscription_status === 'suspended') {
+            return 'Կասեցված (Suspended)';
+        }
+        if ($this->isInGracePeriod()) {
+            return 'Արտոնյալ ժամկետ (Grace Period)';
+        }
         if ($this->isExpired()) {
             return 'Ավարտված / Անջատված';
         }
@@ -646,6 +818,12 @@ class Vendor extends Model
         }
         if ($this->subscription_status === 'active') {
             return 'Ակտիվ';
+        }
+        if ($this->subscription_status === 'cancelled') {
+            return 'Չեղարկված';
+        }
+        if ($this->subscription_status === 'past_due') {
+            return 'Ժամկետանց';
         }
 
         return ucfirst($this->subscription_status ?? 'Active');

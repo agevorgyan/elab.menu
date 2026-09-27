@@ -55,6 +55,10 @@ class PaymentAttempt extends Model
         });
 
         static::saving(function (PaymentAttempt $attempt): void {
+            if ($attempt->amount !== null && $attempt->amount < 0) {
+                throw new \InvalidArgumentException('Payment attempt amount cannot be negative.');
+            }
+
             if ($attempt->order_id && $attempt->vendor_id) {
                 $order = Order::withoutGlobalScopes()->find($attempt->order_id);
                 if ($order && (int) $order->vendor_id !== (int) $attempt->vendor_id) {

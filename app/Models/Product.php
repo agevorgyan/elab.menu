@@ -20,6 +20,10 @@ class Product extends Model
     protected static function booted(): void
     {
         static::saving(function (Product $product) {
+            if ($product->price !== null && $product->price < 0) {
+                throw new \InvalidArgumentException('Product price cannot be negative.');
+            }
+
             if ($product->category_id && $product->vendor_id) {
                 $category = Category::withoutGlobalScopes()->find($product->category_id);
                 if ($category && (int) $category->vendor_id !== (int) $product->vendor_id) {

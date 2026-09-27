@@ -8,8 +8,8 @@ use App\Models\PaymentAttempt;
 use App\Models\SubscriptionPayment;
 use App\Models\Vendor;
 use App\Services\Payments\DTOs\PaymentVerificationResult;
+use App\Services\SubscriptionService;
 use App\Services\TelegramNotificationService;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -201,7 +201,17 @@ class PaymentVerificationService
                         Order::where('id', $attempt->order_id)->update(['payment_status' => 'failed']);
                     }
                     if ($attempt->subscription_id) {
-                        SubscriptionPayment::where('id', $attempt->subscription_id)->update(['status' => 'failed']);
+                        $subPayment = SubscriptionPayment::where('id', $attempt->subscription_id)->first();
+                        if ($subPayment) {
+                            $vendor = Vendor::find($attempt->vendor_id);
+                            if ($vendor) {
+                                $subscriptionService = app(SubscriptionService::class);
+                                $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+                                $subscriptionService->handlePaymentFailure($subscription, $subPayment, $attempt);
+                            } else {
+                                $subPayment->update(['status' => 'failed']);
+                            }
+                        }
                     }
 
                     return PaymentVerificationResult::failed(
@@ -225,7 +235,17 @@ class PaymentVerificationService
                         Order::where('id', $attempt->order_id)->update(['payment_status' => 'failed']);
                     }
                     if ($attempt->subscription_id) {
-                        SubscriptionPayment::where('id', $attempt->subscription_id)->update(['status' => 'failed']);
+                        $subPayment = SubscriptionPayment::where('id', $attempt->subscription_id)->first();
+                        if ($subPayment) {
+                            $vendor = Vendor::find($attempt->vendor_id);
+                            if ($vendor) {
+                                $subscriptionService = app(SubscriptionService::class);
+                                $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+                                $subscriptionService->handlePaymentFailure($subscription, $subPayment, $attempt);
+                            } else {
+                                $subPayment->update(['status' => 'failed']);
+                            }
+                        }
                     }
 
                     return PaymentVerificationResult::failed(
@@ -274,31 +294,21 @@ class PaymentVerificationService
                     ->lockForUpdate()
                     ->first();
 
-                if ($subPayment && $subPayment->status !== 'completed') {
-                    $subPayment->update([
-                        'status' => 'completed',
-                        'payment_method' => $attempt->gateway,
-                    ]);
-
+                if ($subPayment) {
                     $vendor = Vendor::where('id', $attempt->vendor_id)->lockForUpdate()->first();
                     if ($vendor) {
-                        $currentExpiry = ($vendor->subscription_expires_at && $vendor->subscription_expires_at->isFuture())
-                            ? $vendor->subscription_expires_at
-                            : now();
+                        $subscriptionService = app(SubscriptionService::class);
+                        $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
 
-                        $newExpiry = $subPayment->period_end
-                            ? Carbon::parse($subPayment->period_end)
-                            : (clone $currentExpiry)->addMonth();
+                        if ($subPayment->status !== 'completed') {
+                            $subPayment->update([
+                                'payment_method' => $attempt->gateway,
+                                'subscription_id' => $subscription->id,
+                            ]);
 
-                        $vendor->update([
-                            'subscription_plan' => $subPayment->plan?->slug ?? $vendor->subscription_plan,
-                            'subscription_plan_id' => $subPayment->subscription_plan_id ?? $vendor->subscription_plan_id,
-                            'subscription_status' => 'active',
-                            'is_active' => true,
-                            'subscription_expires_at' => $newExpiry,
-                        ]);
-
-                        Log::info("Vendor {$vendor->name} subscription activated via verified payment {$attempt->merchant_reference}");
+                            $subscriptionService->renew($subscription, $subPayment, $attempt);
+                            Log::info("Vendor {$vendor->name} subscription renewed via verified payment {$attempt->merchant_reference}");
+                        }
                     }
                 }
             }
@@ -316,7 +326,17 @@ class PaymentVerificationService
                 Order::where('id', $attempt->order_id)->update(['payment_status' => 'failed']);
             }
             if ($attempt->subscription_id) {
-                SubscriptionPayment::where('id', $attempt->subscription_id)->update(['status' => 'failed']);
+                $subPayment = SubscriptionPayment::where('id', $attempt->subscription_id)->first();
+                if ($subPayment) {
+                    $vendor = Vendor::find($attempt->vendor_id);
+                    if ($vendor) {
+                        $subscriptionService = app(SubscriptionService::class);
+                        $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+                        $subscriptionService->handlePaymentFailure($subscription, $subPayment, $attempt);
+                    } else {
+                        $subPayment->update(['status' => 'failed']);
+                    }
+                }
             }
 
             return $verification;
@@ -330,6 +350,19 @@ class PaymentVerificationService
 
             if ($attempt->order_id) {
                 Order::where('id', $attempt->order_id)->update(['payment_status' => 'refunded']);
+            }
+            if ($attempt->subscription_id) {
+                $subPayment = SubscriptionPayment::where('id', $attempt->subscription_id)->first();
+                if ($subPayment) {
+                    $vendor = Vendor::find($attempt->vendor_id);
+                    if ($vendor) {
+                        $subscriptionService = app(SubscriptionService::class);
+                        $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+                        $subscriptionService->handleRefund($subscription, $subPayment, $attempt);
+                    } else {
+                        $subPayment->update(['status' => 'refunded']);
+                    }
+                }
             }
 
             return $verification;

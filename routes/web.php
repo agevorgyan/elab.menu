@@ -48,7 +48,9 @@ Route::get('/sw.js', function (TenantContext $tenantContext) {
 
 Route::get('/m/{vendor_slug}/manifest.json', [ClientStorefrontController::class, 'manifest'])->name('client.manifest');
 Route::get('/m/{vendor_slug}/sw.js', [ClientStorefrontController::class, 'serviceWorker'])->name('client.sw');
-Route::get('/m/{vendor_slug}/{location_slug?}', [ClientStorefrontController::class, 'showMenu'])->name('client.menu');
+Route::get('/m/{vendor_slug}/{location_slug?}', [ClientStorefrontController::class, 'showMenu'])
+    ->middleware('throttle:120,1')
+    ->name('client.menu');
 
 // Rate-limited public order & waiter endpoints (anti-spam & DDoS protection)
 Route::middleware('throttle:15,1')->group(function () {
@@ -60,6 +62,7 @@ Route::get('/api/m/{vendor_slug}/order/{order_number}/status', [ClientStorefront
     ->name('client.order.status');
 
 Route::get('/payment/callback/{vendor_slug}/{reference}', [ClientStorefrontController::class, 'paymentCallback'])
+    ->middleware('throttle:30,1')
     ->name('client.payment.callback');
 
 // Payment Webhook endpoint for asynchronous server-to-server notifications
@@ -68,7 +71,7 @@ Route::match(['get', 'post'], '/api/webhooks/payment/{gateway}', [PaymentWebhook
     ->middleware('throttle:60,1');
 
 // AI Waiter Advisor Endpoints
-Route::prefix('/api/m/{vendor_slug}/ai-waiter')->group(function () {
+Route::prefix('/api/m/{vendor_slug}/ai-waiter')->middleware('throttle:60,1')->group(function () {
     Route::get('/config', [AiWaiterController::class, 'config'])->name('client.ai_waiter.config');
     Route::get('/questions', [AiWaiterController::class, 'questions'])->name('client.ai_waiter.questions');
     Route::post('/session', [AiWaiterController::class, 'startSession'])->name('client.ai_waiter.session.start');
@@ -105,19 +108,19 @@ Route::get('/terms-of-service', function () {
 
 // 2. Auth & Registration Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // 2FA Challenge & Verification
 Route::get('/login/2fa', [TwoFactorController::class, 'showChallenge'])->name('2fa.challenge');
-Route::post('/login/2fa', [TwoFactorController::class, 'verify'])->name('2fa.verify');
-Route::post('/login/2fa/resend', [TwoFactorController::class, 'resendEmailCode'])->name('2fa.resend');
+Route::post('/login/2fa', [TwoFactorController::class, 'verify'])->middleware('throttle:10,1')->name('2fa.verify');
+Route::post('/login/2fa/resend', [TwoFactorController::class, 'resendEmailCode'])->middleware('throttle:5,1')->name('2fa.resend');
 
 // Password Reset Routes
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:10,1')->name('password.update');
 
 // Captcha Refresh Endpoint
 Route::get('/captcha/refresh', [AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
@@ -126,7 +129,7 @@ Route::get('/demo/login', [AuthController::class, 'showDemoLogin'])->name('demo.
 Route::post('/demo/login', [AuthController::class, 'demoLogin'])->name('demo.login.post');
 
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register.show');
-Route::post('/register', [RegisterController::class, 'register'])->name('register.post');
+Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:10,1')->name('register.post');
 
 Route::get('/email/verify', [RegisterController::class, 'showVerificationNotice'])->name('verification.notice');
 Route::get('/email/verify/{id}/{hash}', [RegisterController::class, 'verifyEmail'])->name('verification.verify');

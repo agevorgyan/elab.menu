@@ -58,7 +58,8 @@ class OrderStatusUpdated implements ShouldBroadcastNow
         $meta = $stepMap[$this->order->status] ?? ['step' => 1, 'percent' => 20];
 
         return [
-            'id' => $this->order->id,
+            'id' => $this->order->tracking_token,
+            'tracking_token' => $this->order->tracking_token,
             'order_number' => $this->order->order_number,
             'status' => $this->order->status,
             'status_label' => __('menu.status_'.$this->order->status),

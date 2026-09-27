@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\TenantAwareJob;
+use App\Jobs\Contracts\TenantJobInterface;
 use App\Models\Category;
 use App\Models\Vendor;
 use App\Services\AiMenuService;
@@ -11,25 +13,40 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class TranslateMenuJob implements ShouldQueue
+class TranslateMenuJob implements ShouldQueue, TenantJobInterface
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels, TenantAwareJob;
+
+    /**
+     * The number of seconds to wait before retrying the job.
+     *
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [15, 60, 180];
+    }
 
     /**
      * Create a new job instance.
      */
     public function __construct(
-        public int $vendorId,
+        int $vendorId,
         public string $targetLang,
-        public bool $overwriteExisting = true
-    ) {}
+        public bool $overwriteExisting = true,
+        ?string $idempotencyKey = null
+    ) {
+        $this->vendorId = $vendorId;
+        $this->idempotencyKey = $idempotencyKey ?? "menu_translate_{$vendorId}_{$targetLang}_".($overwriteExisting ? '1' : '0');
+    }
 
     /**
      * Execute the menu translation job asynchronously.
      */
-    public function handle(AiMenuService $aiService, TenantContext $tenantContext): void
+    public function handle(AiMenuService $aiService, ?TenantContext $tenantContext = null): void
     {
-        $tenantContext->runInTenantContext($this->vendorId, function () use ($aiService) {
+        $context = $tenantContext ?? app(TenantContext::class);
+        $context->runInTenantContext($this->vendorId, function () use ($aiService) {
             $categories = Category::where('vendor_id', $this->vendorId)->with('products.variations')->get();
 
             $itemsToTranslate = [];

@@ -583,6 +583,7 @@
                             this.activeOrder = {
                                 ...this.activeOrder,
                                 id: data.order_id || this.activeOrder.id,
+                                tracking_token: data.tracking_token || this.activeOrder.tracking_token,
                                 order_number: data.order_number,
                                 status: data.status || this.activeOrder.status,
                                 status_label: data.status_label || this.activeOrder.status_label,
@@ -595,6 +596,7 @@
                         } else {
                             this.activeOrder = {
                                 id: data.order_id || null,
+                                tracking_token: data.tracking_token || null,
                                 order_number: data.order_number,
                                 status: data.status || 'pending',
                                 status_step: 1,
@@ -807,11 +809,19 @@
             },
 
             async pollOrderStatus() {
-                if (!this.activeOrder || !this.activeOrder.order_number) return;
+                if (!this.activeOrder || (!this.activeOrder.order_number && !this.activeOrder.tracking_token)) return;
                 try {
-                    const url = '{{ route("client.order.status", ["vendor_slug" => $vendor->slug, "order_number" => "___NUM___"]) }}'.replace('___NUM___', encodeURIComponent(this.activeOrder.order_number));
+                    const token = this.activeOrder.tracking_token || '';
+                    const targetIdentifier = token || this.activeOrder.order_number;
+                    let url = '{{ route("client.order.status", ["vendor_slug" => $vendor->slug, "order_number" => "___NUM___"]) }}'.replace('___NUM___', encodeURIComponent(targetIdentifier));
+                    if (token) {
+                        url += (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token);
+                    }
                     const res = await fetch(url, {
-                        headers: { 'Accept': 'application/json' }
+                        headers: {
+                            'Accept': 'application/json',
+                            ...(token ? { 'X-Tracking-Token': token } : {})
+                        }
                     });
                     if (res.ok) {
                         const data = await res.json();

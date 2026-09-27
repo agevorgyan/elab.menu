@@ -56,7 +56,7 @@ class PublicEndpointRateLimitingTest extends TestCase
         for ($i = 1; $i <= 15; $i++) {
             $response = $this->postJson(route('client.waiter.call', ['vendor_slug' => $this->vendor->slug]), [
                 'location_id' => $this->location->id,
-                'table_number' => 'Table 1',
+                'table_number' => 'Table '.$i,
                 'type' => 'call_waiter',
             ]);
             $response->assertStatus(200);
@@ -65,7 +65,7 @@ class PublicEndpointRateLimitingTest extends TestCase
         // The 16th request must be rejected with 429 Too Many Requests
         $response16 = $this->postJson(route('client.waiter.call', ['vendor_slug' => $this->vendor->slug]), [
             'location_id' => $this->location->id,
-            'table_number' => 'Table 1',
+            'table_number' => 'Table 16',
             'type' => 'call_waiter',
         ]);
 

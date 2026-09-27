@@ -9,6 +9,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Services\CaptchaService;
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -79,6 +80,10 @@ class RegisterController extends Controller
             'secondary_color' => '#4f46e5',
             'is_active' => true,
         ]);
+
+        if ($plan) {
+            app(SubscriptionService::class)->startTrial($vendor, $plan, 14);
+        }
 
         // 2. Create Initial Main Location
         $location = Location::create([

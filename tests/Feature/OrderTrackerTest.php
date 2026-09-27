@@ -86,6 +86,7 @@ class OrderTrackerTest extends TestCase
         $response = $this->getJson(route('client.order.status', [
             'vendor_slug' => $this->vendor->slug,
             'order_number' => $order->order_number,
+            'token' => $order->tracking_token,
         ]));
 
         $response->assertStatus(200)
@@ -245,6 +246,7 @@ class OrderTrackerTest extends TestCase
         $response = $this->getJson(route('client.order.status', [
             'vendor_slug' => $this->vendor->slug,
             'order_number' => $order->order_number,
+            'token' => $order->tracking_token,
         ]));
 
         $response->assertStatus(200)

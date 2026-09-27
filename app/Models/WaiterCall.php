@@ -14,11 +14,38 @@ class WaiterCall extends Model
     protected $fillable = [
         'vendor_id',
         'location_id',
+        'call_token',
         'table_number',
         'type',
         'status',
         'notes',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (WaiterCall $call) {
+            if (empty($call->call_token)) {
+                $call->call_token = static::generateCallToken();
+            }
+        });
+
+        static::saving(function (WaiterCall $call) {
+            if ($call->location_id && $call->vendor_id) {
+                $location = Location::withoutGlobalScopes()->find($call->location_id);
+                if ($location && (int) $location->vendor_id !== (int) $call->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor location assigned to waiter call.');
+                }
+            }
+        });
+    }
+
+    /**
+     * Generate an unguessable cryptographic token for public waiter call reference.
+     */
+    public static function generateCallToken(): string
+    {
+        return 'wcl_'.bin2hex(random_bytes(24));
+    }
 
     /**
      * Relationship to the vendor.

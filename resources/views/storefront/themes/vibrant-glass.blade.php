@@ -17,7 +17,9 @@
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
-    {!! $vendor->custom_css ? '<style>' . strip_tags($vendor->custom_css) . '</style>' : '' !!}
+    @if(!empty($vendor->sanitized_custom_css))
+        <style>{!! $vendor->sanitized_custom_css !!}</style>
+    @endif
     
     <style>
         :root {

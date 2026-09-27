@@ -372,6 +372,8 @@ class VendorLifecycleService
                 'job_uuid' => $deletionJob?->uuid,
             ]
         );
+
+        $this->flushVendorCache($vendor);
     }
 
     /**
@@ -404,6 +406,7 @@ class VendorLifecycleService
      */
     public function flushVendorCache(Vendor $vendor): void
     {
+        TenantCache::invalidateAll($vendor);
         Cache::forget("vendor_{$vendor->id}_config");
         Cache::forget("vendor_{$vendor->slug}_menu");
         if (! empty($vendor->custom_domain)) {

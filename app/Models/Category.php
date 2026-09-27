@@ -27,6 +27,18 @@ class Category extends Model
         'is_active' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Category $category) {
+            if ($category->location_id && $category->vendor_id) {
+                $location = Location::withoutGlobalScopes()->find($category->location_id);
+                if ($location && (int) $location->vendor_id !== (int) $category->vendor_id) {
+                    throw new \InvalidArgumentException('Cross-vendor location assigned to category.');
+                }
+            }
+        });
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

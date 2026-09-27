@@ -110,6 +110,22 @@ class TenantContext
     }
 
     /**
+     * Alias for getTenantId() to ensure consistent API across services.
+     */
+    public function getVendorId(): ?int
+    {
+        return $this->getTenantId();
+    }
+
+    /**
+     * Resolve the current tenant vendor UUID if active.
+     */
+    public function getTenantUuid(): ?string
+    {
+        return $this->getTenant()?->uuid;
+    }
+
+    /**
      * Check if tenant scoping is currently bypassed.
      */
     public function isBypassed(): bool

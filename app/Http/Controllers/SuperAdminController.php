@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SubscriptionStatus;
 use App\Models\Location;
 use App\Models\MenuTemplate;
 use App\Models\Order;
@@ -10,9 +11,12 @@ use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Services\Security\ImageProcessor;
+use App\Services\SubscriptionService;
 use App\Services\TelegramNotificationService;
 use App\Services\TwoFactorAuthService;
 use Carbon\Carbon;
+use Illuminate\Http\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -215,21 +219,31 @@ class SuperAdminController extends Controller
     {
         $validated = $request->validate([
             'subscription_plan_id' => 'required|exists:subscription_plans,id',
-            'subscription_status' => 'required|string|in:trialing,active,expired,cancelled',
+            'subscription_status' => 'required|string|in:trialing,active,past_due,grace,cancelled,expired,suspended',
             'subscription_expires_at' => 'nullable|date',
             'custom_plan_notes' => 'nullable|string',
         ]);
 
         $plan = SubscriptionPlan::find($validated['subscription_plan_id']);
+        $newExpiry = $validated['subscription_expires_at'] ? Carbon::parse($validated['subscription_expires_at']) : null;
+        $status = SubscriptionStatus::tryFrom($validated['subscription_status']) ?? SubscriptionStatus::Active;
 
-        $vendor->update([
+        $subscriptionService = app(SubscriptionService::class);
+        $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+
+        $subscription->update([
             'subscription_plan_id' => $plan->id,
-            'subscription_plan' => $plan->slug,
-            'subscription_status' => $validated['subscription_status'],
-            'subscription_expires_at' => $validated['subscription_expires_at'] ? Carbon::parse($validated['subscription_expires_at']) : null,
-            'custom_plan_notes' => $validated['custom_plan_notes'] ?? null,
-            'is_active' => $validated['subscription_status'] !== 'expired',
+            'status' => $status,
+            'current_period_end' => $newExpiry,
+            'grace_ends_at' => $status === SubscriptionStatus::Grace ? ($vendor->grace_ends_at ?? now()->addDays(3)) : null,
+            'cancelled_at' => $status === SubscriptionStatus::Cancelled ? ($vendor->cancelled_at ?? now()) : null,
         ]);
+
+        $subscriptionService->syncVendor($subscription);
+        if (isset($validated['custom_plan_notes'])) {
+            $vendor->custom_plan_notes = $validated['custom_plan_notes'];
+            $vendor->saveQuietly();
+        }
 
         return back()->with('success', "{$vendor->name}-ի բաժանորդագրությունը թարմացվեց։");
     }
@@ -242,12 +256,18 @@ class SuperAdminController extends Controller
             'invoice_number' => 'nullable|string',
             'period_start' => 'required|date',
             'period_end' => 'required|date',
-            'status' => 'required|string|in:paid,pending,failed',
+            'status' => 'required|string|in:paid,completed,pending,failed',
             'notes' => 'nullable|string',
         ]);
 
-        SubscriptionPayment::create([
+        $subscriptionService = app(SubscriptionService::class);
+        $subscription = $vendor->subscription ?? $subscriptionService->getOrCreateForVendor($vendor);
+
+        $paymentStatus = in_array($validated['status'], ['paid', 'completed'], true) ? 'completed' : $validated['status'];
+
+        $subPayment = SubscriptionPayment::create([
             'vendor_id' => $vendor->id,
+            'subscription_id' => $subscription->id,
             'subscription_plan_id' => $vendor->subscription_plan_id,
             'amount' => $validated['amount'],
             'currency' => $vendor->currency ?? 'AMD',
@@ -255,16 +275,17 @@ class SuperAdminController extends Controller
             'invoice_number' => $validated['invoice_number'] ?? 'INV-'.strtoupper(Str::random(6)),
             'period_start' => $validated['period_start'],
             'period_end' => $validated['period_end'],
-            'status' => $validated['status'],
+            'status' => $paymentStatus,
             'notes' => $validated['notes'] ?? null,
         ]);
 
-        if ($request->has('extend_subscription') && $validated['status'] === 'paid') {
-            $vendor->update([
-                'subscription_status' => 'active',
-                'subscription_expires_at' => Carbon::parse($validated['period_end']),
-                'is_active' => true,
-            ]);
+        if ($request->has('extend_subscription') && $paymentStatus === 'completed') {
+            $plan = $vendor->plan ?? SubscriptionPlan::find($vendor->subscription_plan_id);
+            if ($plan) {
+                $subscriptionService->activate($subscription, $plan, $subPayment);
+            }
+        } elseif ($paymentStatus === 'failed') {
+            $subscriptionService->handlePaymentFailure($subscription, $subPayment);
         }
 
         return back()->with('success', 'Վճարման գրանցումը հաջողությամբ պահպանվեց։');
@@ -444,6 +465,7 @@ class SuperAdminController extends Controller
 
             if ($request->hasFile($inputName) && $request->file($inputName)->isValid()) {
                 try {
+                    $uploadedFile = $request->file($inputName);
                     $oldPath = SystemSetting::get($settingKey);
                     if ($oldPath && str_starts_with($oldPath, '/storage/system/')) {
                         $relative = ltrim(str_replace('/storage/', '', $oldPath), '/');
@@ -451,7 +473,20 @@ class SuperAdminController extends Controller
                             Storage::disk('public')->delete($relative);
                         }
                     }
-                    $stored = $request->file($inputName)->store('system', 'public');
+
+                    $ext = strtolower($uploadedFile->getClientOriginalExtension());
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mime = $finfo ? finfo_file($finfo, $uploadedFile->getRealPath()) : $uploadedFile->getMimeType();
+
+                    $uuid = (string) Str::uuid();
+                    $filename = "{$uuid}.{$ext}";
+                    $tempClean = tempnam(sys_get_temp_dir(), 'sys_img_');
+                    $imageProcessor = app(ImageProcessor::class);
+                    $imageProcessor->reencodeAndStripMetadata($uploadedFile->getRealPath(), $mime, $tempClean);
+
+                    $stored = Storage::disk('public')->putFileAs('system', new File($tempClean), $filename);
+                    @unlink($tempClean);
+
                     if ($stored) {
                         $validated[$settingKey] = '/storage/'.$stored;
                     }

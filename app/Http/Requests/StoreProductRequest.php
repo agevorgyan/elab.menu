@@ -58,12 +58,12 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         $imageRule = extension_loaded('fileinfo')
-            ? ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp,svg', 'max:5120']
+            ? ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,avif', 'max:5120']
             : ['nullable', 'file', 'max:5120', function ($attribute, $value, $fail) {
                 if ($value instanceof UploadedFile) {
                     $ext = strtolower($value->getClientOriginalExtension());
-                    if (! in_array($ext, ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'])) {
-                        $fail('The '.$attribute.' must be a valid image file (jpeg, png, jpg, gif, webp, svg).');
+                    if (! in_array($ext, ['jpeg', 'jpg', 'png', 'webp', 'avif'], true)) {
+                        $fail('The '.$attribute.' must be a valid image file (jpeg, png, jpg, webp, avif).');
                     }
                 }
             }];

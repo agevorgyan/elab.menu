@@ -16,6 +16,7 @@ class Order extends Model
         'location_id',
         'customer_id',
         'order_number',
+        'tracking_token',
         'table_number',
         'delivery_address',
         'type',
@@ -47,7 +48,17 @@ class Order extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (Order $order) {
+            if (empty($order->tracking_token)) {
+                $order->tracking_token = static::generateTrackingToken();
+            }
+        });
+
         static::saving(function (Order $order) {
+            if ($order->total_amount !== null && $order->total_amount < 0) {
+                throw new \InvalidArgumentException('Order total cannot be negative.');
+            }
+
             if ($order->location_id && $order->vendor_id) {
                 $location = Location::withoutGlobalScopes()->find($order->location_id);
                 if ($location && (int) $location->vendor_id !== (int) $order->vendor_id) {
@@ -62,6 +73,14 @@ class Order extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Generate an unguessable cryptographic tracking token for public access.
+     */
+    public static function generateTrackingToken(): string
+    {
+        return 'trk_'.bin2hex(random_bytes(24));
     }
 
     public function vendor()

@@ -20,7 +20,7 @@ class EnsureSubscriptionIsActive
                 return $next($request);
             }
 
-            if ($vendor->isExpired()) {
+            if (! $vendor->allowsAccess()) {
                 return redirect()->route('admin.subscription')
                     ->with('warning', 'Ձեր բաժանորդագրության/փորձնական ժամկետն ավարտվել է։ Խնդրում ենք երկարաձգել այն՝ համակարգից օգտվելու համար։');
             }

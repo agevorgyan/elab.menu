@@ -39,6 +39,11 @@ class SubscriptionPlan extends Model
         return $this->hasMany(Vendor::class, 'subscription_plan_id');
     }
 
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class, 'subscription_plan_id');
+    }
+
     public function getFormattedPriceAttribute(): string
     {
         if ($this->is_custom || $this->price <= 0) {

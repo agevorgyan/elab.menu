@@ -15,8 +15,8 @@ Broadcast::channel('vendor.{vendorId}', function ($user, $vendorId) {
 });
 
 /**
- * Public channel for real-time customer order tracking.
+ * Public channel for real-time customer order tracking (by order number or tracking token).
  */
-Broadcast::channel('order.{orderNumber}', function () {
+Broadcast::channel('order.{identifier}', function () {
     return true;
 });

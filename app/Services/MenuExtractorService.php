@@ -20,6 +20,24 @@ class MenuExtractorService
         $mime = $file->getMimeType();
         $realPath = $file->getRealPath();
 
+        $disallowed = ['php', 'php3', 'php4', 'php5', 'phtml', 'phar', 'exe', 'sh', 'bat', 'cmd', 'js', 'vbs', 'html', 'htm'];
+        if (in_array($extension, $disallowed, true)) {
+            throw new \InvalidArgumentException("Execution-risk file extension [{$extension}] is strictly prohibited.");
+        }
+
+        $head = @file_get_contents($realPath, false, null, 0, 4096) ?: '';
+        if (preg_match('/<\?php|<\?=|eval\s*\(|system\s*\(|shell_exec\s*\(|<script[\s>]/i', $head)) {
+            throw new \InvalidArgumentException('Executable script content detected in menu file. Processing aborted.');
+        }
+
+        if (in_array($extension, ['png', 'jpg', 'jpeg', 'webp'], true)) {
+            $img = @imagecreatefromstring(file_get_contents($realPath));
+            if ($img === false) {
+                throw new \InvalidArgumentException('Uploaded menu image is corrupted or invalid.');
+            }
+            imagedestroy($img);
+        }
+
         return match ($extension) {
             'csv' => $this->extractTabularOrTextFromCsv($realPath),
             'xlsx' => $this->extractTabularOrTextFromXlsx($realPath),

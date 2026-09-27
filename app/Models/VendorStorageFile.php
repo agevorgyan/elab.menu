@@ -35,6 +35,21 @@ class VendorStorageFile extends Model
         'entity_id' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (VendorStorageFile $file) {
+            if ($file->vendor_id && $file->entity_type && $file->entity_id) {
+                $class = $file->entity_type;
+                if (class_exists($class)) {
+                    $entity = $class::withoutGlobalScopes()->find($file->entity_id);
+                    if ($entity && isset($entity->vendor_id) && (int) $entity->vendor_id !== (int) $file->vendor_id) {
+                        throw new \InvalidArgumentException('Cross-vendor entity attached to vendor storage file.');
+                    }
+                }
+            }
+        });
+    }
+
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);

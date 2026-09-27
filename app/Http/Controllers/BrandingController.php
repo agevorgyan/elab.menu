@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\StorageQuotaExceededException;
 use App\Models\MenuTemplate;
+use App\Services\Security\CssSanitizer;
 use App\Services\StorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -51,8 +52,12 @@ class BrandingController extends Controller
             'logo_file' => $imageRule,
             'cover_image' => 'nullable|string',
             'cover_file' => $imageRule,
-            'custom_css' => 'nullable|string',
+            'custom_css' => 'nullable|string|max:10000',
         ]);
+
+        if (array_key_exists('custom_css', $validated) && $validated['custom_css'] !== null) {
+            $validated['custom_css'] = app(CssSanitizer::class)->sanitize($validated['custom_css']);
+        }
 
         if ($request->hasFile('logo_file') && $request->file('logo_file')->isValid()) {
             try {

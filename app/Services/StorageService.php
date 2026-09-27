@@ -7,7 +7,10 @@ use App\Exceptions\InvalidStoragePathException;
 use App\Exceptions\StorageQuotaExceededException;
 use App\Models\Vendor;
 use App\Models\VendorStorageFile;
+use App\Services\Security\ImageProcessor;
+use App\Services\Security\SvgSanitizer;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,15 +30,19 @@ class StorageService
 
     public const MAX_FILE_SIZE_BYTES = 15728640; // 15 MB
 
+    public const RASTER_IMAGE_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/avif',
+    ];
+
     public const IMAGE_MIME_TYPES = [
         'image/jpeg',
         'image/png',
         'image/webp',
-        'image/gif',
-        'image/svg+xml',
-        'image/x-icon',
-        'image/vnd.microsoft.icon',
         'image/avif',
+        'image/svg+xml',
     ];
 
     public const DOCUMENT_MIME_TYPES = [
@@ -54,6 +61,14 @@ class StorageService
         'exe', 'dll', 'so', 'bin', 'sh', 'bash', 'bat', 'cmd',
         'cgi', 'pl', 'py', 'js', 'vbs', 'html', 'htm',
     ];
+
+    public function __construct(
+        protected ?ImageProcessor $imageProcessor = null,
+        protected ?SvgSanitizer $svgSanitizer = null
+    ) {
+        $this->imageProcessor = $imageProcessor ?? new ImageProcessor;
+        $this->svgSanitizer = $svgSanitizer ?? new SvgSanitizer;
+    }
 
     /**
      * Resolve and validate current vendor context.
@@ -136,16 +151,43 @@ class StorageService
 
         $fileUuid = (string) Str::uuid();
         $ext = strtolower($file->getClientOriginalExtension());
+        $mimeType = $this->detectRealMimeType($file);
+
+        if (empty($ext) || ! in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'avif', 'svg', 'pdf', 'csv', 'xlsx', 'xls', 'docx', 'doc', 'txt', 'json'], true)) {
+            $ext = match ($mimeType) {
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp',
+                'image/avif' => 'avif',
+                'image/svg+xml' => 'svg',
+                'application/pdf' => 'pdf',
+                'text/csv' => 'csv',
+                default => 'bin',
+            };
+        }
+
         $filename = "{$fileUuid}.{$ext}";
         $relativeDir = "vendors/{$vendor->uuid}/{$namespace}";
         $relativePath = "{$relativeDir}/{$filename}";
+        $originalName = basename(str_replace(["\0", '%00', '\\'], '', $file->getClientOriginalName()));
 
-        $checksum = hash_file('sha256', $file->getRealPath()) ?: '';
-        $mimeType = $file->getMimeType() ?: 'application/octet-stream';
-        $originalName = $file->getClientOriginalName();
+        $finalSize = $fileSize;
+        $checksum = '';
 
-        // 1. Physically put file on disk
-        $stored = Storage::disk($disk)->putFileAs($relativeDir, $file, $filename);
+        // 1. Re-encode raster images / sanitize SVG and physically put on disk
+        if (in_array($mimeType, self::RASTER_IMAGE_MIME_TYPES, true) || $mimeType === 'image/svg+xml') {
+            $tempCleanPath = tempnam(sys_get_temp_dir(), 'clean_');
+            $meta = $this->imageProcessor->reencodeAndStripMetadata($file->getRealPath(), $mimeType, $tempCleanPath);
+            $finalSize = $meta['size'];
+            $checksum = hash_file('sha256', $tempCleanPath) ?: '';
+
+            $stored = Storage::disk($disk)->putFileAs($relativeDir, new File($tempCleanPath), $filename);
+            @unlink($tempCleanPath);
+        } else {
+            $checksum = hash_file('sha256', $file->getRealPath()) ?: '';
+            $stored = Storage::disk($disk)->putFileAs($relativeDir, $file, $filename);
+        }
+
         if (! $stored) {
             throw new \RuntimeException('Failed to write uploaded file to storage disk.');
         }
@@ -159,7 +201,7 @@ class StorageService
                 $relativePath,
                 $originalName,
                 $mimeType,
-                $fileSize,
+                $finalSize,
                 $checksum,
                 $entity
             ) {
@@ -170,7 +212,7 @@ class StorageService
                     'path' => $relativePath,
                     'original_name' => $originalName,
                     'mime_type' => $mimeType,
-                    'size_bytes' => $fileSize,
+                    'size_bytes' => $finalSize,
                     'checksum' => $checksum,
                     'entity_type' => $entity ? get_class($entity) : null,
                     'entity_id' => $entity ? $entity->getKey() : null,
@@ -178,7 +220,7 @@ class StorageService
                 ]);
 
                 Vendor::where('id', $vendor->id)->update([
-                    'storage_used_bytes' => DB::raw("storage_used_bytes + {$fileSize}"),
+                    'storage_used_bytes' => DB::raw("storage_used_bytes + {$finalSize}"),
                     'storage_files_count' => DB::raw('storage_files_count + 1'),
                 ]);
                 $vendor->refresh();
@@ -413,8 +455,8 @@ class StorageService
 
         $clean = ltrim($clean, '/');
 
-        // Check for directory traversal
-        if (str_contains($clean, '..') || str_contains($clean, '\\')) {
+        // Check for directory traversal and null bytes
+        if (str_contains($clean, '..') || str_contains($clean, '\\') || str_contains($clean, "\0") || str_contains($clean, '%00')) {
             throw new InvalidStoragePathException('Path traversal is strictly prohibited.');
         }
 
@@ -447,13 +489,32 @@ class StorageService
      */
     protected function validateNamespace(string $namespace): void
     {
-        if (str_contains($namespace, '..') || str_contains($namespace, '/') || str_contains($namespace, '\\')) {
+        if (str_contains($namespace, '..') || str_contains($namespace, '/') || str_contains($namespace, '\\') || str_contains($namespace, "\0") || str_contains($namespace, '%00')) {
             throw new InvalidStoragePathException("Invalid storage namespace format [{$namespace}].");
         }
 
         if (! in_array($namespace, self::ALLOWED_NAMESPACES, true)) {
             throw new InvalidStoragePathException("Unsupported storage namespace [{$namespace}].");
         }
+    }
+
+    /**
+     * Detect real MIME type of uploaded file using fileinfo.
+     */
+    public function detectRealMimeType(UploadedFile $file): string
+    {
+        $realPath = $file->getRealPath();
+        if ($realPath && file_exists($realPath)) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $mime = finfo_file($finfo, $realPath);
+                if (! empty($mime)) {
+                    return $mime;
+                }
+            }
+        }
+
+        return $file->getMimeType() ?: 'application/octet-stream';
     }
 
     /**
@@ -466,31 +527,62 @@ class StorageService
             throw new InvalidFileException('File size exceeds maximum allowable limit of 15MB.');
         }
 
+        $origName = $file->getClientOriginalName();
+        if (
+            str_contains($origName, '..') ||
+            str_contains($origName, '/') ||
+            str_contains($origName, '\\') ||
+            str_contains($origName, "\0") ||
+            str_contains($origName, '%00')
+        ) {
+            throw new InvalidStoragePathException('Path traversal detected in file name.');
+        }
+
         $extension = strtolower($file->getClientOriginalExtension());
         if (in_array($extension, self::DISALLOWED_EXTENSIONS, true)) {
             throw new InvalidFileException("Execution-risk file extension [{$extension}] is strictly prohibited.");
         }
 
         $realPath = $file->getRealPath();
-        $detectedMime = null;
-        if ($realPath && file_exists($realPath)) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            if ($finfo) {
-                $detectedMime = finfo_file($finfo, $realPath);
-                finfo_close($finfo);
-            }
+        if (! $realPath || ! file_exists($realPath)) {
+            throw new InvalidFileException('Uploaded file does not exist on disk.');
         }
 
-        $mime = $detectedMime ?: $file->getMimeType();
+        // Content inspection: check for PHP/script injection regardless of extension
+        $firstBytes = @file_get_contents($realPath, false, null, 0, 4096) ?: '';
+        if (preg_match('/<\?php|<\?=|eval\s*\(|system\s*\(|shell_exec\s*\(|<script[\s>]/i', $firstBytes)) {
+            throw new InvalidFileException('Executable or script content detected. Upload rejected.');
+        }
+
+        $mime = $this->detectRealMimeType($file);
 
         // Prevent MIME spoofing (e.g. PHP script sent with image extension)
         if (str_contains($mime, 'php') || str_contains($mime, 'script') || str_contains($mime, 'executable')) {
             throw new InvalidFileException('Executable script content detected. Upload rejected.');
         }
 
-        if (in_array($namespace, ['products', 'branding', 'gallery', 'qr'], true)) {
+        // Product & Gallery images: SVG is disabled, only raster formats permitted
+        if (in_array($namespace, ['products', 'gallery'], true)) {
+            if ($mime === 'image/svg+xml' || $extension === 'svg') {
+                throw new InvalidFileException('SVG format is not allowed for product or gallery images. Allowed formats: JPEG, PNG, WebP, AVIF.');
+            }
+
+            if (! in_array($mime, self::RASTER_IMAGE_MIME_TYPES, true)) {
+                throw new InvalidFileException("MIME type [{$mime}] is not permitted for namespace [{$namespace}]. Only JPEG, PNG, WebP, and AVIF images are allowed.");
+            }
+        } elseif (in_array($namespace, ['branding', 'qr'], true)) {
             if (! in_array($mime, self::IMAGE_MIME_TYPES, true)) {
                 throw new InvalidFileException("MIME type [{$mime}] is not permitted for namespace [{$namespace}]. Only valid images are allowed.");
+            }
+
+            // If SVG is uploaded for branding/qr, validate through SvgSanitizer
+            if ($mime === 'image/svg+xml' || $extension === 'svg') {
+                $svgContent = @file_get_contents($realPath) ?: '';
+                $this->svgSanitizer->sanitize($svgContent);
+            }
+        } elseif ($namespace === 'documents') {
+            if (! in_array($mime, self::DOCUMENT_MIME_TYPES, true)) {
+                throw new InvalidFileException("MIME type [{$mime}] is not permitted for documents.");
             }
         }
     }

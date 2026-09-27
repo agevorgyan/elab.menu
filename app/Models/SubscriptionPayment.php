@@ -12,6 +12,7 @@ class SubscriptionPayment extends Model
 
     protected $fillable = [
         'vendor_id',
+        'subscription_id',
         'subscription_plan_id',
         'amount',
         'currency',
@@ -29,9 +30,23 @@ class SubscriptionPayment extends Model
         'period_end' => 'date',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (SubscriptionPayment $payment): void {
+            if ($payment->amount !== null && $payment->amount < 0) {
+                throw new \InvalidArgumentException('Subscription payment amount cannot be negative.');
+            }
+        });
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function subscription()
+    {
+        return $this->belongsTo(Subscription::class, 'subscription_id');
     }
 
     public function plan()

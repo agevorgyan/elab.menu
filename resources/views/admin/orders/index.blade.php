@@ -662,33 +662,50 @@ function closeThermalReceiptModal() {
 function printViaBrowser() {
     if (!currentReceiptText) return;
 
-    const printWin = window.open('', '_blank', 'width=380,height=600');
-    if (!printWin) {
-        alert('Խնդրում ենք թույլատրել pop-up պատուհանները տպելու համար:');
-        return;
+    let iframe = document.getElementById('thermal_receipt_print_frame');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'thermal_receipt_print_frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
     }
 
     try {
-        printWin.document.title = 'Receipt ' + (currentReceiptOrderNumber || '');
-        const style = printWin.document.createElement('style');
-        style.textContent = '@page { margin: 0; size: auto; } body { font-family: "Courier New", Courier, monospace; font-size: 12px; line-height: 1.35; margin: 8px; padding: 0; color: #000; width: 76mm; } pre { white-space: pre-wrap; word-break: break-word; margin: 0; }';
-        printWin.document.head.appendChild(style);
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Receipt ${currentReceiptOrderNumber || ''}</title>
+                <style>
+                    @page { margin: 0; size: auto; }
+                    body { font-family: "Courier New", Courier, monospace; font-size: 12px; line-height: 1.35; margin: 8px; padding: 0; color: #000; width: 76mm; }
+                    pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: inherit; }
+                </style>
+            </head>
+            <body>
+                <pre>${currentReceiptText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+            </body>
+            </html>
+        `);
+        doc.close();
 
-        const pre = printWin.document.createElement('pre');
-        pre.textContent = currentReceiptText;
-        printWin.document.body.appendChild(pre);
-
-        printWin.focus();
         setTimeout(() => {
             try {
-                printWin.print();
-                printWin.close();
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
             } catch (e) {
                 console.error('Print dialog error:', e);
             }
-        }, 400);
+        }, 300);
     } catch (e) {
-        console.error('Failed to prepare print window:', e);
+        console.error('Failed to prepare print iframe:', e);
     }
 }
 
@@ -748,10 +765,28 @@ async function printViaBluetooth() {
     }
 }
 
+let kitchenWakeLock = null;
+async function acquireKitchenWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            kitchenWakeLock = await navigator.wakeLock.request('screen');
+        } catch (err) {
+            console.debug('Screen wake lock not granted:', err);
+        }
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !kitchenWakeLock) {
+        acquireKitchenWakeLock();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     initEcho();
     startPollingTimer();
     checkAudioStatus();
+    acquireKitchenWakeLock();
 });
 </script>
 @endsection

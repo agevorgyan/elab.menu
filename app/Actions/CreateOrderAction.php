@@ -228,7 +228,7 @@ class CreateOrderAction
                 'vendor_id' => $vendor->id,
                 'location_id' => $dto->locationId,
                 'customer_id' => $customer?->id,
-                'order_number' => 'ORD-'.strtoupper(Str::random(6)),
+                'order_number' => $this->generateOrderNumber($vendor->id),
                 'table_number' => in_array($dto->type, ['delivery', 'takeaway']) ? null : ($dto->tableNumber ?? 'Counter'),
                 'delivery_address' => $dto->deliveryAddress,
                 'type' => $dto->type,
@@ -511,5 +511,20 @@ class CreateOrderAction
         $cleanPhone = preg_replace('/[^0-9]/', '', $location->whatsapp_number);
 
         return "https://wa.me/{$cleanPhone}?text=".urlencode($msg);
+    }
+
+    /**
+     * Generate collision-resistant unique order number.
+     */
+    protected function generateOrderNumber(int $vendorId): string
+    {
+        return retry(5, function () use ($vendorId) {
+            $candidate = 'ORD-'.strtoupper(Str::random(8));
+            if (Order::withoutGlobalScopes()->where('vendor_id', $vendorId)->where('order_number', $candidate)->exists()) {
+                throw new \RuntimeException("Collision detected for order number {$candidate}");
+            }
+
+            return $candidate;
+        });
     }
 }

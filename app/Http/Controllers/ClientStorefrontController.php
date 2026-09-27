@@ -80,55 +80,75 @@ class ClientStorefrontController extends Controller
             );
         }
 
-        // Fetch categories and active products
-        $categories = Category::where('vendor_id', $vendor->id)
-            ->where('is_active', true)
-            ->with(['products' => function ($q) {
-                $q->where('is_available', true)
-                    ->with(['variations', 'allergens', 'overrides'])
-                    ->orderBy('sort_order', 'asc');
-            }])
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        // Fetch categories and active products with tenant-scoped caching
+        $menuVersion = (int) TenantCache::get($vendor, 'menu_version', 1);
+        $locationKey = $location?->id ?? 'all';
+        $menuCacheKey = "storefront_menu:v{$menuVersion}:{$locationKey}";
+
+        $categories = TenantCache::remember($vendor, $menuCacheKey, now()->addDay(), function () use ($vendor) {
+            return Category::where('vendor_id', $vendor->id)
+                ->where('is_active', true)
+                ->with(['products' => function ($q) {
+                    $q->where('is_available', true)
+                        ->with(['variations', 'allergens', 'overrides'])
+                        ->orderBy('sort_order', 'asc');
+                }])
+                ->orderBy('sort_order', 'asc')
+                ->get();
+        });
 
         $themeSlug = $vendor->menuTemplate?->slug ?? 'modern-bistro';
 
-        // Support real-time live preview query parameter overrides
-        if ($request->has('menu_template_id') && $request->get('menu_template_id')) {
-            $tmpl = MenuTemplate::find($request->get('menu_template_id'));
-            if ($tmpl) {
-                $themeSlug = $tmpl->slug;
+        // Support real-time live preview query parameter overrides (guarded by staff auth or valid signature)
+        $hasPreviewParams = $request->hasAny([
+            'menu_template_id', 'theme_mode', 'primary_color', 'accent_color',
+            'secondary_color', 'bg_color', 'text_color', 'logo', 'cover_image',
+        ]);
+
+        if ($hasPreviewParams) {
+            $isAuthorizedStaff = auth('web')->check() && (
+                (bool) auth('web')->user()->isSuperAdmin() ||
+                (int) auth('web')->user()->vendor_id === (int) $vendor->id
+            );
+
+            if ($isAuthorizedStaff || $request->hasValidSignature()) {
+                if ($request->filled('menu_template_id')) {
+                    $tmpl = MenuTemplate::find($request->get('menu_template_id'));
+                    if ($tmpl) {
+                        $themeSlug = $tmpl->slug;
+                    }
+                }
+                if ($request->filled('theme_mode')) {
+                    $vendor->theme_mode = $request->get('theme_mode');
+                }
+                if ($request->filled('primary_color')) {
+                    $vendor->primary_color = $request->get('primary_color');
+                }
+                if ($request->filled('accent_color')) {
+                    $vendor->accent_color = $request->get('accent_color');
+                }
+                if ($request->filled('secondary_color')) {
+                    $vendor->secondary_color = $request->get('secondary_color');
+                }
+                if ($request->filled('bg_color')) {
+                    $vendor->bg_color = $request->get('bg_color');
+                }
+                if ($request->filled('text_color')) {
+                    $vendor->text_color = $request->get('text_color');
+                }
+                if ($request->filled('logo')) {
+                    $vendor->logo = $request->get('logo');
+                }
+                if ($request->filled('cover_image')) {
+                    $vendor->cover_image = $request->get('cover_image');
+                }
+                if ($request->filled('custom_css')) {
+                    $vendor->custom_css = $request->get('custom_css');
+                }
+                if ($request->filled('desktop_max_width')) {
+                    $vendor->desktop_max_width = $request->get('desktop_max_width');
+                }
             }
-        }
-        if ($request->has('theme_mode') && $request->get('theme_mode')) {
-            $vendor->theme_mode = $request->get('theme_mode');
-        }
-        if ($request->has('primary_color') && $request->get('primary_color')) {
-            $vendor->primary_color = $request->get('primary_color');
-        }
-        if ($request->has('accent_color') && $request->get('accent_color')) {
-            $vendor->accent_color = $request->get('accent_color');
-        }
-        if ($request->has('secondary_color') && $request->get('secondary_color')) {
-            $vendor->secondary_color = $request->get('secondary_color');
-        }
-        if ($request->has('bg_color') && $request->get('bg_color')) {
-            $vendor->bg_color = $request->get('bg_color');
-        }
-        if ($request->has('text_color') && $request->get('text_color')) {
-            $vendor->text_color = $request->get('text_color');
-        }
-        if ($request->has('logo') && $request->get('logo')) {
-            $vendor->logo = $request->get('logo');
-        }
-        if ($request->has('cover_image') && $request->get('cover_image')) {
-            $vendor->cover_image = $request->get('cover_image');
-        }
-        if ($request->has('custom_css') && $request->get('custom_css')) {
-            $vendor->custom_css = $request->get('custom_css');
-        }
-        if ($request->has('desktop_max_width') && $request->get('desktop_max_width')) {
-            $vendor->desktop_max_width = $request->get('desktop_max_width');
         }
 
         // Featured Dish / Dish of the Day

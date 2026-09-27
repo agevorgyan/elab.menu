@@ -161,11 +161,22 @@ class TenantCache
     }
 
     /**
+     * Invalidate tenant menu cache, bumping the menu version for storefront queries.
+     */
+    public static function invalidateMenu(Vendor|string|int $vendor): void
+    {
+        static::forget($vendor, 'menu');
+        $current = (int) static::get($vendor, 'menu_version', 1);
+        static::put($vendor, 'menu_version', $current + 1, now()->addYear());
+    }
+
+    /**
      * Invalidate all primary cached data for a vendor.
      */
     public static function invalidateAll(Vendor|string|int $vendor): void
     {
         static::forget($vendor, 'menu');
+        static::forget($vendor, 'menu_version');
         static::forget($vendor, 'settings');
         static::forget($vendor, 'analytics');
         static::forget($vendor, 'config');

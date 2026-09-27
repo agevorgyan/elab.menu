@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CustomDomain;
 use App\Models\Vendor;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -86,21 +87,7 @@ class CustomDomainService
         if ($dnsTxtResolver !== null) {
             $txtRecords = $dnsTxtResolver($challengeHost, $customDomain->normalized_domain);
         } else {
-            // Default native PHP DNS lookup
-            $challengeRecords = @dns_get_record($challengeHost, DNS_TXT) ?: [];
-            $apexRecords = @dns_get_record($customDomain->normalized_domain, DNS_TXT) ?: [];
-            $allRecords = array_merge($challengeRecords, $apexRecords);
-
-            foreach ($allRecords as $record) {
-                if (! empty($record['txt'])) {
-                    $txtRecords[] = trim($record['txt']);
-                }
-                if (! empty($record['entries'])) {
-                    foreach ($record['entries'] as $entry) {
-                        $txtRecords[] = trim($entry);
-                    }
-                }
-            }
+            $txtRecords = $this->resolveTxtRecordsWithTimeout($challengeHost, $customDomain->normalized_domain);
         }
 
         $matched = in_array($expectedToken, $txtRecords, true);
@@ -220,5 +207,57 @@ class CustomDomainService
         $normalized = $customDomain->normalized_domain;
         Cache::forget('domain_'.$normalized);
         $customDomain->delete();
+    }
+
+    /**
+     * Resolve DNS TXT records with strict timeout protection (DoH + native fallback).
+     */
+    protected function resolveTxtRecordsWithTimeout(string $challengeHost, string $apexDomain): array
+    {
+        $txtRecords = [];
+
+        // 1. Attempt fast DNS-over-HTTPS with strict 2.5s timeout to prevent thread blocking
+        try {
+            $hosts = [$challengeHost, $apexDomain];
+            foreach ($hosts as $host) {
+                $response = Http::timeout(2.5)
+                    ->accept('application/dns-json')
+                    ->get('https://cloudflare-dns.com/dns-query', [
+                        'name' => $host,
+                        'type' => 'TXT',
+                    ]);
+
+                if ($response->successful()) {
+                    $answers = $response->json('Answer', []);
+                    foreach ($answers as $ans) {
+                        if (($ans['type'] ?? 0) === 16 && ! empty($ans['data'])) {
+                            $txtRecords[] = trim($ans['data'], '" ');
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall through to native lookup
+        }
+
+        // 2. Fall back to native dns_get_record if DoH returned no results
+        if (empty($txtRecords)) {
+            $challengeRecords = @dns_get_record($challengeHost, DNS_TXT) ?: [];
+            $apexRecords = @dns_get_record($apexDomain, DNS_TXT) ?: [];
+            $allRecords = array_merge($challengeRecords, $apexRecords);
+
+            foreach ($allRecords as $record) {
+                if (! empty($record['txt'])) {
+                    $txtRecords[] = trim($record['txt'], '" ');
+                }
+                if (! empty($record['entries'])) {
+                    foreach ($record['entries'] as $entry) {
+                        $txtRecords[] = trim($entry, '" ');
+                    }
+                }
+            }
+        }
+
+        return $txtRecords;
     }
 }

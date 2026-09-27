@@ -40,7 +40,7 @@ class MenuManagementService
             'is_active' => true,
         ]);
 
-        TenantCache::forget($vendor, 'menu');
+        TenantCache::invalidateMenu($vendor);
 
         return $category;
     }
@@ -62,7 +62,7 @@ class MenuManagementService
             'description' => $data['description'] ?? null,
         ]);
 
-        TenantCache::forget($category->vendor_id, 'menu');
+        TenantCache::invalidateMenu($category->vendor_id);
 
         return $category;
     }
@@ -74,7 +74,7 @@ class MenuManagementService
     {
         $vendorId = $category->vendor_id;
         $category->delete();
-        TenantCache::forget($vendorId, 'menu');
+        TenantCache::invalidateMenu($vendorId);
     }
 
     /**
@@ -177,7 +177,7 @@ class MenuManagementService
             ]);
         }
 
-        TenantCache::forget($vendor, 'menu');
+        TenantCache::invalidateMenu($vendor);
 
         return $product;
     }
@@ -338,7 +338,7 @@ class MenuManagementService
             }
         }
 
-        TenantCache::forget($product->vendor_id, 'menu');
+        TenantCache::invalidateMenu($product->vendor_id);
 
         return $product;
     }
@@ -349,7 +349,7 @@ class MenuManagementService
     public function toggleProductAvailability(Product $product): bool
     {
         $product->update(['is_available' => ! $product->is_available]);
-        TenantCache::forget($product->vendor_id, 'menu');
+        TenantCache::invalidateMenu($product->vendor_id);
 
         return (bool) $product->is_available;
     }
@@ -377,7 +377,7 @@ class MenuManagementService
             ]
         );
 
-        TenantCache::forget($product->vendor_id, 'menu');
+        TenantCache::invalidateMenu($product->vendor_id);
 
         return $override;
     }
@@ -390,7 +390,7 @@ class MenuManagementService
         $vendorId = $product->vendor_id;
         $product->deleteImageFile();
         $product->delete();
-        TenantCache::forget($vendorId, 'menu');
+        TenantCache::invalidateMenu($vendorId);
     }
 
     /**

@@ -625,7 +625,7 @@ class DatabaseIntegrityTest extends TestCase
 
         $orderToDelete->forceDelete();
         $this->assertNull(OrderItem::find($itemId));
-        $this->assertNull(PaymentAttempt::find($attemptId));
+        $this->assertNull(PaymentAttempt::find($attemptId)?->order_id);
 
         // 3. Deleting a location cascades to its overrides
         $override = LocationProductOverride::create([

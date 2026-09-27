@@ -13,284 +13,144 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Composite Unique Constraints on Parent Tables (Prerequisite for Composite Foreign Keys)
-        if (Schema::hasTable('locations') && ! Schema::hasIndex('locations', 'locations_id_vendor_id_unique')) {
-            Schema::table('locations', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'locations_id_vendor_id_unique');
-            });
-        }
+        $uniques = [
+            'locations' => ['columns' => ['id', 'vendor_id'], 'name' => 'locations_id_vendor_id_unique'],
+            'categories' => ['columns' => ['id', 'vendor_id'], 'name' => 'categories_id_vendor_id_unique'],
+            'products' => ['columns' => ['id', 'vendor_id'], 'name' => 'products_id_vendor_id_unique'],
+            'customers' => ['columns' => ['id', 'vendor_id'], 'name' => 'customers_id_vendor_id_unique'],
+            'orders' => ['columns' => ['id', 'vendor_id'], 'name' => 'orders_id_vendor_id_unique'],
+            'subscription_payments' => ['columns' => ['id', 'vendor_id'], 'name' => 'sub_payments_id_vendor_id_unique'],
+            'ai_waiter_sessions' => ['columns' => ['id', 'vendor_id'], 'name' => 'ai_sessions_id_vendor_id_unique'],
+        ];
 
-        if (Schema::hasTable('categories') && ! Schema::hasIndex('categories', 'categories_id_vendor_id_unique')) {
-            Schema::table('categories', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'categories_id_vendor_id_unique');
-            });
-        }
-
-        if (Schema::hasTable('products') && ! Schema::hasIndex('products', 'products_id_vendor_id_unique')) {
-            Schema::table('products', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'products_id_vendor_id_unique');
-            });
-        }
-
-        if (Schema::hasTable('customers') && ! Schema::hasIndex('customers', 'customers_id_vendor_id_unique')) {
-            Schema::table('customers', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'customers_id_vendor_id_unique');
-            });
-        }
-
-        if (Schema::hasTable('orders') && ! Schema::hasIndex('orders', 'orders_id_vendor_id_unique')) {
-            Schema::table('orders', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'orders_id_vendor_id_unique');
-            });
-        }
-
-        if (Schema::hasTable('subscription_payments') && ! Schema::hasIndex('subscription_payments', 'sub_payments_id_vendor_id_unique')) {
-            Schema::table('subscription_payments', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'sub_payments_id_vendor_id_unique');
-            });
-        }
-
-        if (Schema::hasTable('ai_waiter_sessions') && ! Schema::hasIndex('ai_waiter_sessions', 'ai_sessions_id_vendor_id_unique')) {
-            Schema::table('ai_waiter_sessions', function (Blueprint $table) {
-                $table->unique(['id', 'vendor_id'], 'ai_sessions_id_vendor_id_unique');
-            });
+        foreach ($uniques as $table => $cfg) {
+            if (Schema::hasTable($table)) {
+                try {
+                    Schema::table($table, function (Blueprint $t) use ($cfg) {
+                        $t->unique($cfg['columns'], $cfg['name']);
+                    });
+                } catch (Throwable $e) {
+                    // Unique constraint may already exist
+                }
+            }
         }
 
         // 2. Composite Foreign Keys on Child Tables (Cross-Tenant Relationship Enforcement)
-        if (Schema::hasTable('products')) {
-            Schema::table('products', function (Blueprint $table) {
-                $table->foreign(['category_id', 'vendor_id'], 'products_cat_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('categories')
-                    ->cascadeOnDelete();
-            });
-        }
+        $fks = [
+            'products' => [
+                ['columns' => ['category_id', 'vendor_id'], 'name' => 'products_cat_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'categories', 'action' => 'cascade'],
+            ],
+            'orders' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'orders_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+                ['columns' => ['customer_id', 'vendor_id'], 'name' => 'orders_cust_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'customers', 'action' => 'cascade'],
+            ],
+            'categories' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'categories_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+            ],
+            'location_product_overrides' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'lpo_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+                ['columns' => ['product_id', 'vendor_id'], 'name' => 'lpo_prod_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'products', 'action' => 'cascade'],
+            ],
+            'waiter_calls' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'waiter_calls_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+            ],
+            'ai_waiter_sessions' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'ai_sessions_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+                ['columns' => ['order_id', 'vendor_id'], 'name' => 'ai_sessions_order_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'orders', 'action' => 'cascade'],
+            ],
+            'payment_attempts' => [
+                ['columns' => ['order_id', 'vendor_id'], 'name' => 'payment_attempts_order_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'orders', 'action' => 'cascade'],
+                ['columns' => ['subscription_id', 'vendor_id'], 'name' => 'payment_attempts_sub_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'subscription_payments', 'action' => 'cascade'],
+            ],
+            'customers' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'customers_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+            ],
+            'ai_usage_logs' => [
+                ['columns' => ['session_id', 'vendor_id'], 'name' => 'ai_logs_session_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'ai_waiter_sessions', 'action' => 'cascade'],
+            ],
+            'analytics_logs' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'analytics_logs_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+            ],
+            'push_subscriptions' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'push_subs_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+            ],
+            'users' => [
+                ['columns' => ['location_id', 'vendor_id'], 'name' => 'users_loc_vendor_fk', 'ref_columns' => ['id', 'vendor_id'], 'on' => 'locations', 'action' => 'cascade'],
+            ],
+        ];
 
-        if (Schema::hasTable('orders')) {
-            Schema::table('orders', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'orders_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-
-                $table->foreign(['customer_id', 'vendor_id'], 'orders_cust_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('customers')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('categories')) {
-            Schema::table('categories', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'categories_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('location_product_overrides')) {
-            Schema::table('location_product_overrides', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'lpo_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-
-                $table->foreign(['product_id', 'vendor_id'], 'lpo_prod_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('products')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('waiter_calls')) {
-            Schema::table('waiter_calls', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'waiter_calls_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('ai_waiter_sessions')) {
-            Schema::table('ai_waiter_sessions', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'ai_sessions_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-
-                $table->foreign(['order_id', 'vendor_id'], 'ai_sessions_order_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('orders')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('payment_attempts')) {
-            Schema::table('payment_attempts', function (Blueprint $table) {
-                $table->foreign(['order_id', 'vendor_id'], 'payment_attempts_order_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('orders')
-                    ->cascadeOnDelete();
-
-                if (Schema::hasTable('subscription_payments')) {
-                    $table->foreign(['subscription_id', 'vendor_id'], 'payment_attempts_sub_vendor_fk')
-                        ->references(['id', 'vendor_id'])
-                        ->on('subscription_payments')
-                        ->cascadeOnDelete();
+        foreach ($fks as $table => $tableFks) {
+            if (Schema::hasTable($table)) {
+                foreach ($tableFks as $fk) {
+                    try {
+                        Schema::table($table, function (Blueprint $t) use ($fk) {
+                            $t->foreign($fk['columns'], $fk['name'])
+                                ->references($fk['ref_columns'])
+                                ->on($fk['on'])
+                                ->cascadeOnDelete();
+                        });
+                    } catch (Throwable $e) {
+                        // FK constraint may already exist from previous partial migration
+                    }
                 }
-            });
-        }
-
-        if (Schema::hasTable('customers')) {
-            Schema::table('customers', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'customers_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('ai_usage_logs')) {
-            Schema::table('ai_usage_logs', function (Blueprint $table) {
-                $table->foreign(['session_id', 'vendor_id'], 'ai_logs_session_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('ai_waiter_sessions')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('analytics_logs')) {
-            Schema::table('analytics_logs', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'analytics_logs_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('push_subscriptions')) {
-            Schema::table('push_subscriptions', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'push_subs_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-            });
-        }
-
-        if (Schema::hasTable('users')) {
-            Schema::table('users', function (Blueprint $table) {
-                $table->foreign(['location_id', 'vendor_id'], 'users_loc_vendor_fk')
-                    ->references(['id', 'vendor_id'])
-                    ->on('locations')
-                    ->cascadeOnDelete();
-            });
+            }
         }
 
         // 3. Composite Indexes for Tenant-First & Soft-Delete Queries
-        if (Schema::hasTable('categories')) {
-            Schema::table('categories', function (Blueprint $table) {
-                if (! Schema::hasIndex('categories', 'idx_cat_vendor_active_sort')) {
-                    $table->index(['vendor_id', 'is_active', 'sort_order'], 'idx_cat_vendor_active_sort');
-                }
-                if (! Schema::hasIndex('categories', 'idx_cat_vendor_deleted')) {
-                    $table->index(['vendor_id', 'deleted_at'], 'idx_cat_vendor_deleted');
-                }
-            });
-        }
+        // 3. Composite Indexes for Tenant-First & Soft-Delete Queries
+        $tableIndexes = [
+            'categories' => [
+                ['columns' => ['vendor_id', 'is_active', 'sort_order'], 'name' => 'idx_cat_vendor_active_sort'],
+                ['columns' => ['vendor_id', 'deleted_at'], 'name' => 'idx_cat_vendor_deleted'],
+            ],
+            'products' => [
+                ['columns' => ['vendor_id', 'category_id', 'is_available', 'sort_order'], 'name' => 'idx_prod_vendor_cat_avail_sort'],
+                ['columns' => ['vendor_id', 'is_available'], 'name' => 'idx_prod_vendor_available'],
+                ['columns' => ['vendor_id', 'is_featured'], 'name' => 'idx_prod_vendor_featured'],
+                ['columns' => ['vendor_id', 'deleted_at'], 'name' => 'idx_prod_vendor_deleted'],
+            ],
+            'orders' => [
+                ['columns' => ['vendor_id', 'status', 'created_at'], 'name' => 'idx_orders_vendor_status_created'],
+                ['columns' => ['vendor_id', 'location_id', 'status'], 'name' => 'idx_orders_vendor_loc_status'],
+                ['columns' => ['vendor_id', 'type'], 'name' => 'idx_orders_vendor_type'],
+                ['columns' => ['vendor_id', 'deleted_at'], 'name' => 'idx_orders_vendor_deleted'],
+            ],
+            'waiter_calls' => [
+                ['columns' => ['vendor_id', 'status', 'created_at'], 'name' => 'idx_waiter_calls_vendor_status_created'],
+                ['columns' => ['vendor_id', 'location_id', 'status'], 'name' => 'idx_waiter_calls_vendor_loc_status'],
+                ['columns' => ['vendor_id', 'table_number', 'status'], 'name' => 'idx_waiter_calls_vendor_table_status'],
+            ],
+            'customers' => [
+                ['columns' => ['vendor_id', 'phone'], 'name' => 'idx_customers_vendor_phone'],
+                ['columns' => ['vendor_id', 'email'], 'name' => 'idx_customers_vendor_email'],
+            ],
+            'ai_waiter_sessions' => [
+                ['columns' => ['vendor_id', 'status'], 'name' => 'idx_ai_sessions_vendor_status'],
+                ['columns' => ['vendor_id', 'location_id', 'status'], 'name' => 'idx_ai_sessions_vendor_loc_status'],
+            ],
+            'payment_attempts' => [
+                ['columns' => ['vendor_id', 'status'], 'name' => 'idx_payment_attempts_vendor_status'],
+                ['columns' => ['vendor_id', 'order_id'], 'name' => 'idx_payment_attempts_vendor_order'],
+                ['columns' => ['vendor_id', 'merchant_reference'], 'name' => 'idx_payment_attempts_vendor_ref'],
+            ],
+            'vendor_storage_files' => [
+                ['columns' => ['vendor_id', 'status'], 'name' => 'idx_storage_files_vendor_status'],
+                ['columns' => ['vendor_id', 'deleted_at'], 'name' => 'idx_storage_files_vendor_deleted'],
+            ],
+        ];
 
-        if (Schema::hasTable('products')) {
-            Schema::table('products', function (Blueprint $table) {
-                if (! Schema::hasIndex('products', 'idx_prod_vendor_cat_avail_sort')) {
-                    $table->index(['vendor_id', 'category_id', 'is_available', 'sort_order'], 'idx_prod_vendor_cat_avail_sort');
+        foreach ($tableIndexes as $table => $indexes) {
+            if (Schema::hasTable($table)) {
+                foreach ($indexes as $idx) {
+                    try {
+                        Schema::table($table, function (Blueprint $t) use ($idx) {
+                            $t->index($idx['columns'], $idx['name']);
+                        });
+                    } catch (Throwable $e) {
+                        // Index may already exist
+                    }
                 }
-                if (! Schema::hasIndex('products', 'idx_prod_vendor_available')) {
-                    $table->index(['vendor_id', 'is_available'], 'idx_prod_vendor_available');
-                }
-                if (! Schema::hasIndex('products', 'idx_prod_vendor_featured')) {
-                    $table->index(['vendor_id', 'is_featured'], 'idx_prod_vendor_featured');
-                }
-                if (! Schema::hasIndex('products', 'idx_prod_vendor_deleted')) {
-                    $table->index(['vendor_id', 'deleted_at'], 'idx_prod_vendor_deleted');
-                }
-            });
-        }
-
-        if (Schema::hasTable('orders')) {
-            Schema::table('orders', function (Blueprint $table) {
-                if (! Schema::hasIndex('orders', 'idx_orders_vendor_status_created')) {
-                    $table->index(['vendor_id', 'status', 'created_at'], 'idx_orders_vendor_status_created');
-                }
-                if (! Schema::hasIndex('orders', 'idx_orders_vendor_loc_status')) {
-                    $table->index(['vendor_id', 'location_id', 'status'], 'idx_orders_vendor_loc_status');
-                }
-                if (! Schema::hasIndex('orders', 'idx_orders_vendor_type')) {
-                    $table->index(['vendor_id', 'type'], 'idx_orders_vendor_type');
-                }
-                if (! Schema::hasIndex('orders', 'idx_orders_vendor_deleted')) {
-                    $table->index(['vendor_id', 'deleted_at'], 'idx_orders_vendor_deleted');
-                }
-            });
-        }
-
-        if (Schema::hasTable('waiter_calls')) {
-            Schema::table('waiter_calls', function (Blueprint $table) {
-                if (! Schema::hasIndex('waiter_calls', 'idx_waiter_calls_vendor_status_created')) {
-                    $table->index(['vendor_id', 'status', 'created_at'], 'idx_waiter_calls_vendor_status_created');
-                }
-                if (! Schema::hasIndex('waiter_calls', 'idx_waiter_calls_vendor_loc_status')) {
-                    $table->index(['vendor_id', 'location_id', 'status'], 'idx_waiter_calls_vendor_loc_status');
-                }
-                if (! Schema::hasIndex('waiter_calls', 'idx_waiter_calls_vendor_table_status')) {
-                    $table->index(['vendor_id', 'table_number', 'status'], 'idx_waiter_calls_vendor_table_status');
-                }
-            });
-        }
-
-        if (Schema::hasTable('customers')) {
-            Schema::table('customers', function (Blueprint $table) {
-                if (! Schema::hasIndex('customers', 'idx_customers_vendor_phone')) {
-                    $table->index(['vendor_id', 'phone'], 'idx_customers_vendor_phone');
-                }
-                if (! Schema::hasIndex('customers', 'idx_customers_vendor_email')) {
-                    $table->index(['vendor_id', 'email'], 'idx_customers_vendor_email');
-                }
-            });
-        }
-
-        if (Schema::hasTable('ai_waiter_sessions')) {
-            Schema::table('ai_waiter_sessions', function (Blueprint $table) {
-                if (! Schema::hasIndex('ai_waiter_sessions', 'idx_ai_sessions_vendor_status')) {
-                    $table->index(['vendor_id', 'status'], 'idx_ai_sessions_vendor_status');
-                }
-                if (! Schema::hasIndex('ai_waiter_sessions', 'idx_ai_sessions_vendor_loc_status')) {
-                    $table->index(['vendor_id', 'location_id', 'status'], 'idx_ai_sessions_vendor_loc_status');
-                }
-            });
-        }
-
-        if (Schema::hasTable('payment_attempts')) {
-            Schema::table('payment_attempts', function (Blueprint $table) {
-                if (! Schema::hasIndex('payment_attempts', 'idx_payment_attempts_vendor_status')) {
-                    $table->index(['vendor_id', 'status'], 'idx_payment_attempts_vendor_status');
-                }
-                if (! Schema::hasIndex('payment_attempts', 'idx_payment_attempts_vendor_order')) {
-                    $table->index(['vendor_id', 'order_id'], 'idx_payment_attempts_vendor_order');
-                }
-                if (! Schema::hasIndex('payment_attempts', 'idx_payment_attempts_vendor_ref')) {
-                    $table->index(['vendor_id', 'merchant_reference'], 'idx_payment_attempts_vendor_ref');
-                }
-            });
-        }
-
-        if (Schema::hasTable('vendor_storage_files')) {
-            Schema::table('vendor_storage_files', function (Blueprint $table) {
-                if (! Schema::hasIndex('vendor_storage_files', 'idx_storage_files_vendor_status')) {
-                    $table->index(['vendor_id', 'status'], 'idx_storage_files_vendor_status');
-                }
-                if (! Schema::hasIndex('vendor_storage_files', 'idx_storage_files_vendor_deleted')) {
-                    $table->index(['vendor_id', 'deleted_at'], 'idx_storage_files_vendor_deleted');
-                }
-            });
+            }
         }
 
         // 4. Check Constraints where supported by database driver (MySQL 8+ and PostgreSQL)

@@ -331,22 +331,106 @@
                                    placeholder="{{ __('menu.full_name_placeholder') }}">
                         </div>
 
-                        <div class="cart-input-field-wrap">
-                            <i class="fa-solid fa-phone cart-input-prefix-icon" :style="(orderType === 'delivery' || orderType === 'takeaway') ? 'color: #f59e0b;' : ''"></i>
-                            <input type="tel" 
-                                   x-model="customerPhone" 
-                                   class="cart-input" 
-                                   :required="orderType === 'delivery' || orderType === 'takeaway'"
-                                   :placeholder="(orderType === 'delivery' || orderType === 'takeaway') ? '* ' + '{{ __('menu.phone_placeholder') }}' : '{{ __('menu.phone_placeholder') }}'">
+                        <!-- Phone with Country Flag & Strict Digit Validation -->
+                        <div class="cart-phone-field-wrapper">
+                            <div class="cart-phone-input-box" :class="{ 'has-error': phoneErrorMsg, 'is-valid': isPhoneValid() && phoneCleanDigits.length > 0 }">
+                                <!-- Country Selector Pill -->
+                                <button type="button" 
+                                        @click="showPhoneCountryDropdown = !showPhoneCountryDropdown" 
+                                        class="cart-phone-country-btn"
+                                        title="{{ __('menu.phone_country') ?? 'Երկիր' }}">
+                                    <span class="cart-flag-icon" x-text="selectedPhoneCountry.flag"></span>
+                                    <span class="cart-dial-code" x-text="selectedPhoneCountry.dial"></span>
+                                    <i class="fa-solid fa-chevron-down cart-country-caret" :class="{ 'is-open': showPhoneCountryDropdown }"></i>
+                                </button>
+
+                                <!-- National Number Input -->
+                                <input type="tel" 
+                                       id="cartCustomerPhoneInput"
+                                       x-model="phoneNationalNumber" 
+                                       @input="onPhoneInput($event)"
+                                       @blur="validatePhoneOnBlur()"
+                                       class="cart-phone-native-input" 
+                                       :placeholder="(orderType === 'delivery' || orderType === 'takeaway') ? ('* ' + selectedPhoneCountry.placeholder) : selectedPhoneCountry.placeholder"
+                                       :required="orderType === 'delivery' || orderType === 'takeaway'">
+
+                                <!-- Live Digit Counter / Checkmark Status -->
+                                <div class="cart-phone-status-indicator">
+                                    <template x-if="isPhoneValid() && phoneCleanDigits.length > 0">
+                                        <span class="cart-status-badge is-valid" title="Համարը վավեր է">
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        </span>
+                                    </template>
+                                    <template x-if="phoneCleanDigits.length > 0 && !isPhoneValid()">
+                                        <span class="cart-status-badge is-incomplete" :title="'Պահանջվում է ' + (selectedPhoneCountry.digits || '7-15') + ' նիշ'">
+                                            <span x-text="phoneCleanDigits.length + '/' + (selectedPhoneCountry.digits || '10')"></span>
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Country Selection Dropdown Popup -->
+                            <div x-show="showPhoneCountryDropdown" 
+                                 @click.outside="showPhoneCountryDropdown = false"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 transform scale-95 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 transform scale-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform scale-95 -translate-y-1"
+                                 class="cart-country-dropdown"
+                                 style="display: none;">
+                                <template x-for="item in phoneCountries" :key="item.code">
+                                    <button type="button" 
+                                            @click="selectPhoneCountry(item.code)" 
+                                            class="cart-country-item"
+                                            :class="{ 'is-selected': phoneCountryCode === item.code }">
+                                        <span class="cart-item-flag" x-text="item.flag"></span>
+                                        <span class="cart-item-name" x-text="item.name"></span>
+                                        <span class="cart-item-dial" x-text="item.dial"></span>
+                                        <span class="cart-item-digits" x-show="item.digits" x-text="'(' + item.digits + ' նիշ)'"></span>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Phone Error Message -->
+                            <template x-if="phoneErrorMsg">
+                                <div class="cart-input-feedback-msg is-error">
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                    <span x-text="phoneErrorMsg"></span>
+                                </div>
+                            </template>
                         </div>
 
-                        <!-- Email & Birthdate -->
-                        <div class="cart-input-field-wrap">
+                        <!-- Email with Live Validation -->
+                        <div class="cart-input-field-wrap" style="position: relative;">
                             <i class="fa-regular fa-envelope cart-input-prefix-icon"></i>
                             <input type="email" 
+                                   id="cartCustomerEmailInput"
                                    x-model="customerEmail" 
+                                   @input="onEmailInput($event)"
+                                   @blur="validateEmailOnBlur()"
                                    class="cart-input" 
+                                   :class="{ 'has-error': emailErrorMsg, 'is-valid': isEmailValid() && customerEmail.trim().length > 0 }"
                                    placeholder="{{ __('menu.email_placeholder') }}">
+                            
+                            <!-- Email Status Indicator -->
+                            <div class="cart-email-status-indicator" style="position: absolute; right: 0.85rem; display: flex; align-items: center; pointer-events: none;">
+                                <template x-if="isEmailValid() && customerEmail.trim().length > 0">
+                                    <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 0.95rem;"></i>
+                                </template>
+                                <template x-if="!isEmailValid() && customerEmail.trim().length > 0">
+                                    <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; font-size: 0.95rem;"></i>
+                                </template>
+                            </div>
+
+                            <!-- Email Error Message -->
+                            <template x-if="emailErrorMsg">
+                                <div class="cart-input-feedback-msg is-error" style="position: absolute; top: calc(100% + 2px); left: 0;">
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                    <span x-text="emailErrorMsg"></span>
+                                </div>
+                            </template>
                         </div>
 
                         <div class="cart-input-field-wrap">
@@ -1519,6 +1603,213 @@
     .cart-input:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+    .cart-input.has-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+    }
+    .cart-input.is-valid {
+        border-color: #10b981;
+    }
+
+    /* Phone Input Container & Country Picker */
+    .cart-phone-field-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .cart-phone-input-box {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+    }
+
+    .cart-phone-input-box:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+
+    .cart-phone-input-box.has-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+    }
+
+    .cart-phone-input-box.is-valid {
+        border-color: #10b981;
+    }
+
+    .cart-phone-country-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.72rem 0.65rem 0.72rem 0.85rem;
+        background: color-mix(in srgb, var(--text-main) 6%, transparent);
+        border: none;
+        border-right: 1px solid var(--border-color);
+        border-top-left-radius: 11px;
+        border-bottom-left-radius: 11px;
+        color: var(--text-main);
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+        transition: background 0.15s;
+        flex-shrink: 0;
+    }
+
+    .cart-phone-country-btn:hover {
+        background: color-mix(in srgb, var(--text-main) 12%, transparent);
+    }
+
+    .cart-flag-icon {
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+
+    .cart-dial-code {
+        font-family: inherit;
+        font-size: 0.88rem;
+        letter-spacing: -0.2px;
+    }
+
+    .cart-country-caret {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        transition: transform 0.2s ease;
+    }
+
+    .cart-country-caret.is-open {
+        transform: rotate(180deg);
+    }
+
+    .cart-phone-native-input {
+        flex: 1;
+        min-width: 0;
+        padding: 0.72rem 0.65rem;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-main);
+        font-size: 0.92rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        box-sizing: border-box;
+    }
+
+    .cart-phone-native-input::placeholder {
+        color: var(--text-muted);
+        font-weight: 400;
+        font-size: 0.84rem;
+    }
+
+    .cart-phone-status-indicator {
+        padding-right: 0.75rem;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .cart-status-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.18rem 0.45rem;
+        border-radius: 6px;
+        line-height: 1.2;
+    }
+
+    .cart-status-badge.is-incomplete {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .cart-status-badge.is-valid {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        font-size: 0.95rem;
+        padding: 0.1rem 0.25rem;
+    }
+
+    /* Country Dropdown Popup */
+    .cart-country-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        width: 100%;
+        max-width: 320px;
+        max-height: 240px;
+        overflow-y: auto;
+        background: var(--bg-card, #1c1c1e);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        padding: 0.35rem;
+        backdrop-filter: blur(12px);
+    }
+
+    .cart-country-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: none;
+        background: transparent;
+        color: var(--text-main);
+        font-size: 0.85rem;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s;
+        box-sizing: border-box;
+    }
+
+    .cart-country-item:hover, .cart-country-item.is-selected {
+        background: color-mix(in srgb, var(--primary) 18%, transparent);
+        color: var(--text-main);
+    }
+
+    .cart-item-flag {
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+
+    .cart-item-name {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .cart-item-dial {
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 0.82rem;
+    }
+
+    .cart-item-digits {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+    }
+
+    /* Feedback error text */
+    .cart-input-feedback-msg {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        margin-top: 0.35rem;
+        padding-left: 0.3rem;
+    }
+
+    .cart-input-feedback-msg.is-error {
+        color: #ef4444;
+        font-weight: 500;
     }
 
     /* Table Input */

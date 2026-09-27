@@ -81,6 +81,9 @@
             'order_submitted_suffix' => __('menu.order_submitted_suffix'),
             'order_number_label' => __('menu.order_number_label'),
             'wifi_copied' => __('menu.wifi_copied'),
+            'invalid_phone_format' => __('menu.invalid_phone_format'),
+            'invalid_email_format' => __('menu.invalid_email_format'),
+            'phone_country' => __('menu.phone_country'),
         ],
     ];
 @endphp

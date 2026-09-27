@@ -135,4 +135,8 @@ return [
     'active_order_notice_title' => 'Adding to Current Order',
     'active_order_notice_desc' => 'These items will be added to your current open order, and total will be recalculated.',
     'items_appended_toast' => 'Additional items have been added to your order',
+    'invalid_phone_format' => 'Please enter a valid phone number',
+    'invalid_email_format' => 'Please enter a valid email address (e.g. name@example.com)',
+    'phone_country' => 'Country',
+    'phone_digits_required' => 'Phone number must have exactly :count digits',
 ];

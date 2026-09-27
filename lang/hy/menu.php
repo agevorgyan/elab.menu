@@ -135,4 +135,8 @@ return [
     'active_order_notice_title' => 'Ավելացում ընթացիկ պատվերին',
     'active_order_notice_desc' => 'Այս ուտեստները կավելացվեն Ձեր ընթացիկ բաց պատվերին, և գումարը կվերահաշվարկվի։',
     'items_appended_toast' => 'Հավելյալ ուտեստներն ավելացվեցին Ձեր պատվերին',
+    'invalid_phone_format' => 'Խնդրում ենք մուտքագրել ճիշտ հեռախոսահամար',
+    'invalid_email_format' => 'Խնդրում ենք մուտքագրել վավեր էլ․ հասցե (օրինակ՝ name@example.com)',
+    'phone_country' => 'Երկիր',
+    'phone_digits_required' => 'Հեռախոսահամարը պետք է ունենա ճիշտ :count նիշ',
 ];

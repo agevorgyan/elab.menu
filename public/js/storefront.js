@@ -59,9 +59,32 @@
             orderPollInterval: null,
             orderDismissTimeout: null,
             wifiCopied: false,
+            phoneCountryCode: 'AM',
+            phoneNationalNumber: '',
+            showPhoneCountryDropdown: false,
+            phoneErrorMsg: '',
+            emailErrorMsg: '',
             customerName: '',
-            customerPhone: '',
+            customerPhone: customConfig.customerPhone || '',
+            customerEmail: customConfig.customerEmail || '',
             customerBirthdate: '',
+            phoneCountries: [
+                { code: 'AM', flag: '🇦🇲', dial: '+374', digits: 8, name: 'Հայաստան', placeholder: '94 123456' },
+                { code: 'RU', flag: '🇷🇺', dial: '+7', digits: 10, name: 'Россия', placeholder: '999 123-45-67' },
+                { code: 'GE', flag: '🇬🇪', dial: '+995', digits: 9, name: 'საქართველո', placeholder: '599 12-34-56' },
+                { code: 'US', flag: '🇺🇸', dial: '+1', digits: 10, name: 'USA / Canada', placeholder: '555 123-4567' },
+                { code: 'FR', flag: '🇫🇷', dial: '+33', digits: 9, name: 'France', placeholder: '6 12 34 56 78' },
+                { code: 'DE', flag: '🇩🇪', dial: '+49', digits: 10, minDigits: 10, maxDigits: 11, name: 'Deutschland', placeholder: '170 1234567' },
+                { code: 'AE', flag: '🇦🇪', dial: '+971', digits: 9, name: 'UAE', placeholder: '50 123 4567' },
+                { code: 'IR', flag: '🇮🇷', dial: '+98', digits: 10, name: 'Iran', placeholder: '912 123 4567' },
+                { code: 'OTHER', flag: '🌐', dial: '+', digits: null, minDigits: 7, maxDigits: 15, name: 'Այլ երկիր', placeholder: '123456789' }
+            ],
+            get selectedPhoneCountry() {
+                return this.phoneCountries.find(c => c.code === this.phoneCountryCode) || this.phoneCountries[0];
+            },
+            get phoneCleanDigits() {
+                return (this.phoneNationalNumber || '').replace(/\D/g, '');
+            },
             paymentMethod: settings.paymentMethod || 'cash',
             birthdayDiscountPercent: Number(settings.birthdayDiscountPercent || 15),
             birthdayDiscountEnabled: !!settings.birthdayDiscountEnabled,
@@ -147,6 +170,10 @@
                 this.$nextTick(() => {
                     this.initScrollSpy();
                 });
+                if (this.customerPhone) {
+                    this.phoneNationalNumber = this.customerPhone;
+                    this.onPhoneInput();
+                }
             },
 
             triggerToast(message, type = 'success', icon = null) {
@@ -481,7 +508,10 @@
                         return;
                     }
                     if (!this.customerPhone || !this.customerPhone.trim()) {
-                        this.triggerToast(translations.takeaway_phone_required || 'Հեռախոսահամարը պարտադիր է', 'remove', 'fa-solid fa-phone');
+                        this.phoneErrorMsg = translations.takeaway_phone_required || 'Հեռախոսահամարը պարտադիր է';
+                        this.triggerToast(this.phoneErrorMsg, 'remove', 'fa-solid fa-phone');
+                        const el = document.getElementById('cartCustomerPhoneInput');
+                        if (el) el.focus();
                         return;
                     }
                 }
@@ -499,9 +529,39 @@
                         return;
                     }
                     if (!this.customerPhone || !this.customerPhone.trim()) {
-                        this.triggerToast(translations.delivery_phone_required || 'Հեռախոսահամարը պարտադիր է', 'remove', 'fa-solid fa-phone');
+                        this.phoneErrorMsg = translations.delivery_phone_required || 'Հեռախոսահամարը պարտադիր է';
+                        this.triggerToast(this.phoneErrorMsg, 'remove', 'fa-solid fa-phone');
+                        const el = document.getElementById('cartCustomerPhoneInput');
+                        if (el) el.focus();
                         return;
                     }
+                }
+
+                // Strict Phone Digits Validation
+                const phoneDigits = this.phoneCleanDigits;
+                if (phoneDigits && !this.isPhoneValid()) {
+                    const country = this.selectedPhoneCountry;
+                    let msg = translations.invalid_phone_format || 'Խնդրում ենք մուտքագրել ճիշտ հեռախոսահամար';
+                    if (country.digits && phoneDigits.length < country.digits) {
+                        msg = `Հեռախոսահամարը թերի է։ Պակասում է ${country.digits - phoneDigits.length} նիշ (${phoneDigits.length}/${country.digits})`;
+                    } else if (country.digits && phoneDigits.length > country.digits) {
+                        msg = `Հեռախոսահամարը պետք է ունենա ճիշտ ${country.digits} նիշ`;
+                    }
+                    this.phoneErrorMsg = msg;
+                    this.triggerToast(msg, 'remove', 'fa-solid fa-phone-slash');
+                    const el = document.getElementById('cartCustomerPhoneInput');
+                    if (el) el.focus();
+                    return;
+                }
+
+                // Strict Email Format Validation
+                if (this.customerEmail && !this.isEmailValid()) {
+                    const msg = translations.invalid_email_format || 'Խնդրում ենք մուտքագրել վավեր էլ․ հասցե (օրինակ՝ name@example.com)';
+                    this.emailErrorMsg = msg;
+                    this.triggerToast(msg, 'remove', 'fa-solid fa-envelope-circle-check');
+                    const el = document.getElementById('cartCustomerEmailInput');
+                    if (el) el.focus();
+                    return;
                 }
 
                 try {
@@ -1363,6 +1423,201 @@
 
             async fetchAiRecommendations() {
                 await this.fetchPersonalizedRecommendations();
+            },
+
+            selectPhoneCountry(code) {
+                this.phoneCountryCode = code;
+                this.showPhoneCountryDropdown = false;
+                this.phoneErrorMsg = '';
+                this.onPhoneInput();
+            },
+
+            onPhoneInput(event) {
+                let raw = this.phoneNationalNumber || '';
+                
+                // Auto-detect country if user pasted a full international number with +
+                if (raw.trim().startsWith('+')) {
+                    const cleanPlus = raw.trim().replace(/[^\d+]/g, '');
+                    if (cleanPlus.startsWith('+374')) {
+                        this.phoneCountryCode = 'AM';
+                        raw = cleanPlus.slice(4);
+                    } else if (cleanPlus.startsWith('+7')) {
+                        this.phoneCountryCode = 'RU';
+                        raw = cleanPlus.slice(2);
+                    } else if (cleanPlus.startsWith('+995')) {
+                        this.phoneCountryCode = 'GE';
+                        raw = cleanPlus.slice(4);
+                    } else if (cleanPlus.startsWith('+1')) {
+                        this.phoneCountryCode = 'US';
+                        raw = cleanPlus.slice(2);
+                    } else if (cleanPlus.startsWith('+33')) {
+                        this.phoneCountryCode = 'FR';
+                        raw = cleanPlus.slice(3);
+                    } else if (cleanPlus.startsWith('+49')) {
+                        this.phoneCountryCode = 'DE';
+                        raw = cleanPlus.slice(3);
+                    } else if (cleanPlus.startsWith('+971')) {
+                        this.phoneCountryCode = 'AE';
+                        raw = cleanPlus.slice(4);
+                    } else if (cleanPlus.startsWith('+98')) {
+                        this.phoneCountryCode = 'IR';
+                        raw = cleanPlus.slice(3);
+                    }
+                }
+
+                let digits = raw.replace(/\D/g, '');
+                const country = this.selectedPhoneCountry;
+
+                // Special handling for local trunk prefixes
+                if (country.code === 'AM') {
+                    if (digits.startsWith('0')) {
+                        digits = digits.slice(1);
+                    }
+                    if (digits.length > 8) {
+                        digits = digits.slice(0, 8);
+                    }
+                } else if (country.code === 'RU') {
+                    if (digits.startsWith('8') && digits.length > 10) {
+                        digits = digits.slice(1);
+                    }
+                    if (digits.length > 10) {
+                        digits = digits.slice(0, 10);
+                    }
+                } else if (country.code === 'GE') {
+                    if (digits.length > 9) digits = digits.slice(0, 9);
+                } else if (country.code === 'US') {
+                    if (digits.length > 10) digits = digits.slice(0, 10);
+                } else if (country.code === 'FR') {
+                    if (digits.startsWith('0')) digits = digits.slice(1);
+                    if (digits.length > 9) digits = digits.slice(0, 9);
+                } else if (country.code === 'DE') {
+                    if (digits.startsWith('0')) digits = digits.slice(1);
+                    if (digits.length > 11) digits = digits.slice(0, 11);
+                } else if (country.code === 'AE') {
+                    if (digits.startsWith('0')) digits = digits.slice(1);
+                    if (digits.length > 9) digits = digits.slice(0, 9);
+                } else if (country.code === 'IR') {
+                    if (digits.startsWith('0')) digits = digits.slice(1);
+                    if (digits.length > 10) digits = digits.slice(0, 10);
+                } else {
+                    if (digits.length > 15) digits = digits.slice(0, 15);
+                }
+
+                // Format display according to country
+                let formatted = digits;
+                if (country.code === 'AM') {
+                    if (digits.length > 4) {
+                        formatted = digits.slice(0, 2) + ' ' + digits.slice(2, 5) + (digits.length > 5 ? ' ' + digits.slice(5) : '');
+                    } else if (digits.length > 2) {
+                        formatted = digits.slice(0, 2) + ' ' + digits.slice(2);
+                    }
+                } else if (country.code === 'RU') {
+                    if (digits.length > 7) {
+                        formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6, 8) + '-' + digits.slice(8);
+                    } else if (digits.length > 4) {
+                        formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+                    } else if (digits.length > 3) {
+                        formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+                    } else if (digits.length > 0) {
+                        formatted = '(' + digits;
+                    }
+                } else if (country.code === 'US') {
+                    if (digits.length > 6) {
+                        formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+                    } else if (digits.length > 3) {
+                        formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+                    } else if (digits.length > 0) {
+                        formatted = '(' + digits;
+                    }
+                } else if (country.code === 'GE') {
+                    if (digits.length > 5) {
+                        formatted = digits.slice(0, 3) + ' ' + digits.slice(3, 5) + '-' + digits.slice(5, 7) + (digits.length > 7 ? '-' + digits.slice(7) : '');
+                    } else if (digits.length > 3) {
+                        formatted = digits.slice(0, 3) + ' ' + digits.slice(3);
+                    }
+                }
+
+                this.phoneNationalNumber = formatted;
+                this.customerPhone = digits.length > 0 ? (country.dial + digits) : '';
+
+                if (this.isPhoneValid()) {
+                    this.phoneErrorMsg = '';
+                }
+            },
+
+            validatePhoneOnBlur() {
+                const digits = this.phoneCleanDigits;
+                const isRequired = (this.orderType === 'delivery' || this.orderType === 'takeaway');
+                if (!digits) {
+                    if (isRequired) {
+                        this.phoneErrorMsg = (this.orderType === 'delivery' ? translations.delivery_phone_required : translations.takeaway_phone_required) || 'Հեռախոսահամարը պարտադիր է';
+                    } else {
+                        this.phoneErrorMsg = '';
+                    }
+                    return;
+                }
+                const country = this.selectedPhoneCountry;
+                if (country.digits && digits.length !== country.digits) {
+                    if (digits.length < country.digits) {
+                        this.phoneErrorMsg = `Պակասում է ${country.digits - digits.length} նիշ (${digits.length}/${country.digits})`;
+                    } else {
+                        this.phoneErrorMsg = `Հեռախոսահամարը պետք է ունենա ճիշտ ${country.digits} նիշ`;
+                    }
+                } else if (!country.digits && (digits.length < (country.minDigits || 7) || digits.length > (country.maxDigits || 15))) {
+                    this.phoneErrorMsg = translations.invalid_phone_format || 'Անվավեր հեռախոսահամար';
+                } else {
+                    this.phoneErrorMsg = '';
+                }
+            },
+
+            isPhoneValid() {
+                const digits = this.phoneCleanDigits;
+                const isRequired = (this.orderType === 'delivery' || this.orderType === 'takeaway');
+                if (!digits) {
+                    return !isRequired;
+                }
+                const country = this.selectedPhoneCountry;
+                if (country.digits) {
+                    return digits.length === country.digits;
+                }
+                const min = country.minDigits || 7;
+                const max = country.maxDigits || 15;
+                return digits.length >= min && digits.length <= max;
+            },
+
+            onEmailInput() {
+                if (this.isEmailValid()) {
+                    this.emailErrorMsg = '';
+                }
+            },
+
+            validateEmailOnBlur() {
+                const email = (this.customerEmail || '').trim();
+                if (!email) {
+                    this.emailErrorMsg = '';
+                    return;
+                }
+                if (!this.isEmailValid()) {
+                    this.emailErrorMsg = translations.invalid_email_format || 'Խնդրում ենք մուտքագրել վավեր էլ․ հասցե (օրինակ՝ name@example.com)';
+                } else {
+                    this.emailErrorMsg = '';
+                }
+            },
+
+            isEmailValid() {
+                const email = (this.customerEmail || '').trim();
+                if (!email) {
+                    return true;
+                }
+                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+                if (!emailRegex.test(email)) return false;
+                const parts = email.split('@');
+                if (parts.length !== 2) return false;
+                const domain = parts[1];
+                if (!domain.includes('.')) return false;
+                const tld = domain.split('.').pop();
+                if (!tld || tld.length < 2) return false;
+                return true;
             }
         };
     }

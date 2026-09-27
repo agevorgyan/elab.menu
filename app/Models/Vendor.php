@@ -619,6 +619,37 @@ class Vendor extends Model
                 }
             }
         });
+
+        static::saved(function (Vendor $vendor): void {
+            if ($vendor->isDirty('custom_domain')) {
+                if (! empty($vendor->custom_domain)) {
+                    try {
+                        $clean = CustomDomain::normalize($vendor->custom_domain);
+                        $cd = CustomDomain::withoutGlobalScopes()->where('normalized_domain', $clean)->first();
+                        if (! $cd) {
+                            CustomDomain::withoutGlobalScopes()->where('vendor_id', $vendor->id)->update(['is_primary' => false]);
+                            CustomDomain::create([
+                                'vendor_id' => $vendor->id,
+                                'domain' => $vendor->custom_domain,
+                                'normalized_domain' => $clean,
+                                'is_primary' => true,
+                                'verification_token' => CustomDomain::generateVerificationToken(),
+                                'verification_method' => CustomDomain::METHOD_DNS_TXT,
+                                'verified_at' => now(),
+                                'dns_status' => CustomDomain::DNS_DETECTED,
+                                'dns_detected_at' => now(),
+                                'ssl_status' => CustomDomain::SSL_ACTIVE,
+                                'status' => CustomDomain::STATUS_ACTIVE,
+                            ]);
+                        } elseif ((int) $cd->vendor_id === (int) $vendor->id && ! $cd->is_primary) {
+                            $cd->makePrimary();
+                        }
+                    } catch (\Throwable $e) {
+                        // Ignore normalization errors during legacy model attribute sync
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -860,6 +891,51 @@ class Vendor extends Model
     }
 
     /**
+     * Custom domains associated with this vendor.
+     */
+    public function customDomains(): HasMany
+    {
+        return $this->hasMany(CustomDomain::class);
+    }
+
+    /**
+     * Primary custom domain for this vendor.
+     */
+    public function primaryCustomDomain(): HasOne
+    {
+        return $this->hasOne(CustomDomain::class)->where('is_primary', true);
+    }
+
+    /**
+     * Active verified custom domains for this vendor.
+     */
+    public function activeCustomDomains(): HasMany
+    {
+        return $this->hasMany(CustomDomain::class)->where('status', CustomDomain::STATUS_ACTIVE);
+    }
+
+    /**
+     * Mutator to normalize custom_domain attribute on assignment.
+     */
+    public function setCustomDomainAttribute($value): void
+    {
+        if (empty($value) || trim($value) === '') {
+            $this->attributes['custom_domain'] = null;
+
+            return;
+        }
+
+        try {
+            $this->attributes['custom_domain'] = CustomDomain::normalize($value);
+        } catch (\Throwable $e) {
+            $domain = preg_replace('#^https?://#i', '', trim($value));
+            $domain = explode('/', $domain)[0];
+            $domain = explode(':', $domain)[0];
+            $this->attributes['custom_domain'] = strtolower(trim($domain));
+        }
+    }
+
+    /**
      * Check if vendor has a valid custom domain configured.
      */
     public function hasCustomDomain(): bool
@@ -876,10 +952,14 @@ class Vendor extends Model
             return null;
         }
 
-        $domain = preg_replace('#^https?://#i', '', trim($this->custom_domain));
-        $domain = explode('/', $domain)[0];
+        try {
+            return CustomDomain::normalize($this->custom_domain);
+        } catch (\Throwable $e) {
+            $domain = preg_replace('#^https?://#i', '', trim($this->custom_domain));
+            $domain = explode('/', $domain)[0];
 
-        return strtolower(trim($domain));
+            return strtolower(trim($domain));
+        }
     }
 
     /**

@@ -247,9 +247,24 @@
                         </div>
                     </div>
 
-                    @if($vendor->hasCustomDomain())
+                    @php
+                        $primaryDomain = $vendor->primaryCustomDomain;
+                    @endphp
+                    @if($primaryDomain && $primaryDomain->isActive())
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
                             <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ Կցված է') }}
+                        </span>
+                    @elseif($primaryDomain && $primaryDomain->isVerified())
+                        <span style="font-size: 0.78rem; font-weight: 700; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-shield-halved"></i> {{ __('Սեփականությունը հաստատված է (DNS-ի սպասում)') }}
+                        </span>
+                    @elseif($primaryDomain && $primaryDomain->isDnsDetected())
+                        <span style="font-size: 0.78rem; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-bolt"></i> {{ __('DNS-ը գտնված է (Հաստատման սպասում)') }}
+                        </span>
+                    @elseif($vendor->hasCustomDomain())
+                        <span style="font-size: 0.78rem; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-hourglass-half"></i> {{ __('Սպասում է կարգավորման') }}
                         </span>
                     @else
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
@@ -272,7 +287,10 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <button type="button" id="btnVerifyDomain" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; border-color: rgba(16, 185, 129, 0.4); color: #10b981; white-space: nowrap;">
+                                <i class="fa-solid fa-shield-check"></i> {{ __('Հաստատել Սեփականությունը') }}
+                            </button>
                             <button type="button" id="btnCheckDomainDns" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; border-color: rgba(6, 182, 212, 0.4); color: #06b6d4; white-space: nowrap;">
                                 <i class="fa-solid fa-bolt"></i> {{ __('Ստուգել DNS') }}
                             </button>
@@ -283,8 +301,32 @@
                         {{ __('Մուտքագրեք դոմենն առանց http:// կամ https://-ի (օր.՝ menu.restaurant.am): Դատարկ թողնելու դեպքում սեփական դոմենը կանջատվի:') }}
                     </span>
 
-                    <!-- Live Check Result Alert Box -->
+                    <!-- Live Check / Verification Result Alert Box -->
                     <div id="dnsCheckResultBox" style="display: none; margin-top: 1rem; padding: 0.85rem 1.1rem; border-radius: 12px; font-size: 0.86rem; font-weight: 600;"></div>
+
+                    @if($primaryDomain)
+                        <!-- TXT Challenge Info Box -->
+                        <div style="margin-top: 1rem; padding: 0.9rem 1.1rem; border-radius: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.84rem;">
+                            <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.45rem; display: flex; align-items: center; justify-content: space-between;">
+                                <span><i class="fa-solid fa-key"></i> {{ __('Սեփականության հաստատման DNS TXT Գրառում') }}</span>
+                                @if($primaryDomain->isVerified())
+                                    <span style="color: #10b981; font-size: 0.76rem;"><i class="fa-solid fa-circle-check"></i> {{ __('Հաստատված է') }} ({{ $primaryDomain->verified_at?->format('d.m.Y H:i') }})</span>
+                                @else
+                                    <span style="color: #f59e0b; font-size: 0.76rem;"><i class="fa-solid fa-clock"></i> {{ __('Սպասում է TXT գրառմանը') }}</span>
+                                @endif
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 0.4rem; font-family: monospace; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 0.35rem 0.6rem; border-radius: 6px;">
+                                    <span style="color: var(--text-muted);">Host/Name: <strong style="color: var(--text-main);">{{ $primaryDomain->getChallengeHost() }}</strong></span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $primaryDomain->getChallengeHost() }}'); alert('Host-ը պատճենվեց');" style="background: none; border: none; color: #38bdf8; cursor: pointer;" title="Պատճենել"><i class="fa-solid fa-copy"></i></button>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 0.35rem 0.6rem; border-radius: 6px;">
+                                    <span style="color: var(--text-muted); word-break: break-all;">TXT Value: <strong style="color: #a5f3fc;">{{ $primaryDomain->verification_token }}</strong></span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $primaryDomain->verification_token }}'); alert('Թոքենը պատճենվեց');" style="background: none; border: none; color: #38bdf8; cursor: pointer;" title="Պատճենել"><i class="fa-solid fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <!-- Action Links if domain exists -->
                     @if($vendor->hasCustomDomain())
@@ -306,10 +348,23 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; font-size: 0.84rem; color: var(--text-muted);">
-                        <!-- Step 1: DNS -->
+                        <!-- Step 1: TXT Verification -->
                         <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
-                                1. DNS Կարգավորում (Cloudflare, Reg.am, etc.)
+                                1. Սեփականության Հաստատում (TXT Record)
+                            </div>
+                            <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
+                                Ավելացրեք <strong>TXT Record</strong> ձեր դոմենի DNS-ում վերը նշված Host-ով և Value-ով, ապա սեղմեք <strong>«Հաստատել Սեփականությունը»</strong>:
+                            </p>
+                            <div style="font-size: 0.78rem; color: #a5f3fc;">
+                                <i class="fa-solid fa-lock"></i> Սա երաշխավորում է, որ միայն դոմենի իրական տերը կարող է այն կցել իր ռեստորանին:
+                            </div>
+                        </div>
+
+                        <!-- Step 2: DNS Routing -->
+                        <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+                                2. DNS Ուղղորդում (A կամ CNAME)
                             </div>
                             <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
                                 Ավելացրեք <strong>A Record</strong> ձեր դոմենի DNS-ում՝
@@ -325,13 +380,13 @@
                             </div>
                         </div>
 
-                        <!-- Step 2: cPanel -->
+                        <!-- Step 3: cPanel / SSL -->
                         <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
-                                2. cPanel &rarr; Domains
+                                3. cPanel & SSL Սերտիֆիկատ
                             </div>
                             <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
-                                cPanel-ում ստեղծեք նոր Domain/Alias և <strong>Document Root</strong>-ը նշեք նույնը (օր.՝ <code>menu.elab.am/public</code> կամ <code>public_html/menu.elab.am/public</code>)։
+                                cPanel-ում ստեղծեք նոր Domain/Alias՝ Document Root-ը նշելով նույնը (օր.՝ <code>menu.elab.am/public</code>)։
                             </p>
                             <div style="font-size: 0.78rem; color: #a5f3fc;">
                                 <i class="fa-solid fa-shield"></i> cPanel-ի <strong>SSL/TLS Status</strong>-ում գործարկեք <strong>AutoSSL</strong>՝ անվճար HTTPS սերտիֆիկատի համար։
@@ -1738,9 +1793,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const btnVerifyDomain = document.getElementById('btnVerifyDomain');
     const btnCheckDomainDns = document.getElementById('btnCheckDomainDns');
     const customDomainInput = document.getElementById('customDomainInput');
     const dnsCheckResultBox = document.getElementById('dnsCheckResultBox');
+
+    if (btnVerifyDomain && customDomainInput && dnsCheckResultBox) {
+        btnVerifyDomain.addEventListener('click', async () => {
+            const domain = customDomainInput.value.trim();
+            if (!domain) {
+                dnsCheckResultBox.style.display = 'block';
+                dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                dnsCheckResultBox.style.color = '#ef4444';
+                dnsCheckResultBox.textContent = 'Խնդրում ենք մուտքագրել դոմենի հասցեն:';
+                return;
+            }
+
+            btnVerifyDomain.disabled = true;
+            btnVerifyDomain.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Հաստատում...';
+
+            try {
+                const res = await fetch('{{ route("admin.settings.domain.verify") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ domain }),
+                });
+
+                const data = await res.json();
+                dnsCheckResultBox.style.display = 'block';
+
+                if (data.verified) {
+                    dnsCheckResultBox.style.background = 'rgba(16, 185, 129, 0.15)';
+                    dnsCheckResultBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    dnsCheckResultBox.style.color = '#10b981';
+                } else {
+                    dnsCheckResultBox.style.background = 'rgba(245, 158, 11, 0.15)';
+                    dnsCheckResultBox.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+                    dnsCheckResultBox.style.color = '#f59e0b';
+                }
+                dnsCheckResultBox.textContent = data.message;
+            } catch (err) {
+                dnsCheckResultBox.style.display = 'block';
+                dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                dnsCheckResultBox.style.color = '#ef4444';
+                dnsCheckResultBox.textContent = 'Ստուգման ժամանակ սխալ տեղի ունեցավ: Կրկին փորձեք:';
+            } finally {
+                btnVerifyDomain.disabled = false;
+                btnVerifyDomain.innerHTML = '<i class="fa-solid fa-shield-check"></i> {{ __("Հաստատել Սեփականությունը") }}';
+            }
+        });
+    }
 
     if (btnCheckDomainDns && customDomainInput && dnsCheckResultBox) {
         btnCheckDomainDns.addEventListener('click', async () => {

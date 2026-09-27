@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\AiWaiterSession;
 use App\Models\Category;
+use App\Models\CustomDomain;
 use App\Models\Location;
 use App\Models\Product;
 use App\Models\Vendor;
 use App\Services\AiGatewayService;
 use App\Services\CredentialService;
+use App\Services\CustomDomainService;
 use App\Services\TelegramNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class VendorSettingsController extends Controller
@@ -190,48 +193,17 @@ class VendorSettingsController extends Controller
             $rawDomain = $request->input('custom_domain');
             if (empty($rawDomain) || trim($rawDomain) === '') {
                 $vendorUpdate['custom_domain'] = null;
+                $vendor->customDomains()->delete();
             } else {
-                $cleanDomain = preg_replace('#^https?://#i', '', trim($rawDomain));
-                $cleanDomain = explode('/', $cleanDomain)[0];
-                $cleanDomain = explode(':', $cleanDomain)[0];
-                $cleanDomain = strtolower(trim($cleanDomain));
-
-                $forbiddenHosts = [
-                    'menu.elab.am',
-                    'elab.am',
-                    'localhost',
-                    '127.0.0.1',
-                    'qrmenu.local',
-                ];
-                $mainHost = strtolower(parse_url(config('app.url', 'https://menu.elab.am'), PHP_URL_HOST) ?? '');
-                if ($mainHost) {
-                    $forbiddenHosts[] = $mainHost;
+                try {
+                    $domainService = app(CustomDomainService::class);
+                    $customDomain = $domainService->registerDomain($vendor, $rawDomain, isPrimary: true);
+                    $vendorUpdate['custom_domain'] = $customDomain->normalized_domain;
+                } catch (ValidationException $e) {
+                    return back()->withErrors($e->errors())->withInput();
+                } catch (\InvalidArgumentException $e) {
+                    return back()->withErrors(['custom_domain' => $e->getMessage()])->withInput();
                 }
-
-                if (in_array($cleanDomain, $forbiddenHosts)) {
-                    return back()->withErrors([
-                        'custom_domain' => 'Հիմնական հարթակի դոմենը չի կարող օգտագործվել որպես սեփական դոմեն։',
-                    ])->withInput();
-                }
-
-                if (! preg_match('/^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/', $cleanDomain)) {
-                    return back()->withErrors([
-                        'custom_domain' => 'Դոմենի ձևաչափն անվավեր է (օրինակ՝ menu.restaurant.am կամ restaurant.com):',
-                    ])->withInput();
-                }
-
-                // Check uniqueness across other vendors
-                $existing = Vendor::where('custom_domain', $cleanDomain)
-                    ->where('id', '!=', $vendor->id)
-                    ->exists();
-
-                if ($existing) {
-                    return back()->withErrors([
-                        'custom_domain' => 'Այս դոմենն արդեն օգտագործվում է այլ ռեստորանի կողմից։',
-                    ])->withInput();
-                }
-
-                $vendorUpdate['custom_domain'] = $cleanDomain;
             }
         }
 
@@ -634,10 +606,10 @@ class VendorSettingsController extends Controller
         $vendor = Auth::user()->vendor;
         $this->authorize('manageSettings', $vendor);
         $domain = trim($request->input('domain', ''));
-        $domain = preg_replace('#^https?://#i', '', $domain);
-        $domain = explode('/', $domain)[0];
-        $domain = explode(':', $domain)[0];
-        $domain = strtolower(trim($domain));
+
+        if (empty($domain)) {
+            $domain = (string) $vendor->custom_domain;
+        }
 
         if (empty($domain)) {
             return response()->json([
@@ -646,30 +618,100 @@ class VendorSettingsController extends Controller
             ]);
         }
 
-        $serverIp = $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am');
-        $resolvedIp = @gethostbyname($domain);
-        $isResolved = ($resolvedIp !== $domain && ! empty($resolvedIp));
+        try {
+            $cleanDomain = CustomDomain::normalize($domain);
+        } catch (\Throwable $e) {
+            $cleanDomain = preg_replace('#^https?://#i', '', $domain);
+            $cleanDomain = explode('/', $cleanDomain)[0];
+            $cleanDomain = explode(':', $cleanDomain)[0];
+            $cleanDomain = strtolower(trim($cleanDomain));
+        }
 
-        $records = @dns_get_record($domain, DNS_A + DNS_CNAME) ?: [];
+        $serverIp = $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am');
+        $resolvedIp = @gethostbyname($cleanDomain);
+        $isResolved = ($resolvedIp !== $cleanDomain && ! empty($resolvedIp));
+
+        $records = @dns_get_record($cleanDomain, DNS_A + DNS_CNAME) ?: [];
         $aRecords = collect($records)->where('type', 'A')->pluck('ip')->toArray();
         $cnameRecords = collect($records)->where('type', 'CNAME')->pluck('target')->toArray();
 
         $isPointing = ($resolvedIp === $serverIp)
-            || in_array($serverIp, $aRecords)
-            || in_array('menu.elab.am', $cnameRecords);
+            || in_array($serverIp, $aRecords, true)
+            || in_array('menu.elab.am', $cnameRecords, true);
+
+        // Update CustomDomain entity if present
+        $customDomain = CustomDomain::withoutGlobalScopes()
+            ->where('vendor_id', $vendor->id)
+            ->where('normalized_domain', $cleanDomain)
+            ->first();
+
+        if ($customDomain) {
+            if ($isPointing) {
+                $customDomain->markDnsDetected();
+            } else {
+                $customDomain->update(['dns_status' => CustomDomain::DNS_FAILED, 'last_checked_at' => now()]);
+            }
+        }
 
         return response()->json([
             'success' => true,
-            'domain' => $domain,
+            'domain' => $cleanDomain,
             'server_ip' => $serverIp,
             'resolved_ip' => $isResolved ? $resolvedIp : null,
             'is_pointing' => $isPointing,
+            'dns_status' => $isPointing ? CustomDomain::DNS_DETECTED : CustomDomain::DNS_FAILED,
+            'verification_token' => $customDomain?->verification_token,
+            'is_verified' => $customDomain?->isVerified() ?? false,
+            'status' => $customDomain?->status ?? 'pending',
             'message' => $isPointing
                 ? "✅ Դոմենը հաջողությամբ ուղղված է ձեր սերվերի IP-ին ({$serverIp})։"
                 : ($isResolved
                     ? "⚠️ Դոմենը մատնանշում է այլ IP ({$resolvedIp})։ Փոխեք A-record-ը սերվերի IP-ին՝ {$serverIp}"
                     : "⏳ Դոմենը դեռևս չունի ակտիվ DNS գրառումներ։ Ավելացրեք A-record դեպի {$serverIp} (կամ CNAME դեպի menu.elab.am)։"),
         ]);
+    }
+
+    /**
+     * Verify domain ownership using DNS TXT record challenge.
+     */
+    public function verifyDomainOwnership(Request $request, CustomDomainService $domainService): JsonResponse
+    {
+        $vendor = Auth::user()->vendor;
+        $this->authorize('manageSettings', $vendor);
+
+        $domain = trim($request->input('domain', ''));
+        if (empty($domain)) {
+            $domain = (string) $vendor->custom_domain;
+        }
+
+        if (empty($domain)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Խնդրում ենք նախ մուտքագրել դոմենը։',
+            ], 422);
+        }
+
+        try {
+            $cleanDomain = CustomDomain::normalize($domain);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        $customDomain = CustomDomain::withoutGlobalScopes()
+            ->where('vendor_id', $vendor->id)
+            ->where('normalized_domain', $cleanDomain)
+            ->first();
+
+        if (! $customDomain) {
+            $customDomain = $domainService->registerDomain($vendor, $cleanDomain, isPrimary: true);
+        }
+
+        $result = $domainService->verifyOwnership($customDomain);
+
+        return response()->json($result);
     }
 
     /**

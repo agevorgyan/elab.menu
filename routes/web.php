@@ -244,6 +244,7 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff,chef,cashier', Ensur
     Route::post('/settings', [VendorSettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/telegram/test', [VendorSettingsController::class, 'testTelegramConnection'])->name('settings.telegram.test');
     Route::post('/settings/domain/check', [VendorSettingsController::class, 'checkDomainDns'])->name('settings.domain.check');
+    Route::post('/settings/domain/verify', [VendorSettingsController::class, 'verifyDomainOwnership'])->name('settings.domain.verify');
     Route::get('/settings/ai', [VendorSettingsController::class, 'aiIndex'])->name('settings.ai');
     Route::post('/settings/ai', [VendorSettingsController::class, 'aiUpdate'])->name('settings.ai.update');
     Route::post('/settings/ai/test', [VendorSettingsController::class, 'testAiConnection'])->name('settings.ai.test');

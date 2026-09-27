@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CustomDomain;
 use App\Models\Vendor;
 use App\Services\TenantContext;
 use Closure;
@@ -31,11 +32,40 @@ class IdentifyTenant
 
         if (! $isMainPlatformHost) {
             $cleanHost = preg_replace('/^www\./i', '', $host);
-            $customDomainVendor = Vendor::where(function ($q) use ($host, $cleanHost) {
-                $q->where('custom_domain', $host)
-                    ->orWhere('custom_domain', $cleanHost)
-                    ->orWhere('custom_domain', 'www.'.$cleanHost);
-            })->where('is_active', true)->first();
+
+            // 1. Query CustomDomain entity (only ACTIVE status routes traffic)
+            $customDomain = CustomDomain::withoutGlobalScopes()
+                ->with('vendor')
+                ->where(function ($q) use ($host, $cleanHost) {
+                    $q->where('normalized_domain', $host)
+                        ->orWhere('normalized_domain', $cleanHost)
+                        ->orWhere('normalized_domain', 'www.'.$cleanHost);
+                })
+                ->where('status', CustomDomain::STATUS_ACTIVE)
+                ->first();
+
+            if ($customDomain && $customDomain->vendor && $customDomain->vendor->is_active) {
+                $customDomainVendor = $customDomain->vendor;
+            } else {
+                // If domain exists in custom_domains but is not active (pending/suspended/failed), block routing
+                $inactiveExists = CustomDomain::withoutGlobalScopes()
+                    ->where(function ($q) use ($host, $cleanHost) {
+                        $q->where('normalized_domain', $host)
+                            ->orWhere('normalized_domain', $cleanHost)
+                            ->orWhere('normalized_domain', 'www.'.$cleanHost);
+                    })
+                    ->where('status', '!=', CustomDomain::STATUS_ACTIVE)
+                    ->exists();
+
+                if (! $inactiveExists) {
+                    // Fallback to legacy vendors.custom_domain for backwards compatibility
+                    $customDomainVendor = Vendor::where(function ($q) use ($host, $cleanHost) {
+                        $q->where('custom_domain', $host)
+                            ->orWhere('custom_domain', $cleanHost)
+                            ->orWhere('custom_domain', 'www.'.$cleanHost);
+                    })->where('is_active', true)->first();
+                }
+            }
 
             if ($customDomainVendor) {
                 $this->tenantContext->setTenant($customDomainVendor);

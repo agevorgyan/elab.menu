@@ -69,7 +69,15 @@ class TenantCache
      */
     public static function get(Vendor|string|int $vendor, string $suffix, mixed $default = null): mixed
     {
-        return Cache::get(static::key($vendor, $suffix), $default);
+        $value = Cache::get(static::key($vendor, $suffix), $default);
+
+        if ($value instanceof \__PHP_Incomplete_Class) {
+            static::forget($vendor, $suffix);
+
+            return $default;
+        }
+
+        return $value;
     }
 
     /**
@@ -85,7 +93,21 @@ class TenantCache
      */
     public static function remember(Vendor|string|int $vendor, string $suffix, DateTimeInterface|DateInterval|int|null $ttl, Closure $callback): mixed
     {
-        return Cache::remember(static::key($vendor, $suffix), $ttl, $callback);
+        $key = static::key($vendor, $suffix);
+        $value = Cache::get($key);
+
+        if ($value !== null && ! ($value instanceof \__PHP_Incomplete_Class)) {
+            return $value;
+        }
+
+        if ($value instanceof \__PHP_Incomplete_Class) {
+            Cache::forget($key);
+        }
+
+        $value = $callback();
+        Cache::put($key, $value, $ttl);
+
+        return $value;
     }
 
     /**

@@ -21,6 +21,7 @@ use App\Services\PaymentGatewayService;
 use App\Services\Payments\PaymentVerificationService;
 use App\Services\TenantCache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -85,7 +86,7 @@ class ClientStorefrontController extends Controller
         $locationKey = $location?->id ?? 'all';
         $menuCacheKey = "storefront_menu:v{$menuVersion}:{$locationKey}";
 
-        $categories = TenantCache::remember($vendor, $menuCacheKey, now()->addDay(), function () use ($vendor) {
+        $fetchFreshCategories = function () use ($vendor) {
             return Category::where('vendor_id', $vendor->id)
                 ->where('is_active', true)
                 ->with(['products' => function ($q) {
@@ -95,7 +96,17 @@ class ClientStorefrontController extends Controller
                 }])
                 ->orderBy('sort_order', 'asc')
                 ->get();
-        });
+        };
+
+        $cachedCategories = TenantCache::get($vendor, $menuCacheKey);
+
+        if ($cachedCategories instanceof Collection
+            && ($cachedCategories->isEmpty() || $cachedCategories->first() instanceof Category)) {
+            $categories = $cachedCategories;
+        } else {
+            $categories = $fetchFreshCategories();
+            TenantCache::put($vendor, $menuCacheKey, $categories, now()->addDay());
+        }
 
         $themeSlug = $vendor->menuTemplate?->slug ?? 'modern-bistro';
 

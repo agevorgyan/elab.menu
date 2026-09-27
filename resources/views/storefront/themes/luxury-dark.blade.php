@@ -309,9 +309,11 @@
     <!-- Category Tabs Navigation (Smooth Scroll + Auto Scrollspy) -->
     <nav class="category-nav-wrapper" id="categoryNavWrapper" style="margin-top: 0.5rem;">
         @foreach($categories as $cat)
-            <button id="chip-cat-{{ $cat->id }}" class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="scrollToCat('cat-{{ $cat->id }}')">
-                {{ $cat->getTranslatedName($lang) }}
-            </button>
+            @if(is_object($cat) && isset($cat->id))
+                <button id="chip-cat-{{ $cat->id }}" class="cat-chip" :class="{ 'active': activeCat === 'cat-{{ $cat->id }}' }" @click="scrollToCat('cat-{{ $cat->id }}')">
+                    {{ $cat->getTranslatedName($lang) }}
+                </button>
+            @endif
         @endforeach
     </nav>
 
@@ -320,6 +322,7 @@
         @include('storefront.components.featured-dish-banner')
 
         @foreach($categories as $cat)
+            @if(is_object($cat) && isset($cat->id))
             <div id="cat-{{ $cat->id }}" class="category-section">
                 <h2 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-main);">
                     {{ $cat->getTranslatedName($lang) }}
@@ -415,6 +418,7 @@
                     @endforeach
                 </div>
             </div>
+            @endif
         @endforeach
 
         <!-- Storefront Discreet Legal & Powered By Footer -->

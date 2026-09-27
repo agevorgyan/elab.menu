@@ -45,6 +45,18 @@ class StoreProductRequest extends FormRequest
         if ($this->has('ai_enabled')) {
             $merge['ai_enabled'] = $this->boolean('ai_enabled');
         }
+        if ($this->has('available_for_dine_in')) {
+            $merge['available_for_dine_in'] = $this->boolean('available_for_dine_in');
+        }
+        if ($this->has('available_for_takeaway')) {
+            $merge['available_for_takeaway'] = $this->boolean('available_for_takeaway');
+        }
+        if ($this->has('available_for_delivery')) {
+            $merge['available_for_delivery'] = $this->boolean('available_for_delivery');
+        }
+        if ($this->has('is_available')) {
+            $merge['is_available'] = $this->boolean('is_available');
+        }
         if (! empty($merge)) {
             $this->merge($merge);
         }
@@ -83,6 +95,16 @@ class StoreProductRequest extends FormRequest
             'discount_start_time' => 'nullable|date_format:H:i',
             'discount_end_time' => 'nullable|date_format:H:i',
             'is_discount_active' => 'nullable|boolean',
+            'available_start_time' => 'nullable|date_format:H:i',
+            'available_end_time' => 'nullable|date_format:H:i',
+            'available_days' => 'nullable|array',
+            'available_days.*' => 'string|in:mon,tue,wed,thu,fri,sat,sun',
+            'available_for_dine_in' => 'nullable|boolean',
+            'available_for_takeaway' => 'nullable|boolean',
+            'available_for_delivery' => 'nullable|boolean',
+            'is_available' => 'nullable|boolean',
+            'locations' => 'nullable|array',
+            'locations.*' => ['integer', Rule::exists('locations', 'id')->where('vendor_id', Auth::user()?->vendor_id)],
             'image' => 'nullable|string',
             'image_file' => $imageRule,
             'dietary_tags' => 'nullable|array',

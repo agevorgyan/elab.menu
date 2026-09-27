@@ -27,6 +27,12 @@ class MenuBuilderController extends Controller
         $this->authorize('viewAny', Category::class);
 
         $vendor = Auth::user()->vendor;
+        $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
+        if ($activeLocationId) {
+            session(['active_location_id' => $activeLocationId]);
+        }
+        $activeLocation = $vendor->locations->firstWhere('id', (int) $activeLocationId) ?? $vendor->locations->first();
+
         $categories = Category::where('vendor_id', $vendor->id)
             ->with(['products.variations', 'products.allergens', 'products.overrides'])
             ->orderBy('sort_order', 'asc')
@@ -35,7 +41,7 @@ class MenuBuilderController extends Controller
         $allergens = Allergen::all();
         $locations = $vendor->locations;
 
-        return view('admin.menu.index', compact('vendor', 'categories', 'allergens', 'locations'));
+        return view('admin.menu.index', compact('vendor', 'categories', 'allergens', 'locations', 'activeLocationId', 'activeLocation'));
     }
 
     public function storeCategory(StoreCategoryRequest $request)
@@ -111,7 +117,12 @@ class MenuBuilderController extends Controller
     {
         $this->authorize('update', $product);
 
-        $isAvailable = $this->menuService->toggleProductAvailability($product);
+        $locationId = $request->input('location_id', session('active_location_id'));
+        if ($locationId && ! $product->vendor->locations->contains('id', (int) $locationId)) {
+            $locationId = null;
+        }
+
+        $isAvailable = $this->menuService->toggleProductAvailability($product, $locationId ? (int) $locationId : null);
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'is_available' => $isAvailable]);

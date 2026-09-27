@@ -516,6 +516,13 @@
                 <div class="dishes-grid">
                     @foreach($cat->products as $prod)
                         @php
+                            $isLocAvailable = $prod->isAvailableAtLocation($location?->id);
+                            $isTimeAvailable = $prod->isTimeAvailable();
+                            $scheduleSummary = $prod->getAvailabilityScheduleSummary($lang);
+                            $isDineIn = (bool)($prod->available_for_dine_in ?? true);
+                            $isTakeaway = (bool)($prod->available_for_takeaway ?? true);
+                            $isDelivery = (bool)($prod->available_for_delivery ?? true);
+
                             $prodPayload = [
                                 'id' => $prod->id,
                                 'name' => $prod->getTranslatedName($lang),
@@ -525,6 +532,12 @@
                                 'is_discount' => $prod->isDiscountActive(),
                                 'image' => $prod->image,
                                 'calories' => $prod->calories,
+                                'is_available' => $isLocAvailable,
+                                'is_time_available' => $isTimeAvailable,
+                                'schedule_summary' => $scheduleSummary,
+                                'available_for_dine_in' => $isDineIn,
+                                'available_for_takeaway' => $isTakeaway,
+                                'available_for_delivery' => $isDelivery,
                                 'dietary_tags' => $prod->dietary_tags ?? [],
                                 'allergens' => $prod->allergens->map(fn($a) => ['icon' => $a->icon, 'name' => $a->name])->toArray(),
                                 'variations' => $prod->variations->map(fn($v) => [
@@ -536,8 +549,9 @@
                         @endphp
 
                         <div class="dish-card" 
+                             style="{{ (!$isLocAvailable || !$isTimeAvailable) ? 'opacity: 0.65;' : '' }}"
                              :class="{ 'dish-hidden': search && !'{{ addslashes(mb_strtolower($prod->getTranslatedName($lang))) }}'.includes(search.toLowerCase()) && !'{{ addslashes(mb_strtolower($prod->getTranslatedDescription($lang))) }}'.includes(search.toLowerCase()) }"
-                             @click="openDishInfo({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})">
+                             @click="selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})">
 
                             @if(!empty($prod->image))
                                 <div class="dish-img-wrap">
@@ -552,7 +566,31 @@
 
                             <div class="dish-content">
                                 <div>
-                                    <h3 class="dish-title">{{ $prod->getTranslatedName($lang) }}</h3>
+                                    <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                        <h3 class="dish-title" style="margin-bottom: 0;">{{ $prod->getTranslatedName($lang) }}</h3>
+
+                                        @if(!$isLocAvailable)
+                                            <span style="background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.1rem 0.45rem; border-radius: 4px; font-size: 0.65rem; font-weight: 800;">
+                                                🚫 {{ __('menu.out_of_stock') ?: 'Սպառված է' }}
+                                            </span>
+                                        @elseif(!$isTimeAvailable)
+                                            <span style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.1rem 0.45rem; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">
+                                                <i class="fa-regular fa-clock"></i> {{ $scheduleSummary }}
+                                            </span>
+                                        @endif
+
+                                        @if(!$isDineIn || !$isTakeaway || !$isDelivery)
+                                            <span style="background: rgba(99, 102, 241, 0.12); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25); padding: 0.1rem 0.45rem; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">
+                                                @if($isDelivery && !$isDineIn && !$isTakeaway)
+                                                    🛵 {{ __('menu.delivery_only') ?: 'Միայն առաքում' }}
+                                                @elseif($isDineIn && !$isDelivery && !$isTakeaway)
+                                                    🍽️ {{ __('menu.dine_in_only') ?: 'Միայն սրահում' }}
+                                                @elseif($isTakeaway && !$isDelivery && !$isDineIn)
+                                                    🥡 {{ __('menu.takeaway_only') ?: 'Միայն տանելու' }}
+                                                @endif
+                                            </span>
+                                        @endif
+                                    </div>
                                     @if(!empty($prod->getTranslatedDescription($lang)))
                                         <p class="dish-desc">{{ $prod->getTranslatedDescription($lang) }}</p>
                                     @endif
@@ -584,14 +622,22 @@
                                                 </span>
                                             </div>
                                         @elseif($prod->variations->count() > 1)
-                                            <span style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">{{ __('menu.starting_from') }}</span>
+                                            <span style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted); padding-right: 0.2rem;">{{ __('menu.starting_from') }}</span>
                                             <span>{{ number_format($prod->variations->min('price')) }} {{ $vendor->currency }}</span>
                                         @else
                                             <span>{{ number_format($prod->getEffectivePrice($location?->id)) }} {{ $vendor->currency }}</span>
                                         @endif
                                     </div>
 
-                                    @if($prod->variations->count() > 1)
+                                    @if(!$isLocAvailable)
+                                        <span style="font-size: 0.75rem; font-weight: 700; color: #dc2626; padding: 0.35rem 0.5rem; background: #fee2e2; border-radius: 6px;">
+                                            {{ __('menu.out_of_stock') ?: 'Սպառված է' }}
+                                        </span>
+                                    @elseif(!$isTimeAvailable)
+                                        <span style="font-size: 0.72rem; font-weight: 700; color: #d97706; padding: 0.35rem 0.5rem; background: #fef3c7; border-radius: 6px;">
+                                            {{ __('menu.closed_hours') ?: 'Ժամից դուրս' }}
+                                        </span>
+                                    @elseif($prod->variations->count() > 1)
                                         <button class="btn-portion-select" 
                                                 @click.stop='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})'>
                                             {{ __('menu.select_portion_btn') }}

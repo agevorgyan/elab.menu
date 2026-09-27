@@ -126,6 +126,40 @@
     </div>
 </div>
 
+@if($locations->count() > 0)
+    <!-- Branch Menu Scope Bar -->
+    <div style="background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 1rem 1.35rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fa-solid fa-store"></i>
+            </span>
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <strong style="font-size: 1.05rem; color: var(--text-main);">Մասնաճյուղի Մենյուի Կառավարում</strong>
+                    <span class="badge badge-indigo" style="font-size: 0.72rem;">{{ $activeLocation?->name ?? 'Default Branch' }}</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    Ստորև նշված «In Stock / Out of Stock» կոճակները և հասանելիությունը վերաբերում են ընտրված մասնաճյուղին:
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;">
+                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> Մասնաճյուղ՝
+            </label>
+            <form method="GET" action="{{ route('admin.menu.index') }}" id="branchScopeFilterForm" style="display: flex; align-items: center; margin: 0;">
+                <select name="location_id" onchange="document.getElementById('branchScopeFilterForm').submit()" class="form-select" style="min-width: 220px; font-weight: 700; padding: 0.5rem 0.85rem; border-radius: 10px; border-color: rgba(99, 102, 241, 0.4);">
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc->id }}" {{ (int)$activeLocationId === (int)$loc->id ? 'selected' : '' }}>
+                            📍 {{ $loc->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
+    </div>
+@endif
+
 @if($categories->count() == 0)
     <div class="card" style="text-align: center; padding: 4rem 2rem;">
         <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(245, 158, 11, 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.25rem;">
@@ -210,6 +244,34 @@
                                         @foreach($product->dietary_tags as $tag)
                                             <span class="badge badge-emerald" style="font-size: 0.68rem; text-transform: uppercase;">{{ str_replace('_', ' ', $tag) }}</span>
                                         @endforeach
+                                    @endif
+
+                                    @if($product->available_start_time || $product->available_end_time || !empty($product->available_days))
+                                        <span class="badge badge-amber" style="font-size: 0.68rem;">
+                                            <i class="fa-regular fa-clock"></i> {{ $product->getAvailabilityScheduleSummary('hy') }}
+                                        </span>
+                                    @endif
+
+                                    @if(!$product->available_for_dine_in || !$product->available_for_takeaway || !$product->available_for_delivery)
+                                        <span class="badge badge-indigo" style="font-size: 0.68rem;">
+                                            @if($product->available_for_dine_in) 🍽️ Տեղում @endif
+                                            @if($product->available_for_takeaway) 🥡 Տանելու @endif
+                                            @if($product->available_for_delivery) 🛵 Առաքում @endif
+                                        </span>
+                                    @endif
+
+                                    @php
+                                        $locUnavailableCount = 0;
+                                        foreach($locations as $loc) {
+                                            if (!$product->isAvailableAtLocation($loc->id)) {
+                                                $locUnavailableCount++;
+                                            }
+                                        }
+                                    @endphp
+                                    @if($locUnavailableCount > 0 && $locUnavailableCount < $locations->count())
+                                        <span class="badge badge-rose" style="font-size: 0.68rem;">
+                                            <i class="fa-solid fa-store-slash"></i> {{ $locUnavailableCount }} մասնաճյուղում անջատված
+                                        </span>
                                     @endif
                                 </div>
 
@@ -310,18 +372,23 @@
                             </div>
 
                             <div class="dish-actions-mobile">
-                                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;" onclick="editProduct({{ json_encode($product->load(['allergens', 'variations'])) }})">
+                                <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;" onclick="editProduct({{ json_encode($product->load(['allergens', 'variations', 'overrides'])) }})">
                                     <i class="fa-solid fa-pen"></i> Edit
                                 </button>
 
+                                @php
+                                    $isInStockCurrentBranch = $product->isAvailableAtLocation($activeLocationId);
+                                @endphp
                                 <form action="{{ route('admin.menu.products.toggle', $product->id) }}" method="POST" style="margin: 0;">
                                     @csrf
-                                    <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;">
-                                        @if($product->is_available)
+                                    <input type="hidden" name="location_id" value="{{ $activeLocationId }}">
+                                    <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;" title="Փոխել պաշարի կարգավիճակը՝ {{ $activeLocation?->name }}">
+                                        @if($isInStockCurrentBranch)
                                             <span style="color: #10b981;"><i class="fa-solid fa-toggle-on"></i> In Stock</span>
                                         @else
                                             <span style="color: #ef4444;"><i class="fa-solid fa-toggle-off"></i> Out of Stock</span>
                                         @endif
+                                        <small style="opacity: 0.7; font-size: 0.7rem; display: block;">({{ Str::limit($activeLocation?->name ?? 'Branch', 12) }})</small>
                                     </button>
                                 </form>
 
@@ -506,6 +573,99 @@
                         <label class="form-label" style="font-size: 0.75rem;">Ավարտ (End Time)</label>
                         <input type="time" name="discount_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
+                </div>
+            </div>
+
+            <!-- Branch Availability (New) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="width: 28px; height: 28px; border-radius: 8px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                            <i class="fa-solid fa-code-branch"></i>
+                        </span>
+                        <div>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Մասնաճյուղային Հասանելիություն (Branch Availability)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Ընտրեք, թե որ մասնաճյուղերում է այս ուտեստը հասանելի</small>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem;">
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('new', true)">Բոլորը</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('new', false)">Մաքրել</button>
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    @foreach($locations as $loc)
+                        <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.35rem 0.65rem; border-radius: 8px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                            <input type="checkbox" class="new-location-checkbox" name="locations[]" value="{{ $loc->id }}" checked> 📍 {{ $loc->name }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Schedule & Time Availability (Lunch Menu) (New) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <span style="width: 28px; height: 28px; border-radius: 8px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                        <i class="fa-regular fa-clock"></i>
+                    </span>
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Ժամային Սահմանափակում (Lunch / Hours)</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Օրինակ՝ լանչը հասանելի է միայն 12:00 - 15:00 (թողեք դատարկ ամբողջ օրվա համար)</small>
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom: 0.75rem;">
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Հասանելի է սկսած (Start Time)</label>
+                        <input type="time" name="available_start_time" class="form-input" style="padding: 0.45rem 0.75rem;">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Մինչև (End Time)</label>
+                        <input type="time" name="available_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.35rem;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Հասանելի օրեր</label>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'all')">Բոլորը</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'weekdays')">Երկ-Ուրբ</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'weekends')">Հանգստյան</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        @foreach($weekDays as $key => $lbl)
+                            <label style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.55rem; border-radius: 8px; cursor: pointer; color: var(--text-main);">
+                                <input type="checkbox" class="new-available-day-checkbox" name="available_days[]" value="{{ $key }}" checked> {{ $lbl }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Channels / Type Availability (New) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <span style="width: 28px; height: 28px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </span>
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Պատվերի Տեսակների Հասանելիություն (Order Channels)</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Նշեք այն ալիքները, որոնցով կարելի է պատվիրել այս ուտեստը</small>
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="hidden" name="available_for_dine_in" value="0">
+                        <input type="checkbox" name="available_for_dine_in" value="1" checked> 🍽️ Տեղում (Dine-in)
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="hidden" name="available_for_takeaway" value="0">
+                        <input type="checkbox" name="available_for_takeaway" value="1" checked> 🥡 Տանելու (Takeaway)
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="hidden" name="available_for_delivery" value="0">
+                        <input type="checkbox" name="available_for_delivery" value="1" checked> 🛵 Առաքում (Delivery)
+                    </label>
                 </div>
             </div>
 
@@ -730,6 +890,99 @@
                 </div>
             </div>
 
+            <!-- Branch Availability (Edit) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="width: 28px; height: 28px; border-radius: 8px; background: rgba(99, 102, 241, 0.15); color: #6366f1; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                            <i class="fa-solid fa-code-branch"></i>
+                        </span>
+                        <div>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Մասնաճյուղային Հասանելիություն (Branch Availability)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Ընտրեք, թե որ մասնաճյուղերում է այս ուտեստը հասանելի</small>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem;">
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('edit', true)">Բոլորը</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('edit', false)">Մաքրել</button>
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    @foreach($locations as $loc)
+                        <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.35rem 0.65rem; border-radius: 8px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                            <input type="checkbox" class="edit-location-checkbox" name="locations[]" value="{{ $loc->id }}"> 📍 {{ $loc->name }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Schedule & Time Availability (Lunch Menu) (Edit) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <span style="width: 28px; height: 28px; border-radius: 8px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                        <i class="fa-regular fa-clock"></i>
+                    </span>
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Ժամային Սահմանափակում (Lunch / Hours)</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Օրինակ՝ լանչը հասանելի է միայն 12:00 - 15:00 (թողեք դատարկ ամբողջ օրվա համար)</small>
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom: 0.75rem;">
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Հասանելի է սկսած (Start Time)</label>
+                        <input type="time" id="edit_prod_available_start_time" name="available_start_time" class="form-input" style="padding: 0.45rem 0.75rem;">
+                    </div>
+                    <div>
+                        <label class="form-label" style="font-size: 0.75rem;">Մինչև (End Time)</label>
+                        <input type="time" id="edit_prod_available_end_time" name="available_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.35rem;">
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Հասանելի օրեր</label>
+                        <div style="display: flex; gap: 0.35rem;">
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'all')">Բոլորը</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'weekdays')">Երկ-Ուրբ</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'weekends')">Հանգստյան</button>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        @foreach($weekDays as $key => $lbl)
+                            <label style="display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.25rem 0.55rem; border-radius: 8px; cursor: pointer; color: var(--text-main);">
+                                <input type="checkbox" class="edit-available-day-checkbox" name="available_days[]" value="{{ $key }}"> {{ $lbl }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Channels / Type Availability (Edit) -->
+            <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <span style="width: 28px; height: 28px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem;">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                    </span>
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Պատվերի Տեսակների Հասանելիություն (Order Channels)</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Նշեք այն ալիքները, որոնցով կարելի է պատվիրել այս ուտեստը</small>
+                    </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="hidden" name="available_for_dine_in" value="0">
+                        <input type="checkbox" id="edit_prod_available_for_dine_in" name="available_for_dine_in" value="1"> 🍽️ Տեղում (Dine-in)
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="hidden" name="available_for_takeaway" value="0">
+                        <input type="checkbox" id="edit_prod_available_for_takeaway" name="available_for_takeaway" value="1"> 🥡 Տանելու (Takeaway)
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
+                        <input type="hidden" name="available_for_delivery" value="0">
+                        <input type="checkbox" id="edit_prod_available_for_delivery" name="available_for_delivery" value="1"> 🛵 Առաքում (Delivery)
+                    </label>
+                </div>
+            </div>
+
             <div class="grid-2" style="margin-bottom: 1rem;">
                 <div>
                     <label class="form-label">Armenian Name (Հայերեն)</label>
@@ -891,6 +1144,25 @@
         });
     }
 
+    function setLocationsPreset(prefix, isChecked) {
+        document.querySelectorAll(`.${prefix}-location-checkbox`).forEach(cb => {
+            cb.checked = isChecked;
+        });
+    }
+
+    function setAvailableDaysPreset(prefix, type) {
+        const checkboxes = document.querySelectorAll(`.${prefix}-available-day-checkbox`);
+        checkboxes.forEach(cb => {
+            if (type === 'all') {
+                cb.checked = true;
+            } else if (type === 'weekdays') {
+                cb.checked = ['mon', 'tue', 'wed', 'thu', 'fri'].includes(cb.value);
+            } else if (type === 'weekends') {
+                cb.checked = ['sat', 'sun'].includes(cb.value);
+            }
+        });
+    }
+
     function editCategory(cat) {
         document.getElementById('editCategoryForm').action = "/admin/menu/categories/" + cat.id;
         document.getElementById('edit_cat_name').value = cat.name || '';
@@ -937,6 +1209,32 @@
         document.getElementById('edit_prod_ai_group').value = prod.ai_group || '';
         document.getElementById('edit_prod_ai_spicy_level').value = (prod.ai_spicy_level !== undefined && prod.ai_spicy_level !== null) ? prod.ai_spicy_level : 0;
         document.getElementById('edit_prod_ai_tags').value = Array.isArray(prod.ai_tags) ? prod.ai_tags.join(', ') : (prod.ai_tags || '');
+
+        // Branch location availability checkboxes
+        const overrides = prod.overrides || [];
+        document.querySelectorAll('.edit-location-checkbox').forEach(cb => {
+            const locId = parseInt(cb.value);
+            const ov = overrides.find(o => parseInt(o.location_id) === locId);
+            if (ov && ov.is_available !== undefined && ov.is_available !== null) {
+                cb.checked = !!ov.is_available;
+            } else {
+                cb.checked = (prod.is_available !== false && prod.is_available !== 0);
+            }
+        });
+
+        // Time schedule (Lunch/Hours)
+        document.getElementById('edit_prod_available_start_time').value = prod.available_start_time ? prod.available_start_time.substring(0, 5) : '';
+        document.getElementById('edit_prod_available_end_time').value = prod.available_end_time ? prod.available_end_time.substring(0, 5) : '';
+
+        const availDays = prod.available_days || [];
+        document.querySelectorAll('.edit-available-day-checkbox').forEach(cb => {
+            cb.checked = availDays.length === 0 || availDays.includes(cb.value);
+        });
+
+        // Channel availability
+        document.getElementById('edit_prod_available_for_dine_in').checked = prod.available_for_dine_in !== false && prod.available_for_dine_in !== 0;
+        document.getElementById('edit_prod_available_for_takeaway').checked = prod.available_for_takeaway !== false && prod.available_for_takeaway !== 0;
+        document.getElementById('edit_prod_available_for_delivery').checked = prod.available_for_delivery !== false && prod.available_for_delivery !== 0;
 
         // Discount & Happy Hour fields
         document.getElementById('edit_prod_discount_price').value = prod.discount_price || '';

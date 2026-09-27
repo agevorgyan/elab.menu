@@ -116,6 +116,12 @@ class Product extends Model
         'ai_pairs_with',
         'ai_enabled',
         'is_available',
+        'available_start_time',
+        'available_end_time',
+        'available_days',
+        'available_for_dine_in',
+        'available_for_takeaway',
+        'available_for_delivery',
         'sort_order',
     ];
 
@@ -139,6 +145,10 @@ class Product extends Model
         'ai_pairs_with' => 'array',
         'ai_enabled' => 'boolean',
         'is_available' => 'boolean',
+        'available_days' => 'array',
+        'available_for_dine_in' => 'boolean',
+        'available_for_takeaway' => 'boolean',
+        'available_for_delivery' => 'boolean',
     ];
 
     public function vendor()
@@ -367,6 +377,121 @@ class Product extends Model
         }
 
         return $daysText;
+    }
+
+    public function isTimeAvailable(?Carbon $now = null): bool
+    {
+        if (! $this->available_start_time && ! $this->available_end_time && empty($this->available_days)) {
+            return true;
+        }
+
+        $tz = 'Asia/Yerevan';
+        $now = $now ? $now->setTimezone($tz) : Carbon::now($tz);
+
+        // 1. Day of week check
+        if (! empty($this->available_days) && is_array($this->available_days) && count($this->available_days) < 7) {
+            $dayOfWeek = strtolower($now->format('D'));
+            $allowedDays = array_map(fn ($d) => substr(strtolower($d), 0, 3), $this->available_days);
+            if (! in_array($dayOfWeek, $allowedDays)) {
+                return false;
+            }
+        }
+
+        // 2. Time window check
+        if ($this->available_start_time && $this->available_end_time) {
+            $currentTime = $now->format('H:i:s');
+            $startTime = Carbon::parse($this->available_start_time, $tz)->format('H:i:s');
+            $endTime = Carbon::parse($this->available_end_time, $tz)->format('H:i:s');
+
+            if ($startTime <= $endTime) {
+                if ($currentTime < $startTime || $currentTime > $endTime) {
+                    return false;
+                }
+            } else {
+                if ($currentTime < $startTime && $currentTime > $endTime) {
+                    return false;
+                }
+            }
+        } elseif ($this->available_start_time && ! $this->available_end_time) {
+            $currentTime = $now->format('H:i:s');
+            $startTime = Carbon::parse($this->available_start_time, $tz)->format('H:i:s');
+            if ($currentTime < $startTime) {
+                return false;
+            }
+        } elseif (! $this->available_start_time && $this->available_end_time) {
+            $currentTime = $now->format('H:i:s');
+            $endTime = Carbon::parse($this->available_end_time, $tz)->format('H:i:s');
+            if ($currentTime > $endTime) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function getAvailabilityScheduleSummary(?string $locale = 'hy'): string
+    {
+        if (! $this->available_start_time && ! $this->available_end_time && empty($this->available_days)) {
+            return '';
+        }
+
+        $timeText = '';
+        if ($this->available_start_time && $this->available_end_time) {
+            $s = substr($this->available_start_time, 0, 5);
+            $e = substr($this->available_end_time, 0, 5);
+            $timeText = "{$s} - {$e}";
+        } elseif ($this->available_start_time) {
+            $s = substr($this->available_start_time, 0, 5);
+            $timeText = $locale === 'en' ? "From {$s}" : ($locale === 'ru' ? "С {$s}" : "սկսած {$s}-ից");
+        } elseif ($this->available_end_time) {
+            $e = substr($this->available_end_time, 0, 5);
+            $timeText = $locale === 'en' ? "Until {$e}" : ($locale === 'ru' ? "До {$e}" : "մինչև {$e}");
+        }
+
+        $dayMap = [
+            'hy' => ['mon' => 'Երկ', 'tue' => 'Երք', 'wed' => 'Չոր', 'thu' => 'Հնգ', 'fri' => 'Ուրբ', 'sat' => 'Շաբ', 'sun' => 'Կիր'],
+            'en' => ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'],
+            'ru' => ['mon' => 'Пн', 'tue' => 'Вт', 'wed' => 'Ср', 'thu' => 'Чт', 'fri' => 'Пт', 'sat' => 'Сб', 'sun' => 'Вс'],
+        ];
+        $labels = $dayMap[$locale] ?? $dayMap['hy'];
+
+        $daysText = '';
+        if (! empty($this->available_days) && count($this->available_days) < 7) {
+            $prefixes = array_values(array_unique(array_map(fn ($d) => substr(strtolower($d), 0, 3), $this->available_days)));
+            sort($prefixes);
+
+            $weekdays = ['fri', 'mon', 'thu', 'tue', 'wed'];
+            $weekends = ['sat', 'sun'];
+
+            if ($prefixes === $weekdays) {
+                $daysText = $locale === 'en' ? 'Mon-Fri' : ($locale === 'ru' ? 'Пн-Пт' : 'Երկ-Ուրբ');
+            } elseif ($prefixes === $weekends) {
+                $daysText = $locale === 'en' ? 'Weekends' : ($locale === 'ru' ? 'Выходные' : 'Հանգստյան օրեր');
+            } else {
+                $daysText = implode(', ', array_map(fn ($p) => $labels[$p] ?? $p, $prefixes));
+            }
+        }
+
+        if ($timeText && $daysText) {
+            return "{$timeText} ({$daysText})";
+        }
+
+        return $timeText ?: $daysText;
+    }
+
+    public function isOrderTypeAvailable(?string $type = null): bool
+    {
+        if (! $type) {
+            return true;
+        }
+
+        return match ($type) {
+            'dine_in' => (bool) ($this->available_for_dine_in ?? true),
+            'takeaway' => (bool) ($this->available_for_takeaway ?? true),
+            'delivery' => (bool) ($this->available_for_delivery ?? true),
+            'whatsapp' => (bool) (($this->available_for_takeaway ?? true) || ($this->available_for_delivery ?? true)),
+            default => true,
+        };
     }
 
     public function isAvailableAtLocation(?int $locationId = null): bool

@@ -232,6 +232,28 @@
             },
 
             selectDish(dish) {
+                if (dish.is_available === false) {
+                    this.triggerToast(translations.out_of_stock || 'Ուտեստը ժամանակավորապես սպառված է այս մասնաճյուղում', 'remove', 'fa-solid fa-ban');
+                    return;
+                }
+                if (dish.is_time_available === false) {
+                    const sched = dish.schedule_summary || '';
+                    this.triggerToast((translations.closed_hours || 'Ուտեստը հասանելի չէ այս ժամին') + (sched ? ' (' + sched + ')' : ''), 'remove', 'fa-regular fa-clock');
+                    return;
+                }
+                if (this.orderType === 'dine_in' && dish.available_for_dine_in === false) {
+                    this.triggerToast('Այս ուտեստը հասանելի չէ սրահում պատվիրելու համար', 'remove', 'fa-solid fa-ban');
+                    return;
+                }
+                if (this.orderType === 'takeaway' && dish.available_for_takeaway === false) {
+                    this.triggerToast('Այս ուտեստը հասանելի չէ տանելու պատվերի համար', 'remove', 'fa-solid fa-ban');
+                    return;
+                }
+                if (this.orderType === 'delivery' && dish.available_for_delivery === false) {
+                    this.triggerToast('Այս ուտեստը հասանելի չէ առաքման համար', 'remove', 'fa-solid fa-ban');
+                    return;
+                }
+
                 if (!dish.variations || dish.variations.length <= 1) {
                     const v = (dish.variations && dish.variations.length === 1) ? dish.variations[0] : null;
                     this.addToCart(
@@ -240,7 +262,8 @@
                         v ? Number(v.price) : Number(dish.base_price || dish.price || 0),
                         v ? v.name : 'Standard',
                         v ? v.id : null,
-                        1
+                        1,
+                        dish
                     );
                     return;
                 }
@@ -258,12 +281,37 @@
                     Number(this.selectedVariation.price),
                     this.selectedVariation.name,
                     this.selectedVariation.id,
-                    this.variationQty
+                    this.variationQty,
+                    this.selectedDish
                 );
                 this.showVariationModal = false;
             },
 
-            addToCart(id, name, price, variationName = 'Standard', variationId = null, qty = 1) {
+            addToCart(id, name, price, variationName = 'Standard', variationId = null, qty = 1, dishObj = null) {
+                if (dishObj) {
+                    if (dishObj.is_available === false) {
+                        this.triggerToast(translations.out_of_stock || 'Ուտեստը ժամանակավորապես սպառված է այս մասնաճյուղում', 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (dishObj.is_time_available === false) {
+                        const sched = dishObj.schedule_summary || '';
+                        this.triggerToast((translations.closed_hours || 'Ուտեստը հասանելի չէ այս ժամին') + (sched ? ' (' + sched + ')' : ''), 'remove', 'fa-regular fa-clock');
+                        return;
+                    }
+                    if (this.orderType === 'dine_in' && dishObj.available_for_dine_in === false) {
+                        this.triggerToast('Այս ուտեստը հասանելի չէ սրահում պատվիրելու համար', 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (this.orderType === 'takeaway' && dishObj.available_for_takeaway === false) {
+                        this.triggerToast('Այս ուտեստը հասանելի չէ տանելու պատվերի համար', 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (this.orderType === 'delivery' && dishObj.available_for_delivery === false) {
+                        this.triggerToast('Այս ուտեստը հասանելի չէ առաքման համար', 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                }
+
                 let existing = this.cart.find(c => c.id === id && (c.variation_id && variationId ? c.variation_id === variationId : c.variation_name === variationName));
                 if (existing) {
                     existing.qty += qty;
@@ -275,7 +323,10 @@
                         price: Number(price),
                         variation_name: variationName,
                         variation_id: variationId,
-                        qty: qty
+                        qty: qty,
+                        available_for_dine_in: dishObj ? (dishObj.available_for_dine_in ?? true) : true,
+                        available_for_takeaway: dishObj ? (dishObj.available_for_takeaway ?? true) : true,
+                        available_for_delivery: dishObj ? (dishObj.available_for_delivery ?? true) : true,
                     });
                 }
                 const addedText = translations.added_to_cart || 'ավելացվեց զամբյուղում';
@@ -562,6 +613,22 @@
                     const el = document.getElementById('cartCustomerEmailInput');
                     if (el) el.focus();
                     return;
+                }
+
+                // Strict Channel Restrictions Validation
+                for (const item of this.cart) {
+                    if (this.orderType === 'dine_in' && item.available_for_dine_in === false) {
+                        this.triggerToast(`«${item.name}» հասանելի չէ սրահում պատվիրելու համար`, 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (this.orderType === 'takeaway' && item.available_for_takeaway === false) {
+                        this.triggerToast(`«${item.name}» հասանելի չէ տանելու պատվերի համար`, 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
+                    if (this.orderType === 'delivery' && item.available_for_delivery === false) {
+                        this.triggerToast(`«${item.name}» հասանելի չէ առաքման համար`, 'remove', 'fa-solid fa-ban');
+                        return;
+                    }
                 }
 
                 try {

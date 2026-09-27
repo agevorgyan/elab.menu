@@ -97,6 +97,8 @@ class CreateOrderAction
                     ]);
                 }
 
+                $this->validateProductAvailability($product, (int) $dto->locationId, (string) $order->type);
+
                 $pricing = $this->resolveItemPricing($product, $item, $dto->locationId);
                 $subtotal = $pricing['unit_price'] * $item->quantity;
 
@@ -254,6 +256,8 @@ class CreateOrderAction
                         'items' => "Product #{$item->productId} does not belong to this vendor.",
                     ]);
                 }
+
+                $this->validateProductAvailability($product, (int) $dto->locationId, (string) $dto->type);
 
                 $pricing = $this->resolveItemPricing($product, $item, $dto->locationId);
                 $subtotal = $pricing['unit_price'] * $item->quantity;
@@ -526,5 +530,42 @@ class CreateOrderAction
 
             return $candidate;
         });
+    }
+
+    /**
+     * Validate product availability for the given location, time, and order channel.
+     *
+     * @throws ValidationException
+     */
+    protected function validateProductAvailability(Product $product, int $locationId, string $orderType): void
+    {
+        // 1. Branch availability
+        if (! $product->isAvailableAtLocation($locationId)) {
+            throw ValidationException::withMessages([
+                'items' => "«{$product->name}» ուտեստը սպառված է կամ հասանելի չէ ընտրված մասնաճյուղում:",
+            ]);
+        }
+
+        // 2. Schedule / time availability
+        if (! $product->isTimeAvailable()) {
+            $scheduleDesc = $product->getAvailabilityScheduleSummary('hy');
+            $timeMsg = $scheduleDesc ? " (հասանելի է միայն՝ {$scheduleDesc})" : '';
+            throw ValidationException::withMessages([
+                'items' => "«{$product->name}» ուտեստը տվյալ պահին հասանելի չէ պատվիրելու համար{$timeMsg}:",
+            ]);
+        }
+
+        // 3. Order type / channel availability
+        if (! $product->isOrderTypeAvailable($orderType)) {
+            $channelNames = [
+                'dine_in' => 'ռեստորանում տեղում (Dine-in)',
+                'takeaway' => 'տանելու (Takeaway)',
+                'delivery' => 'առաքման (Delivery)',
+            ];
+            $curChannel = $channelNames[$orderType] ?? $orderType;
+            throw ValidationException::withMessages([
+                'items' => "«{$product->name}» ուտեստը նախատեսված չէ {$curChannel} պատվերների համար:",
+            ]);
+        }
     }
 }

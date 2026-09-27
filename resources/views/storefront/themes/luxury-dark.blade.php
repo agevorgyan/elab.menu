@@ -331,6 +331,13 @@
                 <div class="dishes-grid">
                     @foreach($cat->products as $prod)
                         @php
+                            $isLocAvailable = $prod->isAvailableAtLocation($location?->id);
+                            $isTimeAvailable = $prod->isTimeAvailable();
+                            $scheduleSummary = $prod->getAvailabilityScheduleSummary($lang);
+                            $isDineIn = (bool)($prod->available_for_dine_in ?? true);
+                            $isTakeaway = (bool)($prod->available_for_takeaway ?? true);
+                            $isDelivery = (bool)($prod->available_for_delivery ?? true);
+
                             $prodPayload = [
                                 'id' => $prod->id,
                                 'name' => $prod->getTranslatedName($lang),
@@ -340,6 +347,12 @@
                                 'regular_price' => (float)$prod->getRegularPrice($location?->id),
                                 'is_discount_active' => $prod->isDiscountActive(),
                                 'discount_percentage' => $prod->getDiscountPercentage(),
+                                'is_available' => $isLocAvailable,
+                                'is_time_available' => $isTimeAvailable,
+                                'schedule_summary' => $scheduleSummary,
+                                'available_for_dine_in' => $isDineIn,
+                                'available_for_takeaway' => $isTakeaway,
+                                'available_for_delivery' => $isDelivery,
                                 'variations' => $prod->variations->map(fn($v) => [
                                     'id' => $v->id,
                                     'name' => $v->getTranslatedName($lang),
@@ -349,12 +362,35 @@
                                 ])->values(),
                             ];
                         @endphp
-                        <div class="dish-card" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})'>
+                        <div class="dish-card" style="{{ (!$isLocAvailable || !$isTimeAvailable) ? 'opacity: 0.68;' : '' }}" x-show='matchesSearch({!! json_encode(mb_strtolower($prod->getTranslatedName($lang))) !!})' @click='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})'>
                             <img src="{{ $prod->image }}" onerror="this.onerror=null;this.src='{{ asset('images/default-dish.png') }}';" loading="lazy" decoding="async" class="dish-img" alt="{{ $prod->getTranslatedName($lang) }}">
                             <div class="dish-content">
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
                                         <div class="dish-title">{{ $prod->getTranslatedName($lang) }}</div>
+
+                                        @if(!$isLocAvailable)
+                                            <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.1rem 0.45rem; border-radius: 6px; font-size: 0.65rem; font-weight: 800;">
+                                                🚫 {{ __('menu.out_of_stock') ?: 'Սպառված է' }}
+                                            </span>
+                                        @elseif(!$isTimeAvailable)
+                                            <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.1rem 0.45rem; border-radius: 6px; font-size: 0.65rem; font-weight: 700;">
+                                                <i class="fa-regular fa-clock"></i> {{ $scheduleSummary }}
+                                            </span>
+                                        @endif
+
+                                        @if(!$isDineIn || !$isTakeaway || !$isDelivery)
+                                            <span style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.35); padding: 0.1rem 0.45rem; border-radius: 6px; font-size: 0.65rem; font-weight: 700;">
+                                                @if($isDelivery && !$isDineIn && !$isTakeaway)
+                                                    🛵 {{ __('menu.delivery_only') ?: 'Միայն առաքում' }}
+                                                @elseif($isDineIn && !$isDelivery && !$isTakeaway)
+                                                    🍽️ {{ __('menu.dine_in_only') ?: 'Միայն սրահում' }}
+                                                @elseif($isTakeaway && !$isDelivery && !$isDineIn)
+                                                    🥡 {{ __('menu.takeaway_only') ?: 'Միայն տանելու' }}
+                                                @endif
+                                            </span>
+                                        @endif
+
                                         @if($prod->isDiscountActive())
                                             <span style="background: linear-gradient(135deg, #ef4444, #f43f5e); color: #ffffff; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.1rem 0.45rem; border-radius: 6px; font-size: 0.65rem; font-weight: 800; display: inline-flex; align-items: center; gap: 0.25rem;">
                                                 <i class="fa-solid fa-tag"></i> -{{ $prod->getDiscountPercentage() }}%
@@ -405,13 +441,23 @@
                                         @endif
                                     </div>
                                     
-                                    <button class="btn btn-primary" @click.stop='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})' aria-label="{{ __('menu.add_to_cart') }}" title="{{ __('menu.add_to_cart') }}">
-                                        @if($prod->variations->count() > 1)
-                                            <span>{{ __('menu.select_portion_btn') }}</span>
-                                        @else
-                                            <i class="fa-solid fa-cart-plus"></i>
-                                        @endif
-                                    </button>
+                                    @if(!$isLocAvailable)
+                                        <button class="btn btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed; font-size: 0.75rem; padding: 0.4rem 0.65rem;" title="{{ __('menu.out_of_stock') ?: 'Սպառված է' }}">
+                                            <span>{{ __('menu.out_of_stock') ?: 'Սպառված է' }}</span>
+                                        </button>
+                                    @elseif(!$isTimeAvailable)
+                                        <button class="btn btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed; font-size: 0.75rem; padding: 0.4rem 0.65rem;" title="{{ $scheduleSummary }}">
+                                            <span>{{ __('menu.closed_hours') ?: 'Ժամից դուրս' }}</span>
+                                        </button>
+                                    @else
+                                        <button class="btn btn-primary" @click.stop='selectDish({{ json_encode($prodPayload, JSON_HEX_APOS | JSON_UNESCAPED_UNICODE) }})' aria-label="{{ __('menu.add_to_cart') }}" title="{{ __('menu.add_to_cart') }}">
+                                            @if($prod->variations->count() > 1)
+                                                <span>{{ __('menu.select_portion_btn') }}</span>
+                                            @else
+                                                <i class="fa-solid fa-cart-plus"></i>
+                                            @endif
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         </div>

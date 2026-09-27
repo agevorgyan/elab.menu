@@ -113,6 +113,12 @@ class MenuManagementService
             'discount_start_time' => ! empty($data['discount_start_time']) ? $data['discount_start_time'] : null,
             'discount_end_time' => ! empty($data['discount_end_time']) ? $data['discount_end_time'] : null,
             'is_discount_active' => array_key_exists('is_discount_active', $data) ? (bool) $data['is_discount_active'] : true,
+            'available_start_time' => ! empty($data['available_start_time']) ? $data['available_start_time'] : null,
+            'available_end_time' => ! empty($data['available_end_time']) ? $data['available_end_time'] : null,
+            'available_days' => ! empty($data['available_days']) ? $data['available_days'] : null,
+            'available_for_dine_in' => array_key_exists('available_for_dine_in', $data) ? (bool) $data['available_for_dine_in'] : true,
+            'available_for_takeaway' => array_key_exists('available_for_takeaway', $data) ? (bool) $data['available_for_takeaway'] : true,
+            'available_for_delivery' => array_key_exists('available_for_delivery', $data) ? (bool) $data['available_for_delivery'] : true,
             'image' => $imageUrl,
             'dietary_tags' => $data['dietary_tags'] ?? [],
             'calories' => $data['calories'] ?? null,
@@ -131,6 +137,10 @@ class MenuManagementService
             'is_available' => true,
             'sort_order' => (int) (Product::where('category_id', $data['category_id'])->max('sort_order') ?? 0) + 1,
         ]);
+
+        if (array_key_exists('locations', $data)) {
+            $this->syncLocationAvailability($product, $vendor, $data['locations']);
+        }
 
         if (! empty($data['allergens'])) {
             $product->allergens()->sync($data['allergens']);
@@ -245,6 +255,25 @@ class MenuManagementService
             'is_featured' => ! empty($data['is_featured']),
         ];
 
+        if (array_key_exists('available_start_time', $data)) {
+            $updatePayload['available_start_time'] = ! empty($data['available_start_time']) ? $data['available_start_time'] : null;
+        }
+        if (array_key_exists('available_end_time', $data)) {
+            $updatePayload['available_end_time'] = ! empty($data['available_end_time']) ? $data['available_end_time'] : null;
+        }
+        if (array_key_exists('available_days', $data)) {
+            $updatePayload['available_days'] = ! empty($data['available_days']) ? $data['available_days'] : null;
+        }
+        if (array_key_exists('available_for_dine_in', $data)) {
+            $updatePayload['available_for_dine_in'] = (bool) $data['available_for_dine_in'];
+        }
+        if (array_key_exists('available_for_takeaway', $data)) {
+            $updatePayload['available_for_takeaway'] = (bool) $data['available_for_takeaway'];
+        }
+        if (array_key_exists('available_for_delivery', $data)) {
+            $updatePayload['available_for_delivery'] = (bool) $data['available_for_delivery'];
+        }
+
         if (array_key_exists('ai_priority', $data)) {
             $updatePayload['ai_priority'] = (bool) $data['ai_priority'];
         }
@@ -272,6 +301,10 @@ class MenuManagementService
         }
 
         $product->update($updatePayload);
+
+        if (array_key_exists('locations', $data)) {
+            $this->syncLocationAvailability($product, $product->vendor, $data['locations']);
+        }
 
         if (! empty($data['allergens'])) {
             $product->allergens()->sync($data['allergens']);
@@ -344,10 +377,57 @@ class MenuManagementService
     }
 
     /**
-     * Toggle product availability on/off.
+     * Synchronize branch availability overrides for a product.
      */
-    public function toggleProductAvailability(Product $product): bool
+    public function syncLocationAvailability(Product $product, Vendor $vendor, ?array $selectedLocationIds): void
     {
+        if ($selectedLocationIds === null) {
+            return;
+        }
+
+        $locations = Location::where('vendor_id', $vendor->id)->get();
+        $selectedInts = array_map('intval', $selectedLocationIds);
+
+        foreach ($locations as $loc) {
+            $isAvailable = in_array((int) $loc->id, $selectedInts, true);
+
+            $override = LocationProductOverride::firstOrNew([
+                'vendor_id' => $vendor->id,
+                'location_id' => $loc->id,
+                'product_id' => $product->id,
+            ]);
+            $override->is_available = $isAvailable;
+            $override->save();
+        }
+    }
+
+    /**
+     * Toggle product availability on/off (either globally or for a specific branch).
+     */
+    public function toggleProductAvailability(Product $product, ?int $locationId = null): bool
+    {
+        if ($locationId) {
+            $override = LocationProductOverride::where('vendor_id', $product->vendor_id)
+                ->where('location_id', $locationId)
+                ->where('product_id', $product->id)
+                ->first();
+
+            $currentStatus = $override !== null ? (bool) $override->is_available : (bool) $product->is_available;
+            $newStatus = ! $currentStatus;
+
+            $locOverride = LocationProductOverride::firstOrNew([
+                'vendor_id' => $product->vendor_id,
+                'location_id' => $locationId,
+                'product_id' => $product->id,
+            ]);
+            $locOverride->is_available = $newStatus;
+            $locOverride->save();
+
+            TenantCache::invalidateMenu($product->vendor_id);
+
+            return $newStatus;
+        }
+
         $product->update(['is_available' => ! $product->is_available]);
         TenantCache::invalidateMenu($product->vendor_id);
 

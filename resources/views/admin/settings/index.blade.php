@@ -2249,6 +2249,7 @@ function testTelegramConnection() {
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = originalContent;
+    });
 }
 
 function toggleScheduleBlock(channel) {

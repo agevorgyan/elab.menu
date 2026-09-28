@@ -6,6 +6,7 @@ use App\Models\Vendor;
 use App\Models\VendorStorageFile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StorageReconcileCommand extends Command
 {
@@ -44,9 +45,13 @@ class StorageReconcileCommand extends Command
         $query = Vendor::query();
         if ($vendorOption) {
             $query->where(function ($q) use ($vendorOption) {
-                $q->where('id', $vendorOption)
-                    ->orWhere('uuid', $vendorOption)
-                    ->orWhere('slug', $vendorOption);
+                if (is_numeric($vendorOption)) {
+                    $q->where('id', (int) $vendorOption);
+                }
+                if (Str::isUuid($vendorOption)) {
+                    $q->orWhere('uuid', $vendorOption);
+                }
+                $q->orWhere('slug', $vendorOption);
             });
         }
 

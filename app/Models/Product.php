@@ -151,6 +151,31 @@ class Product extends Model
         'available_for_delivery' => 'boolean',
     ];
 
+    /**
+     * Normalise TIME columns to HH:MM format.
+     * PostgreSQL returns HH:MM:SS; MySQL returns HH:MM.
+     * These accessors ensure a consistent format across both drivers.
+     */
+    public function getDiscountStartTimeAttribute(?string $value): ?string
+    {
+        return $value ? substr($value, 0, 5) : $value;
+    }
+
+    public function getDiscountEndTimeAttribute(?string $value): ?string
+    {
+        return $value ? substr($value, 0, 5) : $value;
+    }
+
+    public function getAvailableStartTimeAttribute(?string $value): ?string
+    {
+        return $value ? substr($value, 0, 5) : $value;
+    }
+
+    public function getAvailableEndTimeAttribute(?string $value): ?string
+    {
+        return $value ? substr($value, 0, 5) : $value;
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

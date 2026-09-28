@@ -57,9 +57,17 @@ class CustomerController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                $driver = DB::getDriverName();
+                if ($driver === 'pgsql') {
+                    $q->where('name', 'ilike', "%{$search}%")
+                        ->orWhere('phone', 'ilike', "%{$search}%")
+                        ->orWhere('email', 'ilike', "%{$search}%");
+                } else {
+                    $searchTerm = '%'.mb_strtolower($search).'%';
+                    $q->where(DB::raw('LOWER(name)'), 'like', $searchTerm)
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere(DB::raw('LOWER(email)'), 'like', $searchTerm);
+                }
             });
         }
 

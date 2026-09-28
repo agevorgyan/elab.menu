@@ -6,6 +6,7 @@ use App\Models\Vendor;
 use App\Models\VendorDeletionJob;
 use App\Services\VendorLifecycleService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class VendorDeletionCommand extends Command
 {
@@ -36,9 +37,15 @@ class VendorDeletionCommand extends Command
         $retry = (bool) $this->option('retry');
 
         $vendor = Vendor::withTrashed()
-            ->where('id', $vendorIdentifier)
-            ->orWhere('uuid', $vendorIdentifier)
-            ->orWhere('slug', $vendorIdentifier)
+            ->where(function ($q) use ($vendorIdentifier) {
+                if (is_numeric($vendorIdentifier)) {
+                    $q->where('id', (int) $vendorIdentifier);
+                }
+                if (Str::isUuid($vendorIdentifier)) {
+                    $q->orWhere('uuid', $vendorIdentifier);
+                }
+                $q->orWhere('slug', $vendorIdentifier);
+            })
             ->first();
 
         if (! $vendor) {

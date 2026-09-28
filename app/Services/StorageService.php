@@ -254,8 +254,11 @@ class StorageService
             $cleanOld = $this->cleanPath($oldPathOrUuid);
             $oldRecord = VendorStorageFile::where('vendor_id', $vendor->id)
                 ->where(function ($q) use ($oldPathOrUuid, $cleanOld) {
-                    $q->where('uuid', $oldPathOrUuid)
-                        ->orWhere('path', $cleanOld);
+                    if (Str::isUuid($oldPathOrUuid)) {
+                        $q->where('uuid', $oldPathOrUuid)->orWhere('path', $cleanOld);
+                    } else {
+                        $q->where('path', $cleanOld)->orWhere('path', $oldPathOrUuid);
+                    }
                 })
                 ->first();
         }
@@ -316,8 +319,11 @@ class StorageService
 
             $record = VendorStorageFile::where('vendor_id', $vendor->id)
                 ->where(function ($q) use ($fileOrPath, $path) {
-                    $q->where('uuid', $fileOrPath)
-                        ->orWhere('path', $path);
+                    if (Str::isUuid($fileOrPath)) {
+                        $q->where('uuid', $fileOrPath)->orWhere('path', $path);
+                    } else {
+                        $q->where('path', $path)->orWhere('path', $fileOrPath);
+                    }
                 })
                 ->first();
         }

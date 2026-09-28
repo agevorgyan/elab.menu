@@ -218,7 +218,7 @@ class TelegramNotificationTest extends TestCase
             'order_number' => 'ORD-TG-PAY-100',
             'type' => 'dine_in',
             'table_number' => '3',
-            'status' => 'confirmed',
+            'status' => 'accepted',
             'payment_method' => 'idram',
             'payment_status' => 'paid',
             'payment_transaction_id' => 'TRX-998877',
@@ -244,7 +244,14 @@ class TelegramNotificationTest extends TestCase
     public function test_vendor_can_update_telegram_settings(): void
     {
         $vendor = Vendor::first();
-        $user = User::where('vendor_id', $vendor->id)->where('role', 'vendor_owner')->first();
+        $user = User::where('vendor_id', $vendor->id)->where('role', 'vendor_owner')->first()
+            ?? User::create([
+                'vendor_id' => $vendor->id,
+                'name' => 'Owner',
+                'email' => 'owner-tg@test.com',
+                'password' => bcrypt('password'),
+                'role' => 'vendor_owner',
+            ]);
 
         $this->actingAs($user);
 

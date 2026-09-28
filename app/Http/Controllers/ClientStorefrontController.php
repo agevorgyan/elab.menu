@@ -25,6 +25,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ClientStorefrontController extends Controller
@@ -340,8 +341,10 @@ self.addEventListener('fetch', event => {
         // Find attempt by merchant reference, uuid, or order ID
         $attempt = PaymentAttempt::where('vendor_id', $vendor->id)
             ->where(function ($query) use ($reference) {
-                $query->where('merchant_reference', $reference)
-                    ->orWhere('uuid', $reference);
+                $query->where('merchant_reference', $reference);
+                if (Str::isUuid($reference)) {
+                    $query->orWhere('uuid', $reference);
+                }
                 if (is_numeric($reference)) {
                     $query->orWhere('order_id', (int) $reference);
                 }

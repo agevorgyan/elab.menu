@@ -11,6 +11,21 @@ jobs:
     name: Code Quality & Automated Tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: qrmenu_test
+          POSTGRES_USER: apple
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,7 +34,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          extensions: mbstring, pdo_sqlite, bcmath, intl, curl, json
+          extensions: mbstring, pdo_pgsql, pdo_sqlite, bcmath, intl, curl, json
           coverage: none
 
       - name: Cache Composer Dependencies
@@ -32,10 +47,20 @@ jobs:
       - name: Install Composer Dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader
 
+      - name: Security Vulnerability Audit
+        run: composer audit
+
       - name: Code Style Check (Laravel Pint)
         run: vendor/bin/pint --test
 
-      - name: Run Test Suite
+      - name: Run Test Suite (PostgreSQL)
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: qrmenu_test
+          DB_USERNAME: apple
+          DB_PASSWORD: password
         run: php artisan test --compact
 
       - name: Setup Node.js

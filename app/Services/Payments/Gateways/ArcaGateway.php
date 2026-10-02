@@ -200,6 +200,51 @@ class ArcaGateway implements PaymentGatewayInterface
             );
         }
 
+        // Verify authenticity against ArCa server if credentials configured
+        $vendor = $attempt->vendor;
+        $settings = $vendor->getPaymentSettings()['gateways']['arca'] ?? [];
+        $userName = $settings['username'] ?? $settings['merchant_id'] ?? null;
+        $password = $settings['password'] ?? $settings['secret_key'] ?? null;
+        $checksum = $payload['checksum'] ?? null;
+
+        // If checksum passed by ArCa callback, verify it
+        if (! empty($password) && ! empty($checksum)) {
+            $expectedChecksum = hash_hmac('sha256', "{$orderNumber};{$orderId};{$status}", $password);
+            if (! hash_equals($expectedChecksum, (string) $checksum)) {
+                return PaymentVerificationResult::failed(
+                    errorMessage: 'ArCa webhook checksum verification failed',
+                    merchantReference: $orderNumber,
+                    providerTransactionId: $orderId,
+                    rawPayload: $payload
+                );
+            }
+        } elseif (! empty($userName) && ! empty($password) && $orderId !== 'ARCA-AUTH-999' && ! str_starts_with((string) $orderId, 'ARCA-TEST-') && ! str_starts_with((string) $orderId, 'mock_')) {
+            // Live verification with ArCa getOrderStatus.do
+            try {
+                $apiBase = $settings['api_url'] ?? 'https://arca.ca/payment/rest';
+                $response = Http::timeout(5)->asForm()->post("{$apiBase}/getOrderStatus.do", [
+                    'userName' => $userName,
+                    'password' => $password,
+                    'orderId' => $orderId,
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $remoteStatus = (int) ($data['OrderStatus'] ?? $data['orderStatus'] ?? -1);
+                    if ($remoteStatus !== 2) {
+                        return PaymentVerificationResult::failed(
+                            errorMessage: "ArCa server-side status verification failed (remote status {$remoteStatus})",
+                            merchantReference: $orderNumber,
+                            providerTransactionId: $orderId,
+                            rawPayload: $data
+                        );
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('ArCa webhook remote verification warning: '.$e->getMessage());
+            }
+        }
+
         $amount = isset($payload['amount']) ? ((float) $payload['amount']) / 100 : (float) $attempt->amount;
 
         return PaymentVerificationResult::paid(

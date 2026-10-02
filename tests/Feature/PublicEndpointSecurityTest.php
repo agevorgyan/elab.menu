@@ -84,7 +84,12 @@ class PublicEndpointSecurityTest extends TestCase
         $response->assertHeader('X-XSS-Protection', '1; mode=block');
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
+        $response->assertHeader('Content-Security-Policy');
         $this->assertFalse($response->headers->has('X-Powered-By'));
+
+        // Test HSTS on secure HTTPS request
+        $secureResponse = $this->get('https://localhost/m/'.$this->vendor->slug);
+        $secureResponse->assertHeader('Strict-Transport-Security');
     }
 
     /**

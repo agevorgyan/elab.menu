@@ -32,6 +32,14 @@ class SecurityHeaders
         // Restrict sensitive browser APIs
         $response->headers->set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
 
+        // Content Security Policy baseline protection
+        $response->headers->set('Content-Security-Policy', "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https: data:; frame-ancestors 'self';");
+
+        // Enforce Strict-Transport-Security on HTTPS connections
+        if ($request->isSecure() || app()->environment('production')) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+        }
+
         // Remove server tech disclosure headers
         if (function_exists('header_remove')) {
             @header_remove('X-Powered-By');

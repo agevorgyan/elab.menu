@@ -4,9 +4,6 @@ namespace App\Actions;
 
 use App\DTOs\CreateOrderDTO;
 use App\DTOs\OrderItemDTO;
-use App\Events\OrderCreated;
-use App\Events\OrderStatusUpdated;
-use App\Mail\OrderReceiptMail;
 use App\Models\Location;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -14,9 +11,9 @@ use App\Models\Product;
 use App\Models\Vendor;
 use App\Services\CrmAutomationService;
 use App\Services\CustomerSyncService;
+use App\Services\OrderDispatchService;
+use App\Services\OrderPricingService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -25,8 +22,12 @@ class CreateOrderAction
     public function __construct(
         protected CustomerSyncService $customerSyncService,
         protected ?CrmAutomationService $crmService = null,
+        protected ?OrderPricingService $pricingService = null,
+        protected ?OrderDispatchService $dispatchService = null,
     ) {
         $this->crmService = $crmService ?? app(CrmAutomationService::class);
+        $this->pricingService = $pricingService ?? app(OrderPricingService::class);
+        $this->dispatchService = $dispatchService ?? app(OrderDispatchService::class);
     }
 
     /**
@@ -163,30 +164,8 @@ class CreateOrderAction
         $order->refresh();
         $order->load(['items.product', 'location', 'customer']);
 
-        // Broadcast real-time events for kitchen/admin and customer tracking
-        try {
-            event(new OrderCreated($order));
-        } catch (\Throwable $e) {
-            Log::warning('OrderCreated broadcast failed: '.$e->getMessage());
-        }
-
-        try {
-            event(new OrderStatusUpdated($order));
-        } catch (\Throwable $e) {
-            Log::warning('OrderStatusUpdated broadcast failed: '.$e->getMessage());
-        }
-
+        $this->dispatchService->dispatchNotifications($order, true);
         $whatsappUrl = $this->buildWhatsAppUrl($order, $vendor, $dto->locationId, true);
-
-        if (! empty($order->customer_email)) {
-            try {
-                Mail::to($order->customer_email)->queue(
-                    new OrderReceiptMail($order)
-                );
-            } catch (\Throwable $e) {
-                // Silently ignore mail failure in queue dispatch
-            }
-        }
 
         return [
             'order' => $order,
@@ -324,24 +303,8 @@ class CreateOrderAction
             }
         });
 
-        // Broadcast real-time OrderCreated event for kitchen & staff display
-        try {
-            event(new OrderCreated($order));
-        } catch (\Throwable $e) {
-            Log::warning('OrderCreated broadcast failed: '.$e->getMessage());
-        }
-
+        $this->dispatchService->dispatchNotifications($order, false);
         $whatsappUrl = $this->buildWhatsAppUrl($order, $vendor, $dto->locationId, false);
-
-        if (! empty($order->customer_email)) {
-            try {
-                Mail::to($order->customer_email)->queue(
-                    new OrderReceiptMail($order)
-                );
-            } catch (\Throwable $e) {
-                // Silently ignore mail failure in queue dispatch
-            }
-        }
 
         return [
             'order' => $order,
@@ -355,70 +318,9 @@ class CreateOrderAction
      *
      * @return array{unit_price: float, variation_name: string}
      */
-    protected function resolveItemPricing(Product $product, OrderItemDTO $item, int $locationId): array
+    public function resolveItemPricing(Product $product, OrderItemDTO $item, int $locationId): array
     {
-        $variationsCount = $product->variations()->count();
-        $variation = null;
-
-        // 1. Resolve variation if variationId is supplied
-        if (! empty($item->variationId)) {
-            $variation = $product->variations()->find($item->variationId);
-            if (! $variation) {
-                throw ValidationException::withMessages([
-                    'items' => "Invalid variation selected for dish {$product->name}.",
-                ]);
-            }
-        }
-        // 2. Resolve variation if variationName is supplied
-        elseif (! empty($item->variationName)) {
-            $variation = $product->variations()->where(function ($query) use ($item) {
-                $query->where('name', $item->variationName)
-                    ->orWhere('name_translations->hy', $item->variationName)
-                    ->orWhere('name_translations->ru', $item->variationName)
-                    ->orWhere('name_translations->en', $item->variationName);
-            })->first();
-            if (! $variation && $variationsCount > 0) {
-                throw ValidationException::withMessages([
-                    'items' => "Invalid variation '{$item->variationName}' selected for dish {$product->name}.",
-                ]);
-            }
-        }
-
-        // 3. Prevent pricing bypass: multi-variation dishes must have an explicit valid variation
-        if ($variationsCount > 1 && ! $variation) {
-            throw ValidationException::withMessages([
-                'items' => "A valid variation must be selected for dish {$product->name}.",
-            ]);
-        }
-
-        // 4. If product has exactly 1 variation and none was passed, auto-select it
-        if ($variationsCount === 1 && ! $variation) {
-            $variation = $product->variations()->first();
-        }
-
-        // 5. Determine unit price strictly from variation, location override, or scheduled discount
-        if ($variation) {
-            $override = $product->overrides->firstWhere('location_id', $locationId);
-            if ($variationsCount === 1 && $override && $override->override_price !== null) {
-                if ($product->isDiscountActive() && (float) $product->price > 0) {
-                    $ratio = (float) $product->discount_price / (float) $product->price;
-                    $unitPrice = round((float) $override->override_price * $ratio, 2);
-                } else {
-                    $unitPrice = (float) $override->override_price;
-                }
-            } else {
-                $unitPrice = (float) $variation->getEffectivePrice();
-            }
-            $variationName = $variation->name;
-        } else {
-            $unitPrice = (float) $product->getEffectivePrice($locationId);
-            $variationName = ! empty($item->variationName) ? $item->variationName : 'Standard';
-        }
-
-        return [
-            'unit_price' => $unitPrice,
-            'variation_name' => $variationName,
-        ];
+        return $this->pricingService->resolveItemPricing($product, $item, $locationId);
     }
 
     /**
@@ -426,99 +328,17 @@ class CreateOrderAction
      *
      * @return array{service_fee: float, delivery_fee: float, final_total: float}
      */
-    protected function calculateFees(Vendor $vendor, float $itemsSubtotal, string $orderType): array
+    public function calculateFees(Vendor $vendor, float $itemsSubtotal, string $orderType): array
     {
-        $serviceFee = 0.00;
-        $deliveryFee = 0.00;
-
-        if ($orderType === 'delivery') {
-            if ($vendor->delivery_free_from !== null && (float) $vendor->delivery_free_from > 0 && $itemsSubtotal >= (float) $vendor->delivery_free_from) {
-                $deliveryFee = 0.00;
-            } else {
-                $deliveryFee = (float) ($vendor->delivery_fee ?? 0);
-            }
-        } elseif ($orderType === 'dine_in') {
-            if ($vendor->service_fee_enabled) {
-                $minOrder = $vendor->service_fee_min_order !== null ? (float) $vendor->service_fee_min_order : 0;
-                if ($minOrder <= 0 || $itemsSubtotal >= $minOrder) {
-                    if ($vendor->service_fee_type === 'percent') {
-                        $serviceFee = round(($itemsSubtotal * (float) $vendor->service_fee_value) / 100, 2);
-                    } else {
-                        $serviceFee = (float) ($vendor->service_fee_value ?? 0);
-                    }
-                }
-            }
-        }
-
-        $finalTotal = $itemsSubtotal + $serviceFee + $deliveryFee;
-
-        return [
-            'service_fee' => $serviceFee,
-            'delivery_fee' => $deliveryFee,
-            'final_total' => $finalTotal,
-        ];
+        return $this->pricingService->calculateFees($vendor, $itemsSubtotal, $orderType);
     }
 
     /**
      * Build WhatsApp dispatch URL if branch has configured phone number.
      */
-    protected function buildWhatsAppUrl(Order $order, Vendor $vendor, int $locationId, bool $isAppended = false): ?string
+    public function buildWhatsAppUrl(Order $order, Vendor $vendor, int $locationId, bool $isAppended = false): ?string
     {
-        $location = Location::find($locationId);
-        if (! $location || empty($location->whatsapp_number)) {
-            return null;
-        }
-
-        $headerTitle = $isAppended
-            ? "🧾 *Հավելյալ Պատվեր / Order Update #{$order->order_number}*"
-            : "🧾 *New Order #{$order->order_number}*";
-
-        $msg = "{$headerTitle}\n";
-        if ($order->type === 'delivery') {
-            $msg .= "🛵 *Տեսակը՝ ԱՌԱՔՈՒՄ (Delivery)*\n";
-            $msg .= "📍 *Առաքման հասցե՝* {$order->delivery_address}\n";
-        } elseif ($order->type === 'takeaway') {
-            $msg .= "🛍️ *Տեսակը՝ ՏԵՂՈՒՄ ՎԵՐՑՆԵԼ (Takeaway)*\n";
-            $msg .= "📍 *Մասնաճյուղ՝ {$location->name}*\n";
-        } else {
-            $msg .= "🍽️ *Տեսակը՝ ՌԵՍՏՈՐԱՆՈՒՄ (Dine-in)*\n";
-            $msg .= "📍 *{$location->name}* ".($order->table_number ? "({$order->table_number})" : '')."\n";
-        }
-        $msg .= "👤 Name: {$order->customer_name}\n";
-        if (! empty($order->customer_phone)) {
-            $msg .= "📞 Phone: {$order->customer_phone}\n";
-        }
-        $msg .= "--------------------\n";
-
-        foreach ($order->items as $i) {
-            $msg .= "• {$i->quantity}x {$i->product_name} ({$i->variation_name}) - ".number_format($i->subtotal)." {$vendor->currency}\n";
-        }
-
-        if (! empty($order->notes)) {
-            $msg .= "\n📝 *Notes:* {$order->notes}\n";
-        }
-
-        $msg .= "--------------------\n";
-        $msg .= '🛒 *Ենթագումար (Subtotal): '.number_format($order->subtotal)." {$vendor->currency}*\n";
-
-        if ($order->service_fee > 0) {
-            $feeLabel = $vendor->service_fee_type === 'percent' ? " ({$vendor->service_fee_value}%)" : '';
-            $msg .= "🛎️ *Սպասարկման վճար{$feeLabel}: ".number_format($order->service_fee)." {$vendor->currency}*\n";
-        }
-
-        if ($order->type === 'delivery') {
-            if ($order->delivery_fee > 0) {
-                $msg .= '🛵 *Առաքման վճար: '.number_format($order->delivery_fee)." {$vendor->currency}*\n";
-            } else {
-                $msg .= "🛵 *Առաքում: ԱՆՎՃԱՐ (Free)*\n";
-            }
-        }
-
-        $msg .= '💰 *Ընդամենը (Total): '.number_format($order->total_amount)." {$vendor->currency}*";
-
-        $cleanPhone = preg_replace('/[^0-9]/', '', $location->whatsapp_number);
-
-        return "https://wa.me/{$cleanPhone}?text=".urlencode($msg);
+        return $this->dispatchService->buildWhatsAppUrl($order, $vendor, $locationId, $isAppended);
     }
 
     /**

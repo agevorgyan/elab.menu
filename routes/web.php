@@ -66,7 +66,7 @@ Route::get('/payment/callback/{vendor_slug}/{reference}', [ClientStorefrontContr
     ->name('client.payment.callback');
 
 // Payment Webhook endpoint for asynchronous server-to-server notifications
-Route::match(['get', 'post'], '/api/webhooks/payment/{gateway}', [PaymentWebhookController::class, 'handleWebhook'])
+Route::post('/api/webhooks/payment/{gateway}', [PaymentWebhookController::class, 'handleWebhook'])
     ->name('api.webhooks.payment')
     ->middleware('throttle:60,1');
 

@@ -39,4 +39,11 @@ class PaymentWebhookSecurityTest extends TestCase
             'cvv' => '123',
         ]);
     }
+
+    public function test_payment_webhook_rejects_get_requests(): void
+    {
+        $response = $this->get(route('api.webhooks.payment', ['gateway' => 'idram']));
+
+        $response->assertStatus(405);
+    }
 }

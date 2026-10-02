@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
+use App\Services\AuditSanitizer;
 use App\Services\Payments\PaymentGatewayManager;
 use App\Services\Payments\PaymentVerificationService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,8 @@ class PaymentWebhookController extends Controller
         Request $request,
         string $gateway,
         PaymentGatewayManager $gatewayManager,
-        PaymentVerificationService $verificationService
+        PaymentVerificationService $verificationService,
+        AuditSanitizer $sanitizer
     ): Response|JsonResponse {
         if (! $gatewayManager->hasGateway($gateway)) {
             return response()->json(['error' => "Unknown gateway: {$gateway}"], 404);
@@ -29,7 +31,7 @@ class PaymentWebhookController extends Controller
         $headers = $request->headers->all();
 
         Log::info("Payment webhook received for gateway: {$gateway}", [
-            'payload' => $payload,
+            'payload' => $sanitizer->sanitize($payload),
         ]);
 
         try {

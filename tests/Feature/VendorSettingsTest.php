@@ -53,9 +53,9 @@ class VendorSettingsTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.settings.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Կարգավորումներ');
-        $response->assertSee('Սպասարկման Վճար');
-        $response->assertSee('Առաքման Ծառայության Կարգավորումներ');
+        $response->assertSee(__('Settings'));
+        $response->assertSee(__('Service Fee'));
+        $response->assertSee(__('Delivery Service Settings'));
         $response->assertSee('10');
         $response->assertSee('1000');
     }
@@ -99,7 +99,7 @@ class VendorSettingsTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('admin.settings.index', ['location_id' => $loc2->id]));
         $response->assertStatus(200);
-        $response->assertSee('Ընթացիկ Մասնաճյուղ՝');
+        $response->assertSee(__('Current Branch:'));
         $response->assertSee('Uptown Branch');
         $response->assertSee('Downtown Branch');
     }

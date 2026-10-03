@@ -38,7 +38,7 @@ class AiMenuController extends Controller
         ]);
 
         if (! $request->hasFile('menu_file') && ! $request->filled('website_url') && ! $request->filled('menu_text')) {
-            return back()->withInput()->with('error', 'Խնդրում ենք վերբեռնել ֆայլ, նշել կայքի հղում կամ տեղադրել մենյուի տեքստը:');
+            return back()->withInput()->with('error', 'Please upload a file, provide a website link, or paste menu text.');
         }
 
         try {
@@ -67,7 +67,7 @@ class AiMenuController extends Controller
                 $parsedMenu = $this->aiService->parseMenuFromText($request->input('menu_text', ''), $vendor);
             }
         } catch (\Throwable $e) {
-            return back()->withInput()->with('error', 'Մենյուի արտածումը ձախողվեց: '.$e->getMessage());
+            return back()->withInput()->with('error', 'Menu extraction failed: '.$e->getMessage());
         }
 
         if (empty($parsedMenu['categories'])) {
@@ -102,7 +102,7 @@ class AiMenuController extends Controller
             $category = Category::create([
                 'vendor_id' => $vendor->id,
                 'name' => $catData['name'],
-                'name_translations' => ['hy' => $catData['name'], 'en' => $catData['name'], 'ru' => $catData['name']],
+                'name_translations' => ['en' => $catData['name']],
                 'sort_order' => Category::where('vendor_id', $vendor->id)->max('sort_order') + 1,
                 'is_active' => true,
             ]);
@@ -121,7 +121,7 @@ class AiMenuController extends Controller
                         'vendor_id' => $vendor->id,
                         'category_id' => $category->id,
                         'name' => $prodData['name'],
-                        'name_translations' => ['hy' => $prodData['name'], 'en' => $prodData['name'], 'ru' => $prodData['name']],
+                        'name_translations' => ['en' => $prodData['name']],
                         'description' => $prodData['description'] ?? '',
                         'price' => (float) ($prodData['price'] ?? 0),
                         'image' => $image,
@@ -159,24 +159,24 @@ class AiMenuController extends Controller
             TranslateMenuJob::dispatchSync($vendor->id, $targetLang, $overwrite);
 
             $langLabels = [
-                'hy' => '🇦🇲 Հայերեն',
+                'hy' => '🇦🇲 Armenian',
                 'en' => '🇬🇧 English',
-                'ru' => '🇷🇺 Русский',
-                'fr' => '🇫🇷 Français',
-                'de' => '🇩🇪 Deutsch',
-                'es' => '🇪🇸 Español',
-                'it' => '🇮🇹 Italiano',
-                'ge' => '🇬🇪 ქართული',
-                'ar' => '🇦🇪 العربية',
-                'fa' => '🇮🇷 فارسی',
+                'ru' => '🇷🇺 Russian',
+                'fr' => '🇫🇷 French',
+                'de' => '🇩🇪 German',
+                'es' => '🇪🇸 Spanish',
+                'it' => '🇮🇹 Italian',
+                'ge' => '🇬🇪 Georgian',
+                'ar' => '🇦🇪 Arabic',
+                'fa' => '🇮🇷 Persian',
             ];
             $selectedLabel = $langLabels[$targetLang] ?? strtoupper($targetLang);
 
-            return back()->with('success', "✨ Մենյուի բոլոր ուտեստները, նկարագրությունները և կատեգորիաները հաջողությամբ թարգմանվեցին դեպի [{$selectedLabel}] AI-ի միջոցով։");
+            return back()->with('success', "✨ All menu items, descriptions, and categories were successfully translated to [{$selectedLabel}] via AI.");
         } catch (\Throwable $e) {
             Log::error('AI Menu Translation failed: '.$e->getMessage());
 
-            return back()->with('error', 'Թարգմանության ընթացքում առաջացավ խնդիր: '.$e->getMessage());
+            return back()->with('error', 'An error occurred during translation: '.$e->getMessage());
         }
     }
 
@@ -227,7 +227,7 @@ class AiMenuController extends Controller
 
         $vendor->update(['supported_languages' => $newLanguages]);
 
-        return back()->with('success', 'Լեզվի կարգավորումները հաջողությամբ պահպանվեցին:');
+        return back()->with('success', 'Language settings saved successfully.');
     }
 
     /**
@@ -242,7 +242,7 @@ class AiMenuController extends Controller
         $targetCode = strtolower(trim($code));
 
         if (count($languages) <= 1) {
-            return back()->with('error', 'Հնարավոր չէ հեռացնել վերջին ակտիվ լեզուն:');
+            return back()->with('error', 'Cannot remove the last active language.');
         }
 
         $newLanguages = array_values(array_filter($languages, function ($lang) use ($targetCode) {
@@ -251,6 +251,6 @@ class AiMenuController extends Controller
 
         $vendor->update(['supported_languages' => $newLanguages]);
 
-        return back()->with('success', 'Լեզուն հաջողությամբ հեռացվեց:');
+        return back()->with('success', 'Language removed successfully.');
     }
 }

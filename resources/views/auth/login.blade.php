@@ -9,7 +9,7 @@
         $siteLogoLight = \App\Models\SystemSetting::getLogoLight();
         $siteTagline = \App\Models\SystemSetting::getSiteTagline();
     @endphp
-    <title>{{ isset($customVendor) && $customVendor ? $customVendor->name . ' — Մուտք' : ('Մուտք Համակարգ — ' . $siteName) }}</title>
+    <title>{{ isset($customVendor) && $customVendor ? $customVendor->name . ' — ' . __('Sign In') : (__('System Login') . ' — ' . $siteName) }}</title>
     
     <link rel="icon" type="image/png" href="{{ $siteFavicon }}">
     <link rel="apple-touch-icon" href="{{ $siteFavicon }}">
@@ -115,6 +115,31 @@
             border-color: #f59e0b;
             color: #92400e;
             transform: translateY(-1px);
+        }
+
+        .lang-switch-box {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            border: 1px solid var(--border-card);
+            border-radius: 999px;
+            padding: 2px;
+        }
+
+        .lang-switch-link {
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .lang-switch-link.active {
+            background: #ffffff;
+            color: #b45309;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         /* Login Card */
@@ -524,18 +549,22 @@
         <div class="top-nav">
             @if(isset($customVendor) && $customVendor)
                 <a href="/" class="back-link">
-                    <i class="fa-solid fa-arrow-left"></i> {{ $customVendor->name }} Մենյու
+                    <i class="fa-solid fa-arrow-left"></i> {{ $customVendor->name }} {{ __('View Menu') }}
                 </a>
-                <span class="nav-badge-pill">
-                    <i class="fa-solid fa-store"></i> {{ $customVendor->name }}
-                </span>
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <span class="nav-badge-pill">
+                        <i class="fa-solid fa-store"></i> {{ $customVendor->name }}
+                    </span>
+                </div>
             @else
                 <a href="/" class="back-link">
-                    <i class="fa-solid fa-arrow-left"></i> Գլխավոր էջ
+                    <i class="fa-solid fa-arrow-left"></i> {{ __('Home') }}
                 </a>
-                <a href="{{ route('demo.login') }}" class="nav-badge-pill">
-                    <i class="fa-solid fa-bolt"></i> Փորձարկել Դեմոն
-                </a>
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <a href="{{ route('demo.login') }}" class="nav-badge-pill">
+                        <i class="fa-solid fa-bolt"></i> {{ __('Try Demo') }}
+                    </a>
+                </div>
             @endif
         </div>
 
@@ -551,7 +580,7 @@
                         </div>
                     @endif
                     <h1 class="vendor-title">{{ $customVendor->name }}</h1>
-                    <p class="brand-subtitle">Ռեստորանի Կառավարման Վահանակ</p>
+                    <p class="brand-subtitle">{{ __('Կառավարման Վահանակ') }}</p>
                 @else
                     @if($siteLogoLight)
                         <div style="margin-bottom: 1.25rem;">
@@ -563,7 +592,7 @@
                         </div>
                         <h1 class="brand-title">{{ $siteName }}</h1>
                     @endif
-                    <p class="brand-subtitle">{{ $siteTagline ?: 'Մուտք գործեք ձեր ռեստորանի կառավարման վահանակ' }}</p>
+                    <p class="brand-subtitle">{{ $siteTagline ?: __('Sign in to your restaurant dashboard') }}</p>
                 @endif
             </div>
 
@@ -593,7 +622,7 @@
 
                 <div class="form-group">
                     <label class="form-label">
-                        <span><i class="fa-regular fa-envelope"></i> Էլ․ Փոստ (Email)</span>
+                        <span><i class="fa-regular fa-envelope"></i> {{ __('Email Address') }}</span>
                     </label>
                     <div class="input-wrapper">
                         <input 
@@ -612,7 +641,7 @@
 
                 <div class="form-group">
                     <label class="form-label">
-                        <span><i class="fa-solid fa-lock"></i> Գաղտնաբառ</span>
+                        <span><i class="fa-solid fa-lock"></i> {{ __('Password') }}</span>
                     </label>
                     <div class="input-wrapper">
                         <input 
@@ -624,7 +653,7 @@
                             placeholder="••••••••"
                         >
                         <i class="fa-solid fa-key input-icon"></i>
-                        <button type="button" class="password-toggle-btn" id="togglePasswordBtn" title="Ցուցադրել/Թաքցնել գաղտնաբառը">
+                        <button type="button" class="password-toggle-btn" id="togglePasswordBtn" title="{{ __('Show/Hide password') }}">
                             <i class="fa-regular fa-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
@@ -633,10 +662,10 @@
                 <div class="form-options">
                     <label class="checkbox-label">
                         <input type="checkbox" name="remember" class="checkbox-custom" {{ old('remember') ? 'checked' : '' }}>
-                        <span>Հիշել ինձ</span>
+                        <span>{{ __('Remember me') }}</span>
                     </label>
                     <a href="{{ route('password.request') }}" style="color: #d97706; text-decoration: none; font-size: 0.82rem; font-weight: 600;">
-                        Մոռացե՞լ եք գաղտնաբառը
+                        {{ __('Forgot password?') }}
                     </a>
                 </div>
 
@@ -644,13 +673,13 @@
                 @if(isset($captcha))
                     <div class="form-group">
                         <label class="form-label">
-                            <span><i class="fa-solid fa-shield-halved"></i> Անվտանգության Ստուգում (CAPTCHA)</span>
+                            <span><i class="fa-solid fa-shield-halved"></i> {{ __('Security Check (CAPTCHA)') }}</span>
                         </label>
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div id="captchaContainer" style="display: flex; align-items: center; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
                                 {!! $captcha['svg'] !!}
                             </div>
-                            <button type="button" onclick="refreshCaptcha()" title="Փոխել հարցը" style="padding: 0.55rem 0.75rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; cursor: pointer; font-size: 0.9rem;">
+                            <button type="button" onclick="refreshCaptcha()" title="{{ __('Refresh question') }}" style="padding: 0.55rem 0.75rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; cursor: pointer; font-size: 0.9rem;">
                                 <i class="fa-solid fa-arrows-rotate"></i>
                             </button>
                         </div>
@@ -660,7 +689,7 @@
                                 name="captcha" 
                                 class="form-input" 
                                 required 
-                                placeholder="Մուտքագրեք գումարի պատասխանը"
+                                placeholder="{{ __('Enter math answer') }}"
                                 autocomplete="off"
                                 inputmode="numeric"
                             >
@@ -671,13 +700,13 @@
 
                 <button type="submit" class="btn-submit">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                    <span>Մուտք Գործել</span>
+                    <span>{{ __('Sign In') }}</span>
                 </button>
             </form>
 
             @if(!isset($customVendor) || !$customVendor)
                 <div class="card-divider">
-                    <span>կամ</span>
+                    <span>{{ __('or') }}</span>
                 </div>
 
                 <!-- Quick Demo Promo Box -->
@@ -687,27 +716,27 @@
                             <i class="fa-solid fa-bolt"></i>
                         </div>
                         <div>
-                            <div class="demo-promo-title">Ուսումնասիրել Դեմոն</div>
-                            <div class="demo-promo-desc">Փորձարկեք համակարգը 1 քլիքով</div>
+                            <div class="demo-promo-title">{{ __('Explore Demo') }}</div>
+                            <div class="demo-promo-desc">{{ __('Test the system in 1 click') }}</div>
                         </div>
                     </div>
                     <a href="{{ route('demo.login') }}" class="btn-demo-link">
-                        <span>Դեմո Մուտք</span>
+                        <span>{{ __('Demo Login') }}</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
 
                 <!-- Self Registration CTA -->
                 <div class="register-link-box">
-                    Դեռ չունե՞ք գրանցված ռեստորան։ <br>
+                    {{ __('Don\'t have a registered restaurant yet?') }} <br>
                     <a href="{{ route('register.show') }}">
-                        <i class="fa-solid fa-user-plus"></i> Գրանցվել որպես Նոր Գործընկեր (14 օր անվճար)
+                        <i class="fa-solid fa-user-plus"></i> {{ __('Register as New Partner (14 days free)') }}
                     </a>
                 </div>
             @else
                 <div style="text-align: center; margin-top: 1.5rem; font-size: 0.84rem;">
                     <a href="/" style="color: {{ $customVendor->primary_color ?? '#0284c7' }}; font-weight: 600; text-decoration: none;">
-                        &larr; Վերադառնալ {{ $customVendor->name }} ճաշացանկ
+                        &larr; {{ __('Back to') }} {{ $customVendor->name }} {{ __('digital menu') }}
                     </a>
                 </div>
             @endif
@@ -716,9 +745,9 @@
         <div class="footer-note">
             <span>&copy; {{ date('Y') }} QRMenu SaaS Platform</span>
             <span>•</span>
-            <a href="{{ route('legal.privacy') }}">Գաղտնիություն</a>
+            <a href="{{ route('legal.privacy') }}">{{ __('Privacy Policy') }}</a>
             <span>•</span>
-            <a href="{{ route('legal.terms') }}">Պայմաններ</a>
+            <a href="{{ route('legal.terms') }}">{{ __('Terms of Service') }}</a>
         </div>
     </div>
 

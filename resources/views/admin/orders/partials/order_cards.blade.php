@@ -2,10 +2,10 @@
     <div style="text-align: center; padding: 3.5rem 1rem; background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 16px;">
         <i class="fa-solid fa-bell-concierge" style="font-size: 3rem; color: var(--text-muted); opacity: 0.5; margin-bottom: 1rem;"></i>
         <h3 style="font-family: 'Outfit'; font-size: 1.2rem; color: var(--text-main); margin-bottom: 0.35rem;">
-            Պատվերներ չեն գտնվել
+            No Orders Found
         </h3>
         <p style="color: var(--text-muted); font-size: 0.85rem;">
-            Սեղաններից ստացված նոր պատվերներն այստեղ կհայտնվեն ավտոմատ իրական ժամանակում։
+            New orders from tables and delivery will automatically appear here in real time.
         </p>
     </div>
 @else
@@ -15,7 +15,7 @@
                 
                 @if($order->status == 'pending')
                     <div style="position: absolute; top: -10px; right: 12px; background: #ef4444; color: #fff; font-size: 0.68rem; font-weight: 800; padding: 0.15rem 0.6rem; border-radius: 9999px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); animation: pulse 1.8s infinite;">
-                        ⚡ ՆՈՐ ՊԱՏՎԵՐ
+                        ⚡ NEW ORDER
                     </div>
                 @endif
 
@@ -28,7 +28,7 @@
                     <div style="text-align: right; flex-shrink: 0;">
                         @if($order->type === 'delivery')
                             <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.75rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                <i class="fa-solid fa-motorcycle"></i> ԱՌԱՔՈՒՄ
+                                <i class="fa-solid fa-motorcycle"></i> DELIVERY
                             </span>
                         @else
                             <span style="background: var(--badge-bg); color: var(--badge-text); font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px;">
@@ -41,7 +41,7 @@
                         @if($order->payment_method)
                             <div style="margin-top: 0.25rem;">
                                 <span style="font-size: 0.68rem; font-weight: 800; padding: 0.15rem 0.45rem; border-radius: 4px; background: {{ $order->payment_status === 'paid' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)' }}; color: {{ $order->payment_status === 'paid' ? '#10b981' : '#ef4444' }};">
-                                    {{ strtoupper($order->payment_method) }}: {{ $order->payment_status === 'paid' ? 'Վճարված' : 'Չվճարված' }}
+                                    {{ strtoupper($order->payment_method) }}: {{ $order->payment_status === 'paid' ? 'Paid' : 'Unpaid' }}
                                 </span>
                             </div>
                         @endif
@@ -76,7 +76,7 @@
                             <div style="width: 100%; font-size: 0.82rem; color: #f59e0b; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0.45rem 0.7rem; display: flex; align-items: flex-start; gap: 0.5rem; word-break: break-word;">
                                 <i class="fa-solid fa-map-location-dot" style="margin-top: 0.15rem; flex-shrink: 0;"></i>
                                 <div style="min-width: 0;">
-                                    <strong>Առաքման հասցե՝</strong> {{ $order->delivery_address }}
+                                    <strong>Delivery address:</strong> {{ $order->delivery_address }}
                                 </div>
                             </div>
                         @endif
@@ -107,14 +107,14 @@
                     <div style="min-width: 0;">
                         @if($order->subtotal > 0 && ($order->service_fee > 0 || $order->delivery_fee > 0 || $order->type === 'delivery'))
                             <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.15rem; margin-bottom: 0.35rem; line-height: 1.3;">
-                                <div>Ենթագումար՝ <strong>{{ number_format($order->subtotal) }}</strong> {{ $vendor->currency }}</div>
+                                <div>Subtotal: <strong>{{ number_format($order->subtotal) }}</strong> {{ $vendor->currency }}</div>
                                 @if($order->service_fee > 0)
-                                    <div style="color: #10b981;">Սպասարկում՝ +{{ number_format($order->service_fee) }} {{ $vendor->currency }}</div>
+                                    <div style="color: #10b981;">Service: +{{ number_format($order->service_fee) }} {{ $vendor->currency }}</div>
                                 @endif
                                 @if($order->delivery_fee > 0)
-                                    <div style="color: #3b82f6;">Առաքում՝ +{{ number_format($order->delivery_fee) }} {{ $vendor->currency }}</div>
+                                    <div style="color: #3b82f6;">Delivery: +{{ number_format($order->delivery_fee) }} {{ $vendor->currency }}</div>
                                 @elseif($order->type === 'delivery')
-                                    <div style="color: #10b981;">Առաքում՝ ԱՆՎՃԱՐ</div>
+                                    <div style="color: #10b981;">Delivery: FREE</div>
                                 @endif
                             </div>
                         @endif
@@ -125,29 +125,29 @@
                     </div>
 
                     <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.65rem; font-size: 0.78rem; border-color: rgba(245, 158, 11, 0.4); color: var(--primary);" title="Տպել կտրոնը (ESC/POS)" onclick="printOrderReceipt({{ $order->id }})">
+                        <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.65rem; font-size: 0.78rem; border-color: rgba(245, 158, 11, 0.4); color: var(--primary);" title="Print Receipt (ESC/POS)" onclick="printOrderReceipt({{ $order->id }})">
                             <i class="fa-solid fa-print"></i>
                         </button>
 
                         @if($order->status == 'pending')
                             <button type="button" class="btn btn-primary" style="padding: 0.45rem 0.85rem; font-size: 0.78rem;" onclick="changeOrderStatus({{ $order->id }}, 'preparing')">
-                                <i class="fa-solid fa-fire"></i> Ընդունել
+                                <i class="fa-solid fa-fire"></i> Accept
                             </button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.65rem; font-size: 0.78rem; color: #ef4444;" title="Չեղարկել" onclick="if(confirm('Չեղարկե՞լ պատվերը')) changeOrderStatus({{ $order->id }}, 'cancelled')">
+                            <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.65rem; font-size: 0.78rem; color: #ef4444;" title="Cancel" onclick="if(confirm('Cancel this order?')) changeOrderStatus({{ $order->id }}, 'cancelled')">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         @elseif($order->status == 'preparing')
                             <button type="button" class="btn btn-success" style="padding: 0.45rem 0.85rem; font-size: 0.78rem;" onclick="changeOrderStatus({{ $order->id }}, 'ready')">
-                                <i class="fa-solid fa-bell"></i> Պատրաստ է
+                                <i class="fa-solid fa-bell"></i> Ready
                             </button>
                         @elseif($order->status == 'ready')
                             <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.78rem; color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="changeOrderStatus({{ $order->id }}, 'completed')">
-                                <i class="fa-solid fa-check"></i> Ավարտել
+                                <i class="fa-solid fa-check"></i> Complete
                             </button>
                         @elseif($order->status == 'cancelled')
-                            <span class="badge badge-rose" style="font-size: 0.78rem;"><i class="fa-solid fa-ban"></i> Չեղարկված</span>
+                            <span class="badge badge-rose" style="font-size: 0.78rem;"><i class="fa-solid fa-ban"></i> Cancelled</span>
                         @else
-                            <span class="badge badge-emerald" style="font-size: 0.78rem;"><i class="fa-solid fa-circle-check"></i> Ավարտված</span>
+                            <span class="badge badge-emerald" style="font-size: 0.78rem;"><i class="fa-solid fa-circle-check"></i> Completed</span>
                         @endif
                     </div>
                 </div>

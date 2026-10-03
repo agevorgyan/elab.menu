@@ -8,6 +8,7 @@ use App\Services\TenantCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -370,7 +371,7 @@ class Vendor extends Model
         return (bool) $res['is_open'];
     }
 
-    public function getClosingNotice(string $channel, ?Location $location = null, ?Carbon $now = null, ?string $lang = 'hy'): ?array
+    public function getClosingNotice(string $channel, ?Location $location = null, ?Carbon $now = null, ?string $lang = 'en'): ?array
     {
         $res = $this->resolveOperatingSchedule($channel, $location, $now);
         if (! $res['is_open'] || $res['is_warning_active']) {
@@ -580,7 +581,7 @@ class Vendor extends Model
     public function getAiWaiterConfig(): array
     {
         $defaultConfig = [
-            'languages' => ['hy', 'en', 'ru'],
+            'languages' => ['en'],
             'personality' => 'friendly',
             'max_recommendations' => 3,
             'free_text_enabled' => true,
@@ -707,7 +708,7 @@ class Vendor extends Model
     public function getAiWaiterLanguages(): array
     {
         $config = $this->getAiWaiterConfig();
-        $allowed = $config['languages'] ?? ['hy', 'en', 'ru'];
+        $allowed = $config['languages'] ?? ['en'];
         $vendorSupported = array_map(fn ($l) => strtolower($l['code'] ?? ''), $this->getSupportedLanguages());
 
         if (! empty($vendorSupported)) {
@@ -717,7 +718,7 @@ class Vendor extends Model
             }
         }
 
-        return ! empty($allowed) ? $allowed : ['hy', 'en', 'ru'];
+        return ! empty($allowed) ? $allowed : ['en'];
     }
 
     public function featuredProduct()
@@ -1238,19 +1239,89 @@ class Vendor extends Model
     }
 
     /**
+     * Relationship to vendor languages pivot records.
+     */
+    public function vendorLanguages(): HasMany
+    {
+        return $this->hasMany(VendorLanguage::class)->orderBy('sort_order', 'asc');
+    }
+
+    /**
+     * Relationship to enabled languages for this vendor.
+     */
+    public function languages(): BelongsToMany
+    {
+        return $this->belongsToMany(Language::class, 'vendor_languages')
+            ->withPivot(['is_default', 'is_active', 'sort_order'])
+            ->withTimestamps()
+            ->orderByPivot('sort_order', 'asc');
+    }
+
+    /**
      * Get configured supported languages for this vendor.
      */
     public function getSupportedLanguages(): array
     {
+        if ($this->relationLoaded('vendorLanguages')) {
+            $active = $this->vendorLanguages->where('is_active', true)->sortBy('sort_order');
+            if ($active->isNotEmpty()) {
+                return $active->map(fn ($vl) => [
+                    'code' => $vl->language?->code ?? 'en',
+                    'name' => $vl->language?->name ?? 'English',
+                    'native_name' => $vl->language?->native_name ?? 'English',
+                    'flag' => $vl->language?->flag ?? '🌐',
+                    'direction' => $vl->language?->direction ?? 'ltr',
+                    'is_default' => (bool) $vl->is_default,
+                ])->values()->all();
+            }
+        } else {
+            $relational = $this->vendorLanguages()->with('language')->where('is_active', true)->get();
+            if ($relational->isNotEmpty()) {
+                return $relational->map(fn ($vl) => [
+                    'code' => $vl->language?->code ?? 'en',
+                    'name' => $vl->language?->name ?? 'English',
+                    'native_name' => $vl->language?->native_name ?? 'English',
+                    'flag' => $vl->language?->flag ?? '🌐',
+                    'direction' => $vl->language?->direction ?? 'ltr',
+                    'is_default' => (bool) $vl->is_default,
+                ])->values()->all();
+            }
+        }
+
         if (! empty($this->supported_languages) && is_array($this->supported_languages)) {
             return $this->supported_languages;
         }
 
         return [
-            ['code' => 'hy', 'name' => 'Հայերեն', 'flag' => '🇦🇲'],
-            ['code' => 'en', 'name' => 'English', 'flag' => '🇬🇧'],
-            ['code' => 'ru', 'name' => 'Русский', 'flag' => '🇷🇺'],
+            ['code' => 'en', 'name' => 'English', 'native_name' => 'English', 'flag' => '🇬🇧', 'direction' => 'ltr', 'is_default' => true],
+            ['code' => 'hy', 'name' => 'Armenian', 'native_name' => 'Հայերեն', 'flag' => '🇦🇲', 'direction' => 'ltr', 'is_default' => false],
+            ['code' => 'ru', 'name' => 'Russian', 'native_name' => 'Русский', 'flag' => '🇷🇺', 'direction' => 'ltr', 'is_default' => false],
         ];
+    }
+
+    /**
+     * Get the default language code for this vendor.
+     */
+    public function getDefaultLanguageCode(): string
+    {
+        $supported = $this->getSupportedLanguages();
+        foreach ($supported as $lang) {
+            if (! empty($lang['is_default'])) {
+                return $lang['code'];
+            }
+        }
+
+        return $supported[0]['code'] ?? 'en';
+    }
+
+    /**
+     * Get an array of only language codes supported by this vendor (e.g. ['hy', 'en', 'ru']).
+     *
+     * @return array<int, string>
+     */
+    public function getSupportedLanguageCodes(): array
+    {
+        return array_values(array_filter(array_map(fn ($l) => is_array($l) ? ($l['code'] ?? '') : (string) $l, $this->getSupportedLanguages())));
     }
 
     /**

@@ -112,41 +112,41 @@
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <span class="badge badge-indigo">
-                    <i class="fa-solid fa-store"></i> Գործընկերների Ցուցակ
+                    <i class="fa-solid fa-store"></i> {{ __('Vendor Directory') }}
                 </span>
-                <span style="font-size: 0.78rem; color: var(--text-muted);">Ընդհանուր՝ {{ $vendors->count() }} գործընկեր</span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Total partners: :count', ['count' => $vendors->count()]) }}</span>
             </div>
             <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                Գործընկերների Կատալոգ և Կառավարում
+                {{ __('Partner Catalog & Management') }}
             </h1>
         </div>
         <button class="btn btn-primary" @click="showModal = true" style="border-radius: 12px; font-size: 0.88rem; padding: 0.65rem 1.25rem;">
-            <i class="fa-solid fa-plus"></i> Ստեղծել Նոր Գործընկեր
+            <i class="fa-solid fa-plus"></i> {{ __('Create New Partner') }}
         </button>
     </div>
 
     <!-- KPI Summary Row -->
     <div class="grid-4" style="gap: 1rem; margin-bottom: 1.5rem;">
         <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Գրանցված Գործընկերներ</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">{{ __('Registered Partners') }}</div>
             <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-top: 0.2rem;">
                 {{ $vendors->count() }}
             </div>
         </div>
         <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Ակտիվ Վիճակում</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">{{ __('In Active State') }}</div>
             <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: #10b981; margin-top: 0.2rem;">
                 {{ $vendors->where('is_active', true)->count() }}
             </div>
         </div>
         <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Կասեցված</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">{{ __('Suspended') }}</div>
             <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: #ef4444; margin-top: 0.2rem;">
                 {{ $vendors->where('is_active', false)->count() }}
             </div>
         </div>
         <div class="stat-kpi-card" style="padding: 1.15rem 1.25rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Ընդհանուր Մասնաճյուղեր</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">{{ __('Total Branches') }}</div>
             <div style="font-size: 1.85rem; font-weight: 800; font-family: 'Outfit'; color: var(--primary); margin-top: 0.2rem;">
                 {{ $vendors->sum(fn($v) => $v->locations->count()) }}
             </div>
@@ -159,7 +159,7 @@
             <!-- Search input -->
             <div style="flex: 1; min-width: 260px; position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
-                <input type="text" x-model="search" placeholder="Որոնել ըստ անվանման, հասցեի, ՀՎՀՀ-ի, տնօրենի..." class="form-input" style="padding-left: 2.5rem; padding-right: 2rem; border-radius: 12px;">
+                <input type="text" x-model="search" placeholder="{{ __('Search by name, address, tax ID, director...') }}" class="form-input" style="padding-left: 2.5rem; padding-right: 2rem; border-radius: 12px;">
                 <button x-show="search.length > 0" @click="search = ''" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -167,22 +167,22 @@
 
             <!-- Type Filter Pills -->
             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
-                <span class="filter-pill" :class="{ 'active': typeFilter === 'all' }" @click="typeFilter = 'all'">Բոլորը</span>
-                <span class="filter-pill" :class="{ 'active': typeFilter === 'restaurant' }" @click="typeFilter = 'restaurant'">🍽️ Ռեստորան</span>
-                <span class="filter-pill" :class="{ 'active': typeFilter === 'cafe' }" @click="typeFilter = 'cafe'">☕ Սրճարան</span>
-                <span class="filter-pill" :class="{ 'active': typeFilter === 'hotel' }" @click="typeFilter = 'hotel'">🏨 Հյուրանոց</span>
+                <span class="filter-pill" :class="{ 'active': typeFilter === 'all' }" @click="typeFilter = 'all'">{{ __('All') }}</span>
+                <span class="filter-pill" :class="{ 'active': typeFilter === 'restaurant' }" @click="typeFilter = 'restaurant'">🍽️ {{ __('Restaurant') }}</span>
+                <span class="filter-pill" :class="{ 'active': typeFilter === 'cafe' }" @click="typeFilter = 'cafe'">☕ {{ __('Cafe') }}</span>
+                <span class="filter-pill" :class="{ 'active': typeFilter === 'hotel' }" @click="typeFilter = 'hotel'">🏨 {{ __('Hotel') }}</span>
             </div>
 
             <!-- Status & Plan Dropdowns -->
             <div style="display: flex; gap: 0.65rem; align-items: center;">
                 <select x-model="statusFilter" class="form-select" style="width: auto; padding: 0.5rem 0.85rem; border-radius: 10px; font-size: 0.8rem;">
-                    <option value="all">Բոլոր կարգավիճակները</option>
-                    <option value="active">🟢 Միայն Ակտիվները</option>
-                    <option value="suspended">🔴 Կասեցվածները</option>
+                    <option value="all">{{ __('All Statuses') }}</option>
+                    <option value="active">🟢 {{ __('Active Only') }}</option>
+                    <option value="suspended">🔴 {{ __('Suspended Only') }}</option>
                 </select>
 
                 <select x-model="planFilter" class="form-select" style="width: auto; padding: 0.5rem 0.85rem; border-radius: 10px; font-size: 0.8rem;">
-                    <option value="all">Բոլոր փաթեթները</option>
+                    <option value="all">{{ __('All Plans') }}</option>
                     @foreach($plans as $pl)
                         <option value="{{ $pl->slug }}">{{ $pl->name }}</option>
                     @endforeach
@@ -197,14 +197,14 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="min-width: 220px;">Գործընկեր և Մենյու</th>
-                        <th>Տեսակ</th>
-                        <th style="min-width: 240px;">Իրավաբանական Տվյալներ (ՀՎՀՀ)</th>
-                        <th>Մասնաճյուղ</th>
-                        <th>Թեմա</th>
-                        <th>Փաթեթ</th>
-                        <th>Կարգավիճակ</th>
-                        <th style="text-align: right; min-width: 140px;">Գործողություններ</th>
+                        <th style="min-width: 220px;">{{ __('Partner & Menu') }}</th>
+                        <th>{{ __('Type') }}</th>
+                        <th style="min-width: 240px;">{{ __('Legal Details (Tax ID)') }}</th>
+                        <th>{{ __('Branch') }}</th>
+                        <th>{{ __('Theme') }}</th>
+                        <th>{{ __('Plan') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th style="text-align: right; min-width: 140px;">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -245,9 +245,9 @@
                             <!-- Type -->
                             <td>
                                 <span style="font-size: 0.8rem; font-weight: 600; text-transform: capitalize; color: var(--text-main);">
-                                    @if($v->type === 'restaurant') 🍽️ Ռեստորան
-                                    @elseif($v->type === 'cafe') ☕ Սրճարան
-                                    @else 🏨 Հյուրանոց
+                                    @if($v->type === 'restaurant') 🍽️ {{ __('Restaurant') }}
+                                    @elseif($v->type === 'cafe') ☕ {{ __('Cafe') }}
+                                    @else 🏨 {{ __('Hotel') }}
                                     @endif
                                 </span>
                             </td>
@@ -259,7 +259,7 @@
                                         <span style="font-weight: 700; color: var(--text-main);">{{ $v->legal_name ?? $v->name }}</span>
                                         @if($v->tax_id)
                                             <span style="font-size: 0.72rem; color: var(--primary); font-weight: 800; background: var(--badge-bg); padding: 0.1rem 0.4rem; border-radius: 4px;">
-                                                ՀՎՀՀ: {{ $v->tax_id }}
+                                                {{ __('Tax ID:') }} {{ $v->tax_id }}
                                             </span>
                                         @endif
                                     </div>
@@ -271,12 +271,12 @@
                                     @endif
                                     @if($v->director_name)
                                         <div style="color: var(--text-muted); font-size: 0.72rem;">
-                                            <strong>Տնօրեն՝</strong> {{ $v->director_name }} @if($v->director_phone) <span style="color: var(--text-main); font-weight: 600;">({{ $v->director_phone }})</span> @endif
+                                            <strong>{{ __('Director:') }}</strong> {{ $v->director_name }} @if($v->director_phone) <span style="color: var(--text-main); font-weight: 600;">({{ $v->director_phone }})</span> @endif
                                         </div>
                                     @endif
                                     @if($v->contact_person_name)
                                         <div style="color: var(--text-muted); font-size: 0.72rem;">
-                                            <strong>Մենեջեր՝</strong> {{ $v->contact_person_name }} @if($v->contact_person_phone) <span style="color: var(--text-main); font-weight: 600;">({{ $v->contact_person_phone }})</span> @endif
+                                            <strong>{{ __('Manager:') }}</strong> {{ $v->contact_person_name }} @if($v->contact_person_phone) <span style="color: var(--text-main); font-weight: 600;">({{ $v->contact_person_phone }})</span> @endif
                                         </div>
                                     @endif
                                 </div>
@@ -285,7 +285,7 @@
                             <!-- Locations -->
                             <td>
                                 <span class="badge badge-indigo">
-                                    <i class="fa-solid fa-location-dot"></i> {{ $v->locations->count() }} տեղ
+                                    <i class="fa-solid fa-location-dot"></i> {{ $v->locations->count() }} {{ __('locations') }}
                                 </span>
                             </td>
 
@@ -307,11 +307,11 @@
                             <td>
                                 @if($v->is_active)
                                     <span class="badge badge-emerald">
-                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Ակտիվ
+                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ __('Active') }}
                                     </span>
                                 @else
                                     <span class="badge badge-rose">
-                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Կասեցված
+                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ __('Suspended') }}
                                     </span>
                                 @endif
                             </td>
@@ -319,13 +319,13 @@
                             <!-- Actions -->
                             <td style="text-align: right;">
                                 <div style="display: inline-flex; align-items: center; gap: 0.4rem;">
-                                    <a href="{{ route('superadmin.vendors.edit', $v->id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px; color: var(--primary);" title="Խմբագրել գործընկերոջը">
+                                    <a href="{{ route('superadmin.vendors.edit', $v->id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px; color: var(--primary);" title="{{ __('Edit Partner') }}">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </a>
 
                                     <form action="{{ route('superadmin.vendors.toggle', $v->id) }}" method="POST" style="margin: 0;">
                                         @csrf
-                                        <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px;" title="{{ $v->is_active ? 'Կասեցնել' : 'Ակտիվացնել' }}">
+                                        <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px;" title="{{ $v->is_active ? __('Suspend') : __('Activate') }}">
                                             @if($v->is_active)
                                                 <i class="fa-solid fa-pause" style="color: #ef4444;"></i>
                                             @else
@@ -334,7 +334,7 @@
                                         </button>
                                     </form>
 
-                                    <a href="{{ route('client.menu', ['vendor_slug' => $v->slug]) }}" target="_blank" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px;" title="Բացել Մենյուն">
+                                    <a href="{{ route('client.menu', ['vendor_slug' => $v->slug]) }}" target="_blank" class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: 8px;" title="{{ __('Open Menu') }}">
                                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                     </a>
                                 </div>
@@ -377,11 +377,11 @@
                     <div>
                         @if($v->is_active)
                             <span class="badge badge-emerald">
-                                <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Ակտիվ
+                                <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ __('Active') }}
                             </span>
                         @else
                             <span class="badge badge-rose">
-                                <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Կասեցված
+                                <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ __('Suspended') }}
                             </span>
                         @endif
                     </div>
@@ -390,16 +390,16 @@
                 <!-- Badges Row -->
                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.85rem;">
                     <span class="badge badge-indigo">
-                        @if($v->type === 'restaurant') 🍽️ Ռեստորան
-                        @elseif($v->type === 'cafe') ☕ Սրճարան
-                        @else 🏨 Հյուրանոց
+                        @if($v->type === 'restaurant') 🍽️ {{ __('Restaurant') }}
+                        @elseif($v->type === 'cafe') ☕ {{ __('Cafe') }}
+                        @else 🏨 {{ __('Hotel') }}
                         @endif
                     </span>
                     <span class="plan-pill plan-{{ $planSlug }}">
                         {{ $v->plan?->name ?? strtoupper($v->subscription_plan ?? 'pro') }}
                     </span>
                     <span class="badge badge-cyan">
-                        <i class="fa-solid fa-location-dot"></i> {{ $v->locations->count() }} տեղ
+                        <i class="fa-solid fa-location-dot"></i> {{ $v->locations->count() }} {{ __('locations') }}
                     </span>
                     <span class="badge badge-purple">
                         <i class="fa-solid fa-palette"></i> {{ $v->menuTemplate?->name ?? 'Default' }}
@@ -412,7 +412,7 @@
                         <span style="font-weight: 700; color: var(--text-main);">{{ $v->legal_name ?? $v->name }}</span>
                         @if($v->tax_id)
                             <span style="font-size: 0.72rem; color: var(--primary); font-weight: 800; background: var(--badge-bg); padding: 0.1rem 0.4rem; border-radius: 4px;">
-                                ՀՎՀՀ: {{ $v->tax_id }}
+                                {{ __('Tax ID:') }} {{ $v->tax_id }}
                             </span>
                         @endif
                     </div>
@@ -424,12 +424,12 @@
                     @endif
                     @if($v->director_name)
                         <div style="color: var(--text-muted); font-size: 0.72rem;">
-                            <strong>Տնօրեն՝</strong> {{ $v->director_name }} @if($v->director_phone) ({{ $v->director_phone }}) @endif
+                            <strong>{{ __('Director:') }}</strong> {{ $v->director_name }} @if($v->director_phone) ({{ $v->director_phone }}) @endif
                         </div>
                     @endif
                     @if($v->contact_person_name)
                         <div style="color: var(--text-muted); font-size: 0.72rem;">
-                            <strong>Մենեջեր՝</strong> {{ $v->contact_person_name }} @if($v->contact_person_phone) ({{ $v->contact_person_phone }}) @endif
+                            <strong>{{ __('Manager:') }}</strong> {{ $v->contact_person_name }} @if($v->contact_person_phone) ({{ $v->contact_person_phone }}) @endif
                         </div>
                     @endif
                 </div>
@@ -437,16 +437,16 @@
                 <!-- Action buttons -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
                     <a href="{{ route('superadmin.vendors.edit', $v->id) }}" class="btn btn-secondary" style="justify-content: center; font-size: 0.8rem; padding: 0.55rem; color: var(--primary);">
-                        <i class="fa-solid fa-pen-to-square"></i> Խմբագրել
+                        <i class="fa-solid fa-pen-to-square"></i> {{ __('Edit') }}
                     </a>
                     <form action="{{ route('superadmin.vendors.toggle', $v->id) }}" method="POST" style="margin: 0;">
                         @csrf
                         <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 0.8rem; padding: 0.55rem;">
-                            {{ $v->is_active ? 'Կասեցնել' : 'Ակտիվացնել' }}
+                            {{ $v->is_active ? __('Suspend') : __('Activate') }}
                         </button>
                     </form>
                     <a href="{{ route('client.menu', ['vendor_slug' => $v->slug]) }}" target="_blank" class="btn btn-primary" style="justify-content: center; font-size: 0.8rem; padding: 0.55rem;">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Մենյու
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('View Menu') }}
                     </a>
                 </div>
             </div>
@@ -463,9 +463,9 @@
                     </div>
                     <div>
                         <h3 style="font-family: 'Outfit'; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                            Ստեղծել Նոր Գործընկեր
+                            {{ __('Create New Partner') }}
                         </h3>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Ռեստորանի / սրճարանի հաշվի ստեղծում</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">{{ __('Restaurant / Cafe Account Creation') }}</p>
                     </div>
                 </div>
                 <button type="button" @click="showModal = false" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;">
@@ -479,24 +479,24 @@
                 <!-- Section 1: Business Details -->
                 <div style="margin-bottom: 1.25rem;">
                     <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
-                        🏢 Բիզնես Տվյալներ
+                        🏢 {{ __('Business Details') }}
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
                         <div>
-                            <label class="form-label">Ֆիրմային Անվանում *</label>
+                            <label class="form-label">{{ __('Brand Name') }} *</label>
                             <input type="text" name="name" required class="form-input" placeholder="օր․ Havana Lounge">
                         </div>
                         <div>
-                            <label class="form-label">Բիզնեսի Տեսակ *</label>
+                            <label class="form-label">{{ __('Business Type') }} *</label>
                             <select name="type" class="form-select">
-                                <option value="restaurant">🍽️ Ռեստորան</option>
-                                <option value="cafe">☕ Սրճարան</option>
-                                <option value="hotel">🏨 Հյուրանոց և Լաունջ</option>
+                                <option value="restaurant">🍽️ {{ __('Restaurant') }}</option>
+                                <option value="cafe">☕ {{ __('Cafe') }}</option>
+                                <option value="hotel">🏨 {{ __('Hotel & Lounge') }}</option>
                             </select>
                         </div>
                     </div>
                     <div>
-                        <label class="form-label">Հեռախոսահամար</label>
+                        <label class="form-label">{{ __('Phone Number') }}</label>
                         <input type="text" name="phone" class="form-input" placeholder="+374 10 123456">
                     </div>
                 </div>
@@ -504,20 +504,20 @@
                 <!-- Section 2: Owner Account -->
                 <div style="margin-bottom: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                     <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
-                        👤 Սեփականատիրոջ Մուտքանուն
+                        👤 {{ __('Owner Account') }}
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
                         <div>
-                            <label class="form-label">Սեփականատիրոջ Անուն *</label>
+                            <label class="form-label">{{ __('Owner Name') }} *</label>
                             <input type="text" name="owner_name" required class="form-input" placeholder="Անուն Ազգանուն">
                         </div>
                         <div>
-                            <label class="form-label">Էլ․ Փոստ (Login Email) *</label>
+                            <label class="form-label">{{ __('Email (Login Email)') }} *</label>
                             <input type="email" name="email" required class="form-input" placeholder="owner@restaurant.am">
                         </div>
                     </div>
                     <div>
-                        <label class="form-label">Նախնական Գաղտնաբառ *</label>
+                        <label class="form-label">{{ __('Default Password') }} *</label>
                         <input type="password" name="password" required value="password" class="form-input">
                     </div>
                 </div>
@@ -525,11 +525,11 @@
                 <!-- Section 3: Theme & Plan -->
                 <div style="margin-bottom: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                     <div style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
-                        🎨 Թեմա և Բաժանորդագրություն
+                        🎨 {{ __('Theme & Subscription') }}
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
                         <div>
-                            <label class="form-label">Մենյուի Թեմա *</label>
+                            <label class="form-label">{{ __('Menu Theme') }} *</label>
                             <select name="menu_template_id" class="form-select">
                                 @foreach($templates as $tmpl)
                                     <option value="{{ $tmpl->id }}">{{ $tmpl->name }}</option>
@@ -537,7 +537,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="form-label">Բաժանորդագրության Փաթեթ *</label>
+                            <label class="form-label">{{ __('Subscription Plan') }} *</label>
                             <select name="subscription_plan" class="form-select">
                                 @foreach($plans as $plan)
                                     <option value="{{ $plan->slug }}" {{ $plan->slug === 'pro' ? 'selected' : '' }}>
@@ -552,10 +552,10 @@
                 <!-- Modal Footer -->
                 <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                     <button type="button" class="btn btn-secondary" @click="showModal = false" style="border-radius: 10px;">
-                        Չեղարկել
+                        {{ __('Cancel') }}
                     </button>
                     <button type="submit" class="btn btn-primary" style="border-radius: 10px;">
-                        <i class="fa-solid fa-plus"></i> Ստեղծել Գործընկեր
+                        <i class="fa-solid fa-plus"></i> {{ __('Create Partner') }}
                     </button>
                 </div>
             </form>

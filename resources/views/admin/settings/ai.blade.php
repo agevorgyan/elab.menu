@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('AI Կարգավորումներ & AI Waiter') . ' - ' . $vendor->name)
+@section('title', __('AI Settings & AI Waiter') . ' - ' . $vendor->name)
 
 @section('content')
 <div style="max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;">
@@ -9,30 +9,30 @@
         <div style="min-width: 0; flex: 1;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem;">
                 <a href="{{ route('admin.settings.index') }}" style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
-                    <i class="fa-solid fa-arrow-left"></i> {{ __('Կարգավորումներ') }}
+                    <i class="fa-solid fa-arrow-left"></i> {{ __('Settings') }}
                 </a>
                 <span style="color: var(--text-muted);">/</span>
-                <span style="color: var(--primary); font-weight: 700;">{{ __('AI Կարգավորումներ & Մոդելներ') }}</span>
+                <span style="color: var(--primary); font-weight: 700;">{{ __('AI Settings & Models') }}</span>
             </div>
 
             <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <span style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); color: #8b5cf6; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </span>
-                <span>{{ __('AI Waiter & Խոհարարական Ինտելեկտ') }}</span>
+                <span>{{ __('AI Waiter & Culinary Intelligence') }}</span>
                 <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; letter-spacing: 0.04em;">PRO SUITE</span>
             </h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0 0; word-break: break-word;">
-                {{ __('Կառավարեք AI մատուցողին, ռեստորանի առաջնահերթ ապրանքներն ու բաղադրիչները, հարցերի հաջորդականությունը և AI պրովայդերներին:') }}
+                {{ __('Manage the AI waiter, priority dishes and ingredients, question sequencing, and AI providers:') }}
             </p>
         </div>
 
         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
             <a href="{{ route('admin.settings.index') }}" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem;">
-                <i class="fa-solid fa-sliders"></i> {{ __('Ընդհանուր կարգավորումներ') }}
+                <i class="fa-solid fa-sliders"></i> {{ __('General Settings') }}
             </a>
             <button type="submit" form="aiSettingsForm" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; color: #fff;">
-                <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել Բոլոր Փոփոխությունները') }}
+                <i class="fa-solid fa-floppy-disk"></i> {{ __('Save All Changes') }}
             </button>
         </div>
     </div>
@@ -47,7 +47,7 @@
     @if ($errors->any())
         <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #ef4444;">
             <div style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-circle-exclamation"></i> {{ __('Ուշադրություն. Լրացված տվյալներում առկա են սխալներ') }}
+                <i class="fa-solid fa-circle-exclamation"></i> {{ __('Attention: Please correct the errors in the form') }}
             </div>
             <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.88rem;">
                 @foreach ($errors->all() as $error)
@@ -66,17 +66,17 @@
                 </div>
                 <div>
                     <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                        {{ __('AI Waiter Վերլուծություն & Կոնվերսիա (Analytics)') }}
+                        {{ __('AI Waiter Analytics & Conversion') }}
                     </h3>
                     <span style="font-size: 0.78rem; color: var(--text-muted);">
-                        {{ __('Հաճախորդների փոխազդեցություն, առաջարկների դիտումներ և իրական պատվերներ') }}
+                        {{ __('Customer interactions, recommendation views, and completed orders') }}
                     </span>
                 </div>
             </div>
 
             <!-- Language Distribution Badges -->
             <div style="display: flex; gap: 0.4rem; align-items: center;">
-                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('Լեզուներ՝') }}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ __('Languages:') }}</span>
                 <span style="font-size: 0.75rem; font-weight: 700; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.2rem 0.5rem; border-radius: 6px;">
                     🇦🇲 {{ $analytics['languages']['hy'] ?? 0 }}
                 </span>
@@ -94,52 +94,52 @@
             <!-- Total Sessions -->
             <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
                 <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
-                    {{ __('AI Սեսիաներ') }}
+                    {{ __('AI Sessions') }}
                 </div>
                 <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: var(--text-main);">
                     {{ number_format($analytics['total_sessions']) }}
                 </div>
                 <div style="font-size: 0.75rem; color: #8b5cf6; margin-top: 0.25rem; font-weight: 600;">
-                    <i class="fa-solid fa-users"></i> {{ __('Բոլոր սկանավորումները') }}
+                    <i class="fa-solid fa-users"></i> {{ __('All scans') }}
                 </div>
             </div>
 
             <!-- Recommendations Viewed -->
             <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
                 <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
-                    {{ __('Առաջարկներ Ստացած') }}
+                    {{ __('Recommendations Viewed') }}
                 </div>
                 <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #3b82f6;">
                     {{ number_format($analytics['recommended_count']) }}
                 </div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                    {{ $analytics['total_sessions'] > 0 ? round(($analytics['recommended_count'] / $analytics['total_sessions']) * 100, 1) : 0 }}% {{ __('անցում հարցերից') }}
+                    {{ $analytics['total_sessions'] > 0 ? round(($analytics['recommended_count'] / $analytics['total_sessions']) * 100, 1) : 0 }}% {{ __('funnel from questions') }}
                 </div>
             </div>
 
             <!-- Added to Cart -->
             <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
                 <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
-                    {{ __('Ավելացրել են Զամբյուղ') }}
+                    {{ __('Added to Cart') }}
                 </div>
                 <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #10b981;">
                     {{ number_format($analytics['added_to_cart_count']) }}
                 </div>
                 <div style="font-size: 0.75rem; color: #10b981; margin-top: 0.25rem; font-weight: 600;">
-                    <i class="fa-solid fa-cart-shopping"></i> {{ __('Ակտիվ հետաքրքրություն') }}
+                    <i class="fa-solid fa-cart-shopping"></i> {{ __('Active interest') }}
                 </div>
             </div>
 
             <!-- Orders & Revenue -->
             <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
                 <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
-                    {{ __('AI Պատվերներ & Հասույթ') }}
+                    {{ __('AI Orders & Revenue') }}
                 </div>
                 <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #f59e0b;">
                     {{ number_format($analytics['total_revenue']) }} <span style="font-size: 0.95rem;">{{ $vendor->currency }}</span>
                 </div>
                 <div style="font-size: 0.75rem; color: #f59e0b; margin-top: 0.25rem; font-weight: 600;">
-                    {{ $analytics['ordered_count'] }} {{ __('պատվեր') }} • {{ $analytics['conversion_rate'] }}% {{ __('կոնվերսիա') }}
+                    {{ $analytics['ordered_count'] }} {{ __('orders.orders') }} • {{ $analytics['conversion_rate'] }}% {{ __('Conversion') }}
                 </div>
             </div>
         </div>
@@ -147,7 +147,7 @@
         <!-- Conversion Funnel Bar -->
         <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
             <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;">
-                {{ __('Կոնվերսիոն Ձագար (Conversion Funnel)') }}
+                {{ __('Conversion Funnel') }}
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 140px; background: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; padding: 0.5rem 0.75rem; border-radius: 8px;">
@@ -156,17 +156,17 @@
                 </div>
                 <i class="fa-solid fa-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
                 <div style="flex: 1; min-width: 140px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; padding: 0.5rem 0.75rem; border-radius: 8px;">
-                    <div style="font-size: 0.72rem; color: var(--text-muted);">2. Առաջարկներ</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">2. Recommendations</div>
                     <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['recommended_count'] }}</div>
                 </div>
                 <i class="fa-solid fa-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
                 <div style="flex: 1; min-width: 140px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 0.5rem 0.75rem; border-radius: 8px;">
-                    <div style="font-size: 0.72rem; color: var(--text-muted);">3. Զամբյուղ</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">3. Cart</div>
                     <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['added_to_cart_count'] }}</div>
                 </div>
                 <i class="fa-solid fa-arrow-right" style="color: var(--text-muted); font-size: 0.75rem;"></i>
                 <div style="flex: 1; min-width: 140px; background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 0.5rem 0.75rem; border-radius: 8px;">
-                    <div style="font-size: 0.72rem; color: var(--text-muted);">4. Պատվեր</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">4. Order</div>
                     <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">{{ $analytics['ordered_count'] }} ({{ $analytics['conversion_rate'] }}%)</div>
                 </div>
             </div>
@@ -176,13 +176,13 @@
     <!-- 2. MAIN CONFIGURATION TABS -->
     <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; overflow-x: auto;">
         <button type="button" class="tab-btn active-tab" onclick="switchAiTab('tab-general', this)">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('AI Մատուցող Խորհրդատու') }}
+            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('AI Waiter Assistant') }}
         </button>
         <button type="button" class="tab-btn" onclick="switchAiTab('tab-priorities', this)">
-            <i class="fa-solid fa-award"></i> {{ __('Առաջնահերթություններ & Ranking') }}
+            <i class="fa-solid fa-award"></i> {{ __('Priorities & Ranking') }}
         </button>
         <button type="button" class="tab-btn" onclick="switchAiTab('tab-questions', this)">
-            <i class="fa-solid fa-list-check"></i> {{ __('Հարցաշարի Շարժիչ') }}
+            <i class="fa-solid fa-list-check"></i> {{ __('Question Engine') }}
         </button>
         <button type="button" class="tab-btn" onclick="switchAiTab('tab-provider', this)">
             <i class="fa-solid fa-microchip"></i> {{ __('AI Provider & API Engine') }}
@@ -199,17 +199,17 @@
                     <div>
                         <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fa-solid fa-robot" style="color: #8b5cf6;"></i>
-                            <span>{{ __('AI Մատուցողի Հիմնական Կարգավորումներ') }}</span>
+                            <span>{{ __('AI Waiter Core Settings') }}</span>
                         </h3>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
-                            {{ __('Կարգավորեք անվանումը, ողջույնի հաղորդագրությունը, լեզուները և աշխատանքի ռեժիմը') }}
+                            {{ __('Configure persona name, welcome message, languages, and interaction mode') }}
                         </p>
                     </div>
 
                     <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; background: var(--bg-body); border: 1px solid var(--border-color); padding: 0.55rem 1rem; border-radius: 12px;">
                         <input type="checkbox" name="ai_waiter_enabled" value="1" id="aiWaiterToggle" {{ old('ai_waiter_enabled', $vendor->ai_waiter_enabled) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
                         <span style="font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
-                            {{ __('Միացնել AI Մատուցողը') }}
+                            {{ __('Enable AI Waiter') }}
                         </span>
                     </label>
                 </div>
@@ -218,27 +218,27 @@
                     <!-- Name -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('AI Մատուցողի Անունը / Կերպարը') }}
+                            {{ __('AI Waiter Name / Persona') }}
                         </label>
-                        <input type="text" name="ai_waiter_name" id="aiWaiterNameInput" value="{{ old('ai_waiter_name', $vendor->ai_waiter_name ?? 'AI Մատուցող') }}" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
+                        <input type="text" name="ai_waiter_name" id="aiWaiterNameInput" value="{{ old('ai_waiter_name', $vendor->ai_waiter_name ?? 'AI Waiter') }}" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
                         <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
-                            {{ __('Այս անունով AI-ն կներկայանա հաճախորդին ողջույնի և խորհրդատվության ժամանակ') }}
+                            {{ __('The AI will introduce itself with this name during greetings and consultations') }}
                         </small>
                     </div>
 
                     <!-- Personality / Tone -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('AI Մատուցողի Բնավորություն / Տոն (Personality)') }}
+                            {{ __('AI Waiter Personality / Tone') }}
                         </label>
                         <select name="ai_waiter_personality" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.92rem; font-weight: 600;">
-                            <option value="friendly" {{ ($aiWaiterConfig['personality'] ?? '') === 'friendly' ? 'selected' : '' }}>😊 Ջերմ և ընկերական (Friendly - Լռելյայն)</option>
-                            <option value="professional" {{ ($aiWaiterConfig['personality'] ?? '') === 'professional' ? 'selected' : '' }}>🎩 Պրոֆեսիոնալ և հարգալից (Professional)</option>
-                            <option value="sommelier" {{ ($aiWaiterConfig['personality'] ?? '') === 'sommelier' ? 'selected' : '' }}>🍷 Էքսպերտ-սոմելյե (Sommelier & Gourmet)</option>
-                            <option value="concise" {{ ($aiWaiterConfig['personality'] ?? '') === 'concise' ? 'selected' : '' }}>⚡ Կարճ և արագ (Concise & Fast)</option>
+                            <option value="friendly" {{ ($aiWaiterConfig['personality'] ?? '') === 'friendly' ? 'selected' : '' }}>😊 Friendly & Warm (Default)</option>
+                            <option value="professional" {{ ($aiWaiterConfig['personality'] ?? '') === 'professional' ? 'selected' : '' }}>🎩 Professional & Courteous</option>
+                            <option value="sommelier" {{ ($aiWaiterConfig['personality'] ?? '') === 'sommelier' ? 'selected' : '' }}>🍷 Sommelier & Gourmet Expert</option>
+                            <option value="concise" {{ ($aiWaiterConfig['personality'] ?? '') === 'concise' ? 'selected' : '' }}>⚡ Concise & Fast</option>
                         </select>
                         <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
-                            {{ __('Սահմանում է խորհրդատվության և մեկնաբանությունների լեզվական ոճը') }}
+                            {{ __('Defines the conversational tone for recommendations and dish commentary') }}
                         </small>
                     </div>
                 </div>
@@ -246,11 +246,11 @@
                 <!-- Custom Welcome Greeting -->
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                        {{ __('Ողջույնի Հատուկ Ուղերձ (Intro Welcome Message)') }}
+                        {{ __('Custom Welcome Message (Intro)') }}
                     </label>
-                    <textarea name="ai_waiter_welcome_text" id="aiWaiterWelcomeInput" rows="2" class="form-control" placeholder="Օրինակ՝ Բարի գալուստ, ես Ձեր AI մատուցողն եմ: Կօգնեմ ընտրել հենց այն, ինչ Ձեզ դուր կգա:" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.92rem; resize: vertical;">{{ old('ai_waiter_welcome_text', $vendor->ai_waiter_welcome_text) }}</textarea>
+                    <textarea name="ai_waiter_welcome_text" id="aiWaiterWelcomeInput" rows="2" class="form-control" placeholder="e.g. Welcome! I am your AI waiter. I will help you choose exactly what you like:" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.92rem; resize: vertical;">{{ old('ai_waiter_welcome_text', $vendor->ai_waiter_welcome_text) }}</textarea>
                     <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
-                        {{ __('Եթե դատարկ է, համակարգը կօգտագործի լռելյայն պրեմիում ողջույնը ըստ ընտրված լեզվի') }}
+                        {{ __('If empty, the system will use the default greeting for the active language') }}
                     </small>
                 </div>
 
@@ -259,7 +259,7 @@
                     <!-- Allowed Languages -->
                     <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.15rem;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
-                            <i class="fa-solid fa-globe" style="color: #8b5cf6;"></i> {{ __('Հասանելի Լեզուներ AI-ի համար') }}
+                            <i class="fa-solid fa-globe" style="color: #8b5cf6;"></i> {{ __('Available Languages for AI') }}
                         </label>
                         <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
                             @php
@@ -267,7 +267,7 @@
                             @endphp
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
                                 <input type="checkbox" name="ai_waiter_languages[]" value="hy" {{ in_array('hy', $configuredLangs) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
-                                <span>🇦🇲 Հայերեն</span>
+                                <span>🇦🇲 Armenian</span>
                             </label>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
                                 <input type="checkbox" name="ai_waiter_languages[]" value="en" {{ in_array('en', $configuredLangs) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
@@ -284,15 +284,15 @@
                     <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.15rem; display: flex; flex-direction: column; gap: 0.65rem;">
                         <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
                             <input type="checkbox" name="auto_popup" value="1" {{ !empty($aiWaiterConfig['auto_popup']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
-                            <span>{{ __('Ավտոմատ ցուցադրել Intro-ն առաջին QR սկանավորման ժամանակ') }}</span>
+                            <span>{{ __('Automatically show Intro on first QR scan') }}</span>
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
                             <input type="checkbox" name="free_text_enabled" value="1" {{ !empty($aiWaiterConfig['free_text_enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
-                            <span>{{ __('Թույլատրել Ազատ Տեքստային պատասխան («Կամ գրեք Ձեր տարբերակը»)') }}</span>
+                            <span>{{ __('Allow Free-Text Responses ("Or type your own preference")') }}</span>
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
                             <input type="checkbox" name="ai_chat_enabled" value="1" {{ !empty($aiWaiterConfig['ai_chat_enabled']) ? 'checked' : '' }} style="accent-color: #8b5cf6;">
-                            <span>{{ __('Միացնել ինտերակտիվ AI Չատը («💬 Հարցրեք AI մատուցողին»)') }}</span>
+                            <span>{{ __('Enable Interactive AI Chat ("💬 Ask the AI waiter")') }}</span>
                         </label>
                     </div>
                 </div>
@@ -301,7 +301,7 @@
                 <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
                         <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
-                            <i class="fa-solid fa-eye" style="color: #8b5cf6;"></i> {{ __('Ինչպես է տեսնում հաճախորդը (Live Mobile Widget Preview)') }}
+                            <i class="fa-solid fa-eye" style="color: #8b5cf6;"></i> {{ __('Live Mobile Widget Preview') }}
                         </span>
                         <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 6px;">
                             {{ __('Storefront Preview') }}
@@ -315,17 +315,17 @@
                             </div>
                             <div>
                                 <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);" id="previewWaiterName">
-                                    {{ $vendor->ai_waiter_name ?? 'AI Մատուցող' }}
+                                    {{ $vendor->ai_waiter_name ?? 'AI Waiter' }}
                                 </div>
                                 <div style="font-size: 0.75rem; color: #10b981; display: flex; align-items: center; gap: 0.3rem;">
                                     <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
-                                    <span>{{ __('Օնլայն • Պատրաստ է առաջարկել') }}</span>
+                                    <span>{{ __('Online • Ready to recommend') }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div style="background: var(--bg-body); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.88rem; color: var(--text-main); line-height: 1.45; border-left: 3px solid #8b5cf6;" id="previewWelcomeMessage">
-                            {{ $vendor->ai_waiter_welcome_text ?: 'Բարի գալուստ: Ես Ձեր AI մատուցողն եմ: Կօգնեմ ընտրել հենց այն, ինչ Ձեզ դուր կգա:' }}
+                            {{ $vendor->ai_waiter_welcome_text ?: 'Welcome! I am your AI waiter. I will help you choose exactly what you like.' }}
                         </div>
                     </div>
                 </div>
@@ -338,7 +338,7 @@
                 <div style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
                     <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-award" style="color: #f59e0b;"></i>
-                        <span>{{ __('Ռեստորանի Առաջնահերթություններ & Ranking Շարժիչ (Priority Hierarchy)') }}</span>
+                        <span>{{ __('Restaurant Priorities & Ranking Engine') }}</span>
                     </h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
                         {{ __('«AI understands the customer, but the restaurant controls what it wants AI to recommend.»') }}
@@ -351,14 +351,14 @@
                         <div>
                             <strong style="font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
                                 <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.75rem;">Priority 1</span>
-                                {{ __('Հատուկ Առաջնահերթ Ուտեստներ (Promoted Products)') }}
+                                {{ __('Promoted Products (High Priority)') }}
                             </strong>
                             <small style="color: var(--text-muted); font-size: 0.78rem; display: block;">
-                                {{ __('Այս ուտեստները կստանան ամենաբարձր առաջնահերթությունը, եթե համապատասխանում են հաճախորդի պահանջներին:') }}
+                                {{ __('These dishes receive highest recommendation priority when matching customer preferences:') }}
                             </small>
                         </div>
                         <button type="button" class="btn btn-secondary" onclick="addPromotedProductRow()" style="border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
-                            <i class="fa-solid fa-plus"></i> {{ __('Ավելացնել Ուտեստ') }}
+                            <i class="fa-solid fa-plus"></i> {{ __('Add Dish') }}
                         </button>
                     </div>
 
@@ -366,9 +366,9 @@
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
                             <thead>
                                 <tr style="background: rgba(0,0,0,0.03); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">
-                                    <th style="padding: 0.75rem 1rem;">{{ __('Ուտեստ (Product)') }}</th>
-                                    <th style="padding: 0.75rem 1rem; width: 140px;">{{ __('Առաջնահերթություն (1–100)') }}</th>
-                                    <th style="padding: 0.75rem 1rem; width: 100px; text-align: center;">{{ __('Ակտիվ') }}</th>
+                                    <th style="padding: 0.75rem 1rem;">{{ __('Product') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 140px;">{{ __('Priority (1–100)') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 100px; text-align: center;">{{ __('Active') }}</th>
                                     <th style="padding: 0.75rem 1rem; width: 60px;"></th>
                                 </tr>
                             </thead>
@@ -402,7 +402,7 @@
                                 @empty
                                     <tr id="emptyPromotedRow">
                                         <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                                            {{ __('Դեռ ոչ մի հատուկ ուտեստ ավելացված չէ: Սեղմեք «Ավելացնել Ուտեստ»:') }}
+                                            {{ __('No promoted dishes added yet. Click "Add Dish":') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -417,14 +417,14 @@
                         <div>
                             <strong style="font-size: 0.95rem; color: var(--text-main); display: flex; align-items: center; gap: 0.4rem;">
                                 <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.75rem;">Priority 2</span>
-                                {{ __('Նախընտրելի Բաղադրիչներ (Preferred Target Ingredients)') }}
+                                {{ __('Preferred Target Ingredients') }}
                             </strong>
                             <small style="color: var(--text-muted); font-size: 0.78rem; display: block;">
-                                {{ __('Այս բաղադրիչները պարունակող ուտեստներին AI-ն կտա բարձր խթանում:') }}
+                                {{ __('Dishes containing these ingredients will receive higher promotion by AI:') }}
                             </small>
                         </div>
                         <button type="button" class="btn btn-secondary" onclick="addPreferredIngredientRow()" style="border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
-                            <i class="fa-solid fa-plus"></i> {{ __('Ավելացնել Բաղադրիչ') }}
+                            <i class="fa-solid fa-plus"></i> {{ __('Add Ingredient') }}
                         </button>
                     </div>
 
@@ -432,9 +432,9 @@
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
                             <thead>
                                 <tr style="background: rgba(0,0,0,0.03); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">
-                                    <th style="padding: 0.75rem 1rem;">{{ __('Բաղադրիչ (Ingredient Name)') }}</th>
-                                    <th style="padding: 0.75rem 1rem; width: 140px;">{{ __('Առաջնահերթություն (1–100)') }}</th>
-                                    <th style="padding: 0.75rem 1rem; width: 100px; text-align: center;">{{ __('Ակտիվ') }}</th>
+                                    <th style="padding: 0.75rem 1rem;">{{ __('Ingredient Name') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 140px;">{{ __('Priority (1–100)') }}</th>
+                                    <th style="padding: 0.75rem 1rem; width: 100px; text-align: center;">{{ __('Active') }}</th>
                                     <th style="padding: 0.75rem 1rem; width: 60px;"></th>
                                 </tr>
                             </thead>
@@ -445,7 +445,7 @@
                                 @forelse($ingredientList as $idx => $ing)
                                     <tr style="border-bottom: 1px solid var(--border-color);">
                                         <td style="padding: 0.65rem 1rem;">
-                                            <input type="text" name="preferred_ingredients[{{ $idx }}][ingredient]" value="{{ $ing['ingredient'] }}" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
+                                            <input type="text" name="preferred_ingredients[{{ $idx }}][ingredient]" value="{{ $ing['ingredient'] }}" placeholder="e.g. Beef, Chicken, Truffle, Salmon..." class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
                                         </td>
                                         <td style="padding: 0.65rem 1rem;">
                                             <input type="number" name="preferred_ingredients[{{ $idx }}][priority]" value="{{ $ing['priority'] ?? 80 }}" min="1" max="100" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.92rem; font-weight: 700; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;">
@@ -462,7 +462,7 @@
                                 @empty
                                     <tr id="emptyIngredientRow">
                                         <td colspan="4" style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                                            {{ __('Դեռ ոչ մի բաղադրիչ ավելացված չէ: Սեղմեք «Ավելացնել Բաղադրիչ»:') }}
+                                            {{ __('No preferred ingredients added yet. Click "Add Ingredient":') }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -476,7 +476,7 @@
                     <!-- Group Priorities -->
                     <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.2rem;">
                         <strong style="font-size: 0.9rem; color: var(--text-main); display: block; margin-bottom: 0.75rem;">
-                            {{ __('Ուտեստների Խմբերի Առաջնահերթություն (AI Groups)') }}
+                            {{ __('Dish Category Priorities (AI Groups)') }}
                         </strong>
                         @php
                             $gp = $aiWaiterConfig['group_priorities'] ?? [];
@@ -504,7 +504,7 @@
                     <!-- Configurable Scoring Weights (Section 49) -->
                     <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.2rem;">
                         <strong style="font-size: 0.9rem; color: var(--text-main); display: block; margin-bottom: 0.75rem;">
-                            {{ __('Scoring Շարժիչի Կշիռները (Recommendation Weights %)') }}
+                            {{ __('Scoring Engine Weights (%)') }}
                         </strong>
                         @php
                             $sw = $vendor->getAiScoringWeights();
@@ -557,10 +557,10 @@
                 <div style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
                     <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-list-check" style="color: #8b5cf6;"></i>
-                        <span>{{ __('AI Հարցաշարի Շարժիչ (Question Engine Configuration)') }}</span>
+                        <span>{{ __('AI Question Engine Configuration') }}</span>
                     </h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
-                        {{ __('Կառավարեք ինտերակտիվ հարցերը, դրանց առաջնահերթությունը և ակտիվությունը') }}
+                        {{ __('Manage interactive questionnaire prompts, priorities, and status') }}
                     </p>
                 </div>
 
@@ -574,8 +574,8 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.5rem;">🍽️</span>
                             <div>
-                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">1. Mood / Տրամադրություն</strong>
-                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Ի՞նչ տրամադրությամբ եք այսօր» (Մսային, Թեթև, Կծու, Թարմ, Քաղցր, Surprise me)</small>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">1. Mood</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">"What mood are you in today?" (Hearty, Light, Spicy, Fresh, Sweet, Surprise me)</small>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -585,7 +585,7 @@
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
                                 <input type="checkbox" name="questions[mood][enabled]" value="1" {{ !empty($qConfig['mood']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                                <span>{{ __('Ակտիվ') }}</span>
+                                <span>{{ __('Active') }}</span>
                             </label>
                         </div>
                     </div>
@@ -595,8 +595,8 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.5rem;">🥩</span>
                             <div>
-                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">2. Preference / Հիմնական բաղադրիչ</strong>
-                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Ի՞նչ եք նախընտրում» (Միս, Հավ, Ձուկ, Բուսական, Ամեն ինչ)</small>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">2. Preference / Protein</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">"What do you prefer?" (Beef, Chicken, Seafood, Vegetarian, Anything)</small>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -606,7 +606,7 @@
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
                                 <input type="checkbox" name="questions[preference][enabled]" value="1" {{ !empty($qConfig['preference']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                                <span>{{ __('Ակտիվ') }}</span>
+                                <span>{{ __('Active') }}</span>
                             </label>
                         </div>
                     </div>
@@ -616,8 +616,8 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.5rem;">🌶️</span>
                             <div>
-                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">3. Spiciness / Կծվություն</strong>
-                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Որքա՞ն կծու եք սիրում» (Չեմ սիրում, Թեթև, Միջին, Շատ կծու)</small>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">3. Spiciness</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">"How spicy do you like it?" (Not spicy, Mild, Medium, Extra spicy)</small>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -627,7 +627,7 @@
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
                                 <input type="checkbox" name="questions[spiciness][enabled]" value="1" {{ !empty($qConfig['spiciness']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                                <span>{{ __('Ակտիվ') }}</span>
+                                <span>{{ __('Active') }}</span>
                             </label>
                         </div>
                     </div>
@@ -637,8 +637,8 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.5rem;">🎉</span>
                             <div>
-                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">4. Occasion / Առիթ</strong>
-                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Այսօր ինչպիսի՞ առիթ է» (Միայն ինձ համար, Զույգով, Ընկերներով, Ընտանիքով, Տոնական)</small>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">4. Occasion</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">"What is the occasion today?" (Solo, Date, Friends, Family, Celebration)</small>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -648,7 +648,7 @@
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
                                 <input type="checkbox" name="questions[occasion][enabled]" value="1" {{ !empty($qConfig['occasion']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                                <span>{{ __('Ակտիվ') }}</span>
+                                <span>{{ __('Active') }}</span>
                             </label>
                         </div>
                     </div>
@@ -658,8 +658,8 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.5rem;">💵</span>
                             <div>
-                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">5. Budget / Բյուջե</strong>
-                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Մոտավորապես ի՞նչ բյուջե եք նախատեսում» (Մինչև 5000, 5000-10000, 10000-20000, Կարևոր չէ)</small>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">5. Budget</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">"What budget range do you have in mind?" (Budget, Moderate, Premium, Any)</small>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -669,7 +669,7 @@
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
                                 <input type="checkbox" name="questions[budget][enabled]" value="1" {{ !empty($qConfig['budget']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                                <span>{{ __('Ակտիվ') }}</span>
+                                <span>{{ __('Active') }}</span>
                             </label>
                         </div>
                     </div>
@@ -679,8 +679,8 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.5rem;">🍹</span>
                             <div>
-                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">6. Drink / Ըմպելիք</strong>
-                                <small style="color: var(--text-muted); font-size: 0.78rem;">«Ի՞նչ կցանկանաք խմել» (Ջուր, Լիմոնադ, Կոկտեյլ, Գինի, Գարեջուր, Դու ընտրիր)</small>
+                                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">6. Drink</strong>
+                                <small style="color: var(--text-muted); font-size: 0.78rem;">"What would you like to drink?" (Water, Lemonade, Cocktail, Wine, Beer, You choose)</small>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -690,7 +690,7 @@
                             </div>
                             <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
                                 <input type="checkbox" name="questions[drink][enabled]" value="1" {{ !empty($qConfig['drink']['enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: #8b5cf6; cursor: pointer;">
-                                <span>{{ __('Ակտիվ') }}</span>
+                                <span>{{ __('Active') }}</span>
                             </label>
                         </div>
                     </div>
@@ -713,17 +713,17 @@
                     <div>
                         <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fa-solid fa-microchip" style="color: #4285F4;"></i>
-                            <span>{{ __('AI Պրովայդեր & Մոդելների Շարժիչ') }}</span>
+                            <span>{{ __('AI Provider & Model Engine') }}</span>
                         </h3>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
-                            {{ __('Ընտրեք AI շարժիչը, որը կգեներացնի տեքստերն ու սոմելյեի մեկնաբանությունները') }}
+                            {{ __('Select the AI engine that generates recommendations and sommelier tasting notes') }}
                         </p>
                     </div>
 
                     <!-- Live Connection Test Button -->
                     <button type="button" id="btnTestConnection" class="btn btn-secondary" style="border-radius: 12px; font-weight: 700; font-size: 0.88rem; padding: 0.6rem 1.15rem; display: inline-flex; align-items: center; gap: 0.4rem; border-color: rgba(139, 92, 246, 0.4); color: #8b5cf6;">
                         <i class="fa-solid fa-bolt" id="testIcon"></i>
-                        <span id="testBtnText">{{ __('Ստուգել Կապը (Test Connection)') }}</span>
+                        <span id="testBtnText">{{ __('Test Connection') }}</span>
                     </button>
                 </div>
 
@@ -766,7 +766,7 @@
                         <!-- Model Selection Dropdown -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('AI Մոդել (Model Name)') }} <span style="color: #ef4444;">*</span>
+                                {{ __('AI Model (Model Name)') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <select name="ai_model" id="aiModelSelect" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
                                 <!-- Populated dynamically -->
@@ -776,9 +776,9 @@
                         <!-- Custom Model Input -->
                         <div class="form-group" id="customModelGroup" style="display: none;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Մոդելի Ճշգրիտ Կոդը (Custom Model Identifier)') }}
+                                {{ __('Exact Model Identifier (Custom)') }}
                             </label>
-                            <input type="text" name="custom_model" id="customModelInput" value="{{ old('custom_model', $activeModel) }}" placeholder="օրինակ՝ deepseek-chat, gpt-4o, llama3.3:70b" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="custom_model" id="customModelInput" value="{{ old('custom_model', $activeModel) }}" placeholder="e.g. deepseek-chat, gpt-4o, llama3.3:70b" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;">
                         </div>
 
                         <!-- API Key Input -->
@@ -787,12 +787,12 @@
                                 <span>{{ __('API Key') }}</span>
                                 @if($hasCustomKey)
                                     <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">
-                                        ✓ {{ __('Կարգավորված է (գաղտնագրված)') }}
+                                        ✓ {{ __('Configured (encrypted)') }}
                                     </span>
                                 @endif
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" name="ai_api_key" id="aiApiKeyInput" value="" placeholder="{{ $hasCustomKey ? '•••••••• (' . ($maskedApiKey ?: 'Կարգավորված է') . ')' : 'Լրացրեք սեփական API Key-ը կամ թողեք դատարկ համակարգայինի համար' }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 3rem 0.75rem 1rem; font-size: 0.95rem; font-family: monospace;">
+                                <input type="password" name="ai_api_key" id="aiApiKeyInput" value="" placeholder="{{ $hasCustomKey ? '•••••••• (' . ($maskedApiKey ?: 'Configured') . ')' : 'Enter custom API key or leave blank for system default' }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 3rem 0.75rem 1rem; font-size: 0.95rem; font-family: monospace;">
                                 <button type="button" id="toggleApiKeyVisibility" style="position: absolute; right: 0.75rem; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem;">
                                     <i class="fa-solid fa-eye" id="eyeIcon"></i>
                                 </button>
@@ -802,7 +802,7 @@
                         <!-- Base URL Input -->
                         <div class="form-group" id="baseUrlGroup" style="grid-column: 1 / -1;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Custom API Base URL (Ollama, vLLM կամ Proxy)') }}
+                                {{ __('Custom API Base URL (Ollama, vLLM or Proxy)') }}
                             </label>
                             <input type="url" name="ai_base_url" id="aiBaseUrlInput" value="{{ old('ai_base_url', $savedBaseUrl) }}" placeholder="http://localhost:11434/v1" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 0.92rem; font-family: monospace;">
                         </div>
@@ -814,10 +814,10 @@
         <!-- Sticky Save Bar -->
         <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; padding: 1.25rem 0; margin-bottom: 2rem;">
             <a href="{{ route('admin.settings.index') }}" class="btn btn-secondary" style="border-radius: 12px; padding: 0.75rem 1.4rem; font-weight: 600;">
-                {{ __('Չեղարկել') }}
+                {{ __('Cancel') }}
             </a>
             <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.75rem 1.75rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; color: #fff;">
-                <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել AI Կարգավորումները') }}
+                <i class="fa-solid fa-floppy-disk"></i> {{ __('Save AI Settings') }}
             </button>
         </div>
     </form>
@@ -934,7 +934,7 @@ function addPreferredIngredientRow() {
 
     tr.innerHTML = `
         <td style="padding: 0.65rem 1rem;">
-            <input type="text" name="preferred_ingredients[${ingredientIdx}][ingredient]" placeholder="Օրինակ՝ Տավարի միս, Հավ, Պանիր, Սունկ..." class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
+            <input type="text" name="preferred_ingredients[${ingredientIdx}][ingredient]" placeholder="e.g. Beef, Chicken, Truffle, Salmon..." class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 0.85rem; border-radius: 10px;">
         </td>
         <td style="padding: 0.65rem 1rem;">
             <input type="number" name="preferred_ingredients[${ingredientIdx}][priority]" value="80" min="1" max="100" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-main); font-size: 0.92rem; font-weight: 700; text-align: center; padding: 0.6rem 0.5rem; border-radius: 10px;">
@@ -972,13 +972,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (aiWaiterNameInput && previewWaiterName) {
         aiWaiterNameInput.addEventListener('input', function() {
-            previewWaiterName.textContent = this.value.trim() || 'AI Մատուցող';
+            previewWaiterName.textContent = this.value.trim() || 'AI Waiter';
         });
     }
 
     if (aiWaiterWelcomeInput && previewWelcomeMessage) {
         aiWaiterWelcomeInput.addEventListener('input', function() {
-            previewWelcomeMessage.textContent = this.value.trim() || 'Բարի գալուստ: Ես Ձեր AI մատուցողն եմ: Կօգնեմ ընտրել հենց այն, ինչ Ձեզ դուր կգա:';
+            previewWelcomeMessage.textContent = this.value.trim() || 'Welcome! I am your AI waiter. I will help you choose exactly what you like.';
         });
     }
 
@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const customOpt = document.createElement('option');
         customOpt.value = 'custom';
-        customOpt.textContent = '✨ Այլ մոդել (Custom Model)...';
+        customOpt.textContent = '✨ Custom Model...';
         if (keepExistingModel && !foundSelected && currentModel) {
             customOpt.selected = true;
             customModelInput.value = currentModel;
@@ -1047,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             baseUrlGroup.style.display = 'block';
-            baseUrlInput.placeholder = config.default_base_url ? `Լռելյայն՝ ${config.default_base_url}` : 'Լռելյայն API host';
+            baseUrlInput.placeholder = config.default_base_url ? `Default: ${config.default_base_url}` : 'Default API host';
         }
     }
 
@@ -1088,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         btnTest.disabled = true;
         testIcon.className = 'fa-solid fa-spinner fa-spin';
-        testBtnText.textContent = 'Ստուգվում է...';
+        testBtnText.textContent = 'Testing...';
         testResultBox.style.display = 'none';
 
         fetch("{{ route('admin.settings.ai.test') }}", {
@@ -1109,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             btnTest.disabled = false;
             testIcon.className = 'fa-solid fa-bolt';
-            testBtnText.textContent = 'Ստուգել Կապը (Test Connection)';
+            testBtnText.textContent = 'Test Connection';
 
             testResultBox.style.display = 'block';
             if (data.success) {
@@ -1136,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fa-solid fa-circle-xmark" style="font-size: 1.1rem; margin-top: 0.15rem;"></i>
                         <div>
                             <div>${data.message}</div>
-                            <div style="font-size: 0.8rem; opacity: 0.85; margin-top: 0.25rem;">Խնդրում ենք ստուգել API Key-ը, մոդելի անվանումը կամ ինտերնետ կապը:</div>
+                            <div style="font-size: 0.8rem; opacity: 0.85; margin-top: 0.25rem;">Please check the API Key, model name, or network connection.</div>
                         </div>
                     </div>
                 `;
@@ -1145,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => {
             btnTest.disabled = false;
             testIcon.className = 'fa-solid fa-bolt';
-            testBtnText.textContent = 'Ստուգել Կապը (Test Connection)';
+            testBtnText.textContent = 'Test Connection';
 
             testResultBox.style.display = 'block';
             testResultBox.style.background = 'rgba(239, 68, 68, 0.12)';
@@ -1154,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', function() {
             testResultBox.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fa-solid fa-circle-xmark" style="font-size: 1.1rem;"></i>
-                    <span>Ցանցային սխալ հարցման ընթացքում: Խնդրում ենք փորձել կրկին:</span>
+                    <span>Network error during request. Please try again.</span>
                 </div>
             `;
         });

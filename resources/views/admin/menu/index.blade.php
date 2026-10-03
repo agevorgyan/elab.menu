@@ -101,6 +101,11 @@
 @endsection
 
 @section('content')
+@php
+    $supportedLangs = $vendor->getSupportedLanguages();
+    $primaryLang = $supportedLangs[0] ?? ['code' => 'en', 'name' => 'English', 'flag' => '🇬🇧'];
+    $secondaryLangs = array_slice($supportedLangs, 1);
+@endphp
 <!-- Page Header -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
@@ -135,17 +140,17 @@
             </span>
             <div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <strong style="font-size: 1.05rem; color: var(--text-main);">Մասնաճյուղի Մենյուի Կառավարում</strong>
+                    <strong style="font-size: 1.05rem; color: var(--text-main);">Branch Menu Availability</strong>
                     <span class="badge badge-indigo" style="font-size: 0.72rem;">{{ $activeLocation?->name ?? 'Default Branch' }}</span>
                 </div>
                 <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
-                    Ստորև նշված «In Stock / Out of Stock» կոճակները և հասանելիությունը վերաբերում են ընտրված մասնաճյուղին:
+                    The «In Stock / Out of Stock» toggles and stock settings below apply to the selected branch:
                 </div>
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.65rem;">
             <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;">
-                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> Մասնաճյուղ՝
+                <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> Branch:
             </label>
             <form method="GET" action="{{ route('admin.menu.index') }}" id="branchScopeFilterForm" style="display: flex; align-items: center; margin: 0;">
                 <select name="location_id" onchange="document.getElementById('branchScopeFilterForm').submit()" class="form-select" style="min-width: 220px; font-weight: 700; padding: 0.5rem 0.85rem; border-radius: 10px; border-color: rgba(99, 102, 241, 0.4);">
@@ -232,7 +237,7 @@
                                     
                                     @if($vendor->featured_dish_enabled && $vendor->featured_product_id == $product->id)
                                         <span class="badge" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.7rem; font-weight: 800;">
-                                            <i class="fa-solid fa-fire-flame-curved"></i> {{ $vendor->featured_dish_badge ?: 'ՕՐՎԱ ՈՒՏԵՍՏ' }}
+                                            <i class="fa-solid fa-fire-flame-curved"></i> {{ $vendor->featured_dish_badge ?: 'SPECIAL OF THE DAY' }}
                                         </span>
                                     @endif
                                     
@@ -248,15 +253,15 @@
 
                                     @if($product->available_start_time || $product->available_end_time || !empty($product->available_days))
                                         <span class="badge badge-amber" style="font-size: 0.68rem;">
-                                            <i class="fa-regular fa-clock"></i> {{ $product->getAvailabilityScheduleSummary('hy') }}
+                                            <i class="fa-regular fa-clock"></i> {{ $product->getAvailabilityScheduleSummary('en') }}
                                         </span>
                                     @endif
 
                                     @if(!$product->available_for_dine_in || !$product->available_for_takeaway || !$product->available_for_delivery)
                                         <span class="badge badge-indigo" style="font-size: 0.68rem;">
-                                            @if($product->available_for_dine_in) 🍽️ Տեղում @endif
-                                            @if($product->available_for_takeaway) 🥡 Տանելու @endif
-                                            @if($product->available_for_delivery) 🛵 Առաքում @endif
+                                            @if($product->available_for_dine_in) 🍽️ Dine-in @endif
+                                            @if($product->available_for_takeaway) 🥡 Takeaway @endif
+                                            @if($product->available_for_delivery) 🛵 Delivery @endif
                                         </span>
                                     @endif
 
@@ -270,7 +275,7 @@
                                     @endphp
                                     @if($locUnavailableCount > 0 && $locUnavailableCount < $locations->count())
                                         <span class="badge badge-rose" style="font-size: 0.68rem;">
-                                            <i class="fa-solid fa-store-slash"></i> {{ $locUnavailableCount }} մասնաճյուղում անջատված
+                                            <i class="fa-solid fa-store-slash"></i> Disabled in {{ $locUnavailableCount }} branches
                                         </span>
                                     @endif
                                 </div>
@@ -345,7 +350,7 @@
                                         <div>
                                             <span>{{ number_format($product->price) }} {{ $vendor->currency }}</span>
                                             <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
-                                                (Զեղչ՝ {{ number_format($product->discount_price) }} {{ $vendor->currency }})
+                                                (Discount: {{ number_format($product->discount_price) }} {{ $vendor->currency }})
                                             </div>
                                         </div>
                                     @elseif($product->variations->count() > 1)
@@ -358,15 +363,15 @@
                                 @if($product->isDiscountActive())
                                     <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-end;">
                                         <span class="badge badge-rose" style="font-size: 0.7rem;">
-                                            <i class="fa-solid fa-tag"></i> -{{ $product->getDiscountPercentage() }}% Զեղչ
+                                            <i class="fa-solid fa-tag"></i> -{{ $product->getDiscountPercentage() }}% Off
                                         </span>
                                         <span class="badge badge-emerald" style="font-size: 0.7rem;">
-                                            <i class="fa-regular fa-clock"></i> {{ $product->getDiscountScheduleSummary() }}
+                                            <i class="fa-regular fa-clock"></i> {{ $product->getDiscountScheduleSummary('en') }}
                                         </span>
                                     </div>
                                 @elseif($product->discount_price)
                                     <div style="font-size: 0.7rem; color: var(--text-muted);">
-                                        <i class="fa-regular fa-clock"></i> {{ $product->getDiscountScheduleSummary() }} <span style="opacity: 0.7;">(ժամից դուրս)</span>
+                                        <i class="fa-regular fa-clock"></i> {{ $product->getDiscountScheduleSummary('en') }} <span style="opacity: 0.7;">(off hours)</span>
                                     </div>
                                 @endif
                             </div>
@@ -382,7 +387,7 @@
                                 <form action="{{ route('admin.menu.products.toggle', $product->id) }}" method="POST" style="margin: 0;">
                                     @csrf
                                     <input type="hidden" name="location_id" value="{{ $activeLocationId }}">
-                                    <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;" title="Փոխել պաշարի կարգավիճակը՝ {{ $activeLocation?->name }}">
+                                    <button type="submit" class="btn btn-secondary" style="padding: 0.35rem 0.7rem; font-size: 0.78rem;" title="Toggle stock status for {{ $activeLocation?->name }}">
                                         @if($isInStockCurrentBranch)
                                             <span style="color: #10b981;"><i class="fa-solid fa-toggle-on"></i> In Stock</span>
                                         @else
@@ -416,31 +421,38 @@
 <div id="newCategoryModal" class="modern-modal-overlay" style="display: none;">
     <div class="modal-box-responsive" style="max-width: 500px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0;">Create New Category</h3>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0;">{{ __('Create New Category') }}</h3>
             <button onclick="document.getElementById('newCategoryModal').style.display='none'" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <form action="{{ route('admin.menu.categories.store') }}" method="POST">
             @csrf
             <div style="margin-bottom: 1rem;">
-                <label class="form-label">Category Name (English) *</label>
-                <input type="text" name="name" required placeholder="e.g. Signature Cocktails" class="form-input">
+                <label class="form-label">{{ __('Category Name') }} ({{ $primaryLang['name'] }} {{ $primaryLang['flag'] }}) *</label>
+                <input type="text" name="name" required placeholder="{{ __('e.g. Signature Cocktails') }}" class="form-input">
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Armenian Name (Հայերեն)</label>
-                <input type="text" name="hy_name" placeholder="օր․ Կոկտեյլներ" class="form-input">
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Russian Name (Русский)</label>
-                <input type="text" name="ru_name" placeholder="напр. Коктейли" class="form-input">
-            </div>
+
+            @if(count($secondaryLangs) > 0)
+                <div style="margin-bottom: 1rem; padding: 0.85rem; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-language"></i> {{ __('Translations for active languages') }}
+                    </div>
+                    @foreach($secondaryLangs as $secLang)
+                        <div style="margin-bottom: 0.65rem;">
+                            <label class="form-label" style="font-size: 0.78rem;">{{ $secLang['name'] }} {{ $secLang['flag'] }}</label>
+                            <input type="text" name="name_translations[{{ $secLang['code'] }}]" placeholder="{{ __('Translation in') }} {{ $secLang['name'] }}" class="form-input" style="font-size: 0.85rem;">
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             <div style="margin-bottom: 1.5rem;">
-                <label class="form-label">Description (Optional)</label>
-                <textarea name="description" rows="2" placeholder="Brief category introduction..." class="form-textarea"></textarea>
+                <label class="form-label">{{ __('Description (Optional)') }}</label>
+                <textarea name="description" rows="2" placeholder="{{ __('Brief category introduction...') }}" class="form-textarea"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('newCategoryModal').style.display='none'">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Category</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('newCategoryModal').style.display='none'">{{ __('Cancel') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Save Category') }}</button>
             </div>
         </form>
     </div>
@@ -450,31 +462,38 @@
 <div id="editCategoryModal" class="modern-modal-overlay" style="display: none;">
     <div class="modal-box-responsive" style="max-width: 500px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0;">Edit Category</h3>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0;">{{ __('Edit Category') }}</h3>
             <button onclick="document.getElementById('editCategoryModal').style.display='none'" style="background: none; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <form id="editCategoryForm" method="POST">
             @csrf
             <div style="margin-bottom: 1rem;">
-                <label class="form-label">Category Name (English) *</label>
+                <label class="form-label">{{ __('Category Name') }} ({{ $primaryLang['name'] }} {{ $primaryLang['flag'] }}) *</label>
                 <input type="text" id="edit_cat_name" name="name" required class="form-input">
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Armenian Name (Հայերեն)</label>
-                <input type="text" id="edit_cat_hy_name" name="hy_name" class="form-input">
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label class="form-label">Russian Name (Русский)</label>
-                <input type="text" id="edit_cat_ru_name" name="ru_name" class="form-input">
-            </div>
+
+            @if(count($secondaryLangs) > 0)
+                <div style="margin-bottom: 1rem; padding: 0.85rem; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-language"></i> {{ __('Translations for active languages') }}
+                    </div>
+                    @foreach($secondaryLangs as $secLang)
+                        <div style="margin-bottom: 0.65rem;">
+                            <label class="form-label" style="font-size: 0.78rem;">{{ $secLang['name'] }} {{ $secLang['flag'] }}</label>
+                            <input type="text" id="edit_cat_trans_{{ $secLang['code'] }}" name="name_translations[{{ $secLang['code'] }}]" placeholder="{{ __('Translation in') }} {{ $secLang['name'] }}" class="form-input" style="font-size: 0.85rem;">
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             <div style="margin-bottom: 1.5rem;">
-                <label class="form-label">Description</label>
+                <label class="form-label">{{ __('Description') }}</label>
                 <textarea id="edit_cat_description" name="description" rows="2" class="form-textarea"></textarea>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('editCategoryModal').style.display='none'">Cancel</button>
-                <button type="submit" class="btn btn-primary">Update Category</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('editCategoryModal').style.display='none'">{{ __('Cancel') }}</button>
+                <button type="submit" class="btn btn-primary">{{ __('Update Category') }}</button>
             </div>
         </form>
     </div>
@@ -501,7 +520,7 @@
 
             <div class="grid-3" style="margin-bottom: 1rem;">
                 <div style="grid-column: span 1;">
-                    <label class="form-label">Dish Name (English) *</label>
+                    <label class="form-label">{{ __('Dish Name') }} ({{ $primaryLang['name'] }} {{ $primaryLang['flag'] }}) *</label>
                     <input type="text" name="name" required class="form-input">
                 </div>
                 <div>
@@ -510,9 +529,9 @@
                 </div>
                 <div>
                     <label class="form-label" style="color: #ef4444;">
-                        <i class="fa-solid fa-tag"></i> Զեղչված գին
+                        <i class="fa-solid fa-tag"></i> Discounted Price
                     </label>
-                    <input type="number" name="discount_price" step="100" placeholder="Օրինակ՝ 2500" class="form-input" style="border-color: rgba(239, 68, 68, 0.4);">
+                    <input type="number" name="discount_price" step="100" placeholder="e.g. 2500" class="form-input" style="border-color: rgba(239, 68, 68, 0.4);">
                 </div>
             </div>
 
@@ -524,35 +543,35 @@
                             <i class="fa-solid fa-clock"></i>
                         </span>
                         <div>
-                            <strong style="font-size: 0.85rem; color: var(--text-main);">Զեղչի Ժամանակացույց (Happy Hour)</strong>
-                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Սահմանեք օրերը և ժամերը, երբ կգործի զեղչը</small>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Discount Schedule (Happy Hour)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Set active days and hours for the discount</small>
                         </div>
                     </div>
                     <label style="font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-main); font-weight: 600;">
-                        <input type="checkbox" name="is_discount_active" value="1" checked> Ակտիվացնել զեղչը
+                        <input type="checkbox" name="is_discount_active" value="1" checked> Enable Discount
                     </label>
                 </div>
 
                 <!-- Day Selector Chips -->
                 <div style="margin-bottom: 0.75rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.35rem;">
-                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Շաբաթվա օրեր</label>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Days of the Week</label>
                         <div style="display: flex; gap: 0.35rem;">
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'all')">Բոլորը</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'weekdays')">Երկ-Ուրբ</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'weekends')">Հանգստյան</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'all')">All</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'weekdays')">Mon-Fri</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('new', 'weekends')">Weekends</button>
                         </div>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                         @php
                             $weekDays = [
-                                'mon' => 'Երկ',
-                                'tue' => 'Երք',
-                                'wed' => 'Չոր',
-                                'thu' => 'Հնգ',
-                                'fri' => 'Ուրբ',
-                                'sat' => 'Շաբ',
-                                'sun' => 'Կիր'
+                                'mon' => 'Mon',
+                                'tue' => 'Tue',
+                                'wed' => 'Wed',
+                                'thu' => 'Thu',
+                                'fri' => 'Fri',
+                                'sat' => 'Sat',
+                                'sun' => 'Sun'
                             ];
                         @endphp
                         @foreach($weekDays as $key => $lbl)
@@ -566,11 +585,11 @@
                 <!-- Time Window -->
                 <div class="grid-2" style="margin-bottom: 0.35rem;">
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Սկիզբ (Start Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">Start Time</label>
                         <input type="time" name="discount_start_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Ավարտ (End Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">End Time</label>
                         <input type="time" name="discount_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                 </div>
@@ -584,13 +603,13 @@
                             <i class="fa-solid fa-code-branch"></i>
                         </span>
                         <div>
-                            <strong style="font-size: 0.85rem; color: var(--text-main);">Մասնաճյուղային Հասանելիություն (Branch Availability)</strong>
-                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Ընտրեք, թե որ մասնաճյուղերում է այս ուտեստը հասանելի</small>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Branch Availability</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Select which branches offer this dish</small>
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.35rem;">
-                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('new', true)">Բոլորը</button>
-                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('new', false)">Մաքրել</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('new', true)">Select All</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('new', false)">Clear</button>
                     </div>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -609,27 +628,27 @@
                         <i class="fa-regular fa-clock"></i>
                     </span>
                     <div>
-                        <strong style="font-size: 0.85rem; color: var(--text-main);">Ժամային Սահմանափակում (Lunch / Hours)</strong>
-                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Օրինակ՝ լանչը հասանելի է միայն 12:00 - 15:00 (թողեք դատարկ ամբողջ օրվա համար)</small>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Operating Hours (Lunch / Hours)</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">e.g., lunch available only 12:00 - 15:00 (leave empty for all day)</small>
                     </div>
                 </div>
                 <div class="grid-2" style="margin-bottom: 0.75rem;">
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Հասանելի է սկսած (Start Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">Available from (Start Time)</label>
                         <input type="time" name="available_start_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Մինչև (End Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">Until (End Time)</label>
                         <input type="time" name="available_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                 </div>
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.35rem;">
-                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Հասանելի օրեր</label>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Available Days</label>
                         <div style="display: flex; gap: 0.35rem;">
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'all')">Բոլորը</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'weekdays')">Երկ-Ուրբ</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'weekends')">Հանգստյան</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'all')">All</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'weekdays')">Mon-Fri</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('new', 'weekends')">Weekends</button>
                         </div>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
@@ -649,36 +668,41 @@
                         <i class="fa-solid fa-truck-ramp-box"></i>
                     </span>
                     <div>
-                        <strong style="font-size: 0.85rem; color: var(--text-main);">Պատվերի Տեսակների Հասանելիություն (Order Channels)</strong>
-                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Նշեք այն ալիքները, որոնցով կարելի է պատվիրել այս ուտեստը</small>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Order Channels Availability</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Select allowed order channels for this dish</small>
                     </div>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
                     <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
                         <input type="hidden" name="available_for_dine_in" value="0">
-                        <input type="checkbox" name="available_for_dine_in" value="1" checked> 🍽️ Տեղում (Dine-in)
+                        <input type="checkbox" name="available_for_dine_in" value="1" checked> 🍽️ Dine-in
                     </label>
                     <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
                         <input type="hidden" name="available_for_takeaway" value="0">
-                        <input type="checkbox" name="available_for_takeaway" value="1" checked> 🥡 Տանելու (Takeaway)
+                        <input type="checkbox" name="available_for_takeaway" value="1" checked> 🥡 Takeaway
                     </label>
                     <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
                         <input type="hidden" name="available_for_delivery" value="0">
-                        <input type="checkbox" name="available_for_delivery" value="1" checked> 🛵 Առաքում (Delivery)
+                        <input type="checkbox" name="available_for_delivery" value="1" checked> 🛵 Delivery
                     </label>
                 </div>
             </div>
 
-            <div class="grid-2" style="margin-bottom: 1rem;">
-                <div>
-                    <label class="form-label">Armenian Name (Հայերեն)</label>
-                    <input type="text" name="hy_name" class="form-input">
+            @if(count($secondaryLangs) > 0)
+                <div style="margin-bottom: 1rem; padding: 0.85rem; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-language"></i> {{ __('Dish Name Translations for active languages') }}
+                    </div>
+                    <div class="grid-2" style="gap: 0.65rem;">
+                        @foreach($secondaryLangs as $secLang)
+                            <div>
+                                <label class="form-label" style="font-size: 0.78rem;">{{ $secLang['name'] }} {{ $secLang['flag'] }}</label>
+                                <input type="text" name="name_translations[{{ $secLang['code'] }}]" placeholder="{{ __('Translation in') }} {{ $secLang['name'] }}" class="form-input" style="font-size: 0.85rem;">
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label">Russian Name (Русский)</label>
-                    <input type="text" name="ru_name" class="form-input">
-                </div>
-            </div>
+            @endif
 
             <div style="margin-bottom: 1rem;">
                 <label class="form-label">
@@ -697,9 +721,25 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label class="form-label">Description</label>
-                <textarea name="description" rows="2" class="form-textarea"></textarea>
+                <label class="form-label">{{ __('Description') }} ({{ $primaryLang['name'] }} {{ $primaryLang['flag'] }})</label>
+                <textarea name="description" rows="2" class="form-textarea" placeholder="{{ __('Brief dish ingredients or description...') }}"></textarea>
             </div>
+
+            @if(count($secondaryLangs) > 0)
+                <div style="margin-bottom: 1rem; padding: 0.85rem; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-language"></i> {{ __('Description Translations for active languages') }}
+                    </div>
+                    <div class="grid-2" style="gap: 0.65rem;">
+                        @foreach($secondaryLangs as $secLang)
+                            <div>
+                                <label class="form-label" style="font-size: 0.78rem;">{{ $secLang['name'] }} {{ $secLang['flag'] }}</label>
+                                <textarea name="description_translations[{{ $secLang['code'] }}]" rows="2" class="form-textarea" style="font-size: 0.85rem;" placeholder="{{ __('Description in') }} {{ $secLang['name'] }}"></textarea>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <!-- Portions & Variations Section -->
             <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
@@ -708,7 +748,7 @@
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
                             <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Portions & Variations (Optional)
                         </label>
-                        <small style="color: var(--text-muted); font-size: 0.72rem;">Add sizes/options with translations (EN, Հայերեն, Русский)</small>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">{{ __('Add sizes or portion options') }}</small>
                     </div>
                     <button type="button" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" onclick="addVariationRow('new')">
                         <i class="fa-solid fa-plus"></i> Add Portion
@@ -826,7 +866,7 @@
 
             <div class="grid-3" style="margin-bottom: 1rem;">
                 <div>
-                    <label class="form-label">Dish Name (English) *</label>
+                    <label class="form-label">{{ __('Dish Name') }} ({{ $primaryLang['name'] }} {{ $primaryLang['flag'] }}) *</label>
                     <input type="text" id="edit_prod_name" name="name" required class="form-input">
                 </div>
                 <div>
@@ -835,9 +875,9 @@
                 </div>
                 <div>
                     <label class="form-label" style="color: #ef4444;">
-                        <i class="fa-solid fa-tag"></i> Զեղչված գին
+                        <i class="fa-solid fa-tag"></i> Discount Price
                     </label>
-                    <input type="number" id="edit_prod_discount_price" name="discount_price" step="100" placeholder="Օրինակ՝ 2500" class="form-input" style="border-color: rgba(239, 68, 68, 0.4);">
+                    <input type="number" id="edit_prod_discount_price" name="discount_price" step="100" placeholder="e.g. 2500" class="form-input" style="border-color: rgba(239, 68, 68, 0.4);">
                 </div>
             </div>
 
@@ -849,23 +889,23 @@
                             <i class="fa-solid fa-clock"></i>
                         </span>
                         <div>
-                            <strong style="font-size: 0.85rem; color: var(--text-main);">Զեղչի Ժամանակացույց (Happy Hour)</strong>
-                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Սահմանեք օրերը և ժամերը, երբ կգործի զեղչը</small>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Discount Schedule (Happy Hour)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Set the days and hours when the discount applies</small>
                         </div>
                     </div>
                     <label style="font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-main); font-weight: 600;">
-                        <input type="checkbox" id="edit_prod_is_discount_active" name="is_discount_active" value="1"> Ակտիվացնել զեղչը
+                        <input type="checkbox" id="edit_prod_is_discount_active" name="is_discount_active" value="1"> Enable discount
                     </label>
                 </div>
 
                 <!-- Day Selector Chips -->
                 <div style="margin-bottom: 0.75rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.35rem;">
-                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Շաբաթվա օրեր</label>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Days of Week</label>
                         <div style="display: flex; gap: 0.35rem;">
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'all')">Բոլորը</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'weekdays')">Երկ-Ուրբ</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'weekends')">Հանգստյան</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'all')">All</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'weekdays')">Mon-Fri</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setDiscountDaysPreset('edit', 'weekends')">Weekends</button>
                         </div>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
@@ -880,11 +920,11 @@
                 <!-- Time Window -->
                 <div class="grid-2" style="margin-bottom: 0.35rem;">
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Սկիզբ (Start Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">Start Time</label>
                         <input type="time" id="edit_prod_discount_start_time" name="discount_start_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Ավարտ (End Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">End Time</label>
                         <input type="time" id="edit_prod_discount_end_time" name="discount_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                 </div>
@@ -898,13 +938,13 @@
                             <i class="fa-solid fa-code-branch"></i>
                         </span>
                         <div>
-                            <strong style="font-size: 0.85rem; color: var(--text-main);">Մասնաճյուղային Հասանելիություն (Branch Availability)</strong>
-                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Ընտրեք, թե որ մասնաճյուղերում է այս ուտեստը հասանելի</small>
+                            <strong style="font-size: 0.85rem; color: var(--text-main);">Branch Availability</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Select which branches this dish is available at</small>
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.35rem;">
-                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('edit', true)">Բոլորը</button>
-                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('edit', false)">Մաքրել</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('edit', true)">All</button>
+                        <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setLocationsPreset('edit', false)">Clear</button>
                     </div>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -923,27 +963,27 @@
                         <i class="fa-regular fa-clock"></i>
                     </span>
                     <div>
-                        <strong style="font-size: 0.85rem; color: var(--text-main);">Ժամային Սահմանափակում (Lunch / Hours)</strong>
-                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Օրինակ՝ լանչը հասանելի է միայն 12:00 - 15:00 (թողեք դատարկ ամբողջ օրվա համար)</small>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Hours & Daily Availability (Lunch / Hours)</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">e.g. lunch available only 12:00 - 15:00 (leave empty for all day)</small>
                     </div>
                 </div>
                 <div class="grid-2" style="margin-bottom: 0.75rem;">
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Հասանելի է սկսած (Start Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">Start Time</label>
                         <input type="time" id="edit_prod_available_start_time" name="available_start_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                     <div>
-                        <label class="form-label" style="font-size: 0.75rem;">Մինչև (End Time)</label>
+                        <label class="form-label" style="font-size: 0.75rem;">End Time</label>
                         <input type="time" id="edit_prod_available_end_time" name="available_end_time" class="form-input" style="padding: 0.45rem 0.75rem;">
                     </div>
                 </div>
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.35rem;">
-                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Հասանելի օրեր</label>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Available Days</label>
                         <div style="display: flex; gap: 0.35rem;">
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'all')">Բոլորը</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'weekdays')">Երկ-Ուրբ</button>
-                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'weekends')">Հանգստյան</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'all')">All</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'weekdays')">Mon-Fri</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 0.15rem 0.45rem; font-size: 0.68rem;" onclick="setAvailableDaysPreset('edit', 'weekends')">Weekends</button>
                         </div>
                     </div>
                     <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
@@ -963,36 +1003,41 @@
                         <i class="fa-solid fa-truck-ramp-box"></i>
                     </span>
                     <div>
-                        <strong style="font-size: 0.85rem; color: var(--text-main);">Պատվերի Տեսակների Հասանելիություն (Order Channels)</strong>
-                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Նշեք այն ալիքները, որոնցով կարելի է պատվիրել այս ուտեստը</small>
+                        <strong style="font-size: 0.85rem; color: var(--text-main);">Order Channels Availability</strong>
+                        <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Select order channels where this dish is available</small>
                     </div>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
                     <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
                         <input type="hidden" name="available_for_dine_in" value="0">
-                        <input type="checkbox" id="edit_prod_available_for_dine_in" name="available_for_dine_in" value="1"> 🍽️ Տեղում (Dine-in)
+                        <input type="checkbox" id="edit_prod_available_for_dine_in" name="available_for_dine_in" value="1"> 🍽️ Dine-in
                     </label>
                     <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
                         <input type="hidden" name="available_for_takeaway" value="0">
-                        <input type="checkbox" id="edit_prod_available_for_takeaway" name="available_for_takeaway" value="1"> 🥡 Տանելու (Takeaway)
+                        <input type="checkbox" id="edit_prod_available_for_takeaway" name="available_for_takeaway" value="1"> 🥡 Takeaway
                     </label>
                     <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; background: var(--input-bg); border: 1px solid var(--border-color); padding: 0.45rem 0.8rem; border-radius: 10px; cursor: pointer; color: var(--text-main); font-weight: 600;">
                         <input type="hidden" name="available_for_delivery" value="0">
-                        <input type="checkbox" id="edit_prod_available_for_delivery" name="available_for_delivery" value="1"> 🛵 Առաքում (Delivery)
+                        <input type="checkbox" id="edit_prod_available_for_delivery" name="available_for_delivery" value="1"> 🛵 Delivery
                     </label>
                 </div>
             </div>
 
-            <div class="grid-2" style="margin-bottom: 1rem;">
-                <div>
-                    <label class="form-label">Armenian Name (Հայերեն)</label>
-                    <input type="text" id="edit_prod_hy_name" name="hy_name" class="form-input">
+            @if(count($secondaryLangs) > 0)
+                <div style="margin-bottom: 1rem; padding: 0.85rem; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-language"></i> {{ __('Dish Name Translations for active languages') }}
+                    </div>
+                    <div class="grid-2" style="gap: 0.65rem;">
+                        @foreach($secondaryLangs as $secLang)
+                            <div>
+                                <label class="form-label" style="font-size: 0.78rem;">{{ $secLang['name'] }} {{ $secLang['flag'] }}</label>
+                                <input type="text" id="edit_prod_trans_{{ $secLang['code'] }}" name="name_translations[{{ $secLang['code'] }}]" placeholder="{{ __('Translation in') }} {{ $secLang['name'] }}" class="form-input" style="font-size: 0.85rem;">
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label">Russian Name (Русский)</label>
-                    <input type="text" id="edit_prod_ru_name" name="ru_name" class="form-input">
-                </div>
-            </div>
+            @endif
 
             <div style="margin-bottom: 1rem;">
                 <label class="form-label">
@@ -1011,20 +1056,25 @@
             </div>
 
             <div style="margin-bottom: 1rem;">
-                <label class="form-label">Description</label>
-                <textarea id="edit_prod_description" name="description" rows="2" class="form-textarea"></textarea>
+                <label class="form-label">{{ __('Description') }} ({{ $primaryLang['name'] }} {{ $primaryLang['flag'] }})</label>
+                <textarea id="edit_prod_description" name="description" rows="2" class="form-textarea" placeholder="{{ __('Brief dish ingredients or description...') }}"></textarea>
             </div>
 
-            <div class="grid-2" style="margin-bottom: 1rem;">
-                <div>
-                    <label class="form-label">Armenian Description (Հայերեն)</label>
-                    <textarea id="edit_prod_hy_description" name="hy_description" rows="2" class="form-textarea"></textarea>
+            @if(count($secondaryLangs) > 0)
+                <div style="margin-bottom: 1rem; padding: 0.85rem; background: var(--bg-body); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.65rem;">
+                        <i class="fa-solid fa-language"></i> {{ __('Description Translations for active languages') }}
+                    </div>
+                    <div class="grid-2" style="gap: 0.65rem;">
+                        @foreach($secondaryLangs as $secLang)
+                            <div>
+                                <label class="form-label" style="font-size: 0.78rem;">{{ $secLang['name'] }} {{ $secLang['flag'] }}</label>
+                                <textarea id="edit_prod_desc_trans_{{ $secLang['code'] }}" name="description_translations[{{ $secLang['code'] }}]" rows="2" class="form-textarea" style="font-size: 0.85rem;" placeholder="{{ __('Description in') }} {{ $secLang['name'] }}"></textarea>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-                <div>
-                    <label class="form-label">Russian Description (Русский)</label>
-                    <textarea id="edit_prod_ru_description" name="ru_description" rows="2" class="form-textarea"></textarea>
-                </div>
-            </div>
+            @endif
 
             <!-- Portions & Variations Section -->
             <div style="margin-bottom: 1.25rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem;">
@@ -1033,7 +1083,7 @@
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
                             <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Portions & Variations (Optional)
                         </label>
-                        <small style="color: var(--text-muted); font-size: 0.72rem;">Add or edit portions with translations (EN, Հայերեն, Русский)</small>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">{{ __('Add or edit portions and options') }}</small>
                     </div>
                     <button type="button" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;" onclick="addVariationRow('edit')">
                         <i class="fa-solid fa-plus"></i> Add Portion
@@ -1163,11 +1213,19 @@
         });
     }
 
+    const activeSecondaryLangs = @json($secondaryLangs);
+
     function editCategory(cat) {
         document.getElementById('editCategoryForm').action = "/admin/menu/categories/" + cat.id;
         document.getElementById('edit_cat_name').value = cat.name || '';
-        document.getElementById('edit_cat_hy_name').value = (cat.name_translations && cat.name_translations.hy) ? cat.name_translations.hy : '';
-        document.getElementById('edit_cat_ru_name').value = (cat.name_translations && cat.name_translations.ru) ? cat.name_translations.ru : '';
+        if (activeSecondaryLangs && activeSecondaryLangs.length > 0) {
+            activeSecondaryLangs.forEach(lang => {
+                const el = document.getElementById('edit_cat_trans_' + lang.code);
+                if (el) {
+                    el.value = (cat.name_translations && cat.name_translations[lang.code]) ? cat.name_translations[lang.code] : '';
+                }
+            });
+        }
         document.getElementById('edit_cat_description').value = cat.description || '';
         document.getElementById('editCategoryModal').style.display = 'flex';
     }
@@ -1178,14 +1236,21 @@
         document.getElementById('edit_prod_name').value = prod.name || '';
         document.getElementById('edit_prod_price').value = prod.price || 0;
         
-        document.getElementById('edit_prod_hy_name').value = (prod.name_translations && prod.name_translations.hy) ? prod.name_translations.hy : '';
-        document.getElementById('edit_prod_ru_name').value = (prod.name_translations && prod.name_translations.ru) ? prod.name_translations.ru : '';
+        if (activeSecondaryLangs && activeSecondaryLangs.length > 0) {
+            activeSecondaryLangs.forEach(lang => {
+                const nameEl = document.getElementById('edit_prod_trans_' + lang.code);
+                if (nameEl) {
+                    nameEl.value = (prod.name_translations && prod.name_translations[lang.code]) ? prod.name_translations[lang.code] : '';
+                }
+                const descEl = document.getElementById('edit_prod_desc_trans_' + lang.code);
+                if (descEl) {
+                    descEl.value = (prod.description_translations && prod.description_translations[lang.code]) ? prod.description_translations[lang.code] : '';
+                }
+            });
+        }
         
         document.getElementById('edit_prod_image').value = (prod.image && !prod.image.includes('default-dish')) ? prod.image : '';
         document.getElementById('edit_prod_description').value = prod.description || '';
-        
-        document.getElementById('edit_prod_hy_description').value = (prod.description_translations && prod.description_translations.hy) ? prod.description_translations.hy : '';
-        document.getElementById('edit_prod_ru_description').value = (prod.description_translations && prod.description_translations.ru) ? prod.description_translations.ru : '';
         
         // Dietary tags
         const tags = prod.dietary_tags || [];
@@ -1270,10 +1335,31 @@
         const idx = variationCounter++;
         const id = varData ? (varData.id || '') : '';
         const name = varData ? (varData.name || '') : '';
-        const hyName = (varData && varData.name_translations && varData.name_translations.hy) ? varData.name_translations.hy : ((varData && varData.hy_name) ? varData.hy_name : '');
-        const ruName = (varData && varData.name_translations && varData.name_translations.ru) ? varData.name_translations.ru : ((varData && varData.ru_name) ? varData.ru_name : '');
         const price = varData ? (varData.price || '') : '';
         const isDefault = varData ? !!varData.is_default : (container.children.length === 0);
+
+        let secInputsHtml = '';
+        if (activeSecondaryLangs && activeSecondaryLangs.length > 0) {
+            secInputsHtml += `<div class="grid-2" style="gap: 0.5rem; margin-top: 0.25rem;">`;
+            activeSecondaryLangs.forEach(lang => {
+                let transVal = '';
+                if (varData) {
+                    if (varData.name_translations && varData.name_translations[lang.code]) {
+                        transVal = varData.name_translations[lang.code];
+                    } else if (lang.code === 'hy' && varData.hy_name) {
+                        transVal = varData.hy_name;
+                    } else if (lang.code === 'ru' && varData.ru_name) {
+                        transVal = varData.ru_name;
+                    }
+                }
+                secInputsHtml += `
+                    <div>
+                        <input type="text" name="variations[${idx}][name_translations][${lang.code}]" value="${transVal}" placeholder="${lang.name} ${lang.flag}" class="form-input" style="padding: 0.4rem 0.65rem; font-size: 0.8rem;">
+                    </div>
+                `;
+            });
+            secInputsHtml += `</div>`;
+        }
 
         const row = document.createElement('div');
         row.className = 'variation-row';
@@ -1283,21 +1369,18 @@
             <input type="hidden" name="variations[${idx}][is_default]" class="var-is-default-input" value="${isDefault ? '1' : '0'}">
             
             <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                <input type="text" name="variations[${idx}][name]" value="${name}" placeholder="English (e.g. Regular)" required class="form-input" style="flex: 2; min-width: 140px; padding: 0.45rem 0.65rem; font-size: 0.85rem;">
-                <input type="number" name="variations[${idx}][price]" value="${price}" placeholder="Price" step="100" required class="form-input" style="flex: 1; min-width: 90px; padding: 0.45rem 0.65rem; font-size: 0.85rem;">
-                <label style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; flex-shrink: 0;" title="Default Portion">
+                <input type="text" name="variations[${idx}][name]" value="${name}" placeholder="{{ $primaryLang['name'] }} {{ $primaryLang['flag'] }}" required class="form-input" style="flex: 2; min-width: 140px; padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                <input type="number" name="variations[${idx}][price]" value="${price}" placeholder="{{ __('Price') }}" step="100" required class="form-input" style="flex: 1; min-width: 90px; padding: 0.45rem 0.65rem; font-size: 0.85rem;">
+                <label style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; flex-shrink: 0;" title="{{ __('Default Portion') }}">
                     <input type="radio" name="${prefix}_default_radio" ${isDefault ? 'checked' : ''} onchange="setDefaultVariation(this)">
-                    <span>Default</span>
+                    <span>{{ __('Default') }}</span>
                 </label>
-                <button type="button" class="btn btn-danger" style="padding: 0.4rem 0.6rem; font-size: 0.75rem;" onclick="this.closest('.variation-row').remove()" title="Remove portion">
+                <button type="button" class="btn btn-danger" style="padding: 0.4rem 0.6rem; font-size: 0.75rem;" onclick="this.closest('.variation-row').remove()" title="{{ __('Remove portion') }}">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
 
-            <div class="grid-2" style="gap: 0.5rem;">
-                <input type="text" name="variations[${idx}][hy_name]" value="${hyName}" placeholder="Հայերեն (օր. Սովորական)" class="form-input" style="padding: 0.4rem 0.65rem; font-size: 0.8rem;">
-                <input type="text" name="variations[${idx}][ru_name]" value="${ruName}" placeholder="Русский (напр. Стандарт)" class="form-input" style="padding: 0.4rem 0.65rem; font-size: 0.8rem;">
-            </div>
+            ${secInputsHtml}
         `;
         container.appendChild(row);
     }

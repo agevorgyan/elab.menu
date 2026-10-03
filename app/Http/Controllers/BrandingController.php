@@ -74,7 +74,7 @@ class BrandingController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Branding logo upload failed: '.$e->getMessage(), ['exception' => $e]);
 
-                return back()->withInput()->with('error', 'Լոգոյի վերբեռնումը ձախողվեց: '.$e->getMessage());
+                return back()->withInput()->with('error', 'Logo upload failed: '.$e->getMessage());
             }
         }
 
@@ -93,7 +93,7 @@ class BrandingController extends Controller
             } catch (\Throwable $e) {
                 Log::error('Branding cover upload failed: '.$e->getMessage(), ['exception' => $e]);
 
-                return back()->withInput()->with('error', 'Կազմի նկարի վերբեռնումը ձախողվեց: '.$e->getMessage());
+                return back()->withInput()->with('error', 'Cover image upload failed: '.$e->getMessage());
             }
         }
 

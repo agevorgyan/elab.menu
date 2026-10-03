@@ -11,6 +11,7 @@ class ThermalPrinterService
      */
     public function generateReceiptText(Order $order, string $paperWidth = '80mm'): string
     {
+        $order->loadMissing(['items', 'location', 'vendor']);
         $vendor = $order->vendor;
         $settings = $vendor->getThermalPrinterSettings();
         $cols = ($paperWidth === '58mm') ? 32 : 48;

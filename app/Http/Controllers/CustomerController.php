@@ -9,6 +9,7 @@ use App\Services\CrmAutomationService;
 use App\Services\CustomerSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
@@ -276,14 +277,14 @@ class CustomerController extends Controller
         $vendor = Auth::user()->vendor;
 
         if (empty($customer->phone)) {
-            return back()->with('error', 'Հաճախորդի հեռախոսահամարը նշված չէ։');
+            return back()->with('error', 'Customer phone number is not specified.');
         }
 
         $res = $crmService->sendBirthdayGreeting($customer, $vendor);
         if ($res['success']) {
-            return back()->with('success', 'Ծննդյան շնորհավորական SMS-ը հաջողությամբ ուղարկվեց '.($customer->name ?? 'հաճախորդին').'։');
+            return back()->with('success', 'Birthday greeting SMS successfully sent to '.($customer->name ?? 'customer').'.');
         }
 
-        return back()->with('error', 'SMS-ն ուղարկել չհաջողվեց: '.($res['error'] ?? ''));
+        return back()->with('error', 'Failed to send SMS: '.($res['error'] ?? ''));
     }
 }

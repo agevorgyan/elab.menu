@@ -32,11 +32,15 @@ class ClientStorefrontController extends Controller
 {
     public function showMenu(Request $request, string $vendor_slug, ?string $location_slug = null)
     {
-        $vendor = Vendor::where('slug', $vendor_slug)->where('is_active', true)->firstOrFail();
+        $vendor = Vendor::where('slug', $vendor_slug)
+            ->where('is_active', true)
+            ->with(['menuTemplate', 'locations'])
+            ->firstOrFail();
 
         $location = null;
         if ($location_slug) {
-            $location = Location::where('vendor_id', $vendor->id)->where('slug', $location_slug)->first();
+            $location = $vendor->locations->firstWhere('slug', $location_slug)
+                ?? Location::where('vendor_id', $vendor->id)->where('slug', $location_slug)->first();
         }
         if (! $location) {
             $location = $vendor->locations->first();
@@ -44,7 +48,7 @@ class ClientStorefrontController extends Controller
 
         $supportedLanguages = $vendor->getSupportedLanguages();
         $allowedCodes = array_map(fn ($l) => strtolower($l['code'] ?? ''), $supportedLanguages);
-        $defaultCode = $allowedCodes[0] ?? 'hy';
+        $defaultCode = $allowedCodes[0] ?? 'en';
 
         $lang = strtolower((string) ($request->get('lang') ?? session('app_locale', $defaultCode)));
         if (! in_array($lang, $allowedCodes) && ! in_array($lang, ['hy', 'en', 'ru', 'fr', 'de', 'es', 'it', 'ge', 'ar'])) {

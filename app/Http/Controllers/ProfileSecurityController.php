@@ -40,10 +40,10 @@ class ProfileSecurityController extends Controller
         TwoFactorAuthService::sendEmailCode($user, $action);
 
         $actionMessages = [
-            'password' => 'Գաղտնաբառի փոփոխման անվտանգության 6-նիշ կոդն ուղարկվեց ձեր էլ․ հասցեին։',
-            'email' => 'Էլ․ փոստի փոփոխման անվտանգության 6-նիշ կոդն ուղարկվեց ձեր էլ․ հասցեին։',
-            'setup' => '2FA ակտիվացման ստուգիչ 6-նիշ կոդն ուղարկվեց ձեր էլ․ հասցեին։',
-            'default' => 'Անվտանգության 6-նիշ կոդն ուղարկվեց ձեր էլ․ հասցեին։',
+            'password' => 'A 6-digit security code for password change has been sent to your email.',
+            'email' => 'A 6-digit security code for email change has been sent to your email.',
+            'setup' => 'A 6-digit 2FA setup verification code has been sent to your email.',
+            'default' => 'A 6-digit security code has been sent to your email.',
         ];
 
         return response()->json([
@@ -90,7 +90,7 @@ class ProfileSecurityController extends Controller
             if (empty($secret) || ! TwoFactorAuthService::verifyGoogleAuthenticator($secret, $code)) {
                 if (! (app()->environment('local', 'testing') && $code === '123456')) {
                     return back()->withErrors([
-                        'two_factor_code' => 'Google Authenticator կոդը սխալ է։ Համոզվեք, որ ժամանակը ճշգրիտ է։',
+                        'two_factor_code' => 'Google Authenticator code is incorrect. Ensure device clock is accurate.',
                     ])->with('active_tab', '2fa');
                 }
             }
@@ -105,7 +105,7 @@ class ProfileSecurityController extends Controller
             if (! TwoFactorAuthService::verifyEmailCode($user, $code)) {
                 if (! (app()->environment('local', 'testing') && $code === '123456')) {
                     return back()->withErrors([
-                        'two_factor_code' => 'Էլ․ փոստի ստուգիչ կոդը սխալ է կամ ժամկետանց։',
+                        'two_factor_code' => 'The email verification code is invalid or has expired.',
                     ])->with('active_tab', '2fa');
                 }
             }
@@ -119,7 +119,7 @@ class ProfileSecurityController extends Controller
 
         app(SecurityAuditService::class)->logTwoFactorChange($user, 'enabled', $validated['type']);
 
-        return back()->with('success', 'Երկփուլային նույնականացումը (2FA) հաջողությամբ ակտիվացվեց։');
+        return back()->with('success', 'Two-Factor Authentication (2FA) has been successfully enabled.');
     }
 
     /**
@@ -135,7 +135,7 @@ class ProfileSecurityController extends Controller
 
         if (! Hash::check($validated['current_password'], $user->password)) {
             return back()->withErrors([
-                'current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։',
+                'current_password' => 'Current password is incorrect.',
             ])->with('active_tab', '2fa');
         }
 
@@ -148,7 +148,7 @@ class ProfileSecurityController extends Controller
 
         app(SecurityAuditService::class)->logTwoFactorChange($user, 'disabled');
 
-        return back()->with('success', 'Երկփուլային նույնականացումը (2FA) հաջողությամբ անջատվեց։');
+        return back()->with('success', 'Two-Factor Authentication (2FA) has been successfully disabled.');
     }
 
     /**
@@ -163,14 +163,14 @@ class ProfileSecurityController extends Controller
             'password' => 'required|string|min:6|confirmed',
             'two_factor_code' => $user->hasTwoFactorEnabled() ? 'required|string' : 'nullable|string',
         ], [
-            'password.confirmed' => 'Նոր գաղտնաբառի հաստատումը չի համընկնում։',
-            'password.min' => 'Գաղտնաբառը պետք է լինի առնվազն 6 նիշ։',
-            'two_factor_code.required' => '2FA անվտանգության կոդը պարտադիր է գաղտնաբառը փոխելու համար։',
+            'password.confirmed' => 'The new password confirmation does not match.',
+            'password.min' => 'The password must be at least 6 characters.',
+            'two_factor_code.required' => '2FA security code is required to change password.',
         ]);
 
         if (! Hash::check($validated['current_password'], $user->password)) {
             return back()->withErrors([
-                'current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։',
+                'current_password' => 'Current password is incorrect.',
             ])->with('error_type', 'password');
         }
 
@@ -178,7 +178,7 @@ class ProfileSecurityController extends Controller
         if ($user->hasTwoFactorEnabled() || $request->filled('two_factor_code')) {
             if (! TwoFactorAuthService::verifyCode($user, $request->input('two_factor_code'))) {
                 return back()->withErrors([
-                    'two_factor_code' => '2FA անվտանգության կոդը սխալ է կամ ժամկետանց։',
+                    'two_factor_code' => '2FA security code is invalid or has expired.',
                 ])->with('error_type', 'password')->withInput();
             }
         }
@@ -189,7 +189,7 @@ class ProfileSecurityController extends Controller
 
         app(SecurityAuditService::class)->logPasswordChange($user, actor: $user);
 
-        return back()->with('success', 'Ձեր գաղտնաբառը հաջողությամբ փոխվեց։');
+        return back()->with('success', 'Your password has been changed successfully.');
     }
 
     /**
@@ -204,13 +204,13 @@ class ProfileSecurityController extends Controller
             'email' => 'required|email|unique:users,email,'.$user->id,
             'two_factor_code' => $user->hasTwoFactorEnabled() ? 'required|string' : 'nullable|string',
         ], [
-            'email.unique' => 'Այս էլ․ փոստի հասցեն արդեն գրանցված է համակարգում։',
-            'two_factor_code.required' => '2FA անվտանգության կոդը պարտադիր է էլ․ փոստը փոխելու համար։',
+            'email.unique' => 'This email address is already in use.',
+            'two_factor_code.required' => '2FA security code is required to change email.',
         ]);
 
         if (! Hash::check($validated['current_password'], $user->password)) {
             return back()->withErrors([
-                'current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։',
+                'current_password' => 'Current password is incorrect.',
             ])->with('error_type', 'email');
         }
 
@@ -218,7 +218,7 @@ class ProfileSecurityController extends Controller
         if ($user->hasTwoFactorEnabled() || $request->filled('two_factor_code')) {
             if (! TwoFactorAuthService::verifyCode($user, $request->input('two_factor_code'))) {
                 return back()->withErrors([
-                    'two_factor_code' => '2FA անվտանգության կոդը սխալ է կամ ժամկետանց։',
+                    'two_factor_code' => '2FA security code is invalid or has expired.',
                 ])->with('error_type', 'email')->withInput();
             }
         }
@@ -227,7 +227,7 @@ class ProfileSecurityController extends Controller
             'email' => $validated['email'],
         ]);
 
-        return back()->with('success', 'Ձեր էլ․ փոստի հասցեն հաջողությամբ թարմացվեց։');
+        return back()->with('success', 'Your email address has been updated successfully.');
     }
 
     /**
@@ -244,7 +244,7 @@ class ProfileSecurityController extends Controller
 
         $user->update($validated);
 
-        return back()->with('success', 'Պրոֆիլի տվյալները հաջողությամբ պահպանվեցին։');
+        return back()->with('success', 'Profile details have been saved successfully.');
     }
 
     /**

@@ -352,8 +352,8 @@ class SecurityAndAuthFeaturesTest extends TestCase
         $response = $this->actingAs($user)->get('/admin/profile');
 
         $response->assertStatus(200);
-        $response->assertSee('Երկփուլային Նույնականացում');
-        $response->assertSee('Գաղտնաբառի Փոփոխություն');
-        $response->assertSee('Էլ․ Փոստի Փոփոխություն');
+        $response->assertSee(__('Two-Factor Authentication (2FA)'));
+        $response->assertSee(__('Change Password'));
+        $response->assertSee(__('Change Email'));
     }
 }

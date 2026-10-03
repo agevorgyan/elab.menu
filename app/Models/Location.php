@@ -71,7 +71,7 @@ class Location extends Model
         return $this->vendor->isChannelOpen($channel, $this, $now);
     }
 
-    public function getClosingNotice(string $channel, ?Carbon $now = null, ?string $lang = 'hy'): ?array
+    public function getClosingNotice(string $channel, ?Carbon $now = null, ?string $lang = 'en'): ?array
     {
         return $this->vendor->getClosingNotice($channel, $this, $now, $lang);
     }

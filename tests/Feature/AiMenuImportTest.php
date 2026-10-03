@@ -46,10 +46,10 @@ class AiMenuImportTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('admin.ai.import'));
 
         $response->assertStatus(200);
-        $response->assertSee('AI Խելացի Ներմուծում');
+        $response->assertSee(__('AI Smart Import (Omni-Extractor)'));
         $response->assertSee('Excel (.xlsx, .xls)');
         $response->assertSee('CSV (.csv)');
-        $response->assertSee('Կայքի Հղում');
+        $response->assertSee(__('Website URL'));
     }
 
     public function test_csv_file_import_extracts_and_previews_dishes(): void

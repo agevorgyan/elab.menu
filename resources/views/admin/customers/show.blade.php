@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Հաճախորդի Պատմություն') . ' - ' . ($customer->name ?? __('Հյուր')))
+@section('title', 'Customer History - ' . ($customer->name ?? 'Guest'))
 
 @section('styles')
 <style>
@@ -59,7 +59,7 @@
 @section('content')
 <div style="margin-bottom: 1.5rem;">
     <a href="{{ route('admin.customers.index') }}" class="btn btn-secondary" style="font-size: 0.88rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 12px;">
-        <i class="fa-solid fa-arrow-left"></i> {{ __('Վերադառնալ Հաճախորդների Բազա') }}
+        <i class="fa-solid fa-arrow-left"></i> Back to Customers List
     </a>
 </div>
 
@@ -72,7 +72,7 @@
             </div>
             <div style="min-width: 0;">
                 <h1 style="font-family: 'Outfit', sans-serif; font-size: clamp(1.3rem, 2.5vw, 1.75rem); font-weight: 800; color: var(--text-main); margin: 0; word-break: break-word;">
-                    {{ $customer->name ?? __('Հյուր Հաճախորդ') }}
+                    {{ $customer->name ?? 'Guest Customer' }}
                 </h1>
                 <div style="display: flex; gap: 0.85rem; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.4rem; flex-wrap: wrap; align-items: center;">
                     @if($customer->phone)
@@ -83,28 +83,28 @@
                     @endif
                     @if($customer->birthdate)
                         <span style="color: #ec4899; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-cake-candles"></i> {{ $customer->birthdate->format('d M Y') }} ({{ $customer->birthdate->age }} t.)
+                            <i class="fa-solid fa-cake-candles"></i> {{ $customer->birthdate->format('d M Y') }} ({{ $customer->birthdate->age }} yrs)
                         </span>
                     @endif
                     @if($customer->address)
                         <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-map-pin" style="color: #f59e0b;"></i> {{ $customer->address }}</span>
                     @endif
-                    <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-calendar-day"></i> {{ __('Գրանցված է՝') }} {{ $customer->created_at->format('M Y') }}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-calendar-day"></i> Registered: {{ $customer->created_at->format('M Y') }}</span>
                 </div>
             </div>
         </div>
 
         <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
             <span style="background: rgba(79, 70, 229, 0.15); color: #6366f1; border: 1px solid rgba(79, 70, 229, 0.3); padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
-                <i class="fa-solid fa-location-dot"></i> {{ $customer->location?->name ?? __('Բոլոր մասնաճյուղերը') }}
+                <i class="fa-solid fa-location-dot"></i> {{ $customer->location?->name ?? 'All Locations' }}
             </span>
             @if($customer->marketing_opt_in)
                 <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <i class="fa-solid fa-check-double"></i> {{ __('Մարքեթինգը Ակտիվ է') }}
+                    <i class="fa-solid fa-check-double"></i> Marketing Subscribed
                 </span>
             @else
                 <span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.4rem 0.85rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <i class="fa-solid fa-xmark"></i> {{ __('Անջատված') }}
+                    <i class="fa-solid fa-xmark"></i> Disabled
                 </span>
             @endif
         </div>
@@ -112,7 +112,7 @@
 
     @if($customer->notes)
         <div style="margin-top: 1.25rem; padding: 0.85rem 1.1rem; background: var(--bg-body); border-left: 4px solid var(--primary); border-radius: 10px; font-size: 0.88rem; color: var(--text-main); word-break: break-word;">
-            <i class="fa-solid fa-note-sticky" style="color: var(--primary); margin-right: 0.45rem;"></i> <strong>{{ __('Նշումներ՝') }}</strong> {{ $customer->notes }}
+            <i class="fa-solid fa-note-sticky" style="color: var(--primary); margin-right: 0.45rem;"></i> <strong>Notes:</strong> {{ $customer->notes }}
         </div>
     @endif
 </div>
@@ -120,23 +120,23 @@
 <!-- Key Performance Stat Cards -->
 <div class="grid-4" style="margin-bottom: 2rem;">
     <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.2rem; text-align: center; box-shadow: var(--shadow-card);">
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Ընդհանուր Պատվերներ') }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Total Orders</div>
         <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: var(--text-main); margin-top: 0.2rem;">{{ $customer->total_orders_count }}</div>
     </div>
     <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.2rem; text-align: center; box-shadow: var(--shadow-card);">
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Ընդհանուր Գումար (LTV)') }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Total Spent (LTV)</div>
         <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #10b981; margin-top: 0.2rem;">{{ number_format($customer->total_spent) }} {{ $vendor->currency }}</div>
     </div>
     <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.2rem; text-align: center; box-shadow: var(--shadow-card);">
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Միջին Չեկ (AOV)') }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Average Order Value (AOV)</div>
         <div style="font-family: 'Outfit', sans-serif; font-size: 1.65rem; font-weight: 800; color: #f59e0b; margin-top: 0.2rem;">
             {{ $customer->total_orders_count > 0 ? number_format($customer->total_spent / $customer->total_orders_count) : 0 }} {{ $vendor->currency }}
         </div>
     </div>
     <div class="card kpi-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 1.2rem; text-align: center; box-shadow: var(--shadow-card);">
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">{{ __('Վերջին Ակտիվություն') }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em;">Last Activity</div>
         <div style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-top: 0.35rem;">
-            {{ $customer->last_order_at ? $customer->last_order_at->diffForHumans() : __('Երբեք') }}
+            {{ $customer->last_order_at ? $customer->last_order_at->diffForHumans() : 'Never' }}
         </div>
     </div>
 </div>
@@ -145,7 +145,7 @@
 <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.25rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
     <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin: 0 0 1.25rem 0; display: flex; align-items: center; gap: 0.6rem;">
         <span style="color: var(--primary);"><i class="fa-solid fa-clock-rotate-left"></i></span>
-        <span>{{ __('Պատվերների Ժամանակացույց (Timeline)') }}</span>
+        <span>Orders Timeline</span>
     </h2>
 
     @if($orders->count() > 0)
@@ -157,7 +157,7 @@
                     </div>
 
                     <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 16px; padding: clamp(1rem, 2.5vw, 1.35rem); box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: gap: 0.6rem; margin-bottom: 0.75rem;">
                             <div>
                                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                     <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin: 0;">{{ $order->order_number }}</h3>
@@ -168,10 +168,10 @@
                                 <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
                                     <span><i class="fa-solid fa-calendar"></i> {{ $order->created_at->format('d M Y, H:i') }} ({{ $order->created_at->diffForHumans() }})</span>
                                     <span>•</span>
-                                    <span><i class="fa-solid fa-location-dot"></i> {{ $order->location?->name ?? __('Գլխավոր Մասնաճյուղ') }}</span>
+                                    <span><i class="fa-solid fa-location-dot"></i> {{ $order->location?->name ?? 'Main Branch' }}</span>
                                     @if($order->table_number)
                                         <span>•</span>
-                                        <span style="font-weight: 700; color: var(--primary);">{{ __('Սեղան՝') }} {{ $order->table_number }}</span>
+                                        <span style="font-weight: 700; color: var(--primary);">Table: {{ $order->table_number }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -208,7 +208,7 @@
             <div style="width: 54px; height: 54px; border-radius: 14px; background: rgba(245, 158, 11, 0.1); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 0.75rem;">
                 <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
-            <p style="margin: 0; font-size: 0.95rem; font-weight: 600;">{{ __('Այս հաճախորդի համար պատվերներ դեռ գրանցված չեն:') }}</p>
+            <p style="margin: 0; font-size: 0.95rem; font-weight: 600;">No orders recorded for this customer yet.</p>
         </div>
     @endif
 </div>

@@ -194,6 +194,13 @@ class AiWaiterTest extends TestCase
         // Prioritize Salmon
         $this->vendor->update([
             'ai_waiter_priority_ingredients' => 'Սաղմոն, Norwegian Salmon',
+            'supported_languages' => [
+                ['code' => 'hy', 'name' => 'Հայերեն', 'flag' => '🇦🇲'],
+                ['code' => 'en', 'name' => 'English', 'flag' => '🇬🇧'],
+            ],
+            'ai_waiter_config' => [
+                'languages' => ['hy', 'en'],
+            ],
         ]);
 
         $response = $this->postJson(route('client.ai_waiter.recommend', ['vendor_slug' => $this->vendor->slug]), [

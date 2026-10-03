@@ -3,11 +3,30 @@
 namespace App\Services;
 
 use App\Models\Vendor;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AiMenuService
 {
+    public const LANGUAGE_NAMES = [
+        'hy' => 'Armenian (Հայերեն)',
+        'en' => 'English',
+        'ru' => 'Russian (Русский)',
+        'fr' => 'French (Français)',
+        'de' => 'German (Deutsch)',
+        'es' => 'Spanish (Español)',
+        'it' => 'Italian (Italiano)',
+        'ge' => 'Georgian (ქართული)',
+        'ka' => 'Georgian (ქართული)',
+        'ar' => 'Arabic (العربية)',
+        'fa' => 'Persian (فارسی)',
+        'pt' => 'Portuguese (Português)',
+        'zh' => 'Chinese (中文)',
+        'tr' => 'Turkish (Türkçe)',
+        'el' => 'Greek (Ελληνικά)',
+    ];
+
     /**
      * Parse text/PDF raw text content into categories, products, prices, descriptions, images, and dietary tags.
      */
@@ -136,9 +155,18 @@ Menu text:
      */
     protected function translateChunk(array $items, string $targetLang, ?Vendor $vendor = null): array
     {
-        $prompt = "You are a professional culinary menu translator. Translate the following menu strings to target language '{$targetLang}'. Maintain food culinary accuracy, gastronomic elegance and exact ingredients. Input JSON:\n".json_encode($items, JSON_UNESCAPED_UNICODE)."\nOutput strictly valid JSON format matching input keys with translated values.";
+        $langCode = strtolower(trim($targetLang));
+        $langName = self::LANGUAGE_NAMES[$langCode] ?? strtoupper($langCode);
 
-        if ($vendor) {
+        $prompt = "You are a professional restaurant menu translator. Translate the following menu strings strictly and accurately into {$langName} (language code: '{$langCode}').\n"
+            ."CRITICAL INSTRUCTIONS:\n"
+            ."1. Every single translated value MUST be translated into {$langName}. Do NOT output English or retain the source language unless {$langName} is English or the word is an untranslatable international trademark/proper name.\n"
+            ."2. Preserve culinary nuance, gastronomic elegance, dish authenticity and exact ingredients.\n"
+            ."3. Input JSON:\n".json_encode($items, JSON_UNESCAPED_UNICODE)."\n"
+            .'Output strictly valid JSON format matching input keys with translated values.';
+
+        // Tier 1: Vendor AI key via Gateway
+        if ($vendor && ! empty($vendor->getAiApiKey())) {
             try {
                 $gateway = app(AiGatewayService::class);
                 $decoded = $gateway->generateStructuredJson($vendor, $prompt, ['timeout' => 45]);
@@ -150,7 +178,7 @@ Menu text:
             }
         }
 
-        // Fallback to system-level Gemini API if vendor key failed or was unset
+        // Tier 2: System Gemini API Key
         $geminiApiKey = config('services.gemini.key') ?? env('GEMINI_API_KEY');
         if (! empty($geminiApiKey)) {
             try {
@@ -177,18 +205,84 @@ Menu text:
                     $lastBrace = strrpos($jsonText, '}');
                     if ($firstBrace !== false && $lastBrace !== false && $lastBrace > $firstBrace) {
                         $decoded = json_decode(substr($jsonText, $firstBrace, $lastBrace - $firstBrace + 1), true);
-                        if (is_array($decoded)) {
+                        if (is_array($decoded) && ! empty($decoded)) {
                             return $decoded;
                         }
                     }
                 }
             } catch (\Throwable $e) {
-                Log::warning('Gemini AI translation failed, using fallback translator: '.$e->getMessage());
+                Log::warning('Gemini AI translation failed: '.$e->getMessage());
             }
         }
 
-        // Fallback translation mapping dictionary for common food terms
-        return $this->fallbackTranslator($items, $targetLang);
+        // Tier 3: Zero-config Google Translate neural engine (fast, authentic, works for all languages)
+        $googleResults = $this->translateViaGoogleFree($items, $langCode);
+        if (! empty($googleResults)) {
+            $missing = array_diff_key($items, $googleResults);
+            if (! empty($missing)) {
+                $fallback = $this->fallbackTranslator($missing, $langCode);
+
+                return array_replace($googleResults, $fallback);
+            }
+
+            return $googleResults;
+        }
+
+        // Tier 4: Culinary dictionary fallback
+        return $this->fallbackTranslator($items, $langCode);
+    }
+
+    /**
+     * Highly reliable zero-configuration neural translation engine for restaurants.
+     * Accurately translates menu categories, dishes, ingredients, and descriptions into any target language.
+     */
+    public function translateViaGoogleFree(array $items, string $targetLang): array
+    {
+        if (empty($items)) {
+            return [];
+        }
+
+        $gtxLang = match (strtolower(trim($targetLang))) {
+            'ge' => 'ka',
+            default => strtolower(trim($targetLang)),
+        };
+
+        try {
+            $responses = Http::pool(fn (Pool $pool) => collect($items)->map(fn ($text, $key) => $pool->as((string) $key)->timeout(12)->get('https://translate.googleapis.com/translate_a/single', [
+                'client' => 'gtx',
+                'sl' => 'auto',
+                'tl' => $gtxLang,
+                'dt' => 't',
+                'q' => $text,
+            ])
+            )
+            );
+
+            $results = [];
+            foreach ($items as $key => $origText) {
+                $keyStr = (string) $key;
+                if (isset($responses[$keyStr]) && $responses[$keyStr]->successful()) {
+                    $json = $responses[$keyStr]->json();
+                    $fullString = '';
+                    if (is_array($json) && isset($json[0]) && is_array($json[0])) {
+                        foreach ($json[0] as $segment) {
+                            if (isset($segment[0]) && is_string($segment[0])) {
+                                $fullString .= $segment[0];
+                            }
+                        }
+                    }
+                    if (! empty(trim($fullString))) {
+                        $results[$key] = trim($fullString);
+                    }
+                }
+            }
+
+            return $results;
+        } catch (\Throwable $e) {
+            Log::warning('translateViaGoogleFree failed: '.$e->getMessage());
+
+            return [];
+        }
     }
 
     /**
@@ -556,6 +650,70 @@ Menu text:
     private function fallbackTranslator(array $items, string $targetLang): array
     {
         $dictionary = [
+            'fr' => [
+                'Starters & Appetizers' => 'Entrées & Apéritifs',
+                'Signature Mains & Steaks' => 'Plats Principaux & Steaks',
+                'Desserts & Sweets' => 'Desserts & Douceurs',
+                'Craft Cocktails & Wines' => 'Cocktails Artisanaux & Vins',
+                'Truffle Hummus with Warm Pita' => 'Houmous à la Truffe avec Pain Pita Chaud',
+                'Crispy Calamari Rings' => 'Anneaux de Calamars Croustillants',
+                'Ribeye Steak (350g)' => 'Steak de Faux-Filet Ribeye (350g)',
+                'Grilled Norwegian Salmon' => 'Saumon Norvégien Grillé',
+                'Pistachio Molten Lava Cake' => 'Gâteau Coulant à la Pistache',
+                'Pomegranate Smoked Old Fashioned' => 'Old Fashioned Fumé à la Grenade',
+                'Նախուտեստներ' => 'Entrées & Apéritifs',
+                'Հիմնական Ուտեստներ և Սթեյքեր' => 'Plats Principaux & Steaks',
+                'Աղանդերներ' => 'Desserts & Douceurs',
+                'Կոկտեյլներ և Գինիներ' => 'Cocktails Artisanaux & Vins',
+            ],
+            'de' => [
+                'Starters & Appetizers' => 'Vorspeisen & Aperitifs',
+                'Signature Mains & Steaks' => 'Hauptgerichte & Steaks',
+                'Desserts & Sweets' => 'Desserts & Süßspeisen',
+                'Craft Cocktails & Wines' => 'Handgemachte Cocktails & Weine',
+                'Truffle Hummus with Warm Pita' => 'Trüffel-Hummus mit warmem Pita',
+                'Crispy Calamari Rings' => 'Knusprige Calamari-Ringe',
+                'Ribeye Steak (350g)' => 'Ribeye Steak (350g)',
+                'Grilled Norwegian Salmon' => 'Gegrillter norwegischer Lachs',
+                'Pistachio Molten Lava Cake' => 'Pistazien-Lava-Kuchen',
+                'Pomegranate Smoked Old Fashioned' => 'Geräucherter Granatapfel Old Fashioned',
+                'Նախուտեստներ' => 'Vorspeisen & Aperitifs',
+                'Հիմնական Ուտեստներ և Սթեյքեր' => 'Hauptgerichte & Steaks',
+                'Աղանդերներ' => 'Desserts & Süßspeisen',
+                'Կոկտեյլներ և Գինիներ' => 'Handgemachte Cocktails & Weine',
+            ],
+            'es' => [
+                'Starters & Appetizers' => 'Entrantes y Aperitivos',
+                'Signature Mains & Steaks' => 'Platos Principales y Filetes',
+                'Desserts & Sweets' => 'Postres y Dulces',
+                'Craft Cocktails & Wines' => 'Cócteles Artesanales y Vinos',
+                'Truffle Hummus with Warm Pita' => 'Hummus de Trufa con Pan Pita Caliente',
+                'Crispy Calamari Rings' => 'Anillos de Calamar Crujientes',
+                'Ribeye Steak (350g)' => 'Filete Ribeye (350g)',
+                'Grilled Norwegian Salmon' => 'Salmón Noruego a la Parrilla',
+                'Pistachio Molten Lava Cake' => 'Pastel Volcánico de Pistacho',
+                'Pomegranate Smoked Old Fashioned' => 'Old Fashioned Ahumado de Granada',
+                'Նախուտեստներ' => 'Entrantes y Aperitivos',
+                'Հիմնական Ուտեստներ և Սթեյքեր' => 'Platos Principales y Filetes',
+                'Աղանդերներ' => 'Postres y Dulces',
+                'Կոկտեյլներ և Գինիներ' => 'Cócteles Artesanales y Vinos',
+            ],
+            'it' => [
+                'Starters & Appetizers' => 'Antipasti & Aperitivi',
+                'Signature Mains & Steaks' => 'Piatti Forti & Bistecche',
+                'Desserts & Sweets' => 'Dolci & Dessert',
+                'Craft Cocktails & Wines' => 'Cocktail Artigianali & Vini',
+                'Truffle Hummus with Warm Pita' => 'Hummus al Tartufo con Pita Calda',
+                'Crispy Calamari Rings' => 'Anelli di Calamaro Croccanti',
+                'Ribeye Steak (350g)' => 'Bistecca Ribeye (350g)',
+                'Grilled Norwegian Salmon' => 'Salmone Norvegese alla Griglia',
+                'Pistachio Molten Lava Cake' => 'Tortino con Cuore di Pistacchio',
+                'Pomegranate Smoked Old Fashioned' => 'Old Fashioned Affumicato al Melograno',
+                'Նախուտեստներ' => 'Antipasti & Aperitivi',
+                'Հիմնական Ուտեստներ և Սթեյքեր' => 'Piatti Forti & Bistecche',
+                'Աղանդերներ' => 'Dolci & Dessert',
+                'Կոկտեյլներ և Գինիներ' => 'Cocktail Artigianali & Vini',
+            ],
             'hy' => [
                 'Starters & Appetizers' => 'Նախուտեստներ',
                 'Signature Mains & Steaks' => 'Հիմնական Ուտեստներ և Սթեյքեր',
@@ -579,30 +737,33 @@ Menu text:
                 'Grilled Norwegian Salmon' => 'Норвежский Лосось на Гриле',
                 'Pistachio Molten Lava Cake' => 'Фисташковый Лава-Кейк',
                 'Pomegranate Smoked Old Fashioned' => 'Олд Фэшн с Гранатовым Дымом',
+                'Նախուտեստներ' => 'Закуски',
+                'Հիմնական Ուտեստներ և Սթեյքեր' => 'Фирменные Блюда и Стейки',
+                'Աղանդերներ' => 'Десерты',
+                'Կոկտեյլներ և Գինիներ' => 'Коктейли и Вина',
             ],
             'en' => [
                 'Նախուտեստներ' => 'Starters & Appetizers',
                 'Հիմնական Ուտեստներ և Սթեյքեր' => 'Signature Mains & Steaks',
                 'Աղանդերներ' => 'Desserts & Sweets',
                 'Կոկտեյլներ և Գինիներ' => 'Craft Cocktails & Wines',
+                'Տրյուֆելային Հումուս Տաք Պիտայով' => 'Truffle Hummus with Warm Pita',
+                'Խրթխրթան Կալամարի Օղակներ' => 'Crispy Calamari Rings',
+                'Ռիբայ Սթեյք (350գ)' => 'Ribeye Steak (350g)',
+                'Գրիլ Անված Նորվեգական Սաղմոն' => 'Grilled Norwegian Salmon',
+                'Պիստակով Լավա Տորթ' => 'Pistachio Molten Lava Cake',
+                'Նռան Ծխեցված Օլդ Ֆեշն' => 'Pomegranate Smoked Old Fashioned',
             ],
         ];
 
+        $lang = strtolower(trim($targetLang));
         $translated = [];
         foreach ($items as $key => $text) {
-            if (isset($dictionary[$targetLang][$text])) {
-                $translated[$key] = $dictionary[$targetLang][$text];
+            $trimmed = trim((string) $text);
+            if (isset($dictionary[$lang][$trimmed])) {
+                $translated[$key] = $dictionary[$lang][$trimmed];
             } else {
-                // Prepend language tag indication if exact dictionary key is missing
-                $translated[$key] = match ($targetLang) {
-                    'hy' => $text.' (Հայ)',
-                    'ru' => $text.' (Рус)',
-                    'en' => $text.' (Eng)',
-                    'fr' => $text.' (Fr)',
-                    'de' => $text.' (De)',
-                    'es' => $text.' (Es)',
-                    default => $text,
-                };
+                $translated[$key] = $text;
             }
         }
 

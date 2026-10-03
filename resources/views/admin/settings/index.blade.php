@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Ռեստորանի Կարգավորումներ') . ' - ' . $vendor->name)
+@section('title', __('Restaurant Settings') . ' - ' . $vendor->name)
 
 @section('content')
 <div style="max-width: 1050px; margin: 0 auto; width: 100%; box-sizing: border-box;">
@@ -11,22 +11,22 @@
                 <span style="background: rgba(245, 158, 11, 0.15); color: var(--primary); width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
                     <i class="fa-solid fa-sliders"></i>
                 </span>
-                <span>{{ __('Կարգավորումներ') }}</span>
+                <span>{{ __('Settings') }}</span>
             </h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0 0; word-break: break-word;">
-                {{ __('Կառավարեք մասնաճյուղի հանրային տվյալները, իրավաբանական տեղեկությունները, սպասարկման վճարը և առաքման պարամետրերը') }}
+                {{ __('Manage branch public information, legal details, service fee, and delivery parameters') }}
             </p>
         </div>
 
         <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
             <a href="{{ route('admin.profile') }}" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem;">
-                <i class="fa-solid fa-user-shield" style="color: {{ Auth::user()->hasTwoFactorEnabled() ? '#10b981' : '#f59e0b' }};"></i> {{ __('Անվտանգություն & 2FA') }}
+                <i class="fa-solid fa-user-shield" style="color: {{ Auth::user()->hasTwoFactorEnabled() ? '#10b981' : '#f59e0b' }};"></i> {{ __('Security & 2FA') }}
             </a>
             <a href="{{ route('client.menu', ['vendor_slug' => $vendor->slug]) }}" target="_blank" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem;">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('Դիտել մենյուն') }}
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('View Menu') }}
             </a>
             <button type="submit" form="vendorSettingsForm" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);">
-                <i class="fa-solid fa-floppy-disk"></i> {{ __('Պահպանել') }}
+                <i class="fa-solid fa-floppy-disk"></i> {{ __('Save') }}
             </button>
         </div>
     </div>
@@ -34,7 +34,7 @@
     @if ($errors->any())
         <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; color: #ef4444;">
             <div style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <i class="fa-solid fa-circle-exclamation"></i> {{ __('Ուշադրություն. Լրացված տվյալներում առկա են սխալներ') }}
+                <i class="fa-solid fa-circle-exclamation"></i> {{ __('Attention: There are errors in the submitted form') }}
             </div>
             <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.88rem;">
                 @foreach ($errors->all() as $error)
@@ -51,8 +51,8 @@
                     <i class="fa-solid fa-code-branch"></i>
                 </span>
                 <div>
-                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Ընթացիկ Մասնաճյուղ՝') }} <span style="color: var(--primary);">{{ $location?->name }}</span></div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ __('Կարգավորումները կիրառվում են ընտրված մասնաճյուղի համար') }}</div>
+                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Current Branch:') }} <span style="color: var(--primary);">{{ $location?->name }}</span></div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ __('Settings apply to the selected branch') }}</div>
                 </div>
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -82,24 +82,24 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Մասնաճյուղի և Մենյուի Տեղեկություն') }}
+                                {{ __('Branch & Menu Information') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Այս տվյալները հասանելի են հաճախորդներին մենյույի «Տեղեկություն» բաժնում') }}
+                                {{ __('This information is available to customers in the "Info" tab of the menu') }}
                             </p>
                         </div>
                     </div>
 
                     <span style="font-size: 0.78rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                        <i class="fa-solid fa-eye"></i> {{ __('Երևում է մենյուում') }}
+                        <i class="fa-solid fa-eye"></i> {{ __('Visible in Menu') }}
                     </span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
-                    <!-- Ֆիրմային անվանում -->
+                    <!-- Brand Name -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Ֆիրմային անվանում') }} <span style="color: #ef4444;">*</span>
+                            {{ __('Brand Name') }} <span style="color: #ef4444;">*</span>
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
                             <input type="text" name="name" value="{{ old('name', $location?->name ?? $vendor->name) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
@@ -108,30 +108,30 @@
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Ռեստորանի կամ մասնաճյուղի հանրային անվանումը') }}
+                            {{ __('Public name of the restaurant or branch') }}
                         </span>
                     </div>
 
-                    <!-- Հասցե -->
+                    <!-- Address -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Հասցե') }}
+                            {{ __('Address') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="address" value="{{ old('address', $location?->address ?? ($vendor->operating_address ?? $vendor->legal_address)) }}" class="form-control" placeholder="Օրինակ՝ ք. Երևան, Ամիրյան 18" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="address" value="{{ old('address', $location?->address ?? ($vendor->operating_address ?? $vendor->legal_address)) }}" class="form-control" placeholder="e.g. 18 Amiryan St, Yerevan" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-location-dot"></i>
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Մասնաճյուղի փաստացի գտնվելու հասցեն') }}
+                            {{ __('Physical address of the branch') }}
                         </span>
                     </div>
 
-                    <!-- Հեռախոսահամար -->
+                    <!-- Phone Number -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Հեռախոսահամար') }}
+                            {{ __('Phone Number') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
                             <input type="text" name="phone" value="{{ old('phone', $location?->phone ?? $vendor->phone) }}" class="form-control" placeholder="+374 10 123456" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
@@ -140,7 +140,7 @@
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Հաճախորդների զանգերի համար նախատեսված համար') }}
+                            {{ __('Phone number for customer calls') }}
                         </span>
                     </div>
 
@@ -152,7 +152,7 @@
                             </label>
                             <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none;">
                                 <input type="checkbox" name="allow_whatsapp_orders" value="1" {{ old('allow_whatsapp_orders', ($location?->allow_whatsapp_orders ?? $vendor->allow_whatsapp_orders ?? true)) ? 'checked' : '' }} style="width: 17px; height: 17px; accent-color: #22c55e; cursor: pointer;">
-                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">{{ __('Կոճակն Ակտիվ է') }}</span>
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">{{ __('Button Active') }}</span>
                             </label>
                         </div>
                         <div style="position: relative; display: flex; align-items: center;">
@@ -162,62 +162,62 @@
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Այս համարին կուղարկվեն WhatsApp պատվերները (անջատելու դեպքում կոճակը չի երևա զամբյուղում)') }}
+                            {{ __('WhatsApp orders will be sent to this number (if disabled, button will not appear in cart)') }}
                         </span>
                     </div>
 
                     <!-- Wi-Fi SSID -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Wi-Fi ցանց (SSID)') }}
+                            {{ __('Wi-Fi Network (SSID)') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="wifi_ssid" value="{{ old('wifi_ssid', $location?->wifi_ssid ?? ($vendor->wifi_ssid ?? ($vendor->name . ' Guest'))) }}" class="form-control" placeholder="Օրինակ՝ Bistro_Guest_WiFi" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="wifi_ssid" value="{{ old('wifi_ssid', $location?->wifi_ssid ?? ($vendor->wifi_ssid ?? ($vendor->name . ' Guest'))) }}" class="form-control" placeholder="e.g. Bistro_Guest_WiFi" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--primary); font-size: 1rem;">
                                 <i class="fa-solid fa-wifi"></i>
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Հյուրերի Wi-Fi ցանցի անվանումը') }}
+                            {{ __('Guest Wi-Fi network name') }}
                         </span>
                     </div>
 
                     <!-- Wi-Fi Password -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Wi-Fi գաղտնաբառ') }}
+                            {{ __('Wi-Fi Password') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="wifi_password" value="{{ old('wifi_password', $location?->wifi_password ?? ($vendor->wifi_password ?? 'guest' . str_pad($vendor->id, 4, '0', STR_PAD_LEFT))) }}" class="form-control" placeholder="Գաղտնաբառ" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="wifi_password" value="{{ old('wifi_password', $location?->wifi_password ?? ($vendor->wifi_password ?? 'guest' . str_pad($vendor->id, 4, '0', STR_PAD_LEFT))) }}" class="form-control" placeholder="Password" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--primary); font-size: 1rem;">
                                 <i class="fa-solid fa-key"></i>
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Հաճախորդը կարող է պատճենել այն մեկ սեղմումով') }}
+                            {{ __('Customers can copy it with a single tap') }}
                         </span>
                     </div>
 
-                    <!-- Աշխատանքային օրեր և ժամեր -->
+                    <!-- Working Days & Hours -->
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Աշխատանքային օրեր և ժամեր') }}
+                            {{ __('Working Days & Hours') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="working_hours" value="{{ old('working_hours', $location?->working_hours ?? ($vendor->working_hours ?? '10:00 - 23:00 (Ամեն օր / Daily)')) }}" class="form-control" placeholder="Օրինակ՝ 10:00 - 23:00 (Ամեն օր / Daily)" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="working_hours" value="{{ old('working_hours', $location?->working_hours ?? ($vendor->working_hours ?? '10:00 - 23:00 (Daily)')) }}" class="form-control" placeholder="e.g. 10:00 - 23:00 (Daily)" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--primary); font-size: 1rem;">
                                 <i class="fa-solid fa-clock"></i>
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Օրինակ՝ «Երկ-Կիրակի՝ 10:00 - 23:00»') }}
+                            {{ __('e.g. "Mon-Sun: 10:00 - 23:00"') }}
                         </span>
                     </div>
 
                     <!-- Desktop Screen Max Width -->
                     <div class="form-group" style="grid-column: 1 / -1; border-top: 1px dashed var(--border-color); padding-top: 1.25rem; margin-top: 0.5rem;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
-                            <i class="fa-solid fa-desktop" style="color: var(--primary);"></i> {{ __('Էկրանի Լայնություն Դեսքթոփում (Desktop Frame Max-Width)') }}
+                            <i class="fa-solid fa-desktop" style="color: var(--primary);"></i> {{ __('Desktop Frame Max-Width') }}
                         </label>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
                             @php
@@ -225,19 +225,19 @@
                             @endphp
                             <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '480px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
                                 <input type="radio" name="desktop_max_width" value="480px" {{ $dWidth === '480px' ? 'checked' : '' }}>
-                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">480px (Կոմպակտ)</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">480px (Compact)</span>
                             </label>
                             <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '600px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
                                 <input type="radio" name="desktop_max_width" value="600px" {{ $dWidth === '600px' ? 'checked' : '' }}>
-                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">600px (Լավագույն)</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">600px (Recommended)</span>
                             </label>
                             <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '680px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
                                 <input type="radio" name="desktop_max_width" value="680px" {{ $dWidth === '680px' ? 'checked' : '' }}>
-                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">680px (Մեծ Mobile)</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">680px (Large Mobile)</span>
                             </label>
                             <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '768px' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
                                 <input type="radio" name="desktop_max_width" value="768px" {{ $dWidth === '768px' ? 'checked' : '' }}>
-                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">768px (Պլանշետ)</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">768px (Tablet)</span>
                             </label>
                             <label style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-body); border: 1.5px solid {{ $dWidth === '100%' ? 'var(--primary)' : 'var(--border-color)' }}; border-radius: 10px; padding: 0.6rem 0.8rem; cursor: pointer;">
                                 <input type="radio" name="desktop_max_width" value="100%" {{ $dWidth === '100%' ? 'checked' : '' }}>
@@ -245,7 +245,7 @@
                             </label>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Համակարգիչներով (Desktop) բացելիս մենյուն չի լղոզվի էկրանով մեկ, այլ կցուցադրվի ընտրված չափի էլեգանտ շրջանակով (կենտրոնացված)։ Լռելյայն՝ 600px:') }}
+                            {{ __('When opened on desktop, the menu will be displayed in an elegant centered frame of the selected size. Default: 600px:') }}
                         </span>
                     </div>
                 </div>
@@ -277,13 +277,13 @@
                 $locWarningMessage = old('closing_warning_message', $location?->closing_warning_message ?? ($hasMultipleLocations ? null : $vendor->closing_warning_message));
 
                 $dayNames = [
-                    'mon' => 'Երկ',
-                    'tue' => 'Երք',
-                    'wed' => 'Չոր',
-                    'thu' => 'Հնգ',
-                    'fri' => 'Ուրբ',
-                    'sat' => 'Շաբ',
-                    'sun' => 'Կիր',
+                    'mon' => 'Mon',
+                    'tue' => 'Tue',
+                    'wed' => 'Wed',
+                    'thu' => 'Thu',
+                    'fri' => 'Fri',
+                    'sat' => 'Sat',
+                    'sun' => 'Sun',
                 ];
             @endphp
 
@@ -295,10 +295,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Աշխատանքային Ժամեր, Խոհանոց & Պատվերների Ժամանակացույց') }}
+                                {{ __('Working Hours, Kitchen & Order Schedules') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Կարգավորեք խոհանոցի, առաքման և տանելու (takeaway) պատվերների ընդունման ժամերը, ինչպես նաև փակվելու մասին նախազգուշացումը') }}
+                                {{ __('Configure hours for kitchen, delivery, and takeaway orders, as well as closing warnings') }}
                             </p>
                         </div>
                     </div>
@@ -311,13 +311,13 @@
                             <div style="display: flex; align-items: center; gap: 0.65rem;">
                                 <span style="font-size: 1.15rem; color: #ef4444;"><i class="fa-solid fa-utensils"></i></span>
                                 <div>
-                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Ռեստորանի Խոհանոց / Սրահ (Dine-in)') }}</div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Եթե միացված է, խոհանոցի փակվելուց հետո սրահի պատվերներ չեն ընդունվի') }}</div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Kitchen / Dine-in Hours') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('If enabled, dine-in orders will not be accepted after kitchen closing') }}</div>
                                 </div>
                             </div>
                             <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
                                 <input type="checkbox" name="dine_in_schedule_enabled" value="1" id="dineInScheduleToggle" {{ $locDineInEnabled ? 'checked' : '' }} onchange="toggleScheduleBlock('dineIn')" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Սահմանափակել ժամերը') }}</span>
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Limit Hours') }}</span>
                             </label>
                         </div>
 
@@ -325,13 +325,13 @@
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                                 <div>
                                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                        <i class="fa-regular fa-clock"></i> {{ __('Բացվում է (Սկիզբ)') }}
+                                        <i class="fa-regular fa-clock"></i> {{ __('Opens (Start)') }}
                                     </label>
                                     <input type="time" name="dine_in_start_time" value="{{ substr($locDineInStart, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
                                 </div>
                                 <div>
                                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                        <i class="fa-regular fa-clock"></i> {{ __('Խոհանոցը փակվում է (Ավարտ)') }}
+                                        <i class="fa-regular fa-clock"></i> {{ __('Kitchen Closes (End)') }}
                                     </label>
                                     <input type="time" name="dine_in_end_time" value="{{ substr($locDineInEnd, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
                                 </div>
@@ -339,11 +339,11 @@
 
                             <div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
-                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Աշխատանքային օրեր') }}</label>
+                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Operating Days') }}</label>
                                     <div style="display: flex; gap: 0.35rem;">
-                                        <button type="button" onclick="setChannelDays('dine_in', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Բոլորը') }}</button>
-                                        <button type="button" onclick="setChannelDays('dine_in', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Երկ-Ուրբ') }}</button>
-                                        <button type="button" onclick="setChannelDays('dine_in', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Շաբ-Կիր') }}</button>
+                                        <button type="button" onclick="setChannelDays('dine_in', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('All') }}</button>
+                                        <button type="button" onclick="setChannelDays('dine_in', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Mon-Fri') }}</button>
+                                        <button type="button" onclick="setChannelDays('dine_in', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Sat-Sun') }}</button>
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -364,13 +364,13 @@
                             <div style="display: flex; align-items: center; gap: 0.65rem;">
                                 <span style="font-size: 1.15rem; color: #3b82f6;"><i class="fa-solid fa-motorcycle"></i></span>
                                 <div>
-                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Առաքման Ծառայության Ժամեր') }}</div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Առաքման պատվերների ընդունման ժամանակացույց') }}</div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Delivery Service Hours') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Schedule for accepting delivery orders') }}</div>
                                 </div>
                             </div>
                             <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
                                 <input type="checkbox" name="delivery_schedule_enabled" value="1" id="deliveryScheduleToggle" {{ $locDeliveryEnabled ? 'checked' : '' }} onchange="toggleScheduleBlock('delivery')" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Սահմանափակել ժամերը') }}</span>
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Limit Hours') }}</span>
                             </label>
                         </div>
 
@@ -378,13 +378,13 @@
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                                 <div>
                                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                        <i class="fa-regular fa-clock"></i> {{ __('Առաքման սկիզբ') }}
+                                        <i class="fa-regular fa-clock"></i> {{ __('Delivery Start') }}
                                     </label>
                                     <input type="time" name="delivery_start_time" value="{{ substr($locDeliveryStart, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
                                 </div>
                                 <div>
                                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                        <i class="fa-regular fa-clock"></i> {{ __('Առաքման ավարտ') }}
+                                        <i class="fa-regular fa-clock"></i> {{ __('Delivery End') }}
                                     </label>
                                     <input type="time" name="delivery_end_time" value="{{ substr($locDeliveryEnd, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
                                 </div>
@@ -392,11 +392,11 @@
 
                             <div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
-                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Առաքման աշխատանքային օրեր') }}</label>
+                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Delivery Operating Days') }}</label>
                                     <div style="display: flex; gap: 0.35rem;">
-                                        <button type="button" onclick="setChannelDays('delivery', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Բոլորը') }}</button>
-                                        <button type="button" onclick="setChannelDays('delivery', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Երկ-Ուրբ') }}</button>
-                                        <button type="button" onclick="setChannelDays('delivery', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Շաբ-Կիր') }}</button>
+                                        <button type="button" onclick="setChannelDays('delivery', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('All') }}</button>
+                                        <button type="button" onclick="setChannelDays('delivery', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Mon-Fri') }}</button>
+                                        <button type="button" onclick="setChannelDays('delivery', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Sat-Sun') }}</button>
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -417,13 +417,13 @@
                             <div style="display: flex; align-items: center; gap: 0.65rem;">
                                 <span style="font-size: 1.15rem; color: #10b981;"><i class="fa-solid fa-bag-shopping"></i></span>
                                 <div>
-                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Տանելու Պատվերների Ժամեր (Takeaway)') }}</div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Ինքնուրույն վերցնելու (տանելու) պատվերների ընդունման ժամեր') }}</div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Takeaway Order Hours') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Operating hours for self-pickup (takeaway) orders') }}</div>
                                 </div>
                             </div>
                             <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
                                 <input type="checkbox" name="takeaway_schedule_enabled" value="1" id="takeawayScheduleToggle" {{ $locTakeawayEnabled ? 'checked' : '' }} onchange="toggleScheduleBlock('takeaway')" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Սահմանափակել ժամերը') }}</span>
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Limit Hours') }}</span>
                             </label>
                         </div>
 
@@ -431,13 +431,13 @@
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                                 <div>
                                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                        <i class="fa-regular fa-clock"></i> {{ __('Տանելու սկիզբ') }}
+                                        <i class="fa-regular fa-clock"></i> {{ __('Takeaway Start') }}
                                     </label>
                                     <input type="time" name="takeaway_start_time" value="{{ substr($locTakeawayStart, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
                                 </div>
                                 <div>
                                     <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                        <i class="fa-regular fa-clock"></i> {{ __('Տանելու ավարտ') }}
+                                        <i class="fa-regular fa-clock"></i> {{ __('Takeaway End') }}
                                     </label>
                                     <input type="time" name="takeaway_end_time" value="{{ substr($locTakeawayEnd, 0, 5) }}" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.95rem; font-weight: 700;">
                                 </div>
@@ -445,11 +445,11 @@
 
                             <div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
-                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Տանելու աշխատանքային օրեր') }}</label>
+                                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin: 0;">{{ __('Takeaway Operating Days') }}</label>
                                     <div style="display: flex; gap: 0.35rem;">
-                                        <button type="button" onclick="setChannelDays('takeaway', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Բոլորը') }}</button>
-                                        <button type="button" onclick="setChannelDays('takeaway', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Երկ-Ուրբ') }}</button>
-                                        <button type="button" onclick="setChannelDays('takeaway', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Շաբ-Կիր') }}</button>
+                                        <button type="button" onclick="setChannelDays('takeaway', 'all')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('All') }}</button>
+                                        <button type="button" onclick="setChannelDays('takeaway', 'weekdays')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Mon-Fri') }}</button>
+                                        <button type="button" onclick="setChannelDays('takeaway', 'weekends')" class="btn btn-secondary" style="padding: 0.15rem 0.5rem; font-size: 0.72rem; border-radius: 6px;">{{ __('Sat-Sun') }}</button>
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -470,41 +470,41 @@
                             <div style="display: flex; align-items: center; gap: 0.65rem;">
                                 <span style="font-size: 1.2rem; color: #f59e0b;"><i class="fa-solid fa-triangle-exclamation"></i></span>
                                 <div>
-                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Փակվելու Մասին Նախազգուշացում (Closing Warning)') }}</div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Հաճախորդներին մենյուում նախապես տեղեկացնել խոհանոցի կամ ռեստորանի փակվելու մասին') }}</div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">{{ __('Closing Warning') }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Notify customers in advance when the kitchen or restaurant is about to close') }}</div>
                                 </div>
                             </div>
                             <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; user-select: none;">
                                 <input type="checkbox" name="closing_warning_enabled" value="1" id="closingWarningToggle" {{ $locWarningEnabled ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Միացված է') }}</span>
+                                <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">{{ __('Enabled') }}</span>
                             </label>
                         </div>
 
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1rem;">
                             <div>
                                 <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                    {{ __('Քանի րոպե առաջ ցուցադրել ծանուցումը') }}
+                                    {{ __('Show warning how many minutes in advance') }}
                                 </label>
                                 <select name="closing_warning_minutes" class="form-control" style="width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.92rem; font-weight: 700;">
-                                    <option value="15" {{ $locWarningMinutes == 15 ? 'selected' : '' }}>15 րոպե առաջ (15 mins)</option>
-                                    <option value="30" {{ $locWarningMinutes == 30 ? 'selected' : '' }}>30 րոպե առաջ (30 mins - Խորհուրդ է տրվում)</option>
-                                    <option value="45" {{ $locWarningMinutes == 45 ? 'selected' : '' }}>45 րոպե առաջ (45 mins)</option>
-                                    <option value="60" {{ $locWarningMinutes == 60 ? 'selected' : '' }}>60 րոպե առաջ (1 hour)</option>
-                                    <option value="90" {{ $locWarningMinutes == 90 ? 'selected' : '' }}>90 րոպե առաջ (1.5 hours)</option>
+                                    <option value="15" {{ $locWarningMinutes == 15 ? 'selected' : '' }}>15 minutes before</option>
+                                    <option value="30" {{ $locWarningMinutes == 30 ? 'selected' : '' }}>30 minutes before (Recommended)</option>
+                                    <option value="45" {{ $locWarningMinutes == 45 ? 'selected' : '' }}>45 minutes before</option>
+                                    <option value="60" {{ $locWarningMinutes == 60 ? 'selected' : '' }}>60 minutes before (1 hour)</option>
+                                    <option value="90" {{ $locWarningMinutes == 90 ? 'selected' : '' }}>90 minutes before (1.5 hours)</option>
                                 </select>
                             </div>
                             <div>
                                 <label style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem;">
-                                    {{ __('Հատուկ նախազգուշացման տեքստ (կամայական)') }}
+                                    {{ __('Custom Warning Message (Optional)') }}
                                 </label>
-                                <input type="text" name="closing_warning_message" value="{{ $locWarningMessage }}" placeholder="Օրինակ՝ Խոհանոցը շուտով փակվում է, խնդրում ենք շտապել" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.92rem; font-weight: 600;">
+                                <input type="text" name="closing_warning_message" value="{{ $locWarningMessage }}" placeholder="e.g. The kitchen is closing soon, please finalize your order" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.92rem; font-weight: 600;">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. CUSTOM DOMAIN & BRANDING URL (ՍԵՓԱԿԱՆ ԴՈՄԵՆ) -->
+            <!-- 3. CUSTOM DOMAIN & BRANDING URL -->
             <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
@@ -513,10 +513,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Սեփական Դոմեն (Custom Domain & White-Label)') }}
+                                {{ __('Custom Domain & White-Label') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Կցեք ձեր սեփական դոմենը, որպեսզի մենյուն բացվի ձեր դոմենով (օր.՝ menu.restaurant.am), իսկ ադմինիստրատորները մուտք գործեն ձերդոմեն/admin') }}
+                                {{ __('Connect your custom domain so the menu opens on your domain (e.g. menu.restaurant.com) and admins access yourdomain/admin') }}
                             </p>
                         </div>
                     </div>
@@ -526,23 +526,23 @@
                     @endphp
                     @if($primaryDomain && $primaryDomain->isActive())
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ Կցված է') }}
+                            <i class="fa-solid fa-circle-check"></i> {{ __('Active & Connected') }}
                         </span>
                     @elseif($primaryDomain && $primaryDomain->isVerified())
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-shield-halved"></i> {{ __('Սեփականությունը հաստատված է (DNS-ի սպասում)') }}
+                            <i class="fa-solid fa-shield-halved"></i> {{ __('Ownership Verified (Awaiting DNS)') }}
                         </span>
                     @elseif($primaryDomain && $primaryDomain->isDnsDetected())
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-bolt"></i> {{ __('DNS-ը գտնված է (Հաստատման սպասում)') }}
+                            <i class="fa-solid fa-bolt"></i> {{ __('DNS Detected (Awaiting Verification)') }}
                         </span>
                     @elseif($vendor->hasCustomDomain())
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-hourglass-half"></i> {{ __('Սպասում է կարգավորման') }}
+                            <i class="fa-solid fa-hourglass-half"></i> {{ __('Pending Configuration') }}
                         </span>
                     @else
                         <span style="font-size: 0.78rem; font-weight: 700; background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            <i class="fa-solid fa-circle-minus"></i> {{ __('Անջատված է') }}
+                            <i class="fa-solid fa-circle-minus"></i> {{ __('Disabled') }}
                         </span>
                     @endif
                 </div>
@@ -551,10 +551,10 @@
                     <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: end; flex-wrap: wrap;">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Դոմենի հասցե (Custom Domain FQDN)') }}
+                                {{ __('Custom Domain FQDN') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="custom_domain" id="customDomainInput" value="{{ old('custom_domain', $vendor->custom_domain) }}" class="form-control" placeholder="օրինակ՝ menu.restaurant.am կամ restaurant.com" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                                <input type="text" name="custom_domain" id="customDomainInput" value="{{ old('custom_domain', $vendor->custom_domain) }}" class="form-control" placeholder="e.g. menu.restaurant.com or restaurant.com" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                                 <span style="position: absolute; left: 1rem; color: #06b6d4; font-size: 1rem;">
                                     <i class="fa-solid fa-link"></i>
                                 </span>
@@ -563,16 +563,16 @@
 
                         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <button type="button" id="btnVerifyDomain" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; border-color: rgba(16, 185, 129, 0.4); color: #10b981; white-space: nowrap;">
-                                <i class="fa-solid fa-shield-check"></i> {{ __('Հաստատել Սեփականությունը') }}
+                                <i class="fa-solid fa-shield-check"></i> {{ __('Verify Ownership') }}
                             </button>
                             <button type="button" id="btnCheckDomainDns" class="btn btn-secondary" style="padding: 0.75rem 1rem; font-size: 0.88rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; border-color: rgba(6, 182, 212, 0.4); color: #06b6d4; white-space: nowrap;">
-                                <i class="fa-solid fa-bolt"></i> {{ __('Ստուգել DNS') }}
+                                <i class="fa-solid fa-bolt"></i> {{ __('Check DNS') }}
                             </button>
                         </div>
                     </div>
 
                     <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem; display: block;">
-                        {{ __('Մուտքագրեք դոմենն առանց http:// կամ https://-ի (օր.՝ menu.restaurant.am): Դատարկ թողնելու դեպքում սեփական դոմենը կանջատվի:') }}
+                        {{ __('Enter domain without http:// or https:// (e.g. menu.restaurant.com). Leave blank to disable custom domain:') }}
                     </span>
 
                     <!-- Live Check / Verification Result Alert Box -->
@@ -582,21 +582,21 @@
                         <!-- TXT Challenge Info Box -->
                         <div style="margin-top: 1rem; padding: 0.9rem 1.1rem; border-radius: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.84rem;">
                             <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.45rem; display: flex; align-items: center; justify-content: space-between;">
-                                <span><i class="fa-solid fa-key"></i> {{ __('Սեփականության հաստատման DNS TXT Գրառում') }}</span>
+                                <span><i class="fa-solid fa-key"></i> {{ __('DNS TXT Record for Ownership Verification') }}</span>
                                 @if($primaryDomain->isVerified())
-                                    <span style="color: #10b981; font-size: 0.76rem;"><i class="fa-solid fa-circle-check"></i> {{ __('Հաստատված է') }} ({{ $primaryDomain->verified_at?->format('d.m.Y H:i') }})</span>
+                                    <span style="color: #10b981; font-size: 0.76rem;"><i class="fa-solid fa-circle-check"></i> {{ __('Verified') }} ({{ $primaryDomain->verified_at?->format('d.m.Y H:i') }})</span>
                                 @else
-                                    <span style="color: #f59e0b; font-size: 0.76rem;"><i class="fa-solid fa-clock"></i> {{ __('Սպասում է TXT գրառմանը') }}</span>
+                                    <span style="color: #f59e0b; font-size: 0.76rem;"><i class="fa-solid fa-clock"></i> {{ __('Waiting for TXT record') }}</span>
                                 @endif
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr; gap: 0.4rem; font-family: monospace; font-size: 0.8rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 0.35rem 0.6rem; border-radius: 6px;">
                                     <span style="color: var(--text-muted);">Host/Name: <strong style="color: var(--text-main);">{{ $primaryDomain->getChallengeHost() }}</strong></span>
-                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $primaryDomain->getChallengeHost() }}'); alert('Host-ը պատճենվեց');" style="background: none; border: none; color: #38bdf8; cursor: pointer;" title="Պատճենել"><i class="fa-solid fa-copy"></i></button>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $primaryDomain->getChallengeHost() }}'); alert('Host copied');" style="background: none; border: none; color: #38bdf8; cursor: pointer;" title="Copy"><i class="fa-solid fa-copy"></i></button>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 0.35rem 0.6rem; border-radius: 6px;">
                                     <span style="color: var(--text-muted); word-break: break-all;">TXT Value: <strong style="color: #a5f3fc;">{{ $primaryDomain->verification_token }}</strong></span>
-                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $primaryDomain->verification_token }}'); alert('Թոքենը պատճենվեց');" style="background: none; border: none; color: #38bdf8; cursor: pointer;" title="Պատճենել"><i class="fa-solid fa-copy"></i></button>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ $primaryDomain->verification_token }}'); alert('Token copied');" style="background: none; border: none; color: #38bdf8; cursor: pointer;" title="Copy"><i class="fa-solid fa-copy"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -606,10 +606,10 @@
                     @if($vendor->hasCustomDomain())
                         <div style="margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
                             <a href="{{ $vendor->getStorefrontUrl() }}" target="_blank" class="btn btn-secondary" style="font-size: 0.82rem; font-weight: 600; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.45rem;">
-                                <i class="fa-solid fa-arrow-up-right-from-square" style="color: #06b6d4;"></i> {{ __('Բացել Մենյուն (Storefront)') }}
+                                <i class="fa-solid fa-arrow-up-right-from-square" style="color: #06b6d4;"></i> {{ __('Open Menu (Storefront)') }}
                             </a>
                             <a href="{{ $vendor->getAdminUrl() }}" target="_blank" class="btn btn-secondary" style="font-size: 0.82rem; font-weight: 600; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.45rem;">
-                                <i class="fa-solid fa-shield-halved" style="color: #f59e0b;"></i> {{ __('Բացել Ադմինկան (Admin Panel)') }}
+                                <i class="fa-solid fa-shield-halved" style="color: #f59e0b;"></i> {{ __('Open Admin Panel') }}
                             </a>
                         </div>
                     @endif
@@ -618,59 +618,59 @@
                 <!-- DNS & cPanel Setup Instructions Box -->
                 <div style="background: rgba(30, 41, 59, 0.4); border: 1px dashed rgba(6, 182, 212, 0.35); border-radius: 16px; padding: 1.25rem;">
                     <div style="font-size: 0.92rem; font-weight: 800; color: #38bdf8; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-circle-info"></i> {{ __('Ինչպե՞ս կցել ձեր դոմենը (DNS և cPanel քայլերը)') }}
+                        <i class="fa-solid fa-circle-info"></i> {{ __('How to connect your domain (DNS & cPanel steps)') }}
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; font-size: 0.84rem; color: var(--text-muted);">
                         <!-- Step 1: TXT Verification -->
                         <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
-                                1. Սեփականության Հաստատում (TXT Record)
+                                1. Ownership Verification (TXT Record)
                             </div>
                             <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
-                                Ավելացրեք <strong>TXT Record</strong> ձեր դոմենի DNS-ում վերը նշված Host-ով և Value-ով, ապա սեղմեք <strong>«Հաստատել Սեփականությունը»</strong>:
+                                Add a <strong>TXT Record</strong> in your domain DNS with the Host and Value above, then click <strong>"Verify Ownership"</strong>:
                             </p>
                             <div style="font-size: 0.78rem; color: #a5f3fc;">
-                                <i class="fa-solid fa-lock"></i> Սա երաշխավորում է, որ միայն դոմենի իրական տերը կարող է այն կցել իր ռեստորանին:
+                                <i class="fa-solid fa-lock"></i> This ensures that only the verified domain owner can link it to their restaurant.
                             </div>
                         </div>
 
                         <!-- Step 2: DNS Routing -->
                         <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
-                                2. DNS Ուղղորդում (A կամ CNAME)
+                                2. DNS Routing (A or CNAME)
                             </div>
                             <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
-                                Ավելացրեք <strong>A Record</strong> ձեր դոմենի DNS-ում՝
+                                Add an <strong>A Record</strong> in your domain DNS pointing to:
                             </p>
                             <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 0.4rem 0.65rem; border-radius: 6px; font-family: monospace; color: #a5f3fc; font-size: 0.82rem;">
                                 <span>A &rarr; {{ $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am') }}</span>
-                                <button type="button" onclick="navigator.clipboard.writeText('{{ $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am') }}'); alert('IP-ն պատճենվեց');" style="background: none; border: none; color: #38bdf8; cursor: pointer; padding: 2px 4px;" title="Պատճենել IP-ն">
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ $_SERVER['SERVER_ADDR'] ?? gethostbyname('menu.elab.am') }}'); alert('IP copied');" style="background: none; border: none; color: #38bdf8; cursor: pointer; padding: 2px 4px;" title="Copy IP">
                                     <i class="fa-solid fa-copy"></i>
                                 </button>
                             </div>
                             <div style="margin-top: 0.4rem; font-size: 0.78rem;">
-                                կամ <strong>CNAME</strong> դեպի <code>menu.elab.am</code>
+                                or <strong>CNAME</strong> to <code>menu.elab.am</code>
                             </div>
                         </div>
 
                         <!-- Step 3: cPanel / SSL -->
                         <div style="background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
-                                3. cPanel & SSL Սերտիֆիկատ
+                                3. cPanel & SSL Certificate
                             </div>
                             <p style="margin: 0 0 0.5rem 0; line-height: 1.4;">
-                                cPanel-ում ստեղծեք նոր Domain/Alias՝ Document Root-ը նշելով նույնը (օր.՝ <code>menu.elab.am/public</code>)։
+                                In cPanel create a new Domain/Alias with the same Document Root (e.g. <code>menu.elab.am/public</code>).
                             </p>
                             <div style="font-size: 0.78rem; color: #a5f3fc;">
-                                <i class="fa-solid fa-shield"></i> cPanel-ի <strong>SSL/TLS Status</strong>-ում գործարկեք <strong>AutoSSL</strong>՝ անվճար HTTPS սերտիֆիկատի համար։
+                                <i class="fa-solid fa-shield"></i> In cPanel's <strong>SSL/TLS Status</strong>, run <strong>AutoSSL</strong> for a free HTTPS certificate.
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. FEATURED DISH OF THE DAY BANNER CARD (ՕՐՎԱ ՈՒՏԵՍՏ) -->
+            <!-- 3. FEATURED DISH OF THE DAY BANNER CARD -->
             <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.9rem;">
@@ -679,11 +679,11 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                <span>{{ __('Օրվա Ուտեստի Բաներ') }}</span>
+                                <span>{{ __('Dish of the Day Banner') }}</span>
                                 <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; padding: 0.15rem 0.55rem; border-radius: 6px; letter-spacing: 0.03em;">PROMO BANNER</span>
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Գովազդեք օրվա հատուկ ուտեստը մենյուի ամենասկզբում՝ մեծ և գրավիչ բաներով') }}
+                                {{ __('Promote a special dish of the day at the very top of the menu with an eye-catching banner') }}
                             </p>
                         </div>
                     </div>
@@ -692,20 +692,20 @@
                     <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; background: var(--bg-body); padding: 0.5rem 1rem; border-radius: 14px; border: 1px solid var(--border-color);">
                         <input type="checkbox" name="featured_dish_enabled" value="1" id="featuredDishToggle" {{ old('featured_dish_enabled', $vendor->featured_dish_enabled) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
                         <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);">
-                            {{ __('Ակտիվացնել մենյուում') }}
+                            {{ __('Activate in Menu') }}
                         </span>
                     </label>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
-                    <!-- Ընտրել Ուտեստը -->
+                    <!-- Select Dish -->
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Ընտրել Օրվա Ուտեստը') }}
+                            {{ __('Select Dish of the Day') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
                             <select name="featured_product_id" id="featuredProductSelect" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
-                                <option value="">-- {{ __('Ընտրեք ուտեստը ցանկից') }} --</option>
+                                <option value="">-- {{ __('Select a dish from the list') }} --</option>
                                 @foreach($products as $prod)
                                     <option value="{{ $prod->id }}"
                                             data-name="{{ $prod->name }}"
@@ -713,7 +713,7 @@
                                             data-price="{{ number_format($prod->price, 0) }}"
                                             data-desc="{{ $prod->description }}"
                                             {{ old('featured_product_id', $vendor->featured_product_id) == $prod->id ? 'selected' : '' }}>
-                                        🍽️ {{ $prod->name }} — {{ number_format($prod->price, 0) }} {{ $vendor->currency ?? 'AMD' }} ({{ $prod->category?->name ?? 'Առանց բաժնի' }})
+                                        🍽️ {{ $prod->name }} — {{ number_format($prod->price, 0) }} {{ $vendor->currency ?? 'AMD' }} ({{ $prod->category?->name ?? 'Uncategorized' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -722,39 +722,39 @@
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Այս ուտեստը կցուցադրվի մեծ բաներով անմիջապես կատեգորիաների ներքևում') }}
+                            {{ __('This dish will be featured prominently right beneath the categories') }}
                         </span>
                     </div>
 
-                    <!-- Կրծքանշանի տեքստ (Badge) -->
+                    <!-- Badge Text -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Կրծքանշանի Տեքստ (Badge)') }}
+                            {{ __('Badge Text') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="featured_dish_badge" id="featuredDishBadgeInput" value="{{ old('featured_dish_badge', $vendor->featured_dish_badge ?? '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ') }}" placeholder="Օրինակ՝ ⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="featured_dish_badge" id="featuredDishBadgeInput" value="{{ old('featured_dish_badge', $vendor->featured_dish_badge ?? "⭐ TODAY'S SPECIAL") }}" placeholder="e.g. ⭐ TODAY'S SPECIAL" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-tag"></i>
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Լռելյայն՝ «⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ» կամ «CHEF\'S SPECIAL»') }}
+                            {{ __('Default: "⭐ TODAY\'S SPECIAL" or "CHEF\'S SPECIAL"') }}
                         </span>
                     </div>
 
-                    <!-- Գովազդային կարճ նկարագրություն -->
+                    <!-- Promo Subtitle -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Գովազդային Ենթավերնագիր') }}
+                            {{ __('Promo Subtitle') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="featured_dish_subtitle" id="featuredDishSubtitleInput" value="{{ old('featured_dish_subtitle', $vendor->featured_dish_subtitle) }}" placeholder="Օրինակ՝ Շեֆ խոհարարի հատուկ առաջարկը միայն այսօր" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="featured_dish_subtitle" id="featuredDishSubtitleInput" value="{{ old('featured_dish_subtitle', $vendor->featured_dish_subtitle) }}" placeholder="e.g. Chef's special recommendation for today only" class="form-control" style="width: 100%; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-comment-dots"></i>
                             </span>
                         </div>
                         <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                            {{ __('Եթե դատարկ թողնեք, կօգտագործվի տվյալ ուտեստի հիմնական նկարագրությունը') }}
+                            {{ __("If left empty, the dish's original description will be used") }}
                         </span>
                     </div>
                 </div>
@@ -763,7 +763,7 @@
                 <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--border-color);">
                     <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.45rem;">
                         <i class="fa-solid fa-eye" style="color: var(--primary);"></i>
-                        <span>{{ __('Նախադիտում (ինչպես կերևա հաճախորդներին մենյուում)') }}</span>
+                        <span>{{ __('Preview (how customers will see it in the menu)') }}</span>
                     </div>
 
                     <div id="featuredDishPreviewCard" style="max-width: 480px; border-radius: 16px; overflow: hidden; background: var(--bg-body); border: 2px solid var(--primary); box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
@@ -771,20 +771,20 @@
                             <img id="previewDishImg" src="{{ $vendor->featuredProduct?->image ?: asset('images/default-dish.png') }}" onerror="this.onerror=null;this.src='{{ asset('images/default-dish.png') }}';" style="width: 100%; height: 100%; object-fit: cover;">
                             <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);"></div>
                             <span id="previewDishBadge" style="position: absolute; top: 0.75rem; left: 0.75rem; background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 9999px; text-transform: uppercase;">
-                                {{ $vendor->featured_dish_badge ?: '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ' }}
+                                {{ $vendor->featured_dish_badge ?: "⭐ TODAY'S SPECIAL" }}
                             </span>
                         </div>
                         <div style="padding: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
                                 <h4 id="previewDishName" style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit';">
-                                    {{ $vendor->featuredProduct?->name ?? 'Ընտրեք ուտեստը' }}
+                                    {{ $vendor->featuredProduct?->name ?? 'Select dish' }}
                                 </h4>
                                 <span id="previewDishPrice" style="font-size: 1.05rem; font-weight: 800; color: var(--primary);">
                                     {{ $vendor->featuredProduct ? number_format($vendor->featuredProduct->price, 0) . ' ' . ($vendor->currency ?? 'AMD') : '' }}
                                 </span>
                             </div>
                             <p id="previewDishDesc" style="margin: 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
-                                {{ $vendor->featured_dish_subtitle ?: ($vendor->featuredProduct?->description ?: 'Շեֆ խոհարարի հատուկ ընտրանի') }}
+                                {{ $vendor->featured_dish_subtitle ?: ($vendor->featuredProduct?->description ?: "Chef's special selection") }}
                             </p>
                         </div>
                     </div>
@@ -803,14 +803,14 @@
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                 <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                    {{ __('AI Կառավարման Կենտրոն & AI Մատուցող') }}
+                                    {{ __('AI Control Center & AI Waiter') }}
                                 </h3>
                                 <span style="font-size: 0.72rem; font-weight: 700; background: linear-gradient(135deg, #8b5cf6, #d946ef); color: #fff; padding: 0.15rem 0.5rem; border-radius: 6px;">
                                     NEW DEDICATED HUB
                                 </span>
                             </div>
                             <p style="margin: 0.35rem 0 0; font-size: 0.88rem; color: var(--text-muted); line-height: 1.45;">
-                                {{ __('AI Մատուցողի, ինչպես նաև AI պրովայդերների (Gemini, OpenAI, Claude, DeepSeek, Groq), API բանալիների և մոդելների կարգավորումներն առանձնացվել են հատուկ AI բաժնում:') }}
+                                {{ __('AI Waiter, AI providers (Gemini, OpenAI, Claude, DeepSeek, Groq), API keys, and model settings have been moved to the dedicated AI section:') }}
                             </p>
 
                             <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.75rem; flex-wrap: wrap;">
@@ -819,11 +819,11 @@
                                 </span>
                                 @if($vendor->ai_waiter_enabled)
                                     <span style="font-size: 0.78rem; font-weight: 700; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 0.2rem 0.55rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                        <i class="fa-solid fa-circle-check"></i> {{ __('AI Մատուցող՝ Ակտիվ') }}
+                                        <i class="fa-solid fa-circle-check"></i> {{ __('AI Waiter: Active') }}
                                     </span>
                                 @else
                                     <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; background: rgba(100, 116, 139, 0.12); padding: 0.2rem 0.55rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                        <i class="fa-solid fa-pause"></i> {{ __('AI Մատուցող՝ Անջատված') }}
+                                        <i class="fa-solid fa-pause"></i> {{ __('AI Waiter: Disabled') }}
                                     </span>
                                 @endif
                             </div>
@@ -832,7 +832,7 @@
 
                     <div>
                         <a href="{{ route('admin.settings.ai') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; padding: 0.75rem 1.4rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; color: #fff; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35); white-space: nowrap;">
-                            <i class="fa-solid fa-gear"></i> {{ __('Բացել AI Կարգավորումները') }}
+                            <i class="fa-solid fa-gear"></i> {{ __('Open AI Settings') }}
                             <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i>
                         </a>
                     </div>
@@ -848,37 +848,37 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Իրավաբանական և Կոնտակտային Տվյալներ') }}
+                                {{ __('Legal & Contact Details') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Տվյալները հասանելի են հարթակի գլխավոր ադմինիստրատորին (SuperAdmin)') }}
+                                {{ __('Information accessible to platform SuperAdmin') }}
                             </p>
                         </div>
                     </div>
 
                     <span style="font-size: 0.78rem; font-weight: 700; background: rgba(99, 102, 241, 0.15); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                        <i class="fa-solid fa-shield-halved"></i> {{ __('Երևում է սուպերադմինում') }}
+                        <i class="fa-solid fa-shield-halved"></i> {{ __('Visible to SuperAdmin') }}
                     </span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1.25rem;">
-                    <!-- Իրավաբանական անվանում -->
+                    <!-- Legal Business Name -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Իրավաբանական անվանում') }}
+                            {{ __('Legal Business Name') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="legal_name" value="{{ old('legal_name', $vendor->legal_name) }}" class="form-control" placeholder="Օրինակ՝ «Բիստրո Գրուպ» ՍՊԸ" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="legal_name" value="{{ old('legal_name', $vendor->legal_name) }}" class="form-control" placeholder="e.g. "Bistro Group" LLC" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-building"></i>
                             </span>
                         </div>
                     </div>
 
-                    <!-- ՀՎՀՀ -->
+                    <!-- Tax ID -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('ՀՎՀՀ (Tax ID)') }}
+                            {{ __('Tax ID (TIN)') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
                             <input type="text" name="tax_id" value="{{ old('tax_id', $vendor->tax_id) }}" class="form-control" placeholder="02589412" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
@@ -888,26 +888,26 @@
                         </div>
                     </div>
 
-                    <!-- Գործունեության հասցեն -->
+                    <!-- Operating Address -->
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Գործունեության հասցեն') }}
+                            {{ __('Operating Address') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="operating_address" value="{{ old('operating_address', $vendor->operating_address ?? ($location?->address ?? $vendor->legal_address)) }}" class="form-control" placeholder="Փաստացի գործունեության հասցե" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="operating_address" value="{{ old('operating_address', $vendor->operating_address ?? ($location?->address ?? $vendor->legal_address)) }}" class="form-control" placeholder="Physical operating address" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-map-pin"></i>
                             </span>
                         </div>
                     </div>
 
-                    <!-- Տնօրեն, հեռախոսահամար -->
+                    <!-- Director & Phone -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Տնօրեն (Անուն, Ազգանուն)') }}
+                            {{ __('Director (Full Name)') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="director_name" value="{{ old('director_name', $vendor->director_name) }}" class="form-control" placeholder="Տնօրենի Անուն" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="director_name" value="{{ old('director_name', $vendor->director_name) }}" class="form-control" placeholder="Director's Name" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-user-tie"></i>
                             </span>
@@ -916,7 +916,7 @@
 
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Տնօրենի հեռախոսահամար') }}
+                            {{ __("Director's Phone Number") }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
                             <input type="text" name="director_phone" value="{{ old('director_phone', $vendor->director_phone) }}" class="form-control" placeholder="+374 91 000000" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
@@ -926,13 +926,13 @@
                         </div>
                     </div>
 
-                    <!-- Մենեջեր, հեռախոսահամար -->
+                    <!-- Manager & Phone -->
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Մենեջեր / Կոնտակտային անձ') }}
+                            {{ __('Manager / Contact Person') }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
-                            <input type="text" name="contact_person_name" value="{{ old('contact_person_name', $vendor->contact_person_name) }}" class="form-control" placeholder="Մենեջերի Անուն" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
+                            <input type="text" name="contact_person_name" value="{{ old('contact_person_name', $vendor->contact_person_name) }}" class="form-control" placeholder="Manager's Name" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
                             <span style="position: absolute; left: 1rem; color: var(--text-muted); font-size: 1rem;">
                                 <i class="fa-solid fa-user-gear"></i>
                             </span>
@@ -941,7 +941,7 @@
 
                     <div class="form-group">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Մենեջերի հեռախոսահամար') }}
+                            {{ __("Manager's Phone Number") }}
                         </label>
                         <div style="position: relative; display: flex; align-items: center;">
                             <input type="text" name="contact_person_phone" value="{{ old('contact_person_phone', $vendor->contact_person_phone) }}" class="form-control" placeholder="+374 93 000000" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem 0.75rem 2.6rem; font-size: 0.95rem; font-weight: 600;">
@@ -962,10 +962,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Սպասարկման Վճար (Ռեստորանում)') }}
+                                {{ __('Service Fee (Dine-in)') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Գանձվում է ռեստորանում (Dine-in / Սեղանի մոտ) գտնվող հյուրերի պատվերներից') }}
+                                {{ __('Charged on orders placed by dine-in guests at tables') }}
                             </p>
                         </div>
                     </div>
@@ -973,7 +973,7 @@
                     <!-- Enable Switch -->
                     <label class="modern-switch-wrapper" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none;">
                         <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);" id="serviceFeeStatusLabel">
-                            {{ old('service_fee_enabled', $vendor->service_fee_enabled) ? __('Ակտիվ է') : __('Անջատված է') }}
+                            {{ old('service_fee_enabled', $vendor->service_fee_enabled) ? __('Active') : __('Disabled') }}
                         </span>
                         <input type="checkbox" name="service_fee_enabled" value="1" id="serviceFeeToggle" {{ old('service_fee_enabled', $vendor->service_fee_enabled) ? 'checked' : '' }} onchange="toggleServiceFeeFields()" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
                     </label>
@@ -984,16 +984,16 @@
                         <!-- Fee Type -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Վճարի Տեսակ') }}
+                                {{ __('Fee Type') }}
                             </label>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                 <label class="type-pill {{ old('service_fee_type', $vendor->service_fee_type ?? 'percent') === 'percent' ? 'selected' : '' }}" id="pillPercent" style="cursor: pointer; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 700; font-size: 0.88rem; transition: all 0.2s;">
                                     <input type="radio" name="service_fee_type" value="percent" {{ old('service_fee_type', $vendor->service_fee_type ?? 'percent') === 'percent' ? 'checked' : '' }} onchange="handleFeeTypeChange('percent')" style="display: none;">
-                                    <i class="fa-solid fa-percent"></i> {{ __('Տոկոսային (%)') }}
+                                    <i class="fa-solid fa-percent"></i> {{ __('Percentage (%)') }}
                                 </label>
                                 <label class="type-pill {{ old('service_fee_type', $vendor->service_fee_type) === 'fixed' ? 'selected' : '' }}" id="pillFixed" style="cursor: pointer; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 0.75rem; display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-weight: 700; font-size: 0.88rem; transition: all 0.2s;">
                                     <input type="radio" name="service_fee_type" value="fixed" {{ old('service_fee_type', $vendor->service_fee_type) === 'fixed' ? 'checked' : '' }} onchange="handleFeeTypeChange('fixed')" style="display: none;">
-                                    <i class="fa-solid fa-coins"></i> {{ __('Ֆիքսված գումար') }}
+                                    <i class="fa-solid fa-coins"></i> {{ __('Fixed Amount') }}
                                 </label>
                             </div>
                         </div>
@@ -1001,7 +1001,7 @@
                         <!-- Fee Value -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Սպասարկման վճարի չափը') }} <span style="color: #ef4444;">*</span>
+                                {{ __('Service Fee Amount') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="service_fee_value" id="serviceFeeValue" value="{{ old('service_fee_value', $vendor->service_fee_value ?? 10) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
@@ -1010,14 +1010,14 @@
                                 </span>
                             </div>
                             <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Օրինակ՝ 10% կամ 500 AMD') }}
+                                {{ __('e.g. 10% or 500 AMD') }}
                             </span>
                         </div>
 
                         <!-- Minimum Order for Service Fee -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Նվազագույն պատվերի գումար') }}
+                                {{ __('Minimum Order Amount') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="service_fee_min_order" id="serviceFeeMinOrder" value="{{ old('service_fee_min_order', $vendor->service_fee_min_order) }}" placeholder="0" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
@@ -1026,7 +1026,7 @@
                                 </span>
                             </div>
                             <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Վճարը կգործի միայն եթե պատվերը գերազանցում է այս գումարը (դատարկ = բոլոր պատվերներին)') }}
+                                {{ __('The fee applies only if the order exceeds this amount (empty = applies to all orders)') }}
                             </span>
                         </div>
                     </div>
@@ -1036,7 +1036,7 @@
                         <div style="display: flex; align-items: center; gap: 0.65rem;">
                             <span style="color: var(--primary); font-size: 1.1rem;"><i class="fa-solid fa-calculator"></i></span>
                             <span style="font-size: 0.88rem; color: var(--text-muted);">
-                                {{ __('Հաշվարկման օրինակ 15,000') }} {{ $vendor->currency }} {{ __('պատվերի դեպքում՝') }}
+                                {{ __('Calculation example for 15,000') }} {{ $vendor->currency }} {{ __('order:') }}
                             </span>
                         </div>
                         <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);" id="serviceFeePreviewBox">
@@ -1055,10 +1055,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Առաքման Ծառայության Կարգավորումներ') }}
+                                {{ __('Delivery Service Settings') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Սահմանեք առաքման վճարը, նվազագույն պատվերը և անվճար առաքման շեմը') }}
+                                {{ __('Configure delivery fee, minimum order amount, and free delivery threshold') }}
                             </p>
                         </div>
                     </div>
@@ -1066,7 +1066,7 @@
                     <!-- Enable Switch -->
                     <label class="modern-switch-wrapper" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none;">
                         <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);" id="deliveryStatusLabel">
-                            {{ old('delivery_enabled', $vendor->delivery_enabled) ? __('Ակտիվ է') : __('Անջատված է') }}
+                            {{ old('delivery_enabled', $vendor->delivery_enabled) ? __('Active') : __('Disabled') }}
                         </span>
                         <input type="checkbox" name="delivery_enabled" value="1" id="deliveryToggle" {{ old('delivery_enabled', $vendor->delivery_enabled) ? 'checked' : '' }} onchange="toggleDeliveryFields()" style="width: 20px; height: 20px; accent-color: #3b82f6; cursor: pointer;">
                     </label>
@@ -1077,7 +1077,7 @@
                         <!-- Delivery Fee -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Առաքման Վճար') }} <span style="color: #ef4444;">*</span>
+                                {{ __('Delivery Fee') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="delivery_fee" id="deliveryFeeInput" value="{{ old('delivery_fee', $vendor->delivery_fee ?? 0) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
@@ -1086,14 +1086,14 @@
                                 </span>
                             </div>
                             <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Ստանդարտ ֆիքսված վճար առաքման համար (0 = անվճար)') }}
+                                {{ __('Standard fixed fee for delivery (0 = free)') }}
                             </span>
                         </div>
 
                         <!-- Minimum Order for Delivery -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Նվազագույն պատվերի գումար') }} <span style="color: #ef4444;">*</span>
+                                {{ __('Minimum Order Amount') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="delivery_min_amount" id="deliveryMinAmount" value="{{ old('delivery_min_amount', $vendor->delivery_min_amount ?? 0) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
@@ -1102,23 +1102,23 @@
                                 </span>
                             </div>
                             <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Առաքման նվազագույն շեմ (0 = առանց սահմանափակման)') }}
+                                {{ __('Minimum order threshold for delivery (0 = no limit)') }}
                             </span>
                         </div>
 
                         <!-- Free Delivery From Threshold -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Անվճար առաքում սկսած') }}
+                                {{ __('Free Delivery From') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" step="any" min="0" name="delivery_free_from" id="deliveryFreeFrom" value="{{ old('delivery_free_from', $vendor->delivery_free_from) }}" placeholder="Առանց անվճարի" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
+                                <input type="number" step="any" min="0" name="delivery_free_from" id="deliveryFreeFrom" value="{{ old('delivery_free_from', $vendor->delivery_free_from) }}" placeholder="No free threshold" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
                                 <span style="position: absolute; right: 1rem; font-weight: 800; color: #10b981; font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
                             </div>
                             <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Այս գումարը գերազանցելու դեպքում առաքումը կդառնա 0 AMD (դատարկ = միշտ վճարովի)') }}
+                                {{ __('If order exceeds this amount, delivery becomes free (empty = always paid)') }}
                             </span>
                         </div>
                     </div>
@@ -1131,15 +1131,15 @@
                             </span>
                             <div>
                                 <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);" id="deliveryPreviewText">
-                                    {{ __('Անվճար առաքման հուշում զամբյուղում') }}
+                                    {{ __('Free delivery indicator in cart') }}
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--text-muted);" id="deliveryPreviewSubtext">
-                                    {{ __('Հաճախորդը կտեսնի պրոգրես բար, որը խթանում է պատվերի գումարի աճը') }}
+                                    {{ __('Customers will see a progress bar encouraging higher cart totals') }}
                                 </div>
                             </div>
                         </div>
                         <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; font-weight: 800; border-radius: 8px; padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-                            <i class="fa-solid fa-sparkles"></i> {{ __('Խթանիչ Ֆունկցիա') }}
+                            <i class="fa-solid fa-sparkles"></i> {{ __('Upsell Feature') }}
                         </span>
                     </div>
                 </div>
@@ -1154,10 +1154,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Տեղում Վերցնելու (Takeaway) Ծառայության Կարգավորումներ') }}
+                                {{ __('Takeaway Service Settings') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Հնարավորություն տվեք հաճախորդներին նախապես պատվիրել և վերցնել տեղում') }}
+                                {{ __('Allow customers to pre-order and pick up in person') }}
                             </p>
                         </div>
                     </div>
@@ -1165,7 +1165,7 @@
                     <!-- Enable Switch -->
                     <label class="modern-switch-wrapper" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; user-select: none;">
                         <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);" id="takeawayStatusLabel">
-                            {{ old('takeaway_enabled', $vendor->takeaway_enabled) ? __('Ակտիվ է') : __('Անջատված է') }}
+                            {{ old('takeaway_enabled', $vendor->takeaway_enabled) ? __('Active') : __('Disabled') }}
                         </span>
                         <input type="checkbox" name="takeaway_enabled" value="1" id="takeawayToggle" {{ old('takeaway_enabled', $vendor->takeaway_enabled) ? 'checked' : '' }} onchange="toggleTakeawayFields()" style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;">
                     </label>
@@ -1176,7 +1176,7 @@
                         <!-- Minimum Order for Takeaway -->
                         <div class="form-group">
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Նվազագույն պատվերի գումար') }}
+                                {{ __('Minimum Order Amount') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="takeaway_min_amount" id="takeawayMinAmount" value="{{ old('takeaway_min_amount', $vendor->takeaway_min_amount ?? 0) }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
@@ -1185,7 +1185,7 @@
                                 </span>
                             </div>
                             <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Տեղում վերցնելու նվազագույն շեմ (0 = առանց սահմանափակման)') }}
+                                {{ __('Minimum order threshold for takeaway (0 = no limit)') }}
                             </span>
                         </div>
                     </div>
@@ -1198,15 +1198,15 @@
                             </span>
                             <div>
                                 <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main);" id="takeawayPreviewText">
-                                    {{ __('Տեղում վերցնել (Takeaway) տարբերակը հասանելի է') }}
+                                    {{ __('Takeaway pickup option is available') }}
                                 </div>
                                 <div style="font-size: 0.78rem; color: var(--text-muted);" id="takeawayPreviewSubtext">
-                                    {{ __('Հաճախորդները կարող են նախապես պատվիրել առանց սեղանի QR-ի') }}
+                                    {{ __('Customers can pre-order without a table QR code') }}
                                 </div>
                             </div>
                         </div>
                         <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6; font-weight: 800; border-radius: 8px; padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-                            <i class="fa-solid fa-store"></i> {{ __('Takeaway Ռեժիմ') }}
+                            <i class="fa-solid fa-store"></i> {{ __('Takeaway Mode') }}
                         </span>
                     </div>
                 </div>
@@ -1227,10 +1227,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('Վճարային Համակարգեր (Local & International Payments)') }}
+                                {{ __('Payment Systems (Local & International Payments)') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Կառավարեք հաճախորդների կողմից առցանց կամ տեղում վճարելու եղանակները') }}
+                                {{ __('Manage online and on-premise payment methods for customers') }}
                             </p>
                         </div>
                     </div>
@@ -1244,23 +1244,23 @@
                 <!-- Payment Methods Choice (Cash / Terminal) -->
                 <div style="background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
                     <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem;">
-                        {{ __('Վճարման ընդհանուր մեթոդներ զամբյուղում') }}
+                        {{ __('General Payment Methods in Cart') }}
                     </div>
                     <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
                         <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
                             <input type="checkbox" name="payment_settings[cash_enabled]" value="1" {{ !empty($paymentSettings['cash_enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary);">
-                            <span>💵 {{ __('Կանխիկ վճարում տեղում') }}</span>
+                            <span>💵 {{ __('Cash payment on-site') }}</span>
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
                             <input type="checkbox" name="payment_settings[pos_terminal_enabled]" value="1" {{ !empty($paymentSettings['pos_terminal_enabled']) ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary);">
-                            <span>💳 {{ __('Տերմինալով (POS) վճարում տեղում') }}</span>
+                            <span>💳 {{ __('POS terminal payment on-site') }}</span>
                         </label>
                     </div>
                 </div>
 
                 <div id="onlineGatewaysContainer" style="{{ empty($paymentSettings['online_enabled']) ? 'opacity: 0.55; pointer-events: none;' : '' }}; transition: all 0.25s ease;">
                     <div style="font-size: 0.92rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🇦🇲 {{ __('Հայկական Վճարային Համակարգեր') }}</span>
+                        <span>🇦🇲 {{ __('Armenian Payment Gateways') }}</span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
@@ -1278,10 +1278,10 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][idram][merchant_id]" value="{{ $paymentSettings['gateways']['idram']['merchant_id'] ?? '' }}" placeholder="Receiver / Merchant ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['idram']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['idram']['masked'] ?? 'Կարգավորված է') . ')' : 'Secret Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][idram][secret_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['idram']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['idram']['masked'] ?? 'Configured') . ')' : 'Secret Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][idram][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['idram']['sandbox']) ? 'checked' : '' }} style="accent-color: #ff6f00;">
-                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                    <span>{{ __('Sandbox / Test Mode') }}</span>
                                 </label>
                             </div>
                         </div>
@@ -1300,10 +1300,10 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][telcell][shop_id]" value="{{ $paymentSettings['gateways']['telcell']['shop_id'] ?? '' }}" placeholder="Shop ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][telcell][key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['telcell']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['telcell']['masked'] ?? 'Կարգավորված է') . ')' : 'Security Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][telcell][key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['telcell']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['telcell']['masked'] ?? 'Configured') . ')' : 'Security Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][telcell][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['telcell']['sandbox']) ? 'checked' : '' }} style="accent-color: #e11d48;">
-                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                    <span>{{ __('Sandbox / Test Mode') }}</span>
                                 </label>
                             </div>
                         </div>
@@ -1322,10 +1322,10 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][fastshift][merchant_id]" value="{{ $paymentSettings['gateways']['fastshift']['merchant_id'] ?? '' }}" placeholder="Merchant ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['fastshift']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['fastshift']['masked'] ?? 'Կարգավորված է') . ')' : 'API Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][fastshift][api_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['fastshift']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['fastshift']['masked'] ?? 'Configured') . ')' : 'API Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][fastshift][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['fastshift']['sandbox']) ? 'checked' : '' }} style="accent-color: #2563eb;">
-                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                    <span>{{ __('Sandbox / Test Mode') }}</span>
                                 </label>
                             </div>
                         </div>
@@ -1347,14 +1347,14 @@
                                 <input type="text" name="payment_settings[gateways][arca][terminal_id]" value="{{ $paymentSettings['gateways']['arca']['terminal_id'] ?? '' }}" placeholder="Terminal ID" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][arca][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['arca']['sandbox']) ? 'checked' : '' }} style="accent-color: #059669;">
-                                    <span>{{ __('Sandbox / Թեստային ռեժիմ') }}</span>
+                                    <span>{{ __('Sandbox / Test Mode') }}</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
                     <div style="font-size: 0.92rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🌍 {{ __('Միջազգային Վճարային Համակարգեր') }}</span>
+                        <span>🌍 {{ __('International Payment Gateways') }}</span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.25rem;">
@@ -1372,7 +1372,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                                 <input type="text" name="payment_settings[gateways][stripe][publishable_key]" value="{{ $paymentSettings['gateways']['stripe']['publishable_key'] ?? '' }}" placeholder="Publishable Key (pk_test_...)" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
-                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['stripe']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['stripe']['masked'] ?? 'Կարգավորված է') . ')' : 'Secret Key (sk_test_...)' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
+                                <input type="password" name="payment_settings[gateways][stripe][secret_key]" value="" placeholder="{{ !empty($paymentSettings['gateways']['stripe']['configured']) ? '•••••••• (' . ($paymentSettings['gateways']['stripe']['masked'] ?? 'Configured') . ')' : 'Secret Key (sk_test_...)' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.88rem; font-weight: 600; padding: 0.65rem 0.85rem; border-radius: 10px;">
                                 <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
                                     <input type="checkbox" name="payment_settings[gateways][stripe][sandbox]" value="1" {{ !empty($paymentSettings['gateways']['stripe']['sandbox']) ? 'checked' : '' }} style="accent-color: #6366f1;">
                                     <span>{{ __('Test Mode (pk_test / sk_test)') }}</span>
@@ -1392,10 +1392,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('ESC/POS Ջերմային Տպիչներ (Kitchen & Bar Printers)') }}
+                                {{ __('ESC/POS Thermal Printers (Kitchen & Bar Printers)') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Պատվերի կտրոնների ավտոմատ տպում խոհանոցի կամ բարի տպիչի վրա Web Bluetooth, RawBT կամ PrintNode միջոցով') }}
+                                {{ __('Automatic order receipt printing on kitchen or bar printers via Web Bluetooth, RawBT, or PrintNode') }}
                             </p>
                         </div>
                     </div>
@@ -1409,45 +1409,45 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Թղթի Լայնություն') }}
+                            {{ __('Paper Width') }}
                         </label>
                         <select name="thermal_printer_settings[paper_width]" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
-                            <option value="80mm" {{ ($printerSettings['paper_width'] ?? '80mm') === '80mm' ? 'selected' : '' }}>80 մմ (Ստանդարտ ռեստորանային չափ)</option>
-                            <option value="58mm" {{ ($printerSettings['paper_width'] ?? '') === '58mm' ? 'selected' : '' }}>58 մմ (Կոմպակտ չափ)</option>
+                            <option value="80mm" {{ ($printerSettings['paper_width'] ?? '80mm') === '80mm' ? 'selected' : '' }}>80 mm (Standard restaurant size)</option>
+                            <option value="58mm" {{ ($printerSettings['paper_width'] ?? '') === '58mm' ? 'selected' : '' }}>58 mm (Compact size)</option>
                         </select>
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Տպվող Օրինակների Քանակ') }}
+                            {{ __('Number of Printed Copies') }}
                         </label>
                         <input type="number" min="1" max="5" name="thermal_printer_settings[copies]" value="{{ $printerSettings['copies'] ?? 1 }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Կտրոնի Վերնագիր') }}
+                            {{ __('Receipt Header') }}
                         </label>
-                        <input type="text" name="thermal_printer_settings[header_title]" value="{{ $printerSettings['header_title'] ?? $vendor->name }}" placeholder="Ռեստորանի անուն" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
+                        <input type="text" name="thermal_printer_settings[header_title]" value="{{ $printerSettings['header_title'] ?? $vendor->name }}" placeholder="Restaurant name" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
                     <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
                         <input type="checkbox" name="thermal_printer_settings[print_customer_info]" value="1" {{ !empty($printerSettings['print_customer_info']) ? 'checked' : '' }} style="accent-color: var(--primary);">
-                        <span>{{ __('Ներառել հաճախորդի տվյալները (հեռախոս, հասցե)') }}</span>
+                        <span>{{ __('Include customer details (phone, address)') }}</span>
                     </label>
                     <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
                         <input type="checkbox" name="thermal_printer_settings[print_prices]" value="1" {{ !empty($printerSettings['print_prices']) ? 'checked' : '' }} style="accent-color: var(--primary);">
-                        <span>{{ __('Տպել գները և ընդհանուր գումարը') }}</span>
+                        <span>{{ __('Print item prices and order total') }}</span>
                     </label>
                 </div>
 
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                        {{ __('Կտրոնի Ստորոտ (Footer Text)') }}
+                        {{ __('Receipt Footer Text') }}
                     </label>
-                    <input type="text" name="thermal_printer_settings[footer_text]" value="{{ $printerSettings['footer_text'] ?? 'Շնորհակալություն այցելության համար!' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
+                    <input type="text" name="thermal_printer_settings[footer_text]" value="{{ $printerSettings['footer_text'] ?? 'Thank you for visiting!' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                 </div>
             </div>
 
@@ -1460,10 +1460,10 @@
                         </span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                {{ __('CRM Ավտոմատացում & Ծննդյան Օրվա Զեղչեր') }}
+                                {{ __('CRM Automation & Birthday Discounts') }}
                             </h3>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Ծննդյան օրվա ավտոմատ զեղչեր պատվերների ժամանակ և SMS ծանուցումներ (Mobipace, SMS.am, Twilio)') }}
+                                {{ __('Automated birthday discounts on orders and SMS notifications (Mobipace, SMS.am, Twilio)') }}
                             </p>
                         </div>
                     </div>
@@ -1478,7 +1478,7 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Ծննդյան Զեղչի Չափ (%)') }}
+                                {{ __('Birthday Discount (%)') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" min="0" max="100" step="1" name="crm_settings[birthday_discount_percent]" value="{{ $crmSettings['birthday_discount_percent'] ?? 15 }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: #10b981; padding: 0.7rem 1rem 0.7rem 2.2rem; border-radius: 12px; font-weight: 700; font-size: 0.95rem;">
@@ -1488,21 +1488,21 @@
 
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Գործողության Ժամկետ (օր)') }}
+                                {{ __('Validity Period (days)') }}
                             </label>
                             <input type="number" min="0" max="30" name="crm_settings[birthday_validity_days]" value="{{ $crmSettings['birthday_validity_days'] ?? 3 }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Զեղչը կգործի ծննդյան օրվանից ± նշված օրերին') }}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Discount is valid ± specified days around birthday') }}</span>
                         </div>
 
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('SMS Պրովայդեր') }}
+                                {{ __('SMS Provider') }}
                             </label>
                             <select name="crm_settings[sms_provider]" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
-                                <option value="mobipace" {{ ($crmSettings['sms_provider'] ?? '') === 'mobipace' ? 'selected' : '' }}>Mobipace SMS (Հայաստան)</option>
-                                <option value="smsam" {{ ($crmSettings['sms_provider'] ?? '') === 'smsam' ? 'selected' : '' }}>SMS.am (Հայաստան)</option>
+                                <option value="mobipace" {{ ($crmSettings['sms_provider'] ?? '') === 'mobipace' ? 'selected' : '' }}>Mobipace SMS (Armenia)</option>
+                                <option value="smsam" {{ ($crmSettings['sms_provider'] ?? '') === 'smsam' ? 'selected' : '' }}>SMS.am (Armenia)</option>
                                 <option value="twilio" {{ ($crmSettings['sms_provider'] ?? '') === 'twilio' ? 'selected' : '' }}>Twilio (International)</option>
-                                <option value="log" {{ ($crmSettings['sms_provider'] ?? '') === 'log' ? 'selected' : '' }}>Log / Թեստային (առանց ուղարկման)</option>
+                                <option value="log" {{ ($crmSettings['sms_provider'] ?? '') === 'log' ? 'selected' : '' }}>Log / Test Mode (no SMS sent)</option>
                             </select>
                         </div>
                     </div>
@@ -1512,33 +1512,33 @@
                             <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
                                 <span>{{ __('SMS API Key / Token') }}</span>
                                 @if(!empty($crmSettings['configured']))
-                                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">✓ {{ __('Կարգավորված է') }}</span>
+                                    <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">✓ {{ __('Configured') }}</span>
                                 @endif
                             </label>
-                            <input type="password" name="crm_settings[sms_api_key]" value="" placeholder="{{ !empty($crmSettings['configured']) ? '•••••••• (' . ($crmSettings['masked'] ?? 'Կարգավորված է') . ')' : 'API Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.92rem;">
+                            <input type="password" name="crm_settings[sms_api_key]" value="" placeholder="{{ !empty($crmSettings['configured']) ? '•••••••• (' . ($crmSettings['masked'] ?? 'Configured') . ')' : 'API Key' }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.92rem;">
                         </div>
 
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('SMS Sender ID (Անվանում)') }}
+                                {{ __('SMS Sender ID') }}
                             </label>
-                            <input type="text" name="crm_settings[sms_sender_id]" value="{{ $crmSettings['sms_sender_id'] ?? 'QRMENU' }}" placeholder="Օր․ QRMENU կամ Ռեստորան" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
+                            <input type="text" name="crm_settings[sms_sender_id]" value="{{ $crmSettings['sms_sender_id'] ?? 'QRMENU' }}" placeholder="e.g. QRMENU or Restaurant" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                         </div>
 
                         <div style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
                             <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;">
                                 <input type="checkbox" name="crm_settings[birthday_sms_enabled]" value="1" {{ !empty($crmSettings['birthday_sms_enabled']) ? 'checked' : '' }} style="accent-color: var(--primary);">
-                                <span>{{ __('Ակտիվացնել ավտոմատ SMS շնորհավորանքները') }}</span>
+                                <span>{{ __('Enable automated birthday greeting SMS') }}</span>
                             </label>
                         </div>
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ __('Շնորհավորական SMS-ի Տեքստը') }}
+                            {{ __('Birthday SMS Message Template') }}
                         </label>
-                        <textarea name="crm_settings[birthday_sms_template]" rows="2" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.9rem; resize: vertical;">{{ $crmSettings['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։' }}</textarea>
-                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Հասանելի փոխարինիչներ՝ {NAME} - հաճախորդի անուն, {DISCOUNT} - զեղչի %, {VENDOR} - ռեստորանի անվանում') }}</span>
+                        <textarea name="crm_settings[birthday_sms_template]" rows="2" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem; border-radius: 12px; font-size: 0.9rem; resize: vertical;">{{ $crmSettings['birthday_sms_template'] ?? 'Happy Birthday {NAME}! Enjoy a {DISCOUNT}% discount at {VENDOR}.' }}</textarea>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">{{ __('Available placeholders: {NAME} - customer name, {DISCOUNT} - discount %, {VENDOR} - restaurant name') }}</span>
                     </div>
                 </div>
             </div>
@@ -1565,24 +1565,24 @@
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
                                 <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                    {{ __('Telegram Ծանուցումների Համակարգ') }}
+                                    {{ __('Telegram Notification System') }}
                                 </h3>
                                 @if($tgEnabled && !empty($tgChatId))
                                     <span class="badge badge-emerald" style="font-weight: 700; font-size: 0.75rem;">
-                                        <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ') }}
+                                        <i class="fa-solid fa-circle-check"></i> {{ __('Active') }}
                                     </span>
                                 @elseif($tgEnabled)
                                     <span class="badge badge-amber" style="font-weight: 700; font-size: 0.75rem;">
-                                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Լրացրեք Chat ID') }}
+                                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Enter Chat ID') }}
                                     </span>
                                 @else
                                     <span class="badge badge-secondary" style="font-weight: 700; font-size: 0.75rem;">
-                                        {{ __('Անջատված') }}
+                                        {{ __('Disabled') }}
                                     </span>
                                 @endif
                             </div>
                             <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Ստացեք ակնթարթային ծանուցումներ Ձեր Telegram խմբում, ալիքում կամ անձնական չատում') }}
+                                {{ __('Receive instant notifications in your Telegram group, channel, or direct chat') }}
                             </p>
                         </div>
                     </div>
@@ -1602,54 +1602,54 @@
                                 {{ __('Telegram Chat ID / Group ID / Channel') }} <span style="color: #ef4444;">*</span>
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="text" name="telegram_settings[chat_id]" id="telegramChatId" value="{{ old('telegram_settings.chat_id', $tgChatId) }}" placeholder="Օր․ -100123456789 կամ @restaurant_alerts" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-weight: 600; font-family: monospace; font-size: 0.92rem;">
+                                <input type="text" name="telegram_settings[chat_id]" id="telegramChatId" value="{{ old('telegram_settings.chat_id', $tgChatId) }}" placeholder="e.g. -100123456789 or @restaurant_alerts" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-weight: 600; font-family: monospace; font-size: 0.92rem;">
                                 <span style="position: absolute; left: 0.85rem; color: #229ed9; font-size: 1rem;">
                                     <i class="fa-solid fa-hashtag"></i>
                                 </span>
                             </div>
                             <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Խմբի կամ ալիքի ID-ն (սկսվում է -100-ով) կամ ալիքի @username-ը։ Բոտը պետք է ավելացված լինի այդ խմբում/ալիքում որպես ադմինիստրատոր։') }}
+                                {{ __('Group or channel ID (starts with -100) or channel @username. The bot must be added as an administrator.') }}
                             </span>
                         </div>
 
                         <!-- Custom Bot Token (Optional) -->
                         <div>
                             <label style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                <span>{{ __('Սեփական Bot Token (ըստ ցանկության)') }}</span>
+                                <span>{{ __('Custom Bot Token (Optional)') }}</span>
                                 @if($tgConfigured)
                                     <span style="font-size: 0.72rem; color: #10b981; font-weight: 700;">
-                                        ✓ {{ __('Կարգավորված է') }}
+                                        ✓ {{ __('Configured') }}
                                     </span>
                                 @elseif($platformBotConfigured)
                                     <span style="font-size: 0.72rem; color: #10b981; font-weight: 600;">
-                                        <i class="fa-solid fa-check"></i> {{ __('Հարթակի բոտը հասանելի է') }}
+                                        <i class="fa-solid fa-check"></i> {{ __('Platform default bot available') }}
                                     </span>
                                 @endif
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="" placeholder="{{ $tgConfigured ? '•••••••• (' . ($tgMasked ?: 'Կարգավորված է') . ')' : ($platformBotConfigured ? 'Լռելյայն օգտագործվում է QR Menu բոտը' : '123456789:AA... (@BotFather)') }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
+                                <input type="password" name="telegram_settings[bot_token]" id="telegramBotToken" value="" placeholder="{{ $tgConfigured ? '•••••••• (' . ($tgMasked ?: 'Configured') . ')' : ($platformBotConfigured ? 'Default QR Menu bot is used' : '123456789:AA... (@BotFather)') }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-size: 0.88rem; font-family: monospace;">
                                 <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
                                     <i class="fa-solid fa-robot"></i>
                                 </span>
                             </div>
                             <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Թողեք դատարկ՝ նախկինը պահպանելու կամ համակարգի բոտն օգտագործելու համար, կամ նշեք @BotFather-ից ստացած նոր Token-ը։') }}
+                                {{ __('Leave blank to keep existing or use platform bot, or enter a new Token from @BotFather.') }}
                             </span>
                         </div>
 
                         <!-- Forum Topic ID (Optional) -->
                         <div>
                             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">
-                                {{ __('Forum Topic / Thread ID (ըստ ցանկության)') }}
+                                {{ __('Forum Topic / Thread ID (Optional)') }}
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
-                                <input type="number" name="telegram_settings[topic_id]" id="telegramTopicId" value="{{ old('telegram_settings.topic_id', $tgTopicId) }}" placeholder="Օր․ 42" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
+                                <input type="number" name="telegram_settings[topic_id]" id="telegramTopicId" value="{{ old('telegram_settings.topic_id', $tgTopicId) }}" placeholder="e.g. 42" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.7rem 1rem 0.7rem 2.4rem; border-radius: 12px; font-weight: 600; font-size: 0.92rem;">
                                 <span style="position: absolute; left: 0.85rem; color: var(--text-muted); font-size: 1rem;">
                                     <i class="fa-solid fa-comments"></i>
                                 </span>
                             </div>
                             <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
-                                {{ __('Եթե ձեր Telegram խումբը բաժանված է թեմաների (Topics), նշեք թեմայի ID-ն։') }}
+                                {{ __('If your Telegram group uses forum topics, specify the topic thread ID.') }}
                             </span>
                         </div>
                     </div>
@@ -1660,11 +1660,11 @@
                             <div style="display: flex; align-items: center; gap: 0.65rem;">
                                 <i class="fa-solid fa-code-branch" style="color: #229ed9;"></i>
                                 <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
-                                    {{ __('Այս մասնաճյուղի առանձին Chat ID (ըստ ցանկության)') }}: <strong>{{ $location->name }}</strong>
+                                    {{ __('Specific Chat ID for this branch (Optional)') }}: <strong>{{ $location->name }}</strong>
                                 </span>
                             </div>
                             <div style="flex: 1; max-width: 320px; min-width: 200px;">
-                                <input type="text" name="telegram_chat_id" value="{{ old('telegram_chat_id', $location->telegram_chat_id) }}" placeholder="{{ __('Թողեք դատարկ՝ ընդհանուրը կիրառելու համար') }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; padding: 0.5rem 0.85rem; border-radius: 10px; font-family: monospace;">
+                                <input type="text" name="telegram_chat_id" value="{{ old('telegram_chat_id', $location->telegram_chat_id) }}" placeholder="{{ __('Leave blank to use global chat ID') }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; padding: 0.5rem 0.85rem; border-radius: 10px; font-family: monospace;">
                             </div>
                         </div>
                     @endif
@@ -1672,30 +1672,30 @@
                     <!-- Event checkboxes -->
                     <div style="margin-bottom: 1.5rem;">
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.75rem;">
-                            {{ __('Ծանուցումների Տեսակները') }}
+                            {{ __('Notification Categories') }}
                         </label>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 0.85rem;">
                             <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 1rem; cursor: pointer; transition: border-color 0.2s;">
                                 <input type="checkbox" name="telegram_settings[notify_orders]" value="1" {{ $tgNotifyOrders ? 'checked' : '' }} style="accent-color: #229ed9; width: 18px; height: 18px;">
                                 <div style="font-size: 0.85rem;">
-                                    <strong style="color: var(--text-main); display: block;">🔔 {{ __('Նոր Պատվերներ') }}</strong>
-                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Սեղանի, տանելու և առաքման պատվերներ') }}</span>
+                                    <strong style="color: var(--text-main); display: block;">🔔 {{ __('New Orders') }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Dine-in, takeaway, and delivery orders') }}</span>
                                 </div>
                             </label>
 
                             <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 1rem; cursor: pointer; transition: border-color 0.2s;">
                                 <input type="checkbox" name="telegram_settings[notify_waiter_calls]" value="1" {{ $tgNotifyWaiters ? 'checked' : '' }} style="accent-color: #229ed9; width: 18px; height: 18px;">
                                 <div style="font-size: 0.85rem;">
-                                    <strong style="color: var(--text-main); display: block;">🛎️ {{ __('Մատուցողի Կանչ') }}</strong>
-                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Կանչի և հաշվի (քարտ/կանխիկ) պահանջներ') }}</span>
+                                    <strong style="color: var(--text-main); display: block;">🛎️ {{ __('Waiter Call') }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Call waiter and bill requests (card/cash)') }}</span>
                                 </div>
                             </label>
 
                             <label style="display: flex; align-items: center; gap: 0.65rem; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.75rem 1rem; cursor: pointer; transition: border-color 0.2s;">
                                 <input type="checkbox" name="telegram_settings[notify_payments]" value="1" {{ $tgNotifyPayments ? 'checked' : '' }} style="accent-color: #229ed9; width: 18px; height: 18px;">
                                 <div style="font-size: 0.85rem;">
-                                    <strong style="color: var(--text-main); display: block;">✅ {{ __('Օնլայն Վճարումներ') }}</strong>
-                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Idram, Telcell, ArCa, Stripe հաստատումներ') }}</span>
+                                    <strong style="color: var(--text-main); display: block;">✅ {{ __('Online Payments') }}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.78rem;">{{ __('Idram, Telcell, ArCa, Stripe confirmations') }}</span>
                                 </div>
                             </label>
                         </div>
@@ -1705,16 +1705,16 @@
                     <div style="background: rgba(34, 158, 217, 0.08); border: 1px solid rgba(34, 158, 217, 0.25); border-radius: 16px; padding: 1.15rem 1.35rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                         <div>
                             <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 0.2rem;">
-                                <i class="fa-solid fa-paper-plane" style="color: #229ed9;"></i> {{ __('Ստուգել Կապը & Ուղարկել Թեստ') }}
+                                <i class="fa-solid fa-paper-plane" style="color: #229ed9;"></i> {{ __('Test Connection & Send Message') }}
                             </strong>
                             <span style="font-size: 0.8rem; color: var(--text-muted);">
-                                {{ __('Սեղմեք կոճակը՝ նշված Chat ID-ին թեստային հաղորդագրություն ուղարկելու և ստուգելու համար') }}
+                                {{ __('Click button to send a test message to the specified Chat ID') }}
                             </span>
                         </div>
 
                         <button type="button" id="btnTestTelegram" onclick="testTelegramConnection()" class="btn" style="background: #229ed9; color: #fff; font-weight: 700; border-radius: 12px; padding: 0.65rem 1.4rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 158, 217, 0.35); transition: transform 0.15s ease;">
                             <i class="fa-solid fa-paper-plane"></i>
-                            <span>{{ __('Ուղարկել Թեստ') }}</span>
+                            <span>{{ __('Send Test') }}</span>
                         </button>
                     </div>
 
@@ -1733,26 +1733,26 @@
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
                                 <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
-                                    {{ __('Անձնական Անվտանգություն & 2FA (Պրոֆիլ)') }}
+                                    {{ __('Personal Security & 2FA (Profile)') }}
                                 </h3>
                                 @if(Auth::user()->hasTwoFactorEnabled())
                                     <span class="badge badge-emerald" style="font-weight: 700;">
-                                        <i class="fa-solid fa-circle-check"></i> {{ __('Ակտիվ') }} ({{ Auth::user()->two_factor_type === 'authenticator' ? 'Google Authenticator' : 'Email Code' }})
+                                        <i class="fa-solid fa-circle-check"></i> {{ __('Active') }} ({{ Auth::user()->two_factor_type === 'authenticator' ? 'Google Authenticator' : 'Email Code' }})
                                     </span>
                                 @else
                                     <span class="badge badge-amber" style="font-weight: 700;">
-                                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Անջատված') }}
+                                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Disabled') }}
                                     </span>
                                 @endif
                             </div>
                             <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
-                                {{ __('Երկփուլային նույնականացումը (2FA) պաշտպանում է /login մուտքը, գաղտնաբառի և էլ․ փոստի փոփոխությունը։') }}
+                                {{ __('Two-factor authentication (2FA) protects account login, password changes, and email updates.') }}
                             </p>
                         </div>
                     </div>
 
                     <a href="{{ route('admin.profile') }}" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; border-radius: 12px; font-weight: 700; padding: 0.65rem 1.3rem;">
-                        <i class="fa-solid fa-key"></i> {{ __('Կառավարել 2FA-ն & Գաղտնաբառը') }}
+                        <i class="fa-solid fa-key"></i> {{ __('Manage 2FA & Password') }}
                     </a>
                 </div>
             </div>
@@ -1761,10 +1761,10 @@
             <div class="sticky-save-bar" style="position: sticky; bottom: 1.5rem; z-index: 30; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 0.85rem 1.25rem; box-shadow: 0 12px 30px rgba(0,0,0,0.25); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
                 <div style="display: flex; align-items: center; gap: 0.6rem; color: var(--text-muted); font-size: 0.85rem;">
                     <i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary);"></i>
-                    <span>{{ __('Բոլոր փոփոխությունները կպահպանվեն ընթացիկ մասնաճյուղի համար') }}</span>
+                    <span>{{ __('All changes will be saved for the current branch') }}</span>
                 </div>
                 <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.6rem; border-radius: 14px; font-weight: 700; padding: 0.75rem 2rem; font-size: 0.95rem; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);">
-                    <i class="fa-solid fa-check"></i> {{ __('Պահպանել Բոլոր Կարգավորումները') }}
+                    <i class="fa-solid fa-check"></i> {{ __('Save All Settings') }}
                 </button>
             </div>
         </div>
@@ -1853,11 +1853,11 @@ function toggleServiceFeeFields() {
     if (isChecked) {
         container.style.opacity = '1';
         container.style.pointerEvents = 'auto';
-        label.textContent = "{{ __('Ակտիվ է') }}";
+        label.textContent = "Active";
     } else {
         container.style.opacity = '0.55';
         container.style.pointerEvents = 'none';
-        label.textContent = "{{ __('Անջատված է') }}";
+        label.textContent = "Disabled";
     }
     updateCalculationsPreview();
 }
@@ -1869,11 +1869,11 @@ function toggleDeliveryFields() {
     if (isChecked) {
         container.style.opacity = '1';
         container.style.pointerEvents = 'auto';
-        label.textContent = "{{ __('Ակտիվ է') }}";
+        label.textContent = "Active";
     } else {
         container.style.opacity = '0.55';
         container.style.pointerEvents = 'none';
-        label.textContent = "{{ __('Անջատված է') }}";
+        label.textContent = "Disabled";
     }
     updateCalculationsPreview();
 }
@@ -1885,11 +1885,11 @@ function toggleTakeawayFields() {
     if (isChecked) {
         container.style.opacity = '1';
         container.style.pointerEvents = 'auto';
-        label.textContent = "{{ __('Ակտիվ է') }}";
+        label.textContent = "Active";
     } else {
         container.style.opacity = '0.55';
         container.style.pointerEvents = 'none';
-        label.textContent = "{{ __('Անջատված է') }}";
+        label.textContent = "Disabled";
     }
     updateCalculationsPreview();
 }
@@ -1949,17 +1949,17 @@ function updateCalculationsPreview() {
     const previewBox = document.getElementById('serviceFeePreviewBox');
 
     if (!isServiceEnabled) {
-        previewBox.innerHTML = '<span style="color: var(--text-muted);">{{ __("Անջատված է") }}</span>';
+        previewBox.innerHTML = '<span style="color: var(--text-muted);">Disabled</span>';
     } else if (minOrder > 0 && sampleSubtotal < minOrder) {
-        previewBox.innerHTML = `<span style="color: #f59e0b;">0 ${CURRENCY} (Նվազագույն շեմը՝ ${minOrder.toLocaleString()} ${CURRENCY})</span>`;
+        previewBox.innerHTML = `<span style="color: #f59e0b;">0 ${CURRENCY} (Min threshold: ${minOrder.toLocaleString()} ${CURRENCY})</span>`;
     } else {
         let calc = 0;
         if (serviceFeeType === 'percent') {
             calc = Math.round((sampleSubtotal * feeVal) / 100);
-            previewBox.innerHTML = `<span style="color: #10b981;">+${calc.toLocaleString()} ${CURRENCY} (${feeVal}%)</span> &rarr; Ընդամենը՝ ${(sampleSubtotal + calc).toLocaleString()} ${CURRENCY}`;
+            previewBox.innerHTML = `<span style="color: #10b981;">+${calc.toLocaleString()} ${CURRENCY} (${feeVal}%)</span> &rarr; Total: ${(sampleSubtotal + calc).toLocaleString()} ${CURRENCY}`;
         } else {
             calc = feeVal;
-            previewBox.innerHTML = `<span style="color: #10b981;">+${calc.toLocaleString()} ${CURRENCY} (Ֆիքսված)</span> &rarr; Ընդամենը՝ ${(sampleSubtotal + calc).toLocaleString()} ${CURRENCY}`;
+            previewBox.innerHTML = `<span style="color: #10b981;">+${calc.toLocaleString()} ${CURRENCY} (Fixed)</span> &rarr; Total: ${(sampleSubtotal + calc).toLocaleString()} ${CURRENCY}`;
         }
     }
 
@@ -1973,16 +1973,16 @@ function updateCalculationsPreview() {
     const previewSubtext = document.getElementById('deliveryPreviewSubtext');
 
     if (!isDeliveryEnabled) {
-        previewText.textContent = "{{ __('Առաքման ծառայությունը ներկայումս անջատված է') }}";
-        previewSubtext.textContent = "{{ __('Հաճախորդները չեն կարողանա ընտրել առաքում զամբյուղում') }}";
+        previewText.textContent = "Delivery service is currently disabled";
+        previewSubtext.textContent = "Customers will not be able to select delivery in the cart";
     } else {
-        let minText = deliveryMin > 0 ? `Նվազագույն պատվեր՝ ${deliveryMin.toLocaleString()} ${CURRENCY}: ` : '';
+        let minText = deliveryMin > 0 ? `Minimum order: ${deliveryMin.toLocaleString()} ${CURRENCY}: ` : '';
         if (freeFrom > 0) {
-            previewText.textContent = `${minText}Առաքման վճար՝ ${deliveryFee.toLocaleString()} ${CURRENCY}, իսկ ${freeFrom.toLocaleString()} ${CURRENCY}-ից սկսած՝ ԱՆՎՃԱՐ 🎉`;
-            previewSubtext.textContent = "{{ __('Հաճախորդի զամբյուղում կերևա առաջընթացի սանդղակ (Progress Bar)') }}";
+            previewText.textContent = `${minText}Delivery fee: ${deliveryFee.toLocaleString()} ${CURRENCY}, and FREE from ${freeFrom.toLocaleString()} ${CURRENCY} 🎉`;
+            previewSubtext.textContent = "A progress bar will be shown in customer's cart";
         } else {
-            previewText.textContent = `${minText}Առաքման ֆիքսված վճար՝ ${deliveryFee.toLocaleString()} ${CURRENCY}`;
-            previewSubtext.textContent = "{{ __('Առաքումը միշտ վճարովի է') }}";
+            previewText.textContent = `${minText}Fixed delivery fee: ${deliveryFee.toLocaleString()} ${CURRENCY}`;
+            previewSubtext.textContent = "Delivery is always paid";
         }
     }
 
@@ -1994,12 +1994,12 @@ function updateCalculationsPreview() {
 
     if (takeawayPreviewText && takeawayPreviewSubtext) {
         if (!isTakeawayEnabled) {
-            takeawayPreviewText.textContent = "{{ __('Տեղում վերցնելու (Takeaway) ծառայությունը ներկայումս անջատված է') }}";
-            takeawayPreviewSubtext.textContent = "{{ __('Հաճախորդները չեն կարողանա ընտրել Takeaway տարբերակը') }}";
+            takeawayPreviewText.textContent = "Takeaway service is currently disabled";
+            takeawayPreviewSubtext.textContent = "Customers will not be able to select Takeaway";
         } else {
-            let minText = takeawayMin > 0 ? `Նվազագույն պատվեր՝ ${takeawayMin.toLocaleString()} ${CURRENCY}: ` : '';
-            takeawayPreviewText.textContent = `${minText}Տեղում վերցնելու (Takeaway) պատվերները ակտիվ են`;
-            takeawayPreviewSubtext.textContent = "{{ __('Հաճախորդները կարող են պատվիրել առանց ռեստորանում/սեղանի մոտ գտնվելու') }}";
+            let minText = takeawayMin > 0 ? `Minimum order: ${takeawayMin.toLocaleString()} ${CURRENCY}: ` : '';
+            takeawayPreviewText.textContent = `${minText}Takeaway orders are active`;
+            takeawayPreviewSubtext.textContent = "Customers can order without being at the restaurant/table";
         }
     }
 
@@ -2035,15 +2035,15 @@ function updateFeaturedDishPreview() {
         if (nameEl) nameEl.textContent = opt.dataset.name || opt.text;
         if (priceEl) priceEl.textContent = (opt.dataset.price || '') + ' ' + '{{ $vendor->currency ?? "AMD" }}';
         if (imgEl && opt.dataset.image) imgEl.src = opt.dataset.image;
-        if (descEl) descEl.textContent = subtitleInput.value.trim() || opt.dataset.desc || 'Շեֆ խոհարարի հատուկ ընտրանի';
+        if (descEl) descEl.textContent = subtitleInput.value.trim() || opt.dataset.desc || 'Chef's special selection';
     } else {
-        if (nameEl) nameEl.textContent = 'Ընտրեք ուտեստը';
+        if (nameEl) nameEl.textContent = 'Select dish';
         if (priceEl) priceEl.textContent = '';
-        if (descEl) descEl.textContent = 'Ուտեստ ընտրված չէ';
+        if (descEl) descEl.textContent = 'No dish selected';
     }
 
     if (badgeEl) {
-        badgeEl.textContent = badgeInput.value.trim() || '⭐ ՕՐՎԱ ԱՌԱՋԱՐԿ';
+        badgeEl.textContent = badgeInput.value.trim() || '⭐ TODAY'S SPECIAL';
     }
 }
 
@@ -2080,12 +2080,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                 dnsCheckResultBox.style.color = '#ef4444';
-                dnsCheckResultBox.textContent = 'Խնդրում ենք մուտքագրել դոմենի հասցեն:';
+                dnsCheckResultBox.textContent = 'Please enter the domain address.';
                 return;
             }
 
             btnVerifyDomain.disabled = true;
-            btnVerifyDomain.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Հաստատում...';
+            btnVerifyDomain.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
 
             try {
                 const res = await fetch('{{ route("admin.settings.domain.verify") }}', {
@@ -2116,10 +2116,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                 dnsCheckResultBox.style.color = '#ef4444';
-                dnsCheckResultBox.textContent = 'Ստուգման ժամանակ սխալ տեղի ունեցավ: Կրկին փորձեք:';
+                dnsCheckResultBox.textContent = 'An error occurred during verification. Please try again.';
             } finally {
                 btnVerifyDomain.disabled = false;
-                btnVerifyDomain.innerHTML = '<i class="fa-solid fa-shield-check"></i> {{ __("Հաստատել Սեփականությունը") }}';
+                btnVerifyDomain.innerHTML = '<i class="fa-solid fa-shield-check"></i> Verify Ownership';
             }
         });
     }
@@ -2132,12 +2132,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                 dnsCheckResultBox.style.color = '#ef4444';
-                dnsCheckResultBox.textContent = 'Խնդրում ենք մուտքագրել դոմենի հասցեն:';
+                dnsCheckResultBox.textContent = 'Please enter the domain address.';
                 return;
             }
 
             btnCheckDomainDns.disabled = true;
-            btnCheckDomainDns.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ստուգում...';
+            btnCheckDomainDns.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
 
             try {
                 const res = await fetch('{{ route("admin.settings.domain.check") }}', {
@@ -2168,10 +2168,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 dnsCheckResultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 dnsCheckResultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                 dnsCheckResultBox.style.color = '#ef4444';
-                dnsCheckResultBox.textContent = 'Ստուգման ժամանակ սխալ տեղի ունեցավ: Կրկին փորձեք:';
+                dnsCheckResultBox.textContent = 'An error occurred during verification. Please try again.';
             } finally {
                 btnCheckDomainDns.disabled = false;
-                btnCheckDomainDns.innerHTML = '<i class="fa-solid fa-bolt"></i> {{ __("Ստուգել DNS") }}';
+                btnCheckDomainDns.innerHTML = '<i class="fa-solid fa-bolt"></i> Check DNS';
             }
         });
     }
@@ -2202,13 +2202,13 @@ function testTelegramConnection() {
         resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
         resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
         resultBox.style.color = '#ef4444';
-        resultBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Խնդրում ենք լրացնել Telegram Chat ID դաշտը։';
+        resultBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Please fill in the Telegram Chat ID field.';
         return;
     }
 
     const originalContent = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Ուղարկվում է...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
     resultBox.style.display = 'none';
 
     fetch('{{ route("admin.settings.telegram.test") }}', {
@@ -2231,12 +2231,12 @@ function testTelegramConnection() {
             resultBox.style.background = 'rgba(16, 185, 129, 0.12)';
             resultBox.style.border = '1px solid rgba(16, 185, 129, 0.3)';
             resultBox.style.color = '#10b981';
-            resultBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + (data.message || 'Թեստային հաղորդագրությունը հաջողությամբ ուղարկվեց։');
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + (data.message || 'Test message sent successfully.');
         } else {
             resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
             resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
             resultBox.style.color = '#ef4444';
-            resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.message || 'Սխալ՝ չհաջողվեց ուղարկել հաղորդագրությունը։');
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.message || 'Error: failed to send message.');
         }
     })
     .catch(err => {
@@ -2244,7 +2244,7 @@ function testTelegramConnection() {
         resultBox.style.background = 'rgba(239, 68, 68, 0.12)';
         resultBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
         resultBox.style.color = '#ef4444';
-        resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Կապի խափանում. ' + err.message;
+        resultBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Connection error: ' + err.message;
     })
     .finally(() => {
         btn.disabled = false;

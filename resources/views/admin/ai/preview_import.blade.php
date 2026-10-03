@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Ստուգել Արտածված Մենյուն') . ' - ' . $vendor->name)
+@section('title', 'Review Extracted Menu - ' . $vendor->name)
 
 @section('content')
 @php
@@ -16,19 +16,19 @@
             <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
                 <i class="fa-solid fa-list-check"></i>
             </span>
-            <span>{{ __('Ստուգել & Խմբագրել Արտածված Մենյուն') }}</span>
+            <span>Review & Edit Extracted Menu</span>
         </h1>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.35rem 0 0;">
-            {{ __('Ստուգեք, փոփոխեք կամ ավելացրեք ուտեստները նախքան մենյուում հրապարակելը:') }}
+            Review, modify, or add dishes before publishing to your live menu:
         </p>
     </div>
 
     <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
         <span class="badge badge-indigo" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-            <i class="fa-solid fa-layer-group"></i> {{ count($parsedData['categories']) }} {{ __('Կատեգորիա') }}
+            <i class="fa-solid fa-layer-group"></i> {{ count($parsedData['categories']) }} Categories
         </span>
         <span class="badge badge-emerald" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-            <i class="fa-solid fa-utensils"></i> {{ $totalDishes }} {{ __('Ուտեստ') }}
+            <i class="fa-solid fa-utensils"></i> {{ $totalDishes }} Dishes
         </span>
     </div>
 </div>
@@ -51,7 +51,7 @@ function menuImportApp() {
 
     if (!Array.isArray(initialCategories) || initialCategories.length === 0) {
         initialCategories = [{
-            name: '{{ __('Նոր Բաժին') }}',
+            name: 'New Category',
             products: [{ name: '', description: '', price: 0, image: '' }]
         }];
     }
@@ -60,7 +60,7 @@ function menuImportApp() {
         categories: initialCategories,
         addCategory() {
             this.categories.push({
-                name: '{{ __('Նոր Բաժին') }}',
+                name: 'New Category',
                 products: [{ name: '', description: '', price: 0, image: '' }]
             });
         },
@@ -96,16 +96,16 @@ function menuImportApp() {
                 <div style="flex: 1; min-width: 240px;">
                     <label style="display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.35rem;">
                         <i class="fa-solid fa-folder-open" style="color: var(--primary); margin-right: 0.3rem;"></i>
-                        {{ __('ԿԱՏԵԳՈՐԻԱՅԻ ԱՆՎԱՆՈՒՄ') }}
+                        Category Name
                     </label>
                     <input type="text" :name="'categories[' + cIdx + '][name]'" x-model="cat.name" required style="font-size: 1.15rem; font-weight: 800; width: 100%; box-sizing: border-box; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.65rem 0.9rem; color: var(--text-main); outline: none;">
                 </div>
 
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <button type="button" @click="addProduct(cIdx)" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.45rem 0.85rem; border-radius: 10px;">
-                        <i class="fa-solid fa-plus" style="color: #10b981;"></i> {{ __('Ավելացնել Ուտեստ') }}
+                        <i class="fa-solid fa-plus" style="color: #10b981;"></i> Add Dish
                     </button>
-                    <button type="button" @click="removeCategory(cIdx)" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.45rem 0.75rem; border-radius: 10px; color: #ef4444;" title="{{ __('Ջնջել Կատեգորիան') }}">
+                    <button type="button" @click="removeCategory(cIdx)" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.45rem 0.75rem; border-radius: 10px; color: #ef4444;" title="Delete Category">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
@@ -118,23 +118,23 @@ function menuImportApp() {
                             <div>
                                 <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
                                     <i class="fa-solid fa-utensils" style="color: var(--primary); margin-right: 0.2rem;"></i>
-                                    {{ __('Ուտեստի Անվանում') }}
+                                    Dish Name
                                 </label>
-                                <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][name]'" x-model="prod.name" required placeholder="{{ __('Անվանում') }}" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-weight: 600; outline: none; font-size: 0.88rem;">
+                                <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][name]'" x-model="prod.name" required placeholder="Name" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-weight: 600; outline: none; font-size: 0.88rem;">
                             </div>
 
                             <div>
                                 <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
                                     <i class="fa-solid fa-align-left" style="color: var(--primary); margin-right: 0.2rem;"></i>
-                                    {{ __('Նկարագրություն') }}
+                                    Description
                                 </label>
-                                <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][description]'" x-model="prod.description" placeholder="{{ __('Բաղադրություն, մանրամասներ') }}" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-size: 0.85rem; outline: none;">
+                                <input type="text" :name="'categories[' + cIdx + '][products][' + pIdx + '][description]'" x-model="prod.description" placeholder="Ingredients, notes, details" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--text-main); font-size: 0.85rem; outline: none;">
                             </div>
 
                             <div>
                                 <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
                                     <i class="fa-solid fa-tag" style="color: var(--primary); margin-right: 0.2rem;"></i>
-                                    {{ __('Գին') }} ({{ $vendor->currency }})
+                                    Price ({{ $vendor->currency }})
                                 </label>
                                 <input type="number" step="any" :name="'categories[' + cIdx + '][products][' + pIdx + '][price]'" x-model="prod.price" required placeholder="0" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem 0.75rem; color: var(--primary); font-weight: 800; outline: none; font-size: 0.95rem;">
                             </div>
@@ -142,7 +142,7 @@ function menuImportApp() {
                             <div>
                                 <label style="display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 700; margin-bottom: 0.3rem;">
                                     <i class="fa-solid fa-image" style="color: var(--primary); margin-right: 0.2rem;"></i>
-                                    {{ __('Նկար (URL)') }}
+                                    Image (URL)
                                 </label>
                                 <div style="display: flex; gap: 0.4rem; align-items: center;">
                                     <template x-if="prod.image">
@@ -153,7 +153,7 @@ function menuImportApp() {
                             </div>
 
                             <div>
-                                <button type="button" @click="removeProduct(cIdx, pIdx)" class="btn btn-secondary" style="padding: 0.5rem 0.65rem; border-radius: 10px; color: #ef4444;" title="{{ __('Ջնջել Ուտեստը') }}">
+                                <button type="button" @click="removeProduct(cIdx, pIdx)" class="btn btn-secondary" style="padding: 0.5rem 0.65rem; border-radius: 10px; color: #ef4444;" title="Delete Dish">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             </div>
@@ -166,17 +166,17 @@ function menuImportApp() {
 
     <div style="margin-bottom: 2rem; display: flex; justify-content: flex-start;">
         <button type="button" @click="addCategory()" class="btn btn-secondary" style="border-radius: 12px; font-weight: 700; padding: 0.7rem 1.25rem;">
-            <i class="fa-solid fa-folder-plus" style="color: var(--primary);"></i> {{ __('Ավելացնել Նոր Բաժին') }}
+            <i class="fa-solid fa-folder-plus" style="color: var(--primary);"></i> Add New Category
         </button>
     </div>
 
     <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
         <a href="{{ route('admin.ai.import') }}" class="btn btn-secondary" style="padding: 0.75rem 1.5rem; border-radius: 12px;">
-            {{ __('Չեղարկել') }}
+            Cancel
         </a>
         <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem; border-radius: 12px; box-shadow: 0 4px 14px var(--primary-glow); gap: 0.5rem;">
             <i class="fa-solid fa-cloud-arrow-up"></i>
-            <span>{{ __('Հաստատել & Հրապարակել Մենյուն') }}</span>
+            <span>Confirm & Publish Menu</span>
         </button>
     </div>
 </form>

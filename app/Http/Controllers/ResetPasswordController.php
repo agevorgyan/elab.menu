@@ -38,7 +38,7 @@ class ResetPasswordController extends Controller
 
         if (! CaptchaService::validate($request->input('captcha'))) {
             return back()->withErrors([
-                'captcha' => 'Անվտանգության հարցի (CAPTCHA) պատասխանը սխալ է։',
+                'captcha' => 'The security question (CAPTCHA) answer is incorrect.',
             ])->withInput();
         }
 
@@ -48,7 +48,7 @@ class ResetPasswordController extends Controller
 
         if (! $record) {
             return back()->withErrors([
-                'email' => 'Գաղտնաբառի վերականգնման հարցում չի գտնվել կամ հղումն անվավեր է։',
+                'email' => 'Password reset request not found or link is invalid.',
             ]);
         }
 
@@ -57,13 +57,13 @@ class ResetPasswordController extends Controller
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
             return back()->withErrors([
-                'email' => 'Գաղտնաբառի վերականգնման հղման ժամկետն ավարտվել է։ Խնդրում ենք կատարել նոր հարցում։',
+                'email' => 'The password reset link has expired. Please request a new one.',
             ]);
         }
 
         if (! Hash::check($request->token, $record->token)) {
             return back()->withErrors([
-                'token' => 'Գաղտնաբառի վերականգնման տոկենը սխալ է։',
+                'token' => 'Invalid password reset token.',
             ]);
         }
 
@@ -71,7 +71,7 @@ class ResetPasswordController extends Controller
 
         if (! $user) {
             return back()->withErrors([
-                'email' => 'Տվյալ էլ․ հասցեով օգտատեր չի գտնվել։',
+                'email' => 'No user found with this email address.',
             ]);
         }
 
@@ -81,6 +81,6 @@ class ResetPasswordController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        return redirect()->route('login')->with('status', 'Ձեր գաղտնաբառը հաջողությամբ փոխվեց։ Այժմ կարող եք մուտք գործել նոր գաղտնաբառով։');
+        return redirect()->route('login')->with('status', 'Your password has been reset successfully. You can now log in with your new password.');
     }
 }

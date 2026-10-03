@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Դեմո Մուտք — Ուսումնասիրել QRMenu Համակարգը</title>
+    <title>Demo Login — Explore QRMenu Platform</title>
     
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -503,14 +503,14 @@
         <!-- Top Navigation -->
         <div class="top-nav">
             <a href="/" class="back-link">
-                <i class="fa-solid fa-arrow-left"></i> Գլխավոր էջ
+                <i class="fa-solid fa-arrow-left"></i> Home Page
             </a>
             <div class="top-nav-actions">
                 <a href="{{ route('login') }}" class="btn-top-login">
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Մուտք
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
                 </a>
                 <a href="{{ route('register.show') }}" class="btn-top-register">
-                    <i class="fa-solid fa-user-plus"></i> Գրանցվել (14 օր անվճար)
+                    <i class="fa-solid fa-user-plus"></i> Register (14 Days Free)
                 </a>
             </div>
         </div>
@@ -518,13 +518,13 @@
         <!-- Header Hero -->
         <div class="demo-header">
             <div class="badge-live-demo">
-                <i class="fa-solid fa-bolt"></i> Ինտերակտիվ Դեմո Համակարգ • Անվճար Ուսումնասիրություն
+                <i class="fa-solid fa-bolt"></i> Interactive Demo System • Free Exploration
             </div>
             <h1 class="demo-title">
-                Ուսումնասիրեք <span>QRMenu</span> Ծրագիրը
+                Explore the <span>QRMenu</span> Platform
             </h1>
             <p class="demo-subtitle">
-                Ծանոթացեք ռեստորանի կառավարման բոլոր գործիքներին և թվային մենյուի հնարավորություններին նախքան գրանցվելը։ Մուտք գործեք ընդամենը 1 քլիքով։
+                Discover all restaurant management tools and digital menu features before registering. Instant 1-click access.
             </p>
         </div>
 
@@ -539,7 +539,7 @@
             <!-- 1. Vendor Owner Card -->
             <div class="demo-card featured">
                 <div class="featured-pill">
-                    <i class="fa-solid fa-star"></i> Ամբողջական Հասանելիություն
+                    <i class="fa-solid fa-star"></i> Full Access
                 </div>
 
                 <div>
@@ -549,13 +549,13 @@
                         </div>
                         <div class="role-meta">
                             <h3>Bistro Yerevan</h3>
-                            <p><i class="fa-solid fa-store"></i> Ռեստորանի Սեփականատեր (Owner)</p>
+                            <p><i class="fa-solid fa-store"></i> Restaurant Owner</p>
                         </div>
                     </div>
 
                     <div class="credentials-pill">
                         <div class="cred-row">
-                            <span>Օգտատեր:</span>
+                            <span>User:</span>
                             <strong>Arman Petrosyan</strong>
                         </div>
                         <div class="cred-row">
@@ -567,19 +567,19 @@
                     <ul class="features-list">
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
-                            <span><strong>Մենյուի Կառավարում:</strong> Ուտեստներ, խմբեր, գներ, նկարներ և ալերգեններ</span>
+                            <span><strong>Menu Management:</strong> Dishes, categories, prices, photos & allergens</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
-                            <span><strong>QR Studio:</strong> Գեներացրեք սեղանների QR կոդեր սեփական լոգոյով</span>
+                            <span><strong>QR Studio:</strong> Generate branded table QR codes with custom logo</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
-                            <span><strong>Live Analytics:</strong> Վաճառքների, պատվերների և դիտումների գրաֆիկներ</span>
+                            <span><strong>Live Analytics:</strong> Real-time sales, orders, and visitor charts</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
-                            <span><strong>Կարգավորումներ & Աշխատակիցներ:</strong> Մասնաճյուղեր, մենեջերներ և սպասարկողներ</span>
+                            <span><strong>Settings & Staff:</strong> Branches, managers, and service staff</span>
                         </li>
                     </ul>
                 </div>
@@ -589,7 +589,7 @@
                     <input type="hidden" name="role" value="owner">
                     <button type="submit" class="btn-oneclick btn-owner">
                         <i class="fa-solid fa-bolt"></i>
-                        <span>Մուտք որպես Սեփականատեր (Owner)</span>
+                        <span>Sign In as Owner</span>
                     </button>
                 </form>
             </div>
@@ -603,13 +603,13 @@
                         </div>
                         <div class="role-meta">
                             <h3>Cascades Branch</h3>
-                            <p style="color: #0284c7;"><i class="fa-solid fa-location-dot"></i> Մասնաճյուղի Կառավարիչ (Manager)</p>
+                            <p style="color: #0284c7;"><i class="fa-solid fa-location-dot"></i> Branch Manager</p>
                         </div>
                     </div>
 
                     <div class="credentials-pill">
                         <div class="cred-row">
-                            <span>Օգտատեր:</span>
+                            <span>User:</span>
                             <strong>Anahit Sargsyan</strong>
                         </div>
                         <div class="cred-row">
@@ -621,19 +621,19 @@
                     <ul class="features-list">
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
-                            <span><strong>Live Պատվերներ:</strong> Խոհանոցի և բարի ընթացիկ պատվերների հոսք</span>
+                            <span><strong>Live Orders:</strong> Real-time kitchen and bar order feed</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
-                            <span><strong>Մատուցողի Կանչեր:</strong> Սեղաններից սպասարկման ծանուցումներ</span>
+                            <span><strong>Waiter Calls:</strong> Instant table service paging alerts</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
-                            <span><strong>Stop-List Ռեժիմ:</strong> Ուտեստների առկայության օպերատիվ կարգավորում</span>
+                            <span><strong>Stop-List Mode:</strong> Instant dish availability toggle</span>
                         </li>
                         <li>
                             <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
-                            <span><strong>Սեղանների Կառավարում:</strong> Սեղանների ընթացիկ հաշիվների վերահսկում</span>
+                            <span><strong>Table Management:</strong> Live floor plan and table status tracking</span>
                         </li>
                     </ul>
                 </div>
@@ -643,7 +643,7 @@
                     <input type="hidden" name="role" value="manager">
                     <button type="submit" class="btn-oneclick btn-manager">
                         <i class="fa-solid fa-bolt"></i>
-                        <span>Մուտք որպես Մենեջեր (Manager)</span>
+                        <span>Sign In as Manager</span>
                     </button>
                 </form>
             </div>
@@ -653,7 +653,7 @@
         <div class="demo-features-banner">
             <div class="banner-title">
                 <i class="fa-solid fa-wand-magic-sparkles" style="color: #d97706;"></i>
-                Ի՞նչ կարող եք փորձարկել դեմո տարբերակում
+                What can you explore in the demo?
             </div>
             <div class="banner-grid">
                 <div class="banner-item">
@@ -661,8 +661,8 @@
                         <i class="fa-solid fa-qrcode"></i>
                     </div>
                     <div class="banner-item-text">
-                        <h4>Խելացի QR Կոդեր</h4>
-                        <p>Ստեղծեք սեղանի QR կոդեր սեփական լոգոյով և ֆիրմային գույներով։</p>
+                        <h4>Smart QR Codes</h4>
+                        <p>Create branded table QR codes with custom colors and logo.</p>
                     </div>
                 </div>
                 <div class="banner-item">
@@ -670,8 +670,8 @@
                         <i class="fa-solid fa-bell-concierge"></i>
                     </div>
                     <div class="banner-item-text">
-                        <h4>Առցանց Պատվերներ & Կանչ</h4>
-                        <p>Հյուրերը կարող են պատվիրել սեղանից և կանչել մատուցողին առանց հավելվածի։</p>
+                        <h4>Online Ordering & Paging</h4>
+                        <p>Guests order from table and call staff with zero app downloads.</p>
                     </div>
                 </div>
                 <div class="banner-item">
@@ -679,8 +679,8 @@
                         <i class="fa-solid fa-brain"></i>
                     </div>
                     <div class="banner-item-text">
-                        <h4>AI Waiter & Օգնական</h4>
-                        <p>Ավտոմատ զուգակցումներ, խորհուրդներ և մենյուի խելացի ներմուծում։</p>
+                        <h4>AI Waiter & Assistant</h4>
+                        <p>Automated pairings, dietary advice, and smart menu import.</p>
                     </div>
                 </div>
             </div>
@@ -688,16 +688,16 @@
 
         <!-- Registration CTA Block -->
         <div class="bottom-cta-card">
-            <h3>Պատրա՞ստ եք ստեղծել ձեր սեփական ռեստորանի մենյուն</h3>
-            <p>Գրանցվեք հիմա և ստացեք 14 օր անվճար փորձաշրջան բոլոր հնարավորություններով</p>
+            <h3>Ready to launch your restaurant's digital menu?</h3>
+            <p>Sign up now and get a 14-day free trial with all features included.</p>
             <div class="cta-buttons-row">
                 <a href="{{ route('register.show') }}" class="btn-register-action">
                     <i class="fa-solid fa-rocket"></i>
-                    <span>Գրանցվել (14 օր անվճար)</span>
+                    <span>Register (14 Days Free)</span>
                 </a>
                 <a href="{{ route('login') }}" class="btn-login-action">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                    <span>Արդեն ունե՞ք հաշիվ: Մուտք</span>
+                    <span>Already have an account? Sign In</span>
                 </a>
             </div>
         </div>

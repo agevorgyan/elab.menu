@@ -174,7 +174,7 @@ class SuperAdminSettingsBrandingTest extends TestCase
         // 1. Verify SuperAdmin settings page has the Landing CMS tab and fields
         $settingsView = $this->get(route('superadmin.settings.index'));
         $settingsView->assertStatus(200);
-        $settingsView->assertSee('Լենդինգ Էջ (CMS)');
+        $settingsView->assertSee('Landing Page (CMS)');
         $settingsView->assertSee('name="hero_title_hy"', false);
         $settingsView->assertSee('name="hero_subtitle_hy"', false);
         $settingsView->assertSee('name="vs_title_hy"', false);

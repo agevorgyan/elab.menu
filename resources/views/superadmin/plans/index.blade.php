@@ -55,16 +55,16 @@
     <div>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
             <span class="badge badge-amber">
-                <i class="fa-solid fa-box-archive"></i> Փաթեթների Կառավարում
+                <i class="fa-solid fa-box-archive"></i> {{ __('Plan Management') }}
             </span>
-            <span style="font-size: 0.78rem; color: var(--text-muted);">Ընդհանուր՝ {{ $plans->count() }} փաթեթ</span>
+            <span style="font-size: 0.78rem; color: var(--text-muted);">{{ __('Total') }}: {{ $plans->count() }}</span>
         </div>
         <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0;">
-            Բաժանորդագրությունների Փաթեթներ (Subscription Plans)
+            {{ __('Subscription Plans') }}
         </h1>
     </div>
     <button class="btn btn-primary" onclick="document.getElementById('createPlanModal').style.display='flex'" style="border-radius: 12px; font-size: 0.88rem; padding: 0.65rem 1.25rem;">
-        <i class="fa-solid fa-plus"></i> Ավելացնել Նոր Փաթեթ
+        <i class="fa-solid fa-plus"></i> {{ __('Add New Plan') }}
     </button>
 </div>
 
@@ -91,7 +91,7 @@
                     <form action="{{ route('superadmin.plans.toggle', $plan->id) }}" method="POST" style="margin: 0;">
                         @csrf
                         <button type="submit" class="badge {{ $plan->is_active ? 'badge-emerald' : 'badge-rose' }}" style="cursor: pointer; border-radius: 8px;">
-                            <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ $plan->is_active ? 'Ակտիվ' : 'Անջատված' }}
+                            <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ $plan->is_active ? __('Active') : __('Disabled') }}
                         </button>
                     </form>
                 </div>
@@ -102,20 +102,20 @@
                         {{ $plan->formatted_price }}
                     </div>
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                        <span><i class="fa-solid fa-calendar-days"></i> {{ $plan->duration_days }} օր</span>
+                        <span><i class="fa-solid fa-calendar-days"></i> {{ $plan->duration_days }} {{ __('days') }}</span>
                         <span>•</span>
-                        <span><i class="fa-solid fa-clock"></i> Փորձնական՝ {{ $plan->trial_days }} օր</span>
+                        <span><i class="fa-solid fa-clock"></i> {{ __('Trial: :days days', ['days' => $plan->trial_days]) }}</span>
                     </div>
                 </div>
 
                 <!-- Description -->
                 <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.45; min-height: 2.5rem;">
-                    {{ $plan->description ?: 'Ստանդարտ սակագնային փաթեթ QRMenu համակարգի բոլոր հիմնական գործիքներով։' }}
+                    {{ $plan->description ?: __('Standard pricing plan with all essential QRMenu features.') }}
                 </p>
 
                 <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1.25rem;">
                     <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem;">
-                        Ներառված ֆունկցիաներ ({{ count($plan->features ?? []) }})
+                        {{ __('Included Features') }} ({{ count($plan->features ?? []) }})
                     </h4>
                     <div style="display: flex; flex-direction: column;">
                         @forelse($plan->features ?? [] as $feat)
@@ -124,7 +124,7 @@
                                 <span>{{ $feat }}</span>
                             </div>
                         @empty
-                            <div style="font-size: 0.78rem; color: var(--text-muted);">Ֆունկցիաներ չեն նշված</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ __('No features listed') }}</div>
                         @endforelse
                     </div>
                 </div>
@@ -133,18 +133,18 @@
             <!-- Card Bottom Bar -->
             <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
                 <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
-                    <span>🏢 Օգտագործող գործընկերներ</span>
+                    <span>🏢 {{ __('Active Partners') }}</span>
                     <strong style="color: var(--text-main); font-family: 'Outfit'; font-size: 0.95rem;">{{ $plan->vendors_count }}</strong>
                 </div>
                 <div style="display: flex; gap: 0.5rem;">
                     <button class="btn btn-secondary" style="flex: 1; font-size: 0.82rem; justify-content: center; border-radius: 10px;" onclick="openEditModal({{ json_encode($plan) }})">
-                        <i class="fa-solid fa-pen-to-square"></i> Խմբագրել
+                        <i class="fa-solid fa-pen-to-square"></i> {{ __('Edit Plan') }}
                     </button>
                     @if($plan->vendors_count == 0)
-                        <form action="{{ route('superadmin.plans.destroy', $plan->id) }}" method="POST" onsubmit="return confirm('Վստա՞հ եք, որ ցանկանում եք ջնջել այս փաթեթը։');" style="margin: 0;">
+                        <form action="{{ route('superadmin.plans.destroy', $plan->id) }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to delete this plan?') }}');" style="margin: 0;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-secondary" style="color: #ef4444; border-radius: 10px; padding: 0.55rem 0.75rem;" title="Ջնջել">
+                            <button type="submit" class="btn btn-secondary" style="color: #ef4444; border-radius: 10px; padding: 0.55rem 0.75rem;" title="{{ __('Delete') }}">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </form>

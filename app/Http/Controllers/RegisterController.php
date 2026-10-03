@@ -36,7 +36,7 @@ class RegisterController extends Controller
             'operating_address' => 'required|string',
             'legal_name' => 'required|string|max:255',
             'legal_address' => 'required|string|max:255',
-            'tax_id' => 'required|string|max:50', // ՀՎՀՀ
+            'tax_id' => 'required|string|max:50', // Tax ID / TIN
             'director_name' => 'required|string|max:255',
             'contact_person_name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
@@ -48,7 +48,7 @@ class RegisterController extends Controller
 
         if (! CaptchaService::validate($request->input('captcha'))) {
             return back()->withErrors([
-                'captcha' => 'Անվտանգության հարցի (CAPTCHA) պատասխանը սխալ է։',
+                'captcha' => 'The security question (CAPTCHA) answer is incorrect.',
             ])->withInput();
         }
 
@@ -145,7 +145,7 @@ class RegisterController extends Controller
             }
         }
 
-        return redirect()->route('admin.dashboard')->with('success', '🎉 Ձեր էլ․ փոստը հաջողությամբ հաստատվել է։ Բարի գալուստ Dashboard!');
+        return redirect()->route('admin.dashboard')->with('success', '🎉 Your email has been verified successfully. Welcome to the Dashboard!');
     }
 
     public function directDemoVerify(Request $request)
@@ -158,6 +158,6 @@ class RegisterController extends Controller
             }
         }
 
-        return redirect()->route('admin.dashboard')->with('success', '⚡ Էլ․ փոստը հաջողությամբ հաստատվեց դեմո ռեժիմով։');
+        return redirect()->route('admin.dashboard')->with('success', '⚡ Email successfully verified in demo mode.');
     }
 }

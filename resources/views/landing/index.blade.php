@@ -22,6 +22,12 @@
             if (isset($settings[$key]) && $settings[$key] !== null && $settings[$key] !== '') {
                 return $settings[$key];
             }
+            if (isset($settings[$key . '_en']) && $settings[$key . '_en'] !== null && $settings[$key . '_en'] !== '') {
+                return $settings[$key . '_en'];
+            }
+            if (isset($settings[$key . '_hy']) && $settings[$key . '_hy'] !== null && $settings[$key . '_hy'] !== '') {
+                return $settings[$key . '_hy'];
+            }
             return $fallback;
         };
     @endphp
@@ -2478,11 +2484,6 @@
                 </div>
 
                 <div class="nav-actions">
-                    <!-- Language Switcher -->
-                    <div class="lang-switch">
-                        <a href="{{ route('lang.switch', 'hy') }}" class="lang-btn {{ $loc === 'hy' ? 'active' : '' }}">HY</a>
-                        <a href="{{ route('lang.switch', 'en') }}" class="lang-btn {{ $loc === 'en' ? 'active' : '' }}">EN</a>
-                    </div>
 
                     @auth
                         @if(Auth::user()->isSuperAdmin())
@@ -2731,7 +2732,7 @@
                                         </div>
                                         <div>
                                             <div style="font-size: 0.8rem; font-weight: 800; color: #fff;">{{ $cms('hero_mockup_restaurant', __('hero_mockup_restaurant')) }}</div>
-                                            <div style="font-size: 0.65rem; color: var(--text-secondary);">Table #04 &bull; Dine-In</div>
+                                            <div style="font-size: 0.65rem; color: var(--text-secondary);">{{ __('Table #04 • Dine-In') }}</div>
                                         </div>
                                     </div>
                                     <span class="app-table-pill">
@@ -2754,14 +2755,14 @@
                                             <i class="fa-solid fa-star"></i> 4.9
                                         </div>
                                     </div>
-                                    <div class="app-dish-title">Ribeye Prime Angus Steak</div>
+                                    <div class="app-dish-title">{{ __('Ribeye Prime Angus Steak') }}</div>
                                     <div class="app-dish-price">8 900 AMD</div>
                                 </div>
 
                                 <!-- Floating AI Waiter Bubble -->
                                 <div class="ai-floating-bubble">
                                     <div class="ai-bubble-tag">
-                                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Waiter Suggestion
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('AI Waiter Suggestion') }}
                                     </div>
                                     <div class="ai-bubble-quote">
                                         {{ $cms('hero_mockup_ai_bubble', __('hero_mockup_ai_bubble')) }}

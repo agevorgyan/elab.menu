@@ -162,45 +162,84 @@
                     <span style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--text-main);">{{ $siteName }}</span>
                 @endif
             </a>
-            <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s;">
-                <i class="fa-solid fa-arrow-left"></i> Վերադառնալ
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s;">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        @if(app()->getLocale() === 'en')
+            <h1>🔒 Privacy Policy</h1>
+            <div class="updated-pill">
+                <i class="fa-solid fa-clock"></i> Last updated: {{ date('F d, Y') }}
+            </div>
+
+            <h2>1. General Provisions</h2>
+            <p>This Privacy Policy defines how the {{ $siteName }} platform and partner establishments (Restaurants, Cafes, Hotels) collect, use, store, and protect Customer personal data when browsing digital menus and placing orders.</p>
+
+            <h2>2. Information We Collect</h2>
+            <p>When placing an order or registering, the following information may be collected:</p>
+            <ul>
+                <li><strong>Full Name</strong> — To process the order and properly identify the customer.</li>
+                <li><strong>Phone Number</strong> — To communicate order status updates (Dine-in / Takeaway / WhatsApp confirmation).</li>
+                <li><strong>Email Address</strong> — To transmit receipts and share exclusive promotional updates.</li>
+                <li><strong>Table Number or Delivery Address</strong> — To facilitate table-side service or accurate delivery within the venue.</li>
+            </ul>
+
+            <h2>3. Purpose of Processing & Marketing</h2>
+            <p>Your personal data is processed strictly under high confidentiality standards for:</p>
+            <ul>
+                <li>Accepting, kitchen preparation, and table fulfillment of orders.</li>
+                <li>Continuous customer service enhancement.</li>
+                <li><strong>Promotional notifications:</strong> With your consent, we may send periodic news regarding special discounts, new seasonal dishes, and events. You can opt out at any time.</li>
+            </ul>
+
+            <h2>4. Data Protection & Security</h2>
+            <p>We deploy modern encryption standards (SSL/TLS) alongside strict technical access barriers to prevent unauthorized access or disclosure. We NEVER sell or distribute customer personal information to third parties.</p>
+
+            <h2>5. Contact Information</h2>
+            <p>For questions regarding our Privacy Policy or to request removal of your data, please contact our support team at <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
+
+            <a href="javascript:history.back()" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Back to Menu
             </a>
-        </div>
+        @else
+            <h1>🔒 Գաղտնիության Քաղաքականություն</h1>
+            <div class="updated-pill">
+                <i class="fa-solid fa-clock"></i> Վերջին թարմացում՝ {{ date('d.m.Y') }}
+            </div>
 
-        <h1>🔒 Գաղտնիության Քաղաքականություն</h1>
-        <div class="updated-pill">
-            <i class="fa-solid fa-clock"></i> Վերջին թարմացում՝ {{ date('d.m.Y') }}
-        </div>
+            <h2>1. Ընդհանուր Դրույթներ</h2>
+            <p>Սույն Գաղտնիության Քաղաքականությունը սահմանում է, թե ինչպես է {{ $siteName }} հարթակը և գործընկեր հաստատությունները (Ռեստորաններ, Սրճարաններ, Հյուրանոցներ) հավաքագրում, օգտագործում, պահպանում և պաշտպանում Հաճախորդների անձնական տվյալները թվային մենյուից պատվեր կատարելիս։</p>
 
-        <h2>1. Ընդհանուր Դրույթներ</h2>
-        <p>Սույն Գաղտնիության Քաղաքականությունը սահմանում է, թե ինչպես է {{ $siteName }} հարթակը և գործընկեր հաստատությունները (Ռեստորաններ, Սրճարաններ, Հյուրանոցներ) հավաքագրում, օգտագործում, պահպանում և պաշտպանում Հաճախորդների անձնական տվյալները թվային մենյուից պատվեր կատարելիս։</p>
+            <h2>2. Հավաքագրվող Տվյալները</h2>
+            <p>Պատվերի գրանցման ժամանակ կարող են հավաքագրվել հետևյալ տվյալները․</p>
+            <ul>
+                <li><strong>Անուն և Ազգանուն</strong> — Պատվերը սպասարկելու և հաճախորդին նույնականացնելու համար։</li>
+                <li><strong>Հեռախոսահամար</strong> — Պատվերի կարգավիճակի (Dine-in / Takeaway / WhatsApp) վերաբերյալ կապ հաստատելու համար։</li>
+                <li><strong>Էլեկտրոնային փոստի հասցե (Email)</strong> — Պատվերի անդորրագիր ուղարկելու և անհատական առաջարկներ տրամադրելու համար։</li>
+                <li><strong>Սեղանի համար կամ հասցե</strong> — Հաստատությունում սպասարկումն ապահովելու համար։</li>
+            </ul>
 
-        <h2>2. Հավաքագրվող Տվյալները</h2>
-        <p>Պատվերի գրանցման ժամանակ կարող են հավաքագրվել հետևյալ տվյալները․</p>
-        <ul>
-            <li><strong>Անուն և Ազգանուն</strong> — Պատվերը սպասարկելու և հաճախորդին նույնականացնելու համար։</li>
-            <li><strong>Հեռախոսահամար</strong> — Պատվերի կարգավիճակի (Dine-in / Takeaway / WhatsApp) վերաբերյալ կապ հաստատելու համար։</li>
-            <li><strong>Էլեկտրոնային փոստի հասցե (Email)</strong> — Պատվերի անդորրագիր ուղարկելու և անհատական առաջարկներ տրամադրելու համար։</li>
-            <li><strong>Սեղանի համար կամ հասցե</strong> — Հաստատությունում սպասարկումն ապահովելու համար։</li>
-        </ul>
+            <h2>3. Տվյալների Օգտագործման Նպատակները և Մարքեթինգ</h2>
+            <p>Ձեր տվյալները մշակվում են խիստ գաղտնիության պահպանմամբ։ Օգտագործման նպատակներն են․</p>
+            <ul>
+                <li>Պատվերի ընդունում, պատրաստում և սպասարկում։</li>
+                <li>Հաճախորդների սպասարկման որակի բարձրացում։</li>
+                <li><strong>Մարքեթինգային ծանուցումներ․</strong> Համաձայնության դեպքում Ձեր էլ․ փոստին կամ հեռախոսահամարին կարող են ուղարկվել հատուկ զեղչերի, նոր մենյուի և ակցիաների վերաբերյալ ծանուցումներ։ Դուք ցանկացած պահի կարող եք հրաժարվել մարքեթինգային ծանուցումներից։</li>
+            </ul>
 
-        <h2>3. Տվյալների Օգտագործման Նպատակները և Մարքեթինգ</h2>
-        <p>Ձեր տվյալները մշակվում են խիստ գաղտնիության պահպանմամբ։ Օգտագործման նպատակներն են․</p>
-        <ul>
-            <li>Պատվերի ընդունում, պատրաստում և սպասարկում։</li>
-            <li>Հաճախորդների սպասարկման որակի բարձրացում։</li>
-            <li><strong>Մարքեթինգային ծանուցումներ․</strong> Համաձայնության դեպքում Ձեր էլ․ փոստին կամ հեռախոսահամարին կարող են ուղարկվել հատուկ զեղչերի, նոր մենյուի և ակցիաների վերաբերյալ ծանուցումներ։ Դուք ցանկացած պահի կարող եք հրաժարվել մարքեթինգային ծանուցումներից։</li>
-        </ul>
+            <h2>4. Տվյալների Պաշտպանությունը և Գաղտնիությունը</h2>
+            <p>Մենք կիրառում ենք ժամանակակից կոդավորման (SSL/TLS) և անվտանգության տեխնիկական միջոցներ Ձեր տվյալներն ապօրինի մուտքից կամ արտահոսքից պաշտպանելու համար։ Ձեր տվյալները ԵՐԲԵՔ չեն վաճառվում կամ փոխանցվում երրորդ անձանց։</p>
 
-        <h2>4. Տվյալների Պաշտպանությունը և Գաղտնիությունը</h2>
-        <p>Մենք կիրառում ենք ժամանակակից կոդավորման (SSL/TLS) և անվտանգության տեխնիկական միջոցներ Ձեր տվյալներն ապօրինի մուտքից կամ արտահոսքից պաշտպանելու համար։ Ձեր տվյալները ԵՐԲԵՔ չեն վաճառվում կամ փոխանցվում երրորդ անձանց։</p>
+            <h2>5. Կոնտակտային Տվյալներ</h2>
+            <p>Գաղտնիության քաղաքականության վերաբերյալ հարցերի կամ տվյալների հեռացման պահանջի դեպքում կարող եք կապ հաստատել աջակցման թիմի հետ՝ <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
 
-        <h2>5. Կոնտակտային Տվյալներ</h2>
-        <p>Գաղտնիության քաղաքականության վերաբերյալ հարցերի կամ տվյալների հեռացման պահանջի դեպքում կարող եք կապ հաստատել աջակցման թիմի հետ՝ <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
-
-        <a href="javascript:history.back()" class="back-btn">
-            <i class="fa-solid fa-arrow-left"></i> Վերադառնալ Մենյու
-        </a>
+            <a href="javascript:history.back()" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Վերադառնալ Մենյու
+            </a>
+        @endif
     </div>
 </body>
 </html>

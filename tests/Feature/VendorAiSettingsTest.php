@@ -53,14 +53,14 @@ class VendorAiSettingsTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('admin.settings.ai'));
 
         $response->assertStatus(200);
-        $response->assertSee('AI Կարգավորումներ & Մոդելներ');
+        $response->assertSee(__('AI Settings & Models'));
         $response->assertSee('Google Gemini');
         $response->assertSee('OpenAI');
         $response->assertSee('Anthropic Claude');
         $response->assertSee('DeepSeek');
         $response->assertSee('Groq');
         $response->assertSee('OpenRouter');
-        $response->assertSee('AI Մատուցող Խորհրդատու');
+        $response->assertSee(__('AI Waiter Assistant'));
     }
 
     public function test_vendor_can_update_ai_provider_and_waiter_settings(): void

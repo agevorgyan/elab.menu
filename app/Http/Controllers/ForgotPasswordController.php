@@ -38,7 +38,7 @@ class ForgotPasswordController extends Controller
 
         if (! CaptchaService::validate($request->input('captcha'))) {
             return back()->withErrors([
-                'captcha' => 'Անվտանգության հարցի (CAPTCHA) պատասխանը սխալ է։',
+                'captcha' => 'The security question (CAPTCHA) answer is incorrect.',
             ])->withInput();
         }
 
@@ -68,6 +68,6 @@ class ForgotPasswordController extends Controller
             }
         }
 
-        return back()->with('status', 'Եթե այս էլ․ հասցեով հաշիվ գոյություն ունի, մենք ուղարկել ենք գաղտնաբառի վերականգնման հղումը։');
+        return back()->with('status', 'If an account exists with this email address, we have sent a password reset link.');
     }
 }

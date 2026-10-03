@@ -365,7 +365,7 @@ class OnlinePaymentsAndFloorPlanTest extends TestCase
     {
         $response = $this->actingAs($this->user)->get(route('admin.floor_plan.index'));
         $response->assertStatus(200);
-        $response->assertSee('Սեղանների Ինտերակտիվ Քարտեզ');
+        $response->assertSee(__('Interactive Table Floor Plan'));
 
         $saveResponse = $this->actingAs($this->user)->postJson(route('admin.floor_plan.save'), [
             'tables' => [

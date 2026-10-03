@@ -61,6 +61,10 @@ class AiWaiterSystemTest extends TestCase
             'ai_waiter_enabled' => true,
             'ai_waiter_name' => 'Ալեքս AI',
             'ai_waiter_welcome_text' => 'Ողջույն! Ես Ձեր անձնական AI մատուցողն եմ:',
+            'supported_languages' => [
+                ['code' => 'hy', 'name' => 'Հայերեն', 'flag' => '🇦🇲'],
+                ['code' => 'en', 'name' => 'English', 'flag' => '🇬🇧'],
+            ],
             'ai_waiter_config' => [
                 'languages' => ['hy', 'en', 'ru'],
                 'free_text_enabled' => true,
@@ -208,7 +212,7 @@ class AiWaiterSystemTest extends TestCase
             'waiter_name' => 'Ալեքս AI',
             'free_text_enabled' => true,
             'ai_chat_enabled' => true,
-            'languages' => ['hy', 'en', 'ru'],
+            'languages' => ['hy', 'en'],
         ]);
     }
 

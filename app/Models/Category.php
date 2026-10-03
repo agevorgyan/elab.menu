@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Traits\BelongsToVendor;
+use App\Models\Traits\HasContentTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use BelongsToVendor, HasFactory, SoftDeletes;
+    use BelongsToVendor, HasContentTranslations, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'vendor_id',

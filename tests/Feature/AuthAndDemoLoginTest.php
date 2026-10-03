@@ -31,9 +31,9 @@ class AuthAndDemoLoginTest extends TestCase
         $response = $this->get('/register');
 
         $response->assertStatus(200);
-        $response->assertSee('Գործընկեր');
+        $response->assertSee('Partner');
         $response->assertSee('/demo/login');
-        $response->assertSee('14 Օր Անվճար Փորձաշրջան');
+        $response->assertSee('14-Day Free Trial');
     }
 
     public function test_demo_login_page_renders_with_vendor_accounts_and_without_superadmin(): void

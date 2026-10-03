@@ -39,7 +39,7 @@ class TwoFactorController extends Controller
             session()->forget(['login.2fa.user_id', 'login.2fa.remember']);
 
             return redirect()->route('login')->withErrors([
-                'email' => 'Այս կառավարման վահանակը նախատեսված է միայն '.$customVendor->name.' ռեստորանի անձնակազմի համար։',
+                'email' => 'This dashboard is reserved for '.$customVendor->name.' staff only.',
             ]);
         }
 
@@ -63,7 +63,7 @@ class TwoFactorController extends Controller
             TwoFactorAuthService::sendEmailCode($user);
         }
 
-        return back()->with('status', 'Նոր անվտանգության կոդը հաջողությամբ ուղարկվեց ձեր էլ․ հասցեին։');
+        return back()->with('status', 'A new security code has been sent to your email.');
     }
 
     /**
@@ -106,7 +106,7 @@ class TwoFactorController extends Controller
 
         if (! $isValid) {
             return back()->withErrors([
-                'code' => 'Ներմուծված 2FA անվտանգության կոդը սխալ է կամ ժամկետանց։',
+                'code' => 'The provided 2FA security code is invalid or has expired.',
             ]);
         }
 

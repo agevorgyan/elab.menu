@@ -9,6 +9,7 @@ use App\Listeners\SendTelegramOrderNotification;
 use App\Listeners\SendTelegramWaiterCallNotification;
 use App\Models\AiWaiterSession;
 use App\Models\Category;
+use App\Models\ContentTranslation;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\LocationProductOverride;
@@ -20,6 +21,7 @@ use App\Models\VendorStorageFile;
 use App\Models\WaiterCall;
 use App\Policies\AiWaiterSessionPolicy;
 use App\Policies\CategoryPolicy;
+use App\Policies\ContentTranslationPolicy;
 use App\Policies\CustomerPolicy;
 use App\Policies\LocationPolicy;
 use App\Policies\LocationProductOverridePolicy;
@@ -30,6 +32,10 @@ use App\Policies\VendorPolicy;
 use App\Policies\VendorStorageFilePolicy;
 use App\Policies\WaiterCallPolicy;
 use App\Security\Permission;
+use App\Services\Localization\Contracts\TranslationProviderInterface;
+use App\Services\Localization\Providers\AiGatewayTranslationProvider;
+use App\Services\Localization\TranslationService;
+use App\Services\Localization\TranslationValidator;
 use App\Services\TenantContext;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobFailed;
@@ -50,6 +56,17 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TenantContext::class, function () {
             return new TenantContext;
+        });
+
+        $this->app->singleton(TranslationProviderInterface::class, function ($app) {
+            return $app->make(AiGatewayTranslationProvider::class);
+        });
+
+        $this->app->singleton(TranslationService::class, function ($app) {
+            return new TranslationService(
+                $app->make(TranslationProviderInterface::class),
+                $app->make(TranslationValidator::class)
+            );
         });
     }
 
@@ -98,6 +115,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AiWaiterSession::class, AiWaiterSessionPolicy::class);
         Gate::policy(VendorStorageFile::class, VendorStorageFilePolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(ContentTranslation::class, ContentTranslationPolicy::class);
 
         // Register Gates for all granular permissions
         foreach (Permission::all() as $permission) {

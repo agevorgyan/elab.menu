@@ -136,11 +136,11 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'status' => $waiterCall->status,
-                'message' => "Սեղան #{$waiterCall->table_number}-ի կանչը նշվեց որպես սպասարկված։",
+                'message' => "Table #{$waiterCall->table_number} call marked as attended.",
             ]);
         }
 
-        return back()->with('success', "Սեղան #{$waiterCall->table_number}-ի կանչը նշվեց որպես սպասարկված։");
+        return back()->with('success', "Table #{$waiterCall->table_number} call marked as attended.");
     }
 
     /**

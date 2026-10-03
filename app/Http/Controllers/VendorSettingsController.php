@@ -178,7 +178,7 @@ class VendorSettingsController extends Controller
         }
 
         if (array_key_exists('ai_waiter_name', $validated)) {
-            $vendorUpdate['ai_waiter_name'] = ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Մատուցող';
+            $vendorUpdate['ai_waiter_name'] = ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Waiter';
         }
         if (array_key_exists('ai_waiter_priority_ingredients', $validated)) {
             $vendorUpdate['ai_waiter_priority_ingredients'] = $validated['ai_waiter_priority_ingredients'];
@@ -341,7 +341,7 @@ class VendorSettingsController extends Controller
                 'birthday_discount_percent' => floatval($crmInput['birthday_discount_percent'] ?? 15),
                 'birthday_validity_days' => intval($crmInput['birthday_validity_days'] ?? 3),
                 'birthday_sms_enabled' => ! empty($crmInput['birthday_sms_enabled']),
-                'birthday_sms_template' => (string) ($crmInput['birthday_sms_template'] ?? 'Շնորհավոր Ձեր ծննդյան օրը {NAME}։ Ձեզ սպասում է {DISCOUNT}% զեղչ {VENDOR}-ում։'),
+                'birthday_sms_template' => (string) ($crmInput['birthday_sms_template'] ?? 'Happy Birthday {NAME}! You have a {DISCOUNT}% discount waiting for you at {VENDOR}.'),
                 'order_ready_sms_enabled' => ! empty($crmInput['order_ready_sms_enabled']),
                 'sms_provider' => (string) ($crmInput['sms_provider'] ?? 'mobipace'),
                 'sms_api_key' => '', // Stored securely in vendor_credentials
@@ -356,7 +356,7 @@ class VendorSettingsController extends Controller
                 'auto_print_live_orders' => ! empty($printerInput['auto_print_live_orders']),
                 'paper_width' => in_array($printerInput['paper_width'] ?? '', ['58mm', '80mm']) ? $printerInput['paper_width'] : '80mm',
                 'header_title' => (string) ($printerInput['header_title'] ?? $vendor->name),
-                'footer_text' => (string) ($printerInput['footer_text'] ?? 'Շնորհակալություն այցելության համար!'),
+                'footer_text' => (string) ($printerInput['footer_text'] ?? 'Thank you for your visit!'),
                 'print_customer_info' => ! empty($printerInput['print_customer_info']),
                 'print_prices' => ! empty($printerInput['print_prices']),
                 'copies' => max(1, min(5, intval($printerInput['copies'] ?? 1))),
@@ -449,7 +449,7 @@ class VendorSettingsController extends Controller
 
         TenantCache::increment($vendor, 'menu_version');
 
-        return back()->with('success', 'Կարգավորումները հաջողությամբ պահպանվեցին:');
+        return back()->with('success', 'Settings updated successfully.');
     }
 
     /**
@@ -607,7 +607,7 @@ class VendorSettingsController extends Controller
         }
 
         $newAiWaiterConfig = array_merge($currentConfig, [
-            'languages' => ! empty($validated['ai_waiter_languages']) ? (array) $validated['ai_waiter_languages'] : ['hy', 'en', 'ru'],
+            'languages' => ! empty($validated['ai_waiter_languages']) ? (array) $validated['ai_waiter_languages'] : ['en'],
             'personality' => $validated['ai_waiter_personality'] ?? 'friendly',
             'auto_popup' => $request->boolean('auto_popup', true),
             'free_text_enabled' => $request->boolean('free_text_enabled', true),
@@ -624,14 +624,14 @@ class VendorSettingsController extends Controller
 
         $vendor->update([
             'ai_waiter_enabled' => $request->boolean('ai_waiter_enabled'),
-            'ai_waiter_name' => ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Մատուցող',
+            'ai_waiter_name' => ! empty($validated['ai_waiter_name']) ? $validated['ai_waiter_name'] : 'AI Waiter',
             'ai_waiter_priority_ingredients' => $validated['ai_waiter_priority_ingredients'] ?? null,
             'ai_waiter_welcome_text' => $validated['ai_waiter_welcome_text'] ?? null,
             'ai_waiter_config' => $newAiWaiterConfig,
             'ai_settings' => $newAiSettings,
         ]);
 
-        return redirect()->route('admin.settings.ai')->with('success', '✨ AI կարգավորումները հաջողությամբ պահպանվեցին:');
+        return redirect()->route('admin.settings.ai')->with('success', '✨ AI settings saved successfully.');
     }
 
     /**
@@ -689,7 +689,7 @@ class VendorSettingsController extends Controller
         if (empty($domain)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Խնդրում ենք մուտքագրել դոմենի հասցեն։',
+                'message' => 'Please enter the domain address.',
             ]);
         }
 
@@ -739,10 +739,10 @@ class VendorSettingsController extends Controller
             'is_verified' => $customDomain?->isVerified() ?? false,
             'status' => $customDomain?->status ?? 'pending',
             'message' => $isPointing
-                ? "✅ Դոմենը հաջողությամբ ուղղված է ձեր սերվերի IP-ին ({$serverIp})։"
+                ? "✅ Domain is successfully pointing to your server IP ({$serverIp})."
                 : ($isResolved
-                    ? "⚠️ Դոմենը մատնանշում է այլ IP ({$resolvedIp})։ Փոխեք A-record-ը սերվերի IP-ին՝ {$serverIp}"
-                    : "⏳ Դոմենը դեռևս չունի ակտիվ DNS գրառումներ։ Ավելացրեք A-record դեպի {$serverIp} (կամ CNAME դեպի menu.elab.am)։"),
+                    ? "⚠️ Domain points to another IP ({$resolvedIp}). Update the A-record to server IP: {$serverIp}"
+                    : "⏳ Domain does not have active DNS records yet. Add an A-record to {$serverIp} (or CNAME to menu.elab.am)."),
         ]);
     }
 
@@ -762,7 +762,7 @@ class VendorSettingsController extends Controller
         if (empty($domain)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Խնդրում ենք նախ մուտքագրել դոմենը։',
+                'message' => 'Please enter the domain first.',
             ], 422);
         }
 
@@ -804,7 +804,7 @@ class VendorSettingsController extends Controller
         if (empty($chatId)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Խնդրում ենք լրացնել Telegram Chat ID դաշտը թեստային հաղորդագրություն ուղարկելու համար։',
+                'message' => 'Please fill in the Telegram Chat ID field to send a test message.',
             ]);
         }
 

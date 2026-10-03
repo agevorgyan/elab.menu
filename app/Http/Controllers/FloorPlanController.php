@@ -151,7 +151,7 @@ class FloorPlanController extends Controller
             if (is_array($hall)) {
                 $normalizedHalls[] = [
                     'id' => (string) ($hall['id'] ?? 'hall-'.count($normalizedHalls)),
-                    'name' => (string) ($hall['name'] ?? 'Սրահ '.(count($normalizedHalls) + 1)),
+                    'name' => (string) ($hall['name'] ?? 'Hall '.(count($normalizedHalls) + 1)),
                 ];
             } elseif (is_string($hall)) {
                 $normalizedHalls[] = [
@@ -168,7 +168,7 @@ class FloorPlanController extends Controller
                 'id' => $t['id'] ?? (count($normalizedTables) + 1),
                 'number' => (string) ($t['number'] ?? $t['id'] ?? count($normalizedTables) + 1),
                 'hall_id' => (string) ($t['hall_id'] ?? $t['hall'] ?? 'main'),
-                'name' => (string) ($t['name'] ?? 'Սեղան '.($t['number'] ?? $t['id'] ?? '')),
+                'name' => (string) ($t['name'] ?? 'Table '.($t['number'] ?? $t['id'] ?? '')),
                 'capacity' => intval($t['capacity'] ?? 4),
                 'shape' => in_array($t['shape'] ?? '', ['round', 'rectangle', 'square']) ? $t['shape'] : 'square',
                 'x' => floatval($t['x'] ?? 0),
@@ -186,7 +186,7 @@ class FloorPlanController extends Controller
         return response()->json([
             'status' => 'success',
             'success' => true,
-            'message' => 'Սեղանների քարտեզի դասավորությունը հաջողությամբ պահպանվեց։',
+            'message' => 'Table floor plan layout saved successfully.',
         ]);
     }
 }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vendor Dashboard - ' . $vendor->name)
+@section('title', __('Dashboard') . ' - ' . $vendor->name)
 
 @section('content')
 <!-- Hero Welcome Banner -->
@@ -21,27 +21,27 @@
                     </h1>
                     <span class="badge badge-emerald" style="padding: 0.2rem 0.6rem; font-size: 0.72rem;">
                         <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
-                        {{ $location?->name ?? 'All Branches' }}
+                        {{ $location?->name ?? __('All Branches') }}
                     </span>
                     <span class="badge badge-amber" style="padding: 0.2rem 0.55rem; font-size: 0.7rem;">
-                        0% Commission
+                        {{ __('0% Commission') }}
                     </span>
                 </div>
                 <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;" class="truncate-text">
-                    Welcome back! Real-time operations overview for your restaurant menu, orders, and table stands.
+                    {{ __('Welcome back! Real-time operations overview for your restaurant menu, orders, and table stands.') }}
                 </p>
             </div>
         </div>
 
         <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center;">
             <a href="{{ route('admin.ai.import') }}" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.55rem 1rem;">
-                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> AI Menu Import
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> {{ __('AI Menu Import') }}
             </a>
             <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.55rem 1rem;">
-                <i class="fa-solid fa-bell-concierge" style="color: #ef4444;"></i> Kitchen Orders
+                <i class="fa-solid fa-bell-concierge" style="color: #ef4444;"></i> {{ __('Kitchen Orders') }}
             </a>
             <a href="{{ route('client.menu', ['vendor_slug' => $vendor->slug, 'location_slug' => $location?->slug]) }}" target="_blank" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.55rem 1.1rem;">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Live Menu
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('Live Menu') }}
             </a>
         </div>
     </div>
@@ -53,7 +53,7 @@
     <div class="stat-kpi-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
             <div style="min-width: 0;">
-                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">TODAY'S ORDERS</div>
+                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">{{ __('TODAY\'S ORDERS') }}</div>
                 <div style="font-size: 2.1rem; font-weight: 800; margin-top: 0.4rem; font-family: 'Outfit'; color: var(--text-main); line-height: 1.1;">
                     {{ $todayOrders }}
                 </div>
@@ -63,7 +63,7 @@
             </div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.85rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.65rem;">
-            <span>Live incoming orders</span>
+            <span>{{ __('Live incoming orders') }}</span>
             <span class="badge badge-emerald" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
                 ↑ 8.2%
             </span>
@@ -74,7 +74,7 @@
     <div class="stat-kpi-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
             <div style="min-width: 0;">
-                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">TODAY'S REVENUE</div>
+                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">{{ __('TODAY\'S REVENUE') }}</div>
                 <div style="font-size: 2.1rem; font-weight: 800; margin-top: 0.4rem; font-family: 'Outfit'; color: var(--text-main); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     {{ number_format($todayRevenue) }} <small style="font-size: 0.95rem; font-weight: 600; color: var(--primary);">{{ $vendor->currency }}</small>
                 </div>
@@ -84,7 +84,7 @@
             </div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.85rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.65rem;">
-            <span>Direct to restaurant (0%)</span>
+            <span>{{ __('Direct to restaurant (0%)') }}</span>
             <span class="badge badge-emerald" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
                 ↑ 12.4%
             </span>
@@ -95,7 +95,7 @@
     <div class="stat-kpi-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
             <div style="min-width: 0;">
-                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">PENDING ORDERS</div>
+                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">{{ __('PENDING ORDERS') }}</div>
                 <div style="font-size: 2.1rem; font-weight: 800; margin-top: 0.4rem; font-family: 'Outfit'; color: {{ $pendingOrdersCount > 0 ? '#ef4444' : 'var(--text-main)' }}; line-height: 1.1;">
                     {{ $pendingOrdersCount }}
                 </div>
@@ -105,14 +105,14 @@
             </div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.85rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.65rem;">
-            <span>Kitchen queue stream</span>
+            <span>{{ __('Kitchen queue stream') }}</span>
             @if($pendingOrdersCount > 0)
                 <span class="badge badge-rose" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
-                    ● Action Needed
+                    ● {{ __('Action Needed') }}
                 </span>
             @else
                 <span class="badge badge-emerald" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">
-                    ✓ All clear
+                    ✓ {{ __('All clear') }}
                 </span>
             @endif
         </div>
@@ -122,7 +122,7 @@
     <div class="stat-kpi-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
             <div style="min-width: 0;">
-                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">DIGITAL SCANS</div>
+                <div style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">{{ __('DIGITAL SCANS') }}</div>
                 <div style="font-size: 2.1rem; font-weight: 800; margin-top: 0.4rem; font-family: 'Outfit'; color: var(--text-main); line-height: 1.1;">
                     {{ number_format($dineInVisits + $orderingVisits) }}
                 </div>
@@ -149,11 +149,11 @@
                     <i class="fa-solid fa-bell-concierge"></i>
                 </span>
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    Customer Orders Stream
+                    {{ __('Customer Orders Stream') }}
                 </h3>
             </div>
             <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 8px;">
-                View All <i class="fa-solid fa-arrow-right"></i>
+                {{ __('View All') }} <i class="fa-solid fa-arrow-right"></i>
             </a>
         </div>
 
@@ -162,8 +162,8 @@
                 <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--input-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1rem; color: var(--text-muted);">
                     <i class="fa-solid fa-utensils"></i>
                 </div>
-                <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">No active orders right now</h4>
-                <p style="font-size: 0.85rem; max-width: 320px; margin: 0 auto;">Incoming Dine-In and online orders will instantly appear here via WebSockets.</p>
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">{{ __('No active orders right now') }}</h4>
+                <p style="font-size: 0.85rem; max-width: 320px; margin: 0 auto;">{{ __('Incoming Dine-In and online orders will instantly appear here via WebSockets.') }}</p>
             </div>
         @else
             <div style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -173,7 +173,7 @@
                             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                 <strong style="font-size: 0.98rem; color: var(--text-main); font-family: 'Outfit';">{{ $order->order_number }}</strong>
                                 <span class="badge badge-amber" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;">
-                                    <i class="fa-solid fa-chair text-xs"></i> {{ $order->table_number ? 'Table ' . $order->table_number : 'Takeaway' }}
+                                    <i class="fa-solid fa-chair text-xs"></i> {{ $order->table_number ? __('Table') . ' ' . $order->table_number : __('Takeaway') }}
                                 </span>
                                 <span style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem;">
                                     <i class="fa-regular fa-clock text-xs"></i> {{ $order->created_at->diffForHumans() }}
@@ -191,19 +191,19 @@
                             <div style="margin-top: 0.25rem;">
                                 @if($order->status == 'completed')
                                     <span class="badge badge-emerald" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
-                                        ● COMPLETED
+                                        ● {{ __('COMPLETED') }}
                                     </span>
                                 @elseif($order->status == 'ready')
                                     <span class="badge badge-indigo" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
-                                        ● READY
+                                        ● {{ __('READY') }}
                                     </span>
                                 @elseif($order->status == 'preparing')
                                     <span class="badge badge-amber" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
-                                        ● PREPARING
+                                        ● {{ __('PREPARING') }}
                                     </span>
                                 @else
                                     <span class="badge badge-rose" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
-                                        ● PENDING
+                                        ● {{ __('PENDING') }}
                                     </span>
                                 @endif
                             </div>
@@ -224,16 +224,16 @@
                 </span>
                 <div>
                     <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main);">
-                        AI Menu & Multilingual Suite
+                        {{ __('AI Menu & Multilingual Suite') }}
                     </h3>
-                    <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">Smart Menu Digitizer</span>
+                    <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">{{ __('Smart Menu Digitizer') }}</span>
                 </div>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;">
-                Extract dishes automatically from PDF or Word documents. Translate your entire menu into Armenian, English, Russian, French, and German in 1-click.
+                {{ __('Extract dishes automatically from PDF or Word documents. Translate your entire menu into Armenian, English, Russian, French, and German in 1-click.') }}
             </p>
             <a href="{{ route('admin.ai.import') }}" class="btn btn-primary" style="align-self: flex-start; font-size: 0.82rem; padding: 0.55rem 1.1rem;">
-                Launch AI Suite <i class="fa-solid fa-arrow-right"></i>
+                {{ __('Launch AI Suite') }} <i class="fa-solid fa-arrow-right"></i>
             </a>
         </div>
 
@@ -245,16 +245,16 @@
                 </span>
                 <div>
                     <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-main);">
-                        Table QR Code Studio
+                        {{ __('Table QR Code Studio') }}
                     </h3>
-                    <span style="font-size: 0.72rem; color: #06b6d4; font-weight: 700;">Printable Table Stands</span>
+                    <span style="font-size: 0.72rem; color: #06b6d4; font-weight: 700;">{{ __('Printable Table Stands') }}</span>
                 </div>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;">
-                Generate high-resolution printable table stand flyers with custom logos, table numbers, and brand colors that connect directly to your digital menu.
+                {{ __('Generate high-resolution printable table stand flyers with custom logos, table numbers, and brand colors that connect directly to your digital menu.') }}
             </p>
             <a href="{{ route('admin.qr.index') }}" class="btn btn-secondary" style="align-self: flex-start; font-size: 0.82rem; padding: 0.55rem 1.1rem;">
-                <i class="fa-solid fa-print"></i> Open Stand Studio
+                <i class="fa-solid fa-print"></i> {{ __('Open Stand Studio') }}
             </a>
         </div>
     </div>

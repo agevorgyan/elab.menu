@@ -109,10 +109,10 @@ class AiWaiterController extends Controller
         $this->enforceRateLimits($request, $vendor, $token);
         $session = $this->resolveSession($vendor, $token, $request);
 
-        $lang = strtolower((string) $request->input('language', 'hy'));
+        $lang = strtolower((string) $request->input('language', 'en'));
         $allowed = $vendor->getAiWaiterLanguages();
         if (! in_array($lang, $allowed, true)) {
-            $lang = $allowed[0] ?? 'hy';
+            $lang = $allowed[0] ?? 'en';
         }
 
         $preferences = $session->preferences ?? [];
@@ -641,13 +641,13 @@ class AiWaiterController extends Controller
      */
     protected function resolveLanguage(Request $request, Vendor $vendor): string
     {
-        $lang = $request->input('lang', $request->input('language', session('app_locale', 'hy')));
+        $lang = $request->input('lang', $request->input('language', session('app_locale', 'en')));
         $allowed = $vendor->getAiWaiterLanguages();
 
         if (in_array($lang, $allowed, true)) {
             return $lang;
         }
 
-        return $allowed[0] ?? 'hy';
+        return $allowed[0] ?? 'en';
     }
 }

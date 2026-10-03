@@ -8,7 +8,7 @@
         $siteFavicon = \App\Models\SystemSetting::getFavicon();
         $siteLogoLight = \App\Models\SystemSetting::getLogoLight();
     @endphp
-    <title>Գործընկերոջ Գրանցում — {{ $siteName }}</title>
+    <title>{{ __('Partner Registration') }} — {{ $siteName }}</title>
     
     <link rel="icon" type="image/png" href="{{ $siteFavicon }}">
     <link rel="apple-touch-icon" href="{{ $siteFavicon }}">
@@ -120,6 +120,31 @@
             border-color: #f59e0b;
             color: #92400e;
             transform: translateY(-1px);
+        }
+
+        .lang-switch-box {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            border: 1px solid var(--border-card);
+            border-radius: 999px;
+            padding: 2px;
+        }
+
+        .lang-switch-link {
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .lang-switch-link.active {
+            background: #ffffff;
+            color: #b45309;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         /* Main Registration Card */
@@ -487,14 +512,14 @@
         <!-- Top Navigation -->
         <div class="top-nav">
             <a href="/" class="back-link">
-                <i class="fa-solid fa-arrow-left"></i> Գլխավոր էջ
+                <i class="fa-solid fa-arrow-left"></i> {{ __('Home') }}
             </a>
             <div class="top-nav-actions">
                 <a href="{{ route('demo.login') }}" class="nav-pill-btn">
-                    <i class="fa-solid fa-bolt"></i> Փորձարկել Դեմոն
+                    <i class="fa-solid fa-bolt"></i> {{ __('Try Demo') }}
                 </a>
                 <a href="{{ route('login') }}" class="nav-pill-btn" style="background: #ffffff; border-color: #cbd5e1; color: #334155;">
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Մուտք
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> {{ __('Login') }}
                 </a>
             </div>
         </div>
@@ -508,13 +533,13 @@
                     </div>
                 @endif
                 <div class="trial-badge">
-                    <i class="fa-solid fa-gift"></i> 14 Օր Անվճար Փորձաշրջան • Բանկային քարտ չի պահանջվում
+                    <i class="fa-solid fa-gift"></i> {{ __('14-Day Free Trial • No Credit Card Required') }}
                 </div>
                 <h1 class="brand-title">
-                    Գործընկերոջ <span>Ինքնուրույն Գրանցում</span>
+                    {{ __('Partner') }} <span>{{ __('Registration') }}</span>
                 </h1>
                 <p class="brand-subtitle">
-                    Ստեղծեք ձեր հաշիվը 2 րոպեում և սկսեք ընդունել առցանց պատվերներ թվային QR մենյուի միջոցով
+                    {{ __('Create your account in 2 minutes and start accepting online orders with a digital QR menu.') }}
                 </p>
             </div>
 
@@ -522,10 +547,10 @@
             <div class="demo-bar-banner">
                 <div class="demo-bar-info">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Ցանկանո՞ւմ եք նախ ծանոթանալ ծրագրին առանց գրանցվելու։</span>
+                    <span>{{ __('Want to explore the platform first without registering?') }}</span>
                 </div>
                 <a href="{{ route('demo.login') }}" class="btn-demo-inline">
-                    <span>Ուսումնասիրել Դեմո Տարբերակը</span>
+                    <span>{{ __('Explore Demo Version') }}</span>
                     <i class="fa-solid fa-arrow-right"></i>
                 </a>
             </div>
@@ -534,7 +559,7 @@
                 <div class="alert-error">
                     <div style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Խնդրում ենք ուղղել հետևյալ սխալները․</span>
+                        <span>{{ __('Please correct the following errors:') }}</span>
                     </div>
                     <ul>
                         @foreach($errors->all() as $error)
@@ -550,32 +575,32 @@
                 <!-- 1. Օբյեկտի Տվյալներ -->
                 <div class="section-header">
                     <div class="section-number">1</div>
-                    <div class="section-title">Ռեստորանի / Օբյեկտի Տվյալներ</div>
+                    <div class="section-title">{{ __('Restaurant / Venue Details') }}</div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">Օբյեկտի Տեսակը <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Venue Type') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
                             <select name="type" class="form-select" required>
-                                <option value="restaurant" {{ old('type') == 'restaurant' ? 'selected' : '' }}>Ռեստորան (Restaurant)</option>
-                                <option value="cafe" {{ old('type') == 'cafe' ? 'selected' : '' }}>Սրճարան (Cafe)</option>
-                                <option value="hotel" {{ old('type') == 'hotel' ? 'selected' : '' }}>Հյուրանոց / Լաունջ (Hotel & Lounge)</option>
+                                <option value="restaurant" {{ old('type') == 'restaurant' ? 'selected' : '' }}>{{ __('Restaurant') }}</option>
+                                <option value="cafe" {{ old('type') == 'cafe' ? 'selected' : '' }}>{{ __('Cafe') }}</option>
+                                <option value="hotel" {{ old('type') == 'hotel' ? 'selected' : '' }}>{{ __('Hotel & Lounge') }}</option>
                             </select>
                             <i class="fa-solid fa-utensils input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Բրենդի Անվանումը <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Brand Name') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="name" class="form-input" required placeholder="օր․ Verona Lounge & Cafe" value="{{ old('name') }}">
+                            <input type="text" name="name" class="form-input" required placeholder="{{ __('e.g. Verona Lounge & Cafe') }}" value="{{ old('name') }}">
                             <i class="fa-solid fa-store input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Մասնաճյուղերի քանակ (Locations) <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Number of Branches') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
                             <input type="number" name="expected_locations_count" min="1" max="100" class="form-input" required value="{{ old('expected_locations_count', 1) }}">
                             <i class="fa-solid fa-network-wired input-icon"></i>
@@ -583,20 +608,20 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Սակագնային Պլան (14 օր անվճար) <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Subscription Plan (14 Days Free)') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
                             <select name="subscription_plan" class="form-select" required>
                                 @if(isset($plans) && $plans->count())
                                     @foreach($plans as $p)
                                         <option value="{{ $p->slug }}" {{ old('subscription_plan', request('plan', 'pro')) == $p->slug ? 'selected' : '' }}>
-                                            {{ $p->name }} — {{ $p->formatted_price }} (14 օր անվճար)
+                                            {{ $p->name }} — {{ $p->formatted_price }} ({{ __('14-day free trial') }})
                                         </option>
                                     @endforeach
                                 @else
-                                    <option value="basic" {{ old('subscription_plan', request('plan', 'pro')) == 'basic' ? 'selected' : '' }}>Basic — 9 900 AMD / ամիս (14 օր անվճար)</option>
-                                    <option value="pro" {{ old('subscription_plan', request('plan', 'pro')) == 'pro' ? 'selected' : '' }}>Pro — 19 900 AMD / ամիս (14 օր անվճար)</option>
-                                    <option value="business" {{ old('subscription_plan', request('plan', 'pro')) == 'business' ? 'selected' : '' }}>Business — 34 900 AMD / ամիս (14 օր անվճար)</option>
-                                    <option value="custom" {{ old('subscription_plan', request('plan', 'pro')) == 'custom' ? 'selected' : '' }}>Custom — Պայմանագրային</option>
+                                    <option value="basic" {{ old('subscription_plan', request('plan', 'pro')) == 'basic' ? 'selected' : '' }}>Basic — 9 900 AMD / {{ __('month') }} ({{ __('14-day free trial') }})</option>
+                                    <option value="pro" {{ old('subscription_plan', request('plan', 'pro')) == 'pro' ? 'selected' : '' }}>Pro — 19 900 AMD / {{ __('month') }} ({{ __('14-day free trial') }})</option>
+                                    <option value="business" {{ old('subscription_plan', request('plan', 'pro')) == 'business' ? 'selected' : '' }}>Business — 34 900 AMD / {{ __('month') }} ({{ __('14-day free trial') }})</option>
+                                    <option value="custom" {{ old('subscription_plan', request('plan', 'pro')) == 'custom' ? 'selected' : '' }}>Custom — {{ __('Contractual') }}</option>
                                 @endif
                             </select>
                             <i class="fa-solid fa-crown input-icon"></i>
@@ -604,46 +629,46 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label class="form-label">Գործունեության հասցե կամ հասցեներ <span class="req">*</span></label>
-                        <textarea name="operating_address" rows="2" class="form-textarea" required placeholder="օր․ Մաշտոցի պողոտա 15, Երևան / Թամանյան 2, Երևան">{{ old('operating_address') }}</textarea>
+                        <label class="form-label">{{ __('Operating Address / Locations') }} <span class="req">*</span></label>
+                        <textarea name="operating_address" rows="2" class="form-textarea" required placeholder="{{ __('e.g. 15 Mashtots Ave, Yerevan') }}">{{ old('operating_address') }}</textarea>
                     </div>
                 </div>
 
                 <!-- 2. Իրավաբանական Տվյալներ -->
                 <div class="section-header">
                     <div class="section-number">2</div>
-                    <div class="section-title">Իրավաբանական Տվյալներ</div>
+                    <div class="section-title">{{ __('Legal Details') }}</div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">Իրավաբանական Անվանում (ՍՊԸ/ԱՁ) <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Legal Entity Name (LLC / Sole Proprietorship)') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="legal_name" class="form-input" required placeholder="օր․ «Վերոնա Լաունջ» ՍՊԸ" value="{{ old('legal_name') }}">
+                            <input type="text" name="legal_name" class="form-input" required placeholder="{{ __('e.g. Verona Lounge LLC') }}" value="{{ old('legal_name') }}">
                             <i class="fa-solid fa-building input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">ՀՎՀՀ (Tax ID) <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Tax ID (ՀՎՀՀ)') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="tax_id" class="form-input" required placeholder="օր․ 02589412" value="{{ old('tax_id') }}">
+                            <input type="text" name="tax_id" class="form-input" required placeholder="02589412" value="{{ old('tax_id') }}">
                             <i class="fa-solid fa-hashtag input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Իրավաբանական Հասցե <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Legal Address') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="legal_address" class="form-input" required placeholder="օր․ ք․ Երևան, Բաղրամյան 24" value="{{ old('legal_address') }}">
+                            <input type="text" name="legal_address" class="form-input" required placeholder="{{ __('e.g. 24 Baghramyan Ave, Yerevan') }}" value="{{ old('legal_address') }}">
                             <i class="fa-solid fa-map-location-dot input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Տնօրենի Անուն Ազգանուն <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Director Full Name') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="director_name" class="form-input" required placeholder="օր․ Արմեն Պետրոսյան" value="{{ old('director_name') }}">
+                            <input type="text" name="director_name" class="form-input" required placeholder="{{ __('e.g. Armen Petrosyan') }}" value="{{ old('director_name') }}">
                             <i class="fa-solid fa-user-tie input-icon"></i>
                         </div>
                     </div>
@@ -652,51 +677,51 @@
                 <!-- 3. Կոնտակտ & Մուտքային Հաշիվ -->
                 <div class="section-header">
                     <div class="section-number">3</div>
-                    <div class="section-title">Կոնտակտային Տվյալներ & Մուտքային Հաշիվ</div>
+                    <div class="section-title">{{ __('Contact Details & Account Credentials') }}</div>
                 </div>
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">Կոնտակտային Անձի Անուն <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Contact Person Name') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="contact_person_name" class="form-input" required placeholder="օր․ Անահիտ Սարգսյան" value="{{ old('contact_person_name') }}">
+                            <input type="text" name="contact_person_name" class="form-input" required placeholder="{{ __('e.g. Anahit Sargsyan') }}" value="{{ old('contact_person_name') }}">
                             <i class="fa-solid fa-user input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Հեռախոսահամար <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Phone Number') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" name="phone" class="form-input" required placeholder="օր․ +37491000111" value="{{ old('phone') }}">
+                            <input type="text" name="phone" class="form-input" required placeholder="+37491000111" value="{{ old('phone') }}">
                             <i class="fa-solid fa-phone input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group full-width">
-                        <label class="form-label">Էլ․ Փոստ (Login Email) <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Login Email') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
-                            <input type="email" name="email" class="form-input" required placeholder="info@veronacafe.am" value="{{ old('email') }}">
+                            <input type="email" name="email" class="form-input" required placeholder="info@example.com" value="{{ old('email') }}">
                             <i class="fa-solid fa-envelope input-icon"></i>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Գաղտնաբառ <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Password') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
                             <input type="password" name="password" id="regPasswordInput" class="form-input has-toggle" required placeholder="••••••••">
                             <i class="fa-solid fa-lock input-icon"></i>
-                            <button type="button" class="password-toggle-btn" id="toggleRegPasswordBtn" title="Ցուցադրել/Թաքցնել գաղտնաբառը">
+                            <button type="button" class="password-toggle-btn" id="toggleRegPasswordBtn" title="{{ __('Show/Hide password') }}">
                                 <i class="fa-regular fa-eye" id="toggleRegPasswordIcon"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Կրկնել Գաղտնաբառը <span class="req">*</span></label>
+                        <label class="form-label">{{ __('Confirm Password') }} <span class="req">*</span></label>
                         <div class="input-wrapper">
                             <input type="password" name="password_confirmation" id="regPasswordConfirmInput" class="form-input has-toggle" required placeholder="••••••••">
                             <i class="fa-solid fa-shield-halved input-icon"></i>
-                            <button type="button" class="password-toggle-btn" id="toggleRegPasswordConfirmBtn" title="Ցուցադրել/Թաքցնել գաղտնաբառը">
+                            <button type="button" class="password-toggle-btn" id="toggleRegPasswordConfirmBtn" title="{{ __('Show/Hide password') }}">
                                 <i class="fa-regular fa-eye" id="toggleRegPasswordConfirmIcon"></i>
                             </button>
                         </div>
@@ -706,13 +731,13 @@
                     @if(isset($captcha))
                         <div class="form-group full-width">
                             <label class="form-label">
-                                <span>Անվտանգության Ստուգում (CAPTCHA) <span class="req">*</span></span>
+                                <span>{{ __('Security Verification (CAPTCHA)') }} <span class="req">*</span></span>
                             </label>
                             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                                 <div id="captchaContainer" style="display: flex; align-items: center; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
                                     {!! $captcha['svg'] !!}
                                 </div>
-                                <button type="button" onclick="refreshCaptcha()" title="Փոխել հարցը" style="padding: 0.55rem 0.75rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; cursor: pointer; font-size: 0.9rem;">
+                                <button type="button" onclick="refreshCaptcha()" title="{{ __('Refresh question') }}" style="padding: 0.55rem 0.75rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; color: #475569; cursor: pointer; font-size: 0.9rem;">
                                     <i class="fa-solid fa-arrows-rotate"></i>
                                 </button>
                             </div>
@@ -722,7 +747,7 @@
                                     name="captcha" 
                                     class="form-input" 
                                     required 
-                                    placeholder="Մուտքագրեք գումարի պատասխանը"
+                                    placeholder="{{ __('Enter the calculation answer') }}"
                                     autocomplete="off"
                                     inputmode="numeric"
                                 >
@@ -734,30 +759,30 @@
 
                 <button type="submit" class="btn-submit-register">
                     <i class="fa-solid fa-rocket"></i>
-                    <span>Գրանցվել և Սկսել 14-Օրյա Անվճար Փորձաշրջանը</span>
+                    <span>{{ __('Register and Start 14-Day Free Trial') }}</span>
                 </button>
 
                 <p class="terms-note">
-                    Գրանցվելով դուք համաձայնում եք մեր 
-                    <a href="{{ route('legal.terms') }}">Օգտագործման Պայմաններին</a> և 
-                    <a href="{{ route('legal.privacy') }}">Գաղտնիության Քաղաքականությանը</a>։
+                    {{ __('By registering, you agree to our') }} 
+                    <a href="{{ route('legal.terms') }}">{{ __('Terms of Service') }}</a> {{ __('and') }} 
+                    <a href="{{ route('legal.privacy') }}">{{ __('Privacy Policy') }}</a>.
                 </p>
 
                 <div class="login-redirect-box">
-                    Արդեն ունե՞ք գրանցված հաշիվ։ 
+                    {{ __('Already have an account?') }} 
                     <a href="{{ route('login') }}">
-                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Մուտք գործել այստեղ
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> {{ __('Login here') }}
                     </a>
                 </div>
             </form>
         </div>
 
         <div class="footer-note">
-            <span>&copy; {{ date('Y') }} QRMenu SaaS Platform</span>
+            <span>&copy; {{ date('Y') }} {{ $siteName }} Platform</span>
             <span>•</span>
-            <a href="{{ route('legal.privacy') }}">Գաղտնիություն</a>
+            <a href="{{ route('legal.privacy') }}">{{ __('Privacy Policy') }}</a>
             <span>•</span>
-            <a href="{{ route('legal.terms') }}">Պայմաններ</a>
+            <a href="{{ route('legal.terms') }}">{{ __('Terms of Service') }}</a>
         </div>
     </div>
 

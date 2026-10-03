@@ -266,20 +266,20 @@
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <span class="badge badge-amber">
-                    <i class="fa-solid fa-sliders"></i> Համակարգի Կարգավորումներ
+                    <i class="fa-solid fa-sliders"></i> {{ __('System Settings') }}
                 </span>
             </div>
             <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main);">
-                Լենդինգ Էջի & Համակարգի Կառավարում
+                {{ __('Landing Page & System Management') }}
             </h1>
             <p style="color: var(--text-muted); font-size: 0.88rem;">
-                Կառավարեք գլխավոր լենդինգ էջի (menu.elab.am) բոլոր բաժինները, բրենդինգը, SEO-ն, կոնտակտները և անվտանգությունը։
+                {{ __('Manage landing page sections, branding, SEO, official contacts, and system security.') }}
             </p>
         </div>
 
         <div style="display: flex; gap: 0.75rem;">
             <a href="{{ route('landing') }}" target="_blank" class="btn" style="background: var(--bg-card-hover); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem 1.25rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Դիտել Լենդինգը
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ __('View Landing') }}
             </a>
         </div>
     </div>
@@ -288,27 +288,27 @@
     <div class="settings-nav-tabs">
         <button type="button" class="settings-tab-btn" :class="activeTab === 'landing' ? 'active' : ''" @click="activeTab = 'landing'; window.location.hash = 'landing'">
             <i class="fa-solid fa-rocket" style="color: #f59e0b;"></i>
-            <span>Լենդինգ Էջ (CMS)</span>
+            <span>{{ __('Landing Page (CMS)') }}</span>
         </button>
         <button type="button" class="settings-tab-btn" :class="activeTab === 'branding' ? 'active' : ''" @click="activeTab = 'branding'; window.location.hash = 'branding'">
             <i class="fa-solid fa-palette" style="color: #f59e0b;"></i>
-            <span>Համակարգի Բրենդինգ</span>
+            <span>{{ __('System Branding') }}</span>
         </button>
         <button type="button" class="settings-tab-btn" :class="activeTab === 'seo' ? 'active' : ''" @click="activeTab = 'seo'; window.location.hash = 'seo'">
             <i class="fa-solid fa-magnifying-glass-chart" style="color: #06b6d4;"></i>
-            <span>SEO Օպտիմիզացիա</span>
+            <span>{{ __('SEO Optimization') }}</span>
         </button>
         <button type="button" class="settings-tab-btn" :class="activeTab === 'contacts' ? 'active' : ''" @click="activeTab = 'contacts'; window.location.hash = 'contacts'">
             <i class="fa-solid fa-headset" style="color: #10b981;"></i>
-            <span>Կոնտակտներ & Սոցիալական</span>
+            <span>{{ __('Contacts & Socials') }}</span>
         </button>
         <button type="button" class="settings-tab-btn" :class="activeTab === 'telegram' ? 'active' : ''" @click="activeTab = 'telegram'; window.location.hash = 'telegram'">
             <i class="fa-brands fa-telegram" style="color: #229ed9;"></i>
-            <span>Telegram Ծանուցումներ</span>
+            <span>{{ __('Telegram Notifications') }}</span>
         </button>
         <button type="button" class="settings-tab-btn" :class="activeTab === 'security' ? 'active' : ''" @click="activeTab = 'security'; window.location.hash = 'security'">
             <i class="fa-solid fa-shield-halved" style="color: #6366f1;"></i>
-            <span>Անվտանգություն & 2FA</span>
+            <span>{{ __('Security & 2FA') }}</span>
         </button>
     </div>
 
@@ -360,7 +360,7 @@
         <!-- Submit Button (shown across all config tabs) -->
         <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; margin-bottom: 2.5rem;" x-show="activeTab !== 'security'">
             <button type="submit" class="btn-save">
-                <i class="fa-solid fa-floppy-disk"></i> Պահպանել Բոլոր Կարգավորումները
+                <i class="fa-solid fa-floppy-disk"></i> {{ __('Save All Settings') }}
             </button>
         </div>
     </form>
@@ -370,14 +370,14 @@
         <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <span class="badge badge-indigo">
-                    <i class="fa-solid fa-shield-halved"></i> Անվտանգություն & 2FA
+                    <i class="fa-solid fa-shield-halved"></i> {{ __('Security & 2FA') }}
                 </span>
             </div>
             <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                Ադմինիստրատորի Անվտանգություն & 2FA
+                {{ __('Administrator Security & 2FA') }}
             </h2>
             <p style="color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 0 0;">
-                Կառավարեք երկփուլային նույնականացումը (2FA), փոխեք էլ․ փոստի հասցեն և մուտքի գաղտնաբառը։
+                {{ __('Manage two-factor authentication (2FA), update login email, and change password.') }}
             </p>
         </div>
 
@@ -391,20 +391,20 @@
                     <div>
                         <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
                             <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit';">
-                                Երկփուլային Նույնականացում (2FA)
+                                {{ __('Two-Factor Authentication (2FA)') }}
                             </h3>
                             @if(auth()->user()->hasTwoFactorEnabled())
                                 <span class="badge badge-emerald" style="font-weight: 700;">
-                                    <i class="fa-solid fa-circle-check"></i> Ակտիվ ({{ auth()->user()->two_factor_type === 'authenticator' ? 'Google Authenticator' : 'Email Code' }})
+                                    <i class="fa-solid fa-circle-check"></i> {{ __('Active') }} ({{ auth()->user()->two_factor_type === 'authenticator' ? 'Google Authenticator' : 'Email Code' }})
                                 </span>
                             @else
                                 <span class="badge badge-amber" style="font-weight: 700;">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> Անջատված
+                                    <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Disabled') }}
                                 </span>
                             @endif
                         </div>
                         <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.45;">
-                            Պաշտպանում է ձեր հաշիվը <strong>/login</strong> մուտք գործելիս, ինչպես նաև <strong>գաղտնաբառ</strong> և <strong>էլ․ փոստ</strong> փոխելիս։
+                            {{ __('Protects your account during login, password change, and email update operations.') }}
                         </p>
                     </div>
                 </div>
@@ -412,11 +412,11 @@
                 <div>
                     @if(auth()->user()->hasTwoFactorEnabled())
                         <button type="button" @click="showDisableModal = true" class="btn btn-secondary" style="border-radius: 12px; font-weight: 700; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
-                            <i class="fa-solid fa-power-off"></i> Անջատել 2FA-ն
+                            <i class="fa-solid fa-power-off"></i> {{ __('Disable 2FA') }}
                         </button>
                     @else
                         <button type="button" @click="showEnableModal = true" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem;">
-                            <i class="fa-solid fa-lock"></i> Միացնել 2FA Պաշտպանությունը
+                            <i class="fa-solid fa-lock"></i> {{ __('Enable 2FA Protection') }}
                         </button>
                     @endif
                 </div>
@@ -428,7 +428,7 @@
             <div class="settings-card" style="margin-bottom: 0;">
                 <div class="settings-section-title">
                     <i class="fa-solid fa-envelope" style="color: #6366f1;"></i>
-                    <span>Էլ․ Փոստի Փոփոխություն (2FA)</span>
+                    <span>{{ __('Change Email') }} (2FA)</span>
                 </div>
                 <form action="{{ route('superadmin.settings.security') }}" method="POST" x-data="{ isSubmitting: false, validate() { if(this.$el.checkValidity()) { this.isSubmitting = true; return true; } else { this.$el.reportValidity(); return false; } } }" @submit.prevent="if(validate()) $el.submit()">
                     @csrf
@@ -436,17 +436,17 @@
 
                     <div style="display: flex; flex-direction: column; gap: 1.15rem;">
                         <div class="form-group">
-                            <label class="form-label">Ընթացիկ Էլ․ Փոստ</label>
+                            <label class="form-label">{{ __('Current Email') }}</label>
                             <input type="text" value="{{ auth()->user()->email }}" disabled class="form-input" style="opacity: 0.7; cursor: not-allowed;">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Նոր Էլ․ Փոստ *</label>
-                            <input type="email" name="email" required class="form-input" placeholder="new-admin@qrmenu.local" value="{{ old('action_type') === 'email' ? old('email') : '' }}">
+                            <label class="form-label">{{ __('New Email') }} *</label>
+                            <input type="email" name="email" required class="form-input" placeholder="new-admin@example.com" value="{{ old('action_type') === 'email' ? old('email') : '' }}">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Ընթացիկ Գաղտնաբառ *</label>
+                            <label class="form-label">{{ __('Current Password') }} *</label>
                             <input type="password" name="current_password" required class="form-input" placeholder="••••••••">
                         </div>
 
@@ -454,19 +454,19 @@
                         <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                                 <label class="form-label" style="margin-bottom: 0;">
-                                    2FA Անվտանգության Կոդ {{ auth()->user()->hasTwoFactorEnabled() ? '*' : '(եթե ունեք)' }}
+                                    {{ __('2FA Security Code') }} {{ auth()->user()->hasTwoFactorEnabled() ? '*' : '(' . __('optional') . ')' }}
                                 </label>
                                 <button type="button" @click="sendCode('email', $event)" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 8px;">
-                                    <i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <span x-text="countdownEmail > 0 ? 'Սպասեք ' + countdownEmail + 'վ' : 'Ուղարկել 2FA կոդ'">Ուղարկել 2FA կոդ</span>
+                                    <i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <span x-text="countdownEmail > 0 ? 'Wait ' + countdownEmail + 's' : '{{ __('Send 2FA code') }}'">{{ __('Send 2FA code') }}</span>
                                 </button>
                             </div>
-                            <input type="text" name="two_factor_code" {{ auth()->user()->hasTwoFactorEnabled() ? 'required' : '' }} class="form-input" placeholder="6-նիշ կոդ (Email կամ Authenticator)" maxlength="8" autocomplete="one-time-code">
+                            <input type="text" name="two_factor_code" {{ auth()->user()->hasTwoFactorEnabled() ? 'required' : '' }} class="form-input" placeholder="{{ __('6-digit code') }}" maxlength="8" autocomplete="one-time-code">
                             <div x-show="msgEmail" x-text="msgEmail" style="font-size: 0.78rem; color: #10b981; margin-top: 0.35rem; font-weight: 600;"></div>
                         </div>
 
                         <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
                             <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem;">
-                                <i class="fa-solid fa-check"></i> Թարմացնել Էլ․ Փոստը
+                                <i class="fa-solid fa-check"></i> {{ __('Update Email') }}
                             </button>
                         </div>
                     </div>
@@ -477,7 +477,7 @@
             <div class="settings-card" style="margin-bottom: 0;">
                 <div class="settings-section-title">
                     <i class="fa-solid fa-lock" style="color: #10b981;"></i>
-                    <span>Գաղտնաբառի Փոփոխություն (2FA)</span>
+                    <span>{{ __('Change Password') }} (2FA)</span>
                 </div>
                 <form action="{{ route('superadmin.settings.security') }}" method="POST" x-data="{ isSubmitting: false, validate() { if(this.$el.checkValidity()) { this.isSubmitting = true; return true; } else { this.$el.reportValidity(); return false; } } }" @submit.prevent="if(validate()) $el.submit()">
                     @csrf
@@ -485,17 +485,17 @@
 
                     <div style="display: flex; flex-direction: column; gap: 1.15rem;">
                         <div class="form-group">
-                            <label class="form-label">Ընթացիկ Գաղտնաբառ *</label>
+                            <label class="form-label">{{ __('Current Password') }} *</label>
                             <input type="password" name="current_password" required class="form-input" placeholder="••••••••">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Նոր Գաղտնաբառ * (նվազագույնը 6 նիշ)</label>
+                            <label class="form-label">{{ __('New Password') }} * ({{ __('min. 6 characters') }})</label>
                             <input type="password" name="password" required minlength="6" class="form-input" placeholder="••••••••">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Հաստատել Նոր Գաղտնաբառը *</label>
+                            <label class="form-label">{{ __('Confirm New Password') }} *</label>
                             <input type="password" name="password_confirmation" required minlength="6" class="form-input" placeholder="••••••••">
                         </div>
 
@@ -503,19 +503,19 @@
                         <div class="form-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                                 <label class="form-label" style="margin-bottom: 0;">
-                                    2FA Անվտանգության Կոդ {{ auth()->user()->hasTwoFactorEnabled() ? '*' : '(եթե ունեք)' }}
+                                    {{ __('2FA Security Code') }} {{ auth()->user()->hasTwoFactorEnabled() ? '*' : '(' . __('optional') . ')' }}
                                 </label>
                                 <button type="button" @click="sendCode('password', $event)" class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 8px;">
-                                    <i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <span x-text="countdownPass > 0 ? 'Սպասեք ' + countdownPass + 'վ' : 'Ուղարկել 2FA կոդ'">Ուղարկել 2FA կոդ</span>
+                                    <i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <span x-text="countdownPass > 0 ? 'Wait ' + countdownPass + 's' : '{{ __('Send 2FA code') }}'">{{ __('Send 2FA code') }}</span>
                                 </button>
                             </div>
-                            <input type="text" name="two_factor_code" {{ auth()->user()->hasTwoFactorEnabled() ? 'required' : '' }} class="form-input" placeholder="6-նիշ կոդ (Email կամ Authenticator)" maxlength="8" autocomplete="one-time-code">
+                            <input type="text" name="two_factor_code" {{ auth()->user()->hasTwoFactorEnabled() ? 'required' : '' }} class="form-input" placeholder="{{ __('6-digit code') }}" maxlength="8" autocomplete="one-time-code">
                             <div x-show="msgPass" x-text="msgPass" style="font-size: 0.78rem; color: #10b981; margin-top: 0.35rem; font-weight: 600;"></div>
                         </div>
 
                         <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
                             <button type="submit" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; padding: 0.65rem 1.4rem;">
-                                <i class="fa-solid fa-key"></i> Փոխել Գաղտնաբառը
+                                <i class="fa-solid fa-key"></i> {{ __('Change Password') }}
                             </button>
                         </div>
                     </div>
@@ -532,7 +532,7 @@
                             <i class="fa-solid fa-shield-halved"></i>
                         </span>
                         <h3 style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin: 0;">
-                            Միացնել 2FA Պաշտպանությունը
+                            {{ __('Enable 2FA Protection') }}
                         </h3>
                     </div>
                     <button type="button" @click="showEnableModal = false" style="background: none; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">
@@ -543,7 +543,7 @@
                 <!-- 2FA Type Switcher -->
                 <div style="display: flex; gap: 0.5rem; background: var(--bg-body); padding: 0.35rem; border-radius: 12px; margin-bottom: 1.25rem;">
                     <button type="button" @click="enableType = 'email'" :class="enableType === 'email' ? 'btn btn-primary' : 'btn btn-secondary'" style="flex: 1; border-radius: 10px; font-size: 0.85rem; justify-content: center; padding: 0.55rem;">
-                        <i class="fa-solid fa-envelope"></i> Email Կոդով
+                        <i class="fa-solid fa-envelope"></i> {{ __('Email Code') }}
                     </button>
                     <button type="button" @click="enableType = 'authenticator'" :class="enableType === 'authenticator' ? 'btn btn-primary' : 'btn btn-secondary'" style="flex: 1; border-radius: 10px; font-size: 0.85rem; justify-content: center; padding: 0.55rem;">
                         <i class="fa-solid fa-mobile-screen-button"></i> Authenticator App
@@ -559,13 +559,13 @@
                     <!-- Authenticator Info & QR -->
                     <div x-show="enableType === 'authenticator'" style="margin-bottom: 1.25rem; text-align: center;">
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                            Սկանավորեք այս QR կոդը <strong>Google Authenticator</strong> (կամ Authy) հավելվածով․
+                            {{ __('Scan this QR code with Google Authenticator or Authy:') }}
                         </p>
                         <div style="display: inline-block; background: #ffffff; padding: 12px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid var(--border-color); margin-bottom: 0.75rem;">
                             <img src="{{ $qrCodeUrl ?? '' }}" alt="2FA QR Code" style="width: 170px; height: 170px; display: block;">
                         </div>
                         <div style="font-size: 0.78rem; color: var(--text-muted);">
-                            Կամ մուտքագրեք գաղտնի բանալին ձեռքով՝
+                            {{ __('Or manually enter the secret key:') }}
                             <div style="font-family: monospace; font-size: 0.95rem; font-weight: 700; color: #f59e0b; margin-top: 0.25rem; letter-spacing: 0.1em; user-select: all;">
                                 {{ $setupSecret ?? '' }}
                             </div>
@@ -576,24 +576,24 @@
                     <div x-show="enableType === 'email'" style="margin-bottom: 1.25rem;">
                         <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 0.85rem 1rem; font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1rem;">
                             <i class="fa-solid fa-circle-info" style="color: #f59e0b; margin-right: 0.35rem;"></i>
-                            Հաստատման կոդը կուղարկվի <strong>{{ auth()->user()->maskedEmail() }}</strong> հասցեին։
+                            {{ __('Confirmation code will be sent to:') }} <strong>{{ auth()->user()->maskedEmail() }}</strong>
                         </div>
                         <button type="button" @click="sendCode('setup', $event)" class="btn btn-secondary" style="width: 100%; justify-content: center; border-radius: 10px; font-weight: 600; font-size: 0.86rem; margin-bottom: 0.5rem;">
-                            <i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <span x-text="countdownSetup > 0 ? 'Սպասեք ' + countdownSetup + 'վ' : 'Ուղարկել Ստուգիչ Կոդ'">Ուղարկել Ստուգիչ Կոդ</span>
+                            <i class="fa-solid fa-paper-plane" style="color: #f59e0b;"></i> <span x-text="countdownSetup > 0 ? 'Wait ' + countdownSetup + 's' : '{{ __('Send Verification Code') }}'">{{ __('Send Verification Code') }}</span>
                         </button>
                         <div x-show="msgSetup" x-text="msgSetup" style="font-size: 0.78rem; color: #10b981; font-weight: 600; text-align: center;"></div>
                     </div>
 
                     <!-- Test Code Input -->
                     <div class="form-group" style="margin-bottom: 1.25rem;">
-                        <label class="form-label">Մուտքագրեք 6-նիշ Ստուգիչ Կոդը *</label>
+                        <label class="form-label">{{ __('Enter 6-Digit Verification Code') }} *</label>
                         <input type="text" name="code" required class="form-input" placeholder="••••••" maxlength="8" style="font-family: monospace; font-size: 1.3rem; letter-spacing: 0.3em; text-align: center;">
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                        <button type="button" class="btn btn-secondary" @click="showEnableModal = false">Չեղարկել</button>
+                        <button type="button" class="btn btn-secondary" @click="showEnableModal = false">{{ __('Cancel') }}</button>
                         <button type="submit" class="btn btn-primary" style="font-weight: 700;">
-                            <i class="fa-solid fa-shield-check"></i> Հաստատել և Միացնել
+                            <i class="fa-solid fa-shield-check"></i> {{ __('Verify & Enable') }}
                         </button>
                     </div>
                 </form>
@@ -605,7 +605,7 @@
             <div class="modern-modal-box" @click.outside="showDisableModal = false" style="max-width: 440px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border-color);">
                     <h3 style="font-family: 'Outfit'; font-size: 1.2rem; font-weight: 800; color: #ef4444; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Անջատել 2FA-ն
+                        <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Disable 2FA') }}
                     </h3>
                     <button type="button" @click="showDisableModal = false" style="background: none; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">
                         <i class="fa-solid fa-xmark"></i>
@@ -613,7 +613,7 @@
                 </div>
 
                 <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
-                    Երկփուլային նույնականացումն անջատելու դեպքում ձեր հաշվի պաշտպանության մակարդակը կնվազի։ Հաստատելու համար մուտքագրեք ընթացիկ գաղտնաբառը․
+                    {{ __('Disabling two-factor authentication reduces your account protection level. Please enter your password to confirm:') }}
                 </p>
 
                 <form action="{{ route('superadmin.settings.security') }}" method="POST" x-data="{ isSubmitting: false, validate() { if(this.$el.checkValidity()) { this.isSubmitting = true; return true; } else { this.$el.reportValidity(); return false; } } }" @submit.prevent="if(validate()) $el.submit()">
@@ -621,14 +621,14 @@
                     <input type="hidden" name="action_type" value="2fa_disable">
 
                     <div class="form-group" style="margin-bottom: 1.25rem;">
-                        <label class="form-label">Ընթացիկ Գաղտնաբառ *</label>
+                        <label class="form-label">{{ __('Current Password') }} *</label>
                         <input type="password" name="current_password" required class="form-input" placeholder="••••••••">
                     </div>
 
                     <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                        <button type="button" class="btn btn-secondary" @click="showDisableModal = false">Չեղարկել</button>
+                        <button type="button" class="btn btn-secondary" @click="showDisableModal = false">{{ __('Cancel') }}</button>
                         <button type="submit" class="btn btn-primary" style="background: #ef4444; border-color: #ef4444; font-weight: 700;">
-                            Այո, Անջատել 2FA-ն
+                            {{ __('Yes, Disable 2FA') }}
                         </button>
                     </div>
                 </form>

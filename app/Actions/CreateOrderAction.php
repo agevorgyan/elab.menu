@@ -372,23 +372,23 @@ class CreateOrderAction
 
         // 2. Schedule / time availability
         if (! $product->isTimeAvailable()) {
-            $scheduleDesc = $product->getAvailabilityScheduleSummary('hy');
-            $timeMsg = $scheduleDesc ? " (հասանելի է միայն՝ {$scheduleDesc})" : '';
+            $scheduleDesc = $product->getAvailabilityScheduleSummary('en');
+            $timeMsg = $scheduleDesc ? " (only available: {$scheduleDesc})" : '';
             throw ValidationException::withMessages([
-                'items' => "«{$product->name}» ուտեստը տվյալ պահին հասանելի չէ պատվիրելու համար{$timeMsg}:",
+                'items' => "The item \"{$product->name}\" is currently not available for ordering{$timeMsg}.",
             ]);
         }
 
         // 3. Order type / channel availability
         if (! $product->isOrderTypeAvailable($orderType)) {
             $channelNames = [
-                'dine_in' => 'ռեստորանում տեղում (Dine-in)',
-                'takeaway' => 'տանելու (Takeaway)',
-                'delivery' => 'առաքման (Delivery)',
+                'dine_in' => 'Dine-in',
+                'takeaway' => 'Takeaway',
+                'delivery' => 'Delivery',
             ];
             $curChannel = $channelNames[$orderType] ?? $orderType;
             throw ValidationException::withMessages([
-                'items' => "«{$product->name}» ուտեստը նախատեսված չէ {$curChannel} պատվերների համար:",
+                'items' => "The item \"{$product->name}\" is not available for {$curChannel} orders.",
             ]);
         }
     }

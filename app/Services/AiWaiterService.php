@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AiWaiterSession;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Vendor;
@@ -21,7 +22,7 @@ class AiWaiterService
      *
      * @return array<string, array<string, mixed>>
      */
-    public function getQuestionLibrary(string $lang = 'hy'): array
+    public function getQuestionLibrary(string $lang = 'en'): array
     {
         return [
             'mood' => [
@@ -230,7 +231,7 @@ class AiWaiterService
         Vendor $vendor,
         array $preferences,
         array $answeredKeys,
-        string $lang = 'hy'
+        string $lang = 'en'
     ): ?array {
         $library = $this->getQuestionLibrary($lang);
         $config = $vendor->getAiWaiterConfig();
@@ -332,7 +333,7 @@ class AiWaiterService
      *
      * @return array<string, mixed>
      */
-    public function parseFreeText(string $text, string $lang = 'hy', ?Vendor $vendor = null): array
+    public function parseFreeText(string $text, string $lang = 'en', ?Vendor $vendor = null): array
     {
         $normalized = mb_strtolower(trim($text));
         if ($normalized === '') {
@@ -434,11 +435,11 @@ class AiWaiterService
         Vendor $vendor,
         array $preferences = [],
         ?string $prompt = null,
-        string $lang = 'hy',
+        string $lang = 'en',
         ?int $locationId = null
     ): array {
-        if (! in_array($lang, ['hy', 'en', 'ru'])) {
-            $lang = 'hy';
+        if (! in_array($lang, ['en', 'hy', 'ru'])) {
+            $lang = 'en';
         }
 
         // Merge prompt analysis into preferences if provided
@@ -1067,11 +1068,11 @@ class AiWaiterService
         Vendor $vendor,
         string $message,
         array $sessionContext = [],
-        string $lang = 'hy',
+        string $lang = 'en',
         ?int $locationId = null
     ): array {
-        if (! in_array($lang, ['hy', 'en', 'ru'])) {
-            $lang = 'hy';
+        if (! in_array($lang, ['en', 'hy', 'ru'])) {
+            $lang = 'en';
         }
 
         $waiterName = $vendor->getAiWaiterName();

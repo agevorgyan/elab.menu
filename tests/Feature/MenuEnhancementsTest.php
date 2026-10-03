@@ -183,11 +183,11 @@ class MenuEnhancementsTest extends TestCase
 
         $this->vendor->update([
             'supported_languages' => [
-                ['code' => 'hy', 'name' => 'Հայերեն', 'flag' => '🇦🇲'],
+                ['code' => 'en', 'name' => 'English', 'flag' => '🇬🇧'],
             ],
         ]);
 
-        $response = $this->delete(route('admin.ai.languages.destroy', 'hy'));
+        $response = $this->delete(route('admin.ai.languages.destroy', 'en'));
         $response->assertSessionHas('error');
         $this->vendor->refresh();
         $this->assertCount(1, $this->vendor->getSupportedLanguages());
@@ -241,5 +241,24 @@ class MenuEnhancementsTest extends TestCase
         $response->assertSee('French Fries');
         $response->assertSee('cart-ai-recs-container');
         $response->assertSee('cartRecommendations');
+    }
+
+    public function test_ai_menu_service_translates_into_french_correctly(): void
+    {
+        $service = app(AiMenuService::class);
+        $items = [
+            'item_1' => 'Starters & Appetizers',
+            'item_2' => 'Grilled Norwegian Salmon',
+        ];
+
+        $translated = $service->translateMenuBatch($items, 'fr', $this->vendor);
+
+        $this->assertNotEmpty($translated['item_1']);
+        $this->assertStringNotContainsString('(Fr)', $translated['item_1']);
+        $this->assertNotEquals('Starters & Appetizers', $translated['item_1']);
+
+        $this->assertNotEmpty($translated['item_2']);
+        $this->assertStringNotContainsString('(Fr)', $translated['item_2']);
+        $this->assertNotEquals('Grilled Norwegian Salmon', $translated['item_2']);
     }
 }

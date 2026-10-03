@@ -2,28 +2,79 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Vendor;
+use App\Services\Localization\LocaleManager;
+use App\Services\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetAppLocale
 {
+    public function __construct(
+        protected LocaleManager $localeManager,
+        protected TenantContext $tenantContext
+    ) {}
+
     public function handle(Request $request, Closure $next): Response
     {
-        $requestedLocale = $request->get('lang') ?? $request->get('locale');
-        if ($requestedLocale && in_array($requestedLocale, ['hy', 'en', 'ru'])) {
-            session(['app_locale' => $requestedLocale, 'locale' => $requestedLocale]);
-            App::setLocale($requestedLocale);
-        } else {
-            $locale = session('app_locale') ?? session('locale', 'hy');
-            if (in_array($locale, ['hy', 'en', 'ru'])) {
-                App::setLocale($locale);
+        // 1. Storefront visitor requests (web and API)
+        if ($request->is('m/*') || $request->is('api/m/*')) {
+            $vendor = $this->resolveStorefrontVendor($request);
+            if ($vendor) {
+                $locale = $this->localeManager->resolveStorefrontLocale($request, $vendor);
             } else {
-                App::setLocale('hy');
+                $fallback = $this->localeManager->getSystemDefaultLocale();
+                $param = $request->get('lang') ?? $request->get('locale') ?? session('app_locale') ?? session('locale');
+                $locale = ($param && $this->localeManager->isValidLocale($param)) ? strtolower(trim($param)) : $fallback;
             }
+
+            session(['app_locale' => $locale, 'locale' => $locale]);
+            App::setLocale($locale);
+
+            return $next($request);
         }
 
+        // 2. Generic API endpoints
+        if ($request->is('api/*')) {
+            $param = $request->get('lang') ?? $request->get('locale') ?? $request->header('X-Locale');
+            if ($param && $this->localeManager->isValidLocale($param)) {
+                $locale = strtolower(trim($param));
+            } else {
+                $locale = $this->localeManager->parseAcceptLanguageHeader($request, $this->localeManager->getActiveLocales())
+                    ?? $this->localeManager->getSystemDefaultLocale();
+            }
+
+            App::setLocale($locale);
+
+            return $next($request);
+        }
+
+        // 3. Admin, SuperAdmin, Auth, and Web Platform views
+        $adminLocale = $this->localeManager->resolveAdminLocale($request, Auth::user());
+        session(['admin_locale' => $adminLocale, 'app_locale' => $adminLocale, 'locale' => $adminLocale]);
+        App::setLocale($adminLocale);
+
         return $next($request);
+    }
+
+    /**
+     * Resolve the active vendor for storefront requests.
+     */
+    protected function resolveStorefrontVendor(Request $request): ?Vendor
+    {
+        $tenant = $this->tenantContext->getTenant();
+        if ($tenant) {
+            return $tenant;
+        }
+
+        $slug = $request->route('vendor_slug') ?? $request->segment(2);
+        if ($slug && is_string($slug)) {
+            return Vendor::where('slug', $slug)->first();
+        }
+
+        return null;
     }
 }

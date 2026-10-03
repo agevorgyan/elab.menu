@@ -37,7 +37,7 @@ class TranslateMenuJob implements ShouldQueue, TenantJobInterface
         ?string $idempotencyKey = null
     ) {
         $this->vendorId = $vendorId;
-        $this->idempotencyKey = $idempotencyKey ?? "menu_translate_{$vendorId}_{$targetLang}_".($overwriteExisting ? '1' : '0');
+        $this->idempotencyKey = $idempotencyKey ?? "menu_translate_{$vendorId}_{$targetLang}_".($overwriteExisting ? '1' : '0').'_'.hrtime(true);
     }
 
     /**
@@ -52,24 +52,36 @@ class TranslateMenuJob implements ShouldQueue, TenantJobInterface
             $itemsToTranslate = [];
             foreach ($categories as $cat) {
                 $cTrans = $cat->name_translations ?? [];
-                if ($this->overwriteExisting || empty($cTrans[$this->targetLang])) {
+                $needsCat = $this->overwriteExisting
+                    || empty($cTrans[$this->targetLang])
+                    || preg_match('/\s*\([A-Za-zԱ-Ֆа-яА-Я]{2,4}\)$/u', (string) ($cTrans[$this->targetLang] ?? ''));
+                if ($needsCat) {
                     $itemsToTranslate["cat_{$cat->id}"] = $cat->name;
                 }
                 foreach ($cat->products as $prod) {
                     $pNameTrans = $prod->name_translations ?? [];
-                    if ($this->overwriteExisting || empty($pNameTrans[$this->targetLang])) {
+                    $needsProdName = $this->overwriteExisting
+                        || empty($pNameTrans[$this->targetLang])
+                        || preg_match('/\s*\([A-Za-zԱ-Ֆа-яА-Я]{2,4}\)$/u', (string) ($pNameTrans[$this->targetLang] ?? ''));
+                    if ($needsProdName) {
                         $itemsToTranslate["prod_name_{$prod->id}"] = $prod->name;
                     }
                     if (! empty($prod->description)) {
                         $pDescTrans = $prod->description_translations ?? [];
-                        if ($this->overwriteExisting || empty($pDescTrans[$this->targetLang])) {
+                        $needsProdDesc = $this->overwriteExisting
+                            || empty($pDescTrans[$this->targetLang])
+                            || preg_match('/\s*\([A-Za-zԱ-Ֆа-яА-Я]{2,4}\)$/u', (string) ($pDescTrans[$this->targetLang] ?? ''));
+                        if ($needsProdDesc) {
                             $itemsToTranslate["prod_desc_{$prod->id}"] = $prod->description;
                         }
                     }
                     foreach ($prod->variations as $var) {
                         if (! empty($var->name) && ! in_array($var->name, ['Standard', 'Standard Portion'])) {
                             $vTrans = $var->name_translations ?? [];
-                            if ($this->overwriteExisting || empty($vTrans[$this->targetLang])) {
+                            $needsVar = $this->overwriteExisting
+                                || empty($vTrans[$this->targetLang])
+                                || preg_match('/\s*\([A-Za-zԱ-Ֆа-яА-Я]{2,4}\)$/u', (string) ($vTrans[$this->targetLang] ?? ''));
+                            if ($needsVar) {
                                 $itemsToTranslate["var_name_{$var->id}"] = $var->name;
                             }
                         }

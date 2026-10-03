@@ -88,7 +88,7 @@ class MenuBuilderController extends Controller
         } catch (\Throwable $e) {
             Log::error('Failed to create product dish: '.$e->getMessage(), ['exception' => $e]);
 
-            return back()->withInput()->with('error', 'Սխալ՝ ուտեստը ստեղծելիս: '.$e->getMessage());
+            return back()->withInput()->with('error', 'Error creating dish: '.$e->getMessage());
         }
 
         return back()->with('success', 'Product dish created successfully!');
@@ -107,7 +107,7 @@ class MenuBuilderController extends Controller
         } catch (\Throwable $e) {
             Log::error("Failed to update product {$product->id}: ".$e->getMessage(), ['exception' => $e]);
 
-            return back()->withInput()->with('error', 'Սխալ՝ ուտեստը թարմացնելիս: '.$e->getMessage());
+            return back()->withInput()->with('error', 'Error updating dish: '.$e->getMessage());
         }
 
         return back()->with('success', "Dish {$product->name} updated successfully!");

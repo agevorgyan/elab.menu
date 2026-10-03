@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ContentTranslation;
+use App\Models\Language;
+use App\Services\Localization\LocaleManager;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+
+class LanguageController extends Controller
+{
+    public function __construct(
+        protected LocaleManager $localeManager
+    ) {}
+
+    public function index(): View
+    {
+        abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Unauthorized access.');
+
+        $languages = Language::query()
+            ->orderBy('is_default', 'desc')
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        // Calculate translation coverage metrics per language
+        $translationCounts = ContentTranslation::query()
+            ->selectRaw('locale, count(*) as total, count(case when status = ? then 1 end) as published_count', [
+                ContentTranslation::STATUS_PUBLISHED,
+            ])
+            ->groupBy('locale')
+            ->pluck('total', 'locale')
+            ->all();
+
+        $stats = [
+            'total' => $languages->count(),
+            'active' => $languages->where('is_active', true)->count(),
+            'default' => $languages->firstWhere('is_default', true)?->name ?? 'English',
+            'translations_count' => array_sum($translationCounts),
+        ];
+
+        return view('superadmin.languages.index', compact('languages', 'stats', 'translationCounts'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Unauthorized access.');
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'min:2', 'max:10', 'alpha_dash', 'unique:languages,code'],
+            'name' => ['required', 'string', 'max:60'],
+            'native_name' => ['required', 'string', 'max:60'],
+            'flag' => ['nullable', 'string', 'max:10'],
+            'direction' => ['required', 'in:ltr,rtl'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $code = strtolower(trim($validated['code']));
+        $validated['code'] = $code;
+        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['is_default'] = false;
+        $validated['sort_order'] = Language::count() + 1;
+
+        Language::create($validated);
+        $this->localeManager->clearCache();
+
+        return redirect()->route('superadmin.languages.index')
+            ->with('success', "Language '{$validated['name']}' ({$code}) successfully registered.");
+    }
+
+    public function update(Request $request, Language $language): RedirectResponse
+    {
+        abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Unauthorized access.');
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:60'],
+            'native_name' => ['required', 'string', 'max:60'],
+            'flag' => ['nullable', 'string', 'max:10'],
+            'direction' => ['required', 'in:ltr,rtl'],
+        ]);
+
+        $language->update($validated);
+        $this->localeManager->clearCache();
+
+        return redirect()->route('superadmin.languages.index')
+            ->with('success', "Language '{$language->name}' updated successfully.");
+    }
+
+    public function toggleActive(Language $language): RedirectResponse
+    {
+        abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Unauthorized access.');
+
+        if ($language->is_default && $language->is_active) {
+            return redirect()->route('superadmin.languages.index')
+                ->with('error', 'The system default language cannot be deactivated.');
+        }
+
+        $language->is_active = ! $language->is_active;
+        $language->save();
+
+        $this->localeManager->clearCache();
+
+        $status = $language->is_active ? 'activated' : 'deactivated';
+
+        return redirect()->route('superadmin.languages.index')
+            ->with('success', "Language '{$language->name}' is now {$status}.");
+    }
+
+    public function setDefault(Language $language): RedirectResponse
+    {
+        abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Unauthorized access.');
+
+        Language::query()->update(['is_default' => false]);
+
+        $language->is_default = true;
+        $language->is_active = true;
+        $language->save();
+
+        $this->localeManager->clearCache();
+
+        return redirect()->route('superadmin.languages.index')
+            ->with('success', "Language '{$language->name}' is now the system default.");
+    }
+}

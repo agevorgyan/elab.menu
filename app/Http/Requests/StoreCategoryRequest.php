@@ -27,6 +27,8 @@ class StoreCategoryRequest extends FormRequest
             'name' => 'required|string|max:255',
             'hy_name' => 'nullable|string',
             'ru_name' => 'nullable|string',
+            'name_translations' => 'nullable|array',
+            'name_translations.*' => 'nullable|string|max:255',
             'description' => 'nullable|string',
         ];
     }

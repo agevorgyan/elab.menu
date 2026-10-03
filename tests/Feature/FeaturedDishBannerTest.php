@@ -86,7 +86,7 @@ class FeaturedDishBannerTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('admin.settings.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Օրվա Ուտեստի Բաներ');
+        $response->assertSee(__('Dish of the Day Banner'));
         $response->assertSee('Grilled Ribeye Special');
         $response->assertSee('featured_product_id');
     }

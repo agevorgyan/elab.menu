@@ -26,7 +26,7 @@ class AuthController extends Controller
                 session()->regenerateToken();
 
                 return view('auth.login', compact('customVendor', 'captcha'))->withErrors([
-                    'email' => "Այս կառավարման վահանակը նախատեսված է միայն {$customVendor->name} ռեստորանի անձնակազմի համար։",
+                    'email' => "This dashboard is reserved for {$customVendor->name} staff only.",
                 ]);
             }
 
@@ -66,7 +66,7 @@ class AuthController extends Controller
 
         if (! $user) {
             return back()->withErrors([
-                'email' => 'Դեմո օգտատերը չի գտնվել համակարգում։',
+                'email' => 'Demo user not found in the system.',
             ]);
         }
 
@@ -89,7 +89,7 @@ class AuthController extends Controller
         if ($request->filled('captcha') || ! app()->environment('testing')) {
             if (! CaptchaService::validate($request->input('captcha'))) {
                 return back()->withErrors([
-                    'captcha' => 'Անվտանգության հարցի (CAPTCHA) պատասխանը սխալ է։',
+                    'captcha' => 'The security question (CAPTCHA) answer is incorrect.',
                 ])->onlyInput('email');
             }
         }
@@ -106,7 +106,7 @@ class AuthController extends Controller
                 );
 
                 return back()->withErrors([
-                    'email' => "Այս կառավարման վահանակ կարող են մուտք գործել միայն {$customVendor->name} ռեստորանի օգտատերերը։",
+                    'email' => "Only users from {$customVendor->name} can log in to this panel.",
                 ])->onlyInput('email');
             }
 

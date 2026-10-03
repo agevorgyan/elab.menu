@@ -62,6 +62,13 @@ class Permission
 
     public const REPORTS_EXPORT = 'reports.export';
 
+    // Translation permissions
+    public const TRANSLATIONS_VIEW = 'translations.view';
+
+    public const TRANSLATIONS_MANAGE = 'translations.manage';
+
+    public const TRANSLATIONS_PUBLISH = 'translations.publish';
+
     // Platform (SuperAdmin) permissions
     public const PLATFORM_ACCESS = 'platform.access';
 
@@ -72,6 +79,8 @@ class Permission
     public const PLATFORM_SETTINGS = 'platform.settings';
 
     public const PLATFORM_LOGS = 'platform.logs';
+
+    public const PLATFORM_LANGUAGES = 'platform.languages';
 
     /**
      * Get all defined permissions in the system.
@@ -103,11 +112,15 @@ class Permission
             self::STORAGE_MANAGE,
             self::REPORTS_VIEW,
             self::REPORTS_EXPORT,
+            self::TRANSLATIONS_VIEW,
+            self::TRANSLATIONS_MANAGE,
+            self::TRANSLATIONS_PUBLISH,
             self::PLATFORM_ACCESS,
             self::PLATFORM_VENDORS,
             self::PLATFORM_SUBSCRIPTIONS,
             self::PLATFORM_SETTINGS,
             self::PLATFORM_LOGS,
+            self::PLATFORM_LANGUAGES,
         ];
     }
 
@@ -123,6 +136,10 @@ class Permission
                 self::PLATFORM_SUBSCRIPTIONS,
                 self::PLATFORM_SETTINGS,
                 self::PLATFORM_LOGS,
+                self::PLATFORM_LANGUAGES,
+                self::TRANSLATIONS_VIEW,
+                self::TRANSLATIONS_MANAGE,
+                self::TRANSLATIONS_PUBLISH,
                 self::STORAGE_VIEW,
                 self::REPORTS_VIEW,
                 self::REPORTS_EXPORT,
@@ -132,6 +149,9 @@ class Permission
                 self::MENU_CREATE,
                 self::MENU_UPDATE,
                 self::MENU_DELETE,
+                self::TRANSLATIONS_VIEW,
+                self::TRANSLATIONS_MANAGE,
+                self::TRANSLATIONS_PUBLISH,
                 self::ORDERS_VIEW,
                 self::ORDERS_UPDATE,
                 self::ORDERS_CANCEL,
@@ -158,6 +178,9 @@ class Permission
                 self::MENU_CREATE,
                 self::MENU_UPDATE,
                 self::MENU_DELETE,
+                self::TRANSLATIONS_VIEW,
+                self::TRANSLATIONS_MANAGE,
+                self::TRANSLATIONS_PUBLISH,
                 self::ORDERS_VIEW,
                 self::ORDERS_UPDATE,
                 self::ORDERS_CANCEL,

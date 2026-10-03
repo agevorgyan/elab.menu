@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -785,6 +785,9 @@
                 <a href="{{ route('superadmin.settings.index') }}" class="nav-item {{ request()->routeIs('superadmin.settings.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-sliders" style="color: #06b6d4;"></i> <span>{{ __('Settings & Landing') }}</span>
                 </a>
+                <a href="{{ route('superadmin.languages.index') }}" class="nav-item {{ request()->routeIs('superadmin.languages.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-language" style="color: #a855f7;"></i> <span>{{ __('Languages & i18n') }}</span>
+                </a>
             @else
                 @php $v = Auth::user()?->vendor; @endphp
                 
@@ -806,7 +809,7 @@
                 @can('locations.view')
                 <a href="{{ route('admin.floor_plan.index') }}" class="nav-item {{ request()->routeIs('admin.floor_plan.*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        <i class="fa-solid fa-map-location-dot" style="color: #3b82f6;"></i> <span>{{ __('Սեղանների Քարտեզ') }}</span>
+                        <i class="fa-solid fa-map-location-dot" style="color: #3b82f6;"></i> <span>{{ __('Floor Plan') }}</span>
                     </span>
                     @if($v && !$v->hasFeature('orders'))
                         <span style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">🔒 PRO</span>
@@ -818,6 +821,9 @@
                 <div class="menu-category">{{ __('Menu & Content') }}</div>
                 <a href="{{ route('admin.menu.index') }}" class="nav-item {{ request()->routeIs('admin.menu.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-utensils" style="color: #10b981;"></i> <span>{{ __('Menu Builder') }}</span>
+                </a>
+                <a href="{{ route('admin.translations.index') }}" class="nav-item {{ request()->routeIs('admin.translations.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-language" style="color: #6366f1;"></i> <span>{{ __('Translations & AI') }}</span>
                 </a>
                 @endcan
 
@@ -856,19 +862,19 @@
 
                 <div class="menu-category">{{ __('Settings & Administration') }}</div>
                 <a href="{{ route('admin.profile') }}" class="nav-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
-                    <i class="fa-solid fa-user-shield" style="color: #10b981;"></i> <span>{{ __('Անվտանգություն & 2FA') }}</span>
+                    <i class="fa-solid fa-user-shield" style="color: #10b981;"></i> <span>{{ __('Security & 2FA') }}</span>
                 </a>
 
                 @can('settings.view')
                 <a href="{{ route('admin.settings.index') }}" class="nav-item {{ request()->routeIs('admin.settings.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-sliders" style="color: #64748b;"></i> <span>{{ __('Կարգավորումներ') }}</span>
+                    <i class="fa-solid fa-sliders" style="color: #64748b;"></i> <span>{{ __('Settings') }}</span>
                 </a>
                 @endcan
 
                 @can('ai.view')
                 <a href="{{ route('admin.settings.ai') }}" class="nav-item {{ request()->routeIs('admin.settings.ai*') ? 'active' : '' }}" style="justify-content: space-between;">
                     <span style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        <i class="fa-solid fa-robot" style="color: #8b5cf6;"></i> <span>{{ __('AI Կարգավորումներ') }}</span>
+                        <i class="fa-solid fa-robot" style="color: #8b5cf6;"></i> <span>{{ __('AI Settings') }}</span>
                     </span>
                     <span style="font-size: 0.65rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); color: #8b5cf6; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; flex-shrink: 0;">AI</span>
                 </a>
@@ -964,30 +970,6 @@
             </div>
 
             <div class="user-profile">
-                <!-- Admin Language Switcher -->
-                <div style="position: relative;" x-data="{ openLang: false }">
-                    <button @click="openLang = !openLang" class="theme-toggle-btn" style="border-radius: 10px;">
-                        <i class="fa-solid fa-globe" style="color: var(--primary);"></i>
-                        <span>
-                            @if(app()->getLocale() == 'hy') 🇦🇲 AM
-                            @elseif(app()->getLocale() == 'ru') 🇷🇺 RU
-                            @else 🇬🇧 EN @endif
-                        </span>
-                        <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem; color: var(--text-muted);"></i>
-                    </button>
-                    <div x-show="openLang" @click.outside="openLang = false" x-transition style="position: absolute; right: 0; top: 115%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-card); min-width: 140px; z-index: 100; overflow: hidden; padding: 0.25rem 0;">
-                        <a href="{{ route('lang.switch', 'hy') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'hy' ? '700' : '400' }}; background: {{ app()->getLocale() == 'hy' ? 'var(--nav-hover)' : 'transparent' }};">
-                            🇦🇲 Հայերեն
-                        </a>
-                        <a href="{{ route('lang.switch', 'en') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'en' ? '700' : '400' }}; background: {{ app()->getLocale() == 'en' ? 'var(--nav-hover)' : 'transparent' }};">
-                            🇬🇧 English
-                        </a>
-                        <a href="{{ route('lang.switch', 'ru') }}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: {{ app()->getLocale() == 'ru' ? '700' : '400' }}; background: {{ app()->getLocale() == 'ru' ? 'var(--nav-hover)' : 'transparent' }};">
-                            🇷🇺 Русский
-                        </a>
-                    </div>
-                </div>
-
                 <!-- Light / Dark Theme Switcher Button -->
                 <button class="theme-toggle-btn" @click="toggleTheme()" title="Toggle Light / Dark Mode">
                     <i class="fa-solid" :class="currentTheme === 'dark' ? 'fa-sun' : 'fa-moon'" style="color: var(--primary);"></i>
@@ -995,9 +977,9 @@
                 </button>
 
                 <!-- User Profile & 2FA Button -->
-                <a href="{{ Auth::user()?->isSuperAdmin() ? route('superadmin.settings.index') . '#security-section' : route('admin.profile') }}" class="theme-toggle-btn" style="text-decoration: none; border-radius: 10px;" title="{{ __('Անվտանգություն & 2FA') }}">
+                <a href="{{ Auth::user()?->isSuperAdmin() ? route('superadmin.settings.index') . '#security-section' : route('admin.profile') }}" class="theme-toggle-btn" style="text-decoration: none; border-radius: 10px;" title="{{ __('Security & 2FA') }}">
                     <i class="fa-solid fa-shield-halved" style="color: {{ Auth::user()?->hasTwoFactorEnabled() ? '#10b981' : '#f59e0b' }};"></i>
-                    <span class="hide-on-mobile">{{ __('2FA & Պրոֆիլ') }}</span>
+                    <span class="hide-on-mobile">{{ __('2FA & Profile') }}</span>
                 </a>
 
                 <!-- User Role Badge -->
@@ -1041,10 +1023,10 @@
                 <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 0.85rem 1.25rem; border-radius: 14px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-clock"></i>
-                        <span><strong>Բաժանորդագրության հիշեցում․</strong> Ձեր փաթեթին մնացել է <strong>{{ Auth::user()->vendor->daysLeft() }} օր</strong> ({{ Auth::user()->vendor->subscription_status_label }})։</span>
+                        <span><strong>{{ __('Subscription Reminder:') }}</strong> {{ Auth::user()->vendor->daysLeft() }} {{ __('days left') }} ({{ Auth::user()->vendor->subscription_status_label }})</span>
                     </div>
                     <a href="{{ route('admin.subscription') }}" class="btn btn-primary" style="font-size: 0.78rem; padding: 0.35rem 0.75rem;">
-                        Մանրամասներ / Երկարաձգել
+                        {{ __('Details / Extend') }}
                     </a>
                 </div>
             @endif

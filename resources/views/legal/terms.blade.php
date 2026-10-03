@@ -162,37 +162,68 @@
                     <span style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--text-main);">{{ $siteName }}</span>
                 @endif
             </a>
-            <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s;">
-                <i class="fa-solid fa-arrow-left"></i> Վերադառնալ
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s;">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+
+        @if(app()->getLocale() === 'en')
+            <h1>📜 Terms of Service</h1>
+            <div class="updated-pill">
+                <i class="fa-solid fa-clock"></i> Last updated: {{ date('F d, Y') }}
+            </div>
+
+            <h2>1. Description of Service</h2>
+            <p>The {{ $siteName }} platform provides digital menu browsing, table-side ordering, and venue workflow automation. By accessing and using the digital menu, you agree to comply with and be bound by these Terms of Service.</p>
+
+            <h2>2. Orders & Venue Responsibility</h2>
+            <ul>
+                <li>The customer undertakes to provide accurate and truthful information (Name, Phone number, Email, Table number) to ensure correct fulfillment.</li>
+                <li>The servicing partner establishment (Restaurant/Cafe) carries full and exclusive responsibility for food preparation quality, ingredients, and allergen notices.</li>
+            </ul>
+
+            <h2>3. Pricing & Payments</h2>
+            <p>All prices presented on the digital menu include statutory taxes (unless explicitly stated otherwise). Payments are processed on premise (Dine-in / Cash / POS) or through direct confirmation with the establishment via WhatsApp/Online payment methods.</p>
+
+            <h2>4. Intellectual Property</h2>
+            <p>The digital menu design, trademarks, software code, and interface layouts remain the intellectual property of {{ $siteName }} and its partner venues.</p>
+
+            <h2>5. Contact Information</h2>
+            <p>If you have any questions regarding these Terms of Service, please contact our support team at <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
+
+            <a href="javascript:history.back()" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Back to Menu
             </a>
-        </div>
+        @else
+            <h1>📜 Օգտագործման Պայմաններ</h1>
+            <div class="updated-pill">
+                <i class="fa-solid fa-clock"></i> Վերջին թարմացում՝ {{ date('d.m.Y') }}
+            </div>
 
-        <h1>📜 Օգտագործման Պայմաններ</h1>
-        <div class="updated-pill">
-            <i class="fa-solid fa-clock"></i> Վերջին թարմացում՝ {{ date('d.m.Y') }}
-        </div>
+            <h2>1. Ծառայության Նկարագրությունը</h2>
+            <p>{{ $siteName }} հարթակը տրամադրում է թվային մենյուների դիտման, պատվերների ձևակերպման և ռեստորանային սպասարկման ավտոմատացման համակարգ։ Օգտվելով թվային մենյուից՝ Դուք համաձայնում եք սույն Օգտագործման Պայմանների հետ։</p>
 
-        <h2>1. Ծառայության Նկարագրությունը</h2>
-        <p>{{ $siteName }} հարթակը տրամադրում է թվային մենյուների դիտման, պատվերների ձևակերպման և ռեստորանային սպասարկման ավտոմատացման համակարգ։ Օգտվելով թվային մենյուից՝ Դուք համաձայնում եք սույն Օգտագործման Պայմանների հետ։</p>
+            <h2>2. Պատվերների Ձևակերպումը և Պատասխանատվությունը</h2>
+            <ul>
+                <li>Հաճախորդը պարտավորվում է տրամադրել ճշգրիտ տվյալներ (Անուն, Հեռախոսահամար, Էլ․ փոստ, Սեղանի համար) պատվերը պատշաճ կատարելու համար։</li>
+                <li>Պատվիրված ուտեստների և ըմպելիքների պատրաստման որակի, բաղադրության և ալերգենների պատասխանատվությունը կրում է սպասարկող հաստատությունը (Ռեստորանը/Սրճարանը)։</li>
+            </ul>
 
-        <h2>2. Պատվերների Ձևակերպումը և Պատասխանատվությունը</h2>
-        <ul>
-            <li>Հաճախորդը պարտավորվում է տրամադրել ճշգրիտ տվյալներ (Անուն, Հեռախոսահամար, Էլ․ փոստ, Սեղանի համար) պատվերը պատշաճ կատարելու համար։</li>
-            <li>Պատվիրված ուտեստների և ըմպելիքների պատրաստման որակի, բաղադրության և ալերգենների պատասխանատվությունը կրում է սպասարկող հաստատությունը (Ռեստորանը/Սրճարանը)։</li>
-        </ul>
+            <h2>3. Գնագոյացում և Վճարումներ</h2>
+            <p>Մենյուում նշված բոլոր գները ներառում են օրենքով սահմանված հարկերը (եթե այլ բան նախատեսված չէ)։ Վճարումը կատարվում է տեղում (Dine-in / Cash / POS) կամ WhatsApp / Online պատվերի դեպքում հաստատության հետ համաձայնեցված եղանակով։</p>
 
-        <h2>3. Գնագոյացում և Վճարումներ</h2>
-        <p>Մենյուում նշված բոլոր գները ներառում են օրենքով սահմանված հարկերը (եթե այլ բան նախատեսված չէ)։ Վճարումը կատարվում է տեղում (Dine-in / Cash / POS) կամ WhatsApp / Online պատվերի դեպքում հաստատության հետ համաձայնեցված եղանակով։</p>
+            <h2>4. Մտավոր Սեփականություն</h2>
+            <p>Մենյուի դիզայնը, լոգոները, նկարները և ծրագրային կոդը հանդիսանում են {{ $siteName }}-ի և համապատասխան Գործընկերոջ մտավոր սեփականությունը։</p>
 
-        <h2>4. Մտավոր Սեփականություն</h2>
-        <p>Մենյուի դիզայնը, լոգոները, նկարները և ծրագրային կոդը հանդիսանում են {{ $siteName }}-ի և համապատասխան Գործընկերոջ մտավոր սեփականությունը։</p>
+            <h2>5. Կոնտակտային Տվյալներ</h2>
+            <p>Օգտագործման պայմանների հետ կապված հարցերի դեպքում կարող եք կապ հաստատել աջակցման թիմի հետ՝ <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
 
-        <h2>5. Կոնտակտային Տվյալներ</h2>
-        <p>Օգտագործման պայմանների հետ կապված հարցերի դեպքում կարող եք կապ հաստատել աջակցման թիմի հետ՝ <strong style="color: var(--accent-amber);">{{ $contactEmail }}</strong></p>
-
-        <a href="javascript:history.back()" class="back-btn">
-            <i class="fa-solid fa-arrow-left"></i> Վերադառնալ Մենյու
-        </a>
+            <a href="javascript:history.back()" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Վերադառնալ Մենյու
+            </a>
+        @endif
     </div>
 </body>
 </html>

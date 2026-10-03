@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\BelongsToVendor;
+use App\Models\Traits\HasContentTranslations;
 use App\Services\StorageService;
 use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
-    use BelongsToVendor, HasFactory, SoftDeletes;
+    use BelongsToVendor, HasContentTranslations, HasFactory, SoftDeletes;
 
     public const DEFAULT_IMAGE = '/images/default-dish.png';
 
@@ -354,23 +355,23 @@ class Product extends Model
         return (int) round(($diff / $regular) * 100);
     }
 
-    public function getDiscountScheduleSummary(?string $locale = 'hy'): string
+    public function getDiscountScheduleSummary(?string $locale = 'en'): string
     {
         if (! $this->discount_price) {
             return '';
         }
 
         $dayMap = [
-            'hy' => ['mon' => 'Երկ', 'tue' => 'Երք', 'wed' => 'Չոր', 'thu' => 'Հնգ', 'fri' => 'Ուրբ', 'sat' => 'Շաբ', 'sun' => 'Կիր'],
             'en' => ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'],
+            'hy' => ['mon' => 'Երկ', 'tue' => 'Երք', 'wed' => 'Չոր', 'thu' => 'Հնգ', 'fri' => 'Ուրբ', 'sat' => 'Շաբ', 'sun' => 'Կիր'],
             'ru' => ['mon' => 'Пн', 'tue' => 'Вт', 'wed' => 'Ср', 'thu' => 'Чт', 'fri' => 'Пт', 'sat' => 'Сб', 'sun' => 'Вс'],
         ];
 
-        $labels = $dayMap[$locale] ?? $dayMap['hy'];
+        $labels = $dayMap[$locale] ?? $dayMap['en'];
 
         $daysText = '';
         if (empty($this->discount_days) || count($this->discount_days) >= 7) {
-            $daysText = $locale === 'en' ? 'Every day' : ($locale === 'ru' ? 'Каждый день' : 'Ամեն օր');
+            $daysText = $locale === 'hy' ? 'Ամեն օր' : ($locale === 'ru' ? 'Каждый день' : 'Every day');
         } else {
             $prefixes = array_values(array_unique(array_map(fn ($d) => substr(strtolower($d), 0, 3), $this->discount_days)));
             sort($prefixes);
@@ -454,7 +455,7 @@ class Product extends Model
         return true;
     }
 
-    public function getAvailabilityScheduleSummary(?string $locale = 'hy'): string
+    public function getAvailabilityScheduleSummary(?string $locale = 'en'): string
     {
         if (! $this->available_start_time && ! $this->available_end_time && empty($this->available_days)) {
             return '';
@@ -467,18 +468,18 @@ class Product extends Model
             $timeText = "{$s} - {$e}";
         } elseif ($this->available_start_time) {
             $s = substr($this->available_start_time, 0, 5);
-            $timeText = $locale === 'en' ? "From {$s}" : ($locale === 'ru' ? "С {$s}" : "սկսած {$s}-ից");
+            $timeText = $locale === 'hy' ? "սկսած {$s}-ից" : ($locale === 'ru' ? "С {$s}" : "From {$s}");
         } elseif ($this->available_end_time) {
             $e = substr($this->available_end_time, 0, 5);
-            $timeText = $locale === 'en' ? "Until {$e}" : ($locale === 'ru' ? "До {$e}" : "մինչև {$e}");
+            $timeText = $locale === 'hy' ? "մինչև {$e}" : ($locale === 'ru' ? "До {$e}" : "Until {$e}");
         }
 
         $dayMap = [
-            'hy' => ['mon' => 'Երկ', 'tue' => 'Երք', 'wed' => 'Չոր', 'thu' => 'Հնգ', 'fri' => 'Ուրբ', 'sat' => 'Շաբ', 'sun' => 'Կիր'],
             'en' => ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'],
+            'hy' => ['mon' => 'Երկ', 'tue' => 'Երք', 'wed' => 'Չոր', 'thu' => 'Հնգ', 'fri' => 'Ուրբ', 'sat' => 'Շաբ', 'sun' => 'Կիր'],
             'ru' => ['mon' => 'Пн', 'tue' => 'Вт', 'wed' => 'Ср', 'thu' => 'Чт', 'fri' => 'Пт', 'sat' => 'Сб', 'sun' => 'Вс'],
         ];
-        $labels = $dayMap[$locale] ?? $dayMap['hy'];
+        $labels = $dayMap[$locale] ?? $dayMap['en'];
 
         $daysText = '';
         if (! empty($this->available_days) && count($this->available_days) < 7) {

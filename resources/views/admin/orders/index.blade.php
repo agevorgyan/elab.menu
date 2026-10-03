@@ -14,11 +14,11 @@
                 <i class="fa-solid fa-bell-concierge"></i>
             </span>
             <h1 style="font-size: 1.75rem; font-weight: 800; margin: 0; color: var(--text-main);">
-                Խոհանոցի Պատվերների Վահանակ
+                Kitchen Orders Display
             </h1>
         </div>
         <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">
-            Իրական ժամանակի պատվերներ սեղաններից և առաքումից <strong style="color: var(--primary);">{{ $location?->name ?? 'Բոլոր մասնաճյուղեր' }}</strong>-ի համար։
+            Real-time table and delivery orders for <strong style="color: var(--primary);">{{ $location?->name ?? 'All Branches' }}</strong>.
         </p>
     </div>
 
@@ -27,17 +27,17 @@
         <!-- Live Status Pill -->
         <div id="liveStatusPill" style="display: flex; gap: 0.5rem; align-items: center; background: rgba(16, 185, 129, 0.12); color: #10b981; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.28); transition: all 0.3s ease;">
             <span class="pulse-dot" style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
-            <span id="liveStatusText">⚡ WebSockets Կապ</span>
+            <span id="liveStatusText">⚡ WebSockets Live</span>
         </div>
 
         <!-- Audio Toggle Button -->
         <button id="soundToggleBtn" onclick="toggleKitchenSound()" class="btn btn-secondary" style="padding: 0.5rem 0.9rem; font-size: 0.82rem; display: flex; align-items: center; gap: 0.45rem; border-radius: 12px;">
             <i id="soundIcon" class="fa-solid fa-volume-high" style="color: var(--primary);"></i>
-            <span id="soundText">Ձայնը միացված է</span>
+            <span id="soundText">Sound On</span>
         </button>
 
         <!-- Test Sound Button -->
-        <button onclick="playKitchenChime(true)" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.82rem; border-radius: 12px;" title="Ստուգել ծանուցման ձայնը">
+        <button onclick="playKitchenChime(true)" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.82rem; border-radius: 12px;" title="Test notification sound">
             <i class="fa-solid fa-bell" style="color: #f59e0b;"></i>
         </button>
     </div>
@@ -48,12 +48,12 @@
     <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0;">
         <span style="font-size: 1.5rem; animation: ringBell 0.8s infinite alternate;">🔔</span>
         <div style="min-width: 0;">
-            <strong style="font-size: 1.05rem; font-family: 'Outfit';">ՆՈՐ ՊԱՏՎԵՐ ՍՏԱՑՎԵՑ!</strong>
-            <div style="font-size: 0.82rem; opacity: 0.95;" id="newOrderBannerText">Ստացվել է նոր պատվեր սեղանից։</div>
+            <strong style="font-size: 1.05rem; font-family: 'Outfit';">NEW ORDER RECEIVED!</strong>
+            <div style="font-size: 0.82rem; opacity: 0.95;" id="newOrderBannerText">New order received from table.</div>
         </div>
     </div>
     <button onclick="dismissNewOrderBanner()" style="background: rgba(255,255,255,0.25); border: none; color: #fff; padding: 0.4rem 0.9rem; border-radius: 10px; font-weight: 700; cursor: pointer;">
-        Լավ
+        Dismiss
     </button>
 </div>
 
@@ -62,11 +62,11 @@
     <div style="display: flex; align-items: center; gap: 0.65rem;">
         <i class="fa-solid fa-volume-high" style="font-size: 1.1rem;"></i>
         <div style="font-size: 0.85rem;">
-            <strong>Ծանուցումների ձայն․</strong> Բրաուզերում նոր պատվերների ձայնն ակտիվացնելու համար սեղմեք կոճակը։
+            <strong>Order Alert Audio:</strong> Click to enable sound notifications for new orders in this browser.
         </div>
     </div>
     <button type="button" onclick="enableAndTestAudio()" class="btn btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.8rem; border-radius: 10px;">
-        <i class="fa-solid fa-bell"></i> Ակտիվացնել Ձայնը
+        <i class="fa-solid fa-bell"></i> Enable Sound
     </button>
 </div>
 
@@ -74,28 +74,28 @@
 <div class="card" style="padding: 0.85rem 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
     <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
         <a href="?status=all" class="btn {{ request('status', 'all') == 'all' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
-            Բոլորը (All)
+            All Orders
         </a>
         <a href="?status=pending" class="btn {{ request('status') == 'pending' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
-            ⏳ Սպասող (Pending)
+            ⏳ Pending
             @if(isset($pendingCount) && $pendingCount > 0)
                 <span style="background: #ef4444; color: #fff; padding: 0.1rem 0.45rem; border-radius: 9999px; font-size: 0.7rem; margin-left: 0.35rem; font-weight: 800;">{{ $pendingCount }}</span>
             @endif
         </a>
         <a href="?status=preparing" class="btn {{ request('status') == 'preparing' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
-            🔥 Պատրաստվում է
+            🔥 Preparing
         </a>
         <a href="?status=ready" class="btn {{ request('status') == 'ready' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
-            🔔 Պատրաստ է
+            🔔 Ready
         </a>
         <a href="?status=completed" class="btn {{ request('status') == 'completed' ? 'btn-primary' : 'btn-secondary' }}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem; border-radius: 10px;">
-            ✅ Ավարտված
+            ✅ Completed
         </a>
     </div>
 
     <div id="pollInfoContainer" style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
         <span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
-            <i class="fa-solid fa-bolt text-xs"></i> <span>Իրական ժամանակ (WebSockets)</span>
+            <i class="fa-solid fa-bolt text-xs"></i> <span>Real-time (WebSockets)</span>
         </span>
     </div>
 </div>
@@ -120,7 +120,7 @@
                     <i class="fa-solid fa-print"></i>
                 </span>
                 <div>
-                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);" id="receiptModalTitle">Կտրոնի Տպում</h3>
+                    <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);" id="receiptModalTitle">Print Receipt</h3>
                     <div style="font-size: 0.78rem; color: var(--text-muted);">ESC/POS Thermal Printer</div>
                 </div>
             </div>
@@ -145,7 +145,7 @@
                 </a>
             </div>
             <button type="button" onclick="printViaBrowser()" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem; font-size: 0.85rem; border-radius: 12px;">
-                <i class="fa-solid fa-print"></i> Տպել Բրաուզերով (System Dialog)
+                <i class="fa-solid fa-print"></i> Print via Browser (System Dialog)
             </button>
         </div>
     </div>
@@ -187,11 +187,11 @@ function updateSoundUI() {
     if (isSoundEnabled) {
         icon.className = 'fa-solid fa-volume-high';
         icon.style.color = '#10b981';
-        text.innerText = 'Ձայնը միացված է';
+        text.innerText = 'Sound On';
     } else {
         icon.className = 'fa-solid fa-volume-xmark';
         icon.style.color = '#ef4444';
-        text.innerText = 'Ձայնն անջատված է';
+        text.innerText = 'Sound Off';
     }
 }
 updateSoundUI();
@@ -348,12 +348,12 @@ async function fetchKitchenFeed(silent = false) {
                     const banner = document.getElementById('newOrderBanner');
                     const bannerText = document.getElementById('newOrderBannerText');
                     if (banner && bannerText) {
-                        bannerText.innerText = `Ստացվել է նոր պատվեր (ընդհանուր սպասող՝ ${data.pending_count})։`;
+                        bannerText.innerText = `New order received (pending: ${data.pending_count}).`;
                         banner.style.display = 'flex';
                     }
 
                     // Update Title with Alert
-                    document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ! - ${@json($vendor->name)}`;
+                    document.title = `(1) 🔔 NEW ORDER! - ${@json($vendor->name)}`;
                     setTimeout(() => {
                         document.title = 'Live Kitchen Orders - ' + @json($vendor->name);
                     }, 8000);
@@ -374,7 +374,7 @@ async function fetchKitchenFeed(silent = false) {
                 if (!isWebSocketConnected) {
                     const statusText = document.getElementById('liveStatusText');
                     if (statusText) {
-                        statusText.innerText = `Պահուստային կապ (${new Date().toLocaleTimeString()})`;
+                        statusText.innerText = `Polling active (${new Date().toLocaleTimeString()})`;
                     }
                 }
             }
@@ -384,7 +384,7 @@ async function fetchKitchenFeed(silent = false) {
         if (!isWebSocketConnected) {
             const statusText = document.getElementById('liveStatusText');
             if (statusText) {
-                statusText.innerText = 'Կապի խնդիր (կրկին փորձ)';
+                statusText.innerText = 'Connection error (retrying...)';
             }
         }
     } finally {
@@ -431,7 +431,7 @@ async function changeOrderStatus(orderId, newStatus) {
             // Silently refresh the list
             fetchKitchenFeed(true);
         } else {
-            alert('Չհաջողվեց թարմացնել պատվերի կարգավիճակը:');
+            alert('Failed to update order status.');
         }
     } catch (e) {
         console.error('Order status update error:', e);
@@ -526,7 +526,7 @@ function initEcho() {
             window.Echo.connector.pusher.connection.bind('connecting', () => {
                 const text = document.getElementById('liveStatusText');
                 if (text && !isWebSocketConnected) {
-                    text.innerText = '⚡ WebSockets Միացում...';
+                    text.innerText = '⚡ WebSockets Connecting...';
                 }
             });
 
@@ -565,9 +565,9 @@ function updateConnectionStatus(connected) {
             dot.style.background = '#10b981';
             dot.className = 'pulse-dot';
         }
-        if (text) text.innerHTML = '⚡ WebSockets (Reverb) Ակտիվ է';
+        if (text) text.innerHTML = '⚡ WebSockets (Reverb) Active';
         if (pollInfo) {
-            pollInfo.innerHTML = '<span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-bolt text-xs"><\/i> <span>Իրական ժամանակ (WebSockets)<\/span><\/span>';
+            pollInfo.innerHTML = '<span style="color: #10b981; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-bolt text-xs"><\/i> <span>Real-time (WebSockets)<\/span><\/span>';
         }
         pollSecondsRemaining = 120;
     } else {
@@ -580,9 +580,9 @@ function updateConnectionStatus(connected) {
             dot.style.background = '#f59e0b';
             dot.className = '';
         }
-        if (text) text.innerHTML = '⚠️ Պահուստային ռեժիմ (Polling)';
+        if (text) text.innerHTML = '⚠️ Polling Mode';
         if (pollInfo) {
-            pollInfo.innerHTML = '<span style="color: #f59e0b; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-rotate text-xs"><\/i> <span>Պահուստային թարմացում՝ <strong id="pollCounter">' + pollSecondsRemaining + '<\/strong>վ<\/span><\/span>';
+            pollInfo.innerHTML = '<span style="color: #f59e0b; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-rotate text-xs"><\/i> <span>Next update in: <strong id="pollCounter">' + pollSecondsRemaining + '<\/strong>s<\/span><\/span>';
         }
         pollSecondsRemaining = 6;
     }
@@ -593,10 +593,10 @@ function handleWebSocketOrderCreated(data) {
     const banner = document.getElementById('newOrderBanner');
     const bannerText = document.getElementById('newOrderBannerText');
     if (banner && bannerText) {
-        bannerText.innerText = `Նոր պատվեր #${data.order_number} (${data.table_number || 'Սեղան'}) — Գումար՝ ${Number(data.total_amount).toLocaleString()} դրամ։`;
+        bannerText.innerText = `New order #${data.order_number} (${data.table_number ? 'Table ' + data.table_number : 'Takeaway'}) — Total: ${Number(data.total_amount).toLocaleString()} ${@json($vendor->currency)}.`;
         banner.style.display = 'flex';
     }
-    document.title = `(1) 🔔 ՆՈՐ ՊԱՏՎԵՐ #${data.order_number}!`;
+    document.title = `(1) 🔔 NEW ORDER #${data.order_number}!`;
     setTimeout(() => {
         document.title = 'Live Kitchen Orders - ' + @json($vendor->name);
     }, 8000);
@@ -613,7 +613,7 @@ function handleWebSocketWaiterCalled(data) {
     const banner = document.getElementById('newOrderBanner');
     const bannerText = document.getElementById('newOrderBannerText');
     if (banner && bannerText) {
-        bannerText.innerText = `🔔 Կանչ ${data.table_number || 'Սեղանից'}: ${data.type_label}։`;
+        bannerText.innerText = `🔔 Call from ${data.table_number ? 'Table ' + data.table_number : 'Table'}: ${data.type_label}.`;
         banner.style.display = 'flex';
     }
     fetchKitchenFeed(true);
@@ -640,7 +640,7 @@ async function printOrderReceipt(orderId, isAuto = false) {
             currentReceiptText = data.receipt_text;
             currentReceiptOrderNumber = data.order_number;
 
-            document.getElementById('receiptModalTitle').textContent = `Կտրոն #${data.order_number}`;
+            document.getElementById('receiptModalTitle').textContent = `Receipt #${data.order_number}`;
             document.getElementById('receiptTextPreview').textContent = data.receipt_text;
             document.getElementById('btnRawBtPrint').href = data.rawbt_url;
             document.getElementById('thermalReceiptModal').style.display = 'flex';
@@ -651,7 +651,7 @@ async function printOrderReceipt(orderId, isAuto = false) {
         }
     } catch (e) {
         console.error('Failed to load receipt:', e);
-        alert('Չհաջողվեց բեռնել կտրոնը։');
+        alert('Failed to load receipt.');
     }
 }
 
@@ -714,13 +714,13 @@ function printViaBrowser() {
 
 async function printViaBluetooth() {
     if (!navigator.bluetooth) {
-        alert('Web Bluetooth API-ն հասանելի չէ այս բրաուզերում (խնդրում ենք օգտագործել Chrome կամ Edge):');
+        alert('Web Bluetooth API is not supported in this browser (please use Chrome or Edge).');
         return;
     }
 
     const btn = document.getElementById('btnBluetoothPrint');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"><\/i> Միացում...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"><\/i> Connecting...';
 
     try {
         const device = await navigator.bluetooth.requestDevice({
@@ -755,12 +755,12 @@ async function printViaBluetooth() {
         await writeChar.writeValue(textBytes);
         await writeChar.writeValue(cutCmd);
 
-        alert('Կտրոնը հաջողությամբ ուղարկվեց Bluetooth տպիչին։');
+        alert('Receipt sent to Bluetooth printer successfully.');
         closeThermalReceiptModal();
     } catch (e) {
         console.warn('Bluetooth print:', e);
         if (e.name !== 'NotFoundError') {
-            alert('Bluetooth տպիչին միանալու սխալ: Կարող եք օգտագործել RawBT կամ Browser Print տարբերակը:');
+            alert('Bluetooth printer connection failed. You can use RawBT or Browser Print instead.');
         }
     } finally {
         btn.disabled = false;

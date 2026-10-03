@@ -175,8 +175,8 @@
                 <div class="section-header">
                     <span class="step-num">4</span>
                     <div>
-                        <h3 class="section-title">Էկրանի Լայնություն Դեսքթոփում (Desktop Frame Width)</h3>
-                        <p class="section-desc">Կարգավորեք մենյուի մաքսիմալ լայնությունը համակարգիչներով (PC/Laptop) բացելիս</p>
+                        <h3 class="section-title">Desktop Frame Width</h3>
+                        <p class="section-desc">Set the maximum menu frame width when viewed on desktop and laptop screens</p>
                     </div>
                 </div>
 
@@ -190,7 +190,7 @@
                         <i class="fa-solid fa-mobile-screen" style="font-size: 1.25rem; color: var(--primary);"></i>
                         <div>
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">480px</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Կոմպակտ</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Compact</div>
                         </div>
                     </label>
 
@@ -199,7 +199,7 @@
                         <i class="fa-solid fa-tablet-screen-button" style="font-size: 1.25rem; color: #10b981;"></i>
                         <div>
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">600px <span style="font-size: 0.6rem; background: #10b981; color: #fff; padding: 0.1rem 0.3rem; border-radius: 4px;">Top</span></div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Ստանդարտ</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Standard</div>
                         </div>
                     </label>
 
@@ -208,7 +208,7 @@
                         <i class="fa-solid fa-tablet" style="font-size: 1.25rem; color: #3b82f6;"></i>
                         <div>
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">680px</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Մեծ Mobile</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Wide Mobile</div>
                         </div>
                     </label>
 
@@ -217,7 +217,7 @@
                         <i class="fa-solid fa-tablets" style="font-size: 1.25rem; color: #8b5cf6;"></i>
                         <div>
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">768px</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Պլանշետ</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Tablet</div>
                         </div>
                     </label>
 
@@ -226,7 +226,7 @@
                         <i class="fa-solid fa-expand" style="font-size: 1.25rem; color: #64748b;"></i>
                         <div>
                             <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">100%</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Ամբողջական</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Full Width</div>
                         </div>
                     </label>
                 </div>

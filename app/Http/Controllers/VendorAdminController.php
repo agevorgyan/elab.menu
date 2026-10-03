@@ -198,21 +198,21 @@ class VendorAdminController extends Controller
             'fastshift' => 'FastShift',
             'arca' => 'ArCa / Ameriabank vPOS',
             'stripe' => 'Stripe',
-            'bank_transfer' => 'Բանկային փոխանցում',
-            'cash' => 'Կանխիկ',
+            'bank_transfer' => 'Bank Transfer',
+            'cash' => 'Cash',
         ];
         $selectedMethodName = $methodNames[$validated['payment_method']] ?? strtoupper($validated['payment_method']);
 
         if ($result->type === 'redirect' && $result->redirectUrl) {
             return redirect($result->redirectUrl)->with(
                 'info',
-                "Վճարման հարցումը ստեղծված է ({$selectedMethodName})։ Հաշիվ-ապրանքագիր: {$payment->invoice_number}։"
+                "Payment request created ({$selectedMethodName}). Invoice: {$payment->invoice_number}."
             );
         }
 
         return back()->with(
             'success',
-            "Հաշիվ-ապրանքագիրը ստեղծված է ({$selectedMethodName})։ Հաշիվ-ապրանքագիր: {$payment->invoice_number}։ Վճարման հաստատումից հետո բաժանորդագրությունը կակտիվանա։"
+            "Invoice created ({$selectedMethodName}). Invoice: {$payment->invoice_number}. Subscription will be activated upon payment confirmation."
         );
     }
 }

@@ -64,27 +64,27 @@
     <div>
         <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.4rem;">
             <span style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: #fff; padding: 0.2rem 0.65rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
-                <i class="fa-solid fa-bolt"></i> HQ Command Center
+                <i class="fa-solid fa-bolt"></i> {{ __('HQ Command Center') }}
             </span>
             <span style="font-size: 0.75rem; color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
-                Բոլոր համակարգերն ակտիվ են
+                {{ __('All systems active') }}
             </span>
         </div>
         <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">
-            Պլատֆորմի Գլխավոր Ակնարկ (SuperAdmin)
+            {{ __('Platform Overview (SuperAdmin)') }}
         </h1>
         <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 600px;">
-            Գործընկերների, մասնաճյուղերի, պատվերների շրջանառության և բաժանորդագրությունների իրական ժամանակի կառավարում։
+            {{ __('Real-time management of partners, branches, order volumes, and subscriptions.') }}
         </p>
     </div>
 
     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
         <a href="{{ route('superadmin.subscriptions.index') }}" class="btn btn-secondary" style="border-radius: 12px; font-size: 0.85rem; padding: 0.65rem 1.15rem;">
-            <i class="fa-solid fa-credit-card" style="color: #6366f1;"></i> Բաժանորդագրություններ
+            <i class="fa-solid fa-credit-card" style="color: #6366f1;"></i> {{ __('Subscriptions') }}
         </a>
         <a href="{{ route('superadmin.vendors.index') }}" class="btn btn-primary" style="border-radius: 12px; font-size: 0.85rem; padding: 0.65rem 1.25rem;">
-            <i class="fa-solid fa-plus"></i> Ստեղծել Նոր Գործընկեր
+            <i class="fa-solid fa-plus"></i> {{ __('Create New Partner') }}
         </a>
     </div>
 </div>
@@ -96,7 +96,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <div style="color: var(--text-muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Ընդհանուր Գործընկերներ
+                    {{ __('Total Partners') }}
                 </div>
                 <div style="font-size: 2.25rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin: 0.4rem 0 0.2rem;">
                     {{ $totalVendors }}
@@ -108,7 +108,7 @@
         </div>
         <div style="font-size: 0.78rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem;">
             <i class="fa-solid fa-circle-check"></i>
-            <span>Ակտիվ multi-tenant բիզնեսներ</span>
+            <span>{{ __('Active multi-tenant businesses') }}</span>
         </div>
     </div>
 
@@ -117,7 +117,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <div style="color: var(--text-muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Ակտիվ Մասնաճյուղեր
+                    {{ __('Active Locations') }}
                 </div>
                 <div style="font-size: 2.25rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin: 0.4rem 0 0.2rem;">
                     {{ $totalLocations }}
@@ -129,7 +129,7 @@
         </div>
         <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem;">
             <i class="fa-solid fa-diagram-project"></i>
-            <span>Միջինում {{ $totalVendors > 0 ? round($totalLocations / $totalVendors, 1) : 1 }} մասնաճյուղ / գործընկեր</span>
+            <span>{{ __('Average') }} {{ $totalVendors > 0 ? round($totalLocations / $totalVendors, 1) : 1 }} {{ __('locations / partner') }}</span>
         </div>
     </div>
 
@@ -138,7 +138,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <div style="color: var(--text-muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Գրանցված Պատվերներ
+                    {{ __('Registered Orders') }}
                 </div>
                 <div style="font-size: 2.25rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin: 0.4rem 0 0.2rem;">
                     {{ number_format($totalOrders) }}
@@ -150,7 +150,7 @@
         </div>
         <div style="font-size: 0.78rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem;">
             <i class="fa-solid fa-shield-halved"></i>
-            <span>0% միջնորդավճարով պատվերներ</span>
+            <span>{{ __('0% commission orders') }}</span>
         </div>
     </div>
 
@@ -159,7 +159,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <div style="color: var(--text-muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Պլատֆորմի Շրջանառություն
+                    {{ __('Platform Turnover') }}
                 </div>
                 <div style="font-size: 2rem; font-weight: 800; font-family: 'Outfit'; color: var(--primary); margin: 0.4rem 0 0.2rem; white-space: nowrap;">
                     {{ number_format($totalRevenue) }} ֏
@@ -171,7 +171,7 @@
         </div>
         <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem;">
             <i class="fa-solid fa-chart-line"></i>
-            <span>Մշակված պատվերների արժեք</span>
+            <span>{{ __('Value of processed orders') }}</span>
         </div>
     </div>
 </div>
@@ -182,10 +182,10 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
             <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
                 <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i>
-                <span>Բաժանորդագրությունների Փաթեթների Բաշխվածություն</span>
+                <span>{{ __('Subscription Plan Distribution') }}</span>
             </div>
             <a href="{{ route('superadmin.plans.index') }}" style="font-size: 0.78rem; color: var(--primary); text-decoration: none; font-weight: 600;">
-                Կառավարել Փաթեթները →
+                {{ __('Manage Plans') }} →
             </a>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
@@ -197,7 +197,7 @@
                     <span style="font-size: 0.85rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main);">
                         {{ $p->vendors_count ?? 0 }}
                     </span>
-                    <span style="font-size: 0.72rem; color: var(--text-muted);">գործընկեր</span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">{{ __('partner') }}</span>
                 </div>
             @endforeach
         </div>
@@ -211,12 +211,12 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <div>
                 <h3 style="font-size: 1.15rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-bottom: 0.2rem;">
-                    <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Վերջին Գրանցված Գործընկերները
+                    <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> {{ __('Recent Partners') }}
                 </h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Վերջին 5 միացած ռեստորանները և սրճարանները</p>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">{{ __('Latest 5 joined restaurants and cafes') }}</p>
             </div>
             <a href="{{ route('superadmin.vendors.index') }}" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; border-radius: 10px;">
-                Բոլորը ({{ $totalVendors }}) →
+                {{ __('All') }} ({{ $totalVendors }}) →
             </a>
         </div>
 
@@ -224,11 +224,11 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Գործընկեր</th>
-                        <th>Տեսակ</th>
-                        <th>Մասնաճյուղ</th>
-                        <th>Փաթեթ</th>
-                        <th style="text-align: right;">Կարգավիճակ</th>
+                        <th>{{ __('Partner') }}</th>
+                        <th>{{ __('Type') }}</th>
+                        <th>{{ __('Branch') }}</th>
+                        <th>{{ __('Plan') }}</th>
+                        <th style="text-align: right;">{{ __('Status') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -254,14 +254,14 @@
                             </td>
                             <td style="padding: 0.85rem 1rem;">
                                 <span style="font-size: 0.78rem; text-transform: capitalize; color: var(--text-main); font-weight: 600;">
-                                    @if($v->type === 'restaurant') 🍽️ Ռեստորան
-                                    @elseif($v->type === 'cafe') ☕ Սրճարան
-                                    @else 🏨 Հյուրանոց
+                                    @if($v->type === 'restaurant') 🍽️ {{ __('Restaurant') }}
+                                    @elseif($v->type === 'cafe') ☕ {{ __('Cafe') }}
+                                    @else 🏨 {{ __('Hotel') }}
                                     @endif
                                 </span>
                             </td>
                             <td style="padding: 0.85rem 1rem; color: var(--text-main); font-weight: 600;">
-                                {{ $v->locations_count }} տեղ
+                                {{ $v->locations_count }} {{ __('locations') }}
                             </td>
                             <td style="padding: 0.85rem 1rem;">
                                 <span class="plan-pill plan-{{ strtolower($v->subscription_plan ?? 'pro') }}">
@@ -271,11 +271,11 @@
                             <td style="padding: 0.85rem 1rem; text-align: right;">
                                 @if($v->is_active)
                                     <span class="badge badge-emerald">
-                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Ակտիվ
+                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ __('Active') }}
                                     </span>
                                 @else
                                     <span class="badge badge-rose">
-                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> Կասեցված
+                                        <i class="fa-solid fa-circle" style="font-size: 0.45rem;"></i> {{ __('Suspended') }}
                                     </span>
                                 @endif
                             </td>
@@ -283,7 +283,7 @@
                     @empty
                         <tr>
                             <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                                Դեռևս գրանցված գործընկերներ չկան։
+                                {{ __('No partners registered yet.') }}
                             </td>
                         </tr>
                     @endforelse
@@ -297,11 +297,11 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
             <div>
                 <h3 style="font-size: 1.15rem; font-weight: 800; font-family: 'Outfit'; color: var(--text-main); margin-bottom: 0.2rem;">
-                    <i class="fa-solid fa-palette" style="color: var(--primary);"></i> Մենյուի Թեմաներ (Templates)
+                    <i class="fa-solid fa-palette" style="color: var(--primary);"></i> {{ __('Menu Templates') }}
                 </h3>
-                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Կատալոգում հասանելի մոդեռն UI դիզայններ</p>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">{{ __('Modern UI designs available in catalog') }}</p>
             </div>
-            <span class="badge badge-indigo">{{ count($templates) }} թեմաներ</span>
+            <span class="badge badge-indigo">{{ count($templates) }} {{ __('themes') }}</span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -316,7 +316,7 @@
                             @endif
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-                            Օգտագործվում է <strong>{{ $tmpl->vendors_count }}</strong> ակտիվ գործընկերների կողմից
+                            {{ __('Used by') }} <strong>{{ $tmpl->vendors_count }}</strong> {{ __('active partners') }}
                         </div>
                     </div>
                     <div style="flex-shrink: 0;">

@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\FloorPlanController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\MenuBuilderController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentWebhookController;
@@ -18,13 +19,16 @@ use App\Http\Controllers\QrStudioController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\TranslationController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\VendorAdminController;
 use App\Http\Controllers\VendorSettingsController;
 use App\Http\Middleware\EnsurePlanHasFeature;
 use App\Http\Middleware\EnsureSubscriptionIsActive;
+use App\Services\Localization\LocaleManager;
 use App\Services\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
 // 1. Landing & Client Storefront PWA Routes
@@ -88,10 +92,11 @@ Route::prefix('/api/m/{vendor_slug}/ai-waiter')->middleware('throttle:60,1')->gr
     Route::get('/pairings/{product_id}', [AiWaiterController::class, 'pairings'])->name('client.ai_waiter.pairings');
 });
 
-// Admin Language Switcher
-Route::get('/lang/{locale}', function (string $locale) {
-    if (in_array($locale, ['hy', 'en', 'ru'])) {
-        session(['app_locale' => $locale]);
+// Admin / Platform Language Switcher
+Route::get('/lang/{locale}', function (string $locale, LocaleManager $localeManager) {
+    if ($localeManager->isValidLocale($locale)) {
+        session(['admin_locale' => $locale, 'app_locale' => $locale, 'locale' => $locale]);
+        App::setLocale($locale);
     }
 
     return redirect()->back();
@@ -184,6 +189,13 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::post('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
     Route::post('/settings/telegram/test', [SuperAdminController::class, 'testTelegramConnection'])->name('settings.telegram.test');
     Route::post('/settings/security', [SuperAdminController::class, 'updateProfileSecurity'])->name('settings.security');
+
+    // Platform Languages & i18n Management
+    Route::get('/languages', [LanguageController::class, 'index'])->name('languages.index');
+    Route::post('/languages', [LanguageController::class, 'store'])->name('languages.store');
+    Route::put('/languages/{language}', [LanguageController::class, 'update'])->name('languages.update');
+    Route::post('/languages/{language}/toggle', [LanguageController::class, 'toggleActive'])->name('languages.toggle');
+    Route::post('/languages/{language}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
 });
 
 // 4. Vendor Admin Panel (/admin)
@@ -193,6 +205,17 @@ Route::middleware(['auth', 'role:vendor_owner,manager,staff,chef,cashier', Ensur
     // Vendor Subscription Status & Payment History
     Route::get('/subscription', [VendorAdminController::class, 'subscriptionIndex'])->name('subscription');
     Route::post('/subscription/renew', [VendorAdminController::class, 'renewSubscription'])->name('subscription.renew');
+
+    // Translation Management & AI Localization Studio
+    Route::get('/translations', [TranslationController::class, 'index'])->name('translations.index');
+    Route::get('/translations/{translation}/edit', [TranslationController::class, 'edit'])->name('translations.edit');
+    Route::post('/translations/{translation}/action', [TranslationController::class, 'handleAction'])->name('translations.action');
+    Route::post('/translations/{translation}/restore/{history}', [TranslationController::class, 'restore'])->name('translations.restore');
+    Route::post('/translations/batch-ai', [TranslationController::class, 'batchAiTranslate'])->name('translations.batch_ai');
+    Route::post('/translations/languages/sync', [TranslationController::class, 'syncVendorLanguages'])->name('translations.languages.sync');
+    Route::get('/translations/glossary', [TranslationController::class, 'glossaryIndex'])->name('translations.glossary.index');
+    Route::post('/translations/glossary', [TranslationController::class, 'glossaryStore'])->name('translations.glossary.store');
+    Route::delete('/translations/glossary/{glossary}', [TranslationController::class, 'glossaryDestroy'])->name('translations.glossary.destroy');
 
     // Locations & Team (Business Plan Feature)
     Route::middleware([EnsurePlanHasFeature::class.':locations'])->group(function () {

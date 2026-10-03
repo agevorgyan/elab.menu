@@ -162,4 +162,52 @@ class CustomerManagementTest extends TestCase
         $response->assertSee('15 Jun 1992');
         $response->assertSee('Mashtots 40');
     }
+
+    public function test_admin_can_search_customers(): void
+    {
+        $plan = SubscriptionPlan::where('slug', 'pro')->first();
+
+        $vendor = Vendor::create([
+            'name' => 'Search Vendor',
+            'slug' => 'search-vendor',
+            'email' => 'search@vendor.com',
+            'password' => bcrypt('password'),
+            'subscription_plan' => 'pro',
+            'subscription_plan_id' => $plan->id,
+            'subscription_expires_at' => now()->addDays(30),
+            'is_active' => true,
+        ]);
+
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'search@vendor.com',
+            'password' => bcrypt('password'),
+            'vendor_id' => $vendor->id,
+            'role' => 'vendor_owner',
+        ]);
+
+        Customer::create([
+            'vendor_id' => $vendor->id,
+            'name' => 'Armen Petrosyan',
+            'phone' => '091112233',
+            'email' => 'armen@example.com',
+        ]);
+
+        Customer::create([
+            'vendor_id' => $vendor->id,
+            'name' => 'Sona Sargsyan',
+            'phone' => '093334455',
+            'email' => 'sona@example.com',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.customers.index', ['search' => 'Armen']));
+        $response->assertStatus(200);
+        $response->assertSee('Armen Petrosyan');
+        $response->assertDontSee('Sona Sargsyan');
+
+        $phoneResponse = $this->actingAs($user)->get(route('admin.customers.index', ['search' => '093334455']));
+        $phoneResponse->assertStatus(200);
+        $phoneResponse->assertSee('Sona Sargsyan');
+        $phoneResponse->assertDontSee('Armen Petrosyan');
+    }
 }

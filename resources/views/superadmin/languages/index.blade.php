@@ -316,7 +316,7 @@ function openEditModal(lang) {
     document.getElementById('edit_name').value = lang.name;
     document.getElementById('edit_native_name').value = lang.native_name;
     document.getElementById('edit_direction').value = lang.direction || 'ltr';
-    document.getElementById('editLangForm').action = '/superadmin/languages/' + lang.id;
+    document.getElementById('editLangForm').action = "{{ url('superadmin/languages') }}/" + lang.id;
     document.getElementById('editLangModal').style.display = 'flex';
 }
 </script>

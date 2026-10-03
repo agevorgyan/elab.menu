@@ -8,6 +8,7 @@ use App\Services\Localization\LocaleManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class LanguageController extends Controller
@@ -20,20 +21,30 @@ class LanguageController extends Controller
     {
         abort_unless(Auth::user()?->isSuperAdmin(), 403, 'Unauthorized access.');
 
-        $languages = Language::query()
-            ->orderBy('is_default', 'desc')
-            ->orderBy('sort_order', 'asc')
-            ->orderBy('name', 'asc')
-            ->get();
+        try {
+            $languages = Language::query()
+                ->orderBy('is_default', 'desc')
+                ->orderBy('sort_order', 'asc')
+                ->orderBy('name', 'asc')
+                ->get();
+        } catch (\Throwable $e) {
+            Log::error('LanguageController index Language query error: '.$e->getMessage());
+            $languages = collect();
+        }
 
         // Calculate translation coverage metrics per language
-        $translationCounts = ContentTranslation::query()
-            ->selectRaw('locale, count(*) as total, count(case when status = ? then 1 end) as published_count', [
-                ContentTranslation::STATUS_PUBLISHED,
-            ])
-            ->groupBy('locale')
-            ->pluck('total', 'locale')
-            ->all();
+        $translationCounts = [];
+        try {
+            $translationCounts = ContentTranslation::withoutGlobalScopes()
+                ->selectRaw('locale, count(*) as total, count(case when status = ? then 1 end) as published_count', [
+                    ContentTranslation::STATUS_PUBLISHED,
+                ])
+                ->groupBy('locale')
+                ->pluck('total', 'locale')
+                ->all();
+        } catch (\Throwable $e) {
+            Log::warning('LanguageController index ContentTranslation query error: '.$e->getMessage());
+        }
 
         $stats = [
             'total' => $languages->count(),

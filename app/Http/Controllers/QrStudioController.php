@@ -12,7 +12,7 @@ class QrStudioController extends Controller
         $vendor = Auth::user()->vendor;
         $this->authorize('viewSettings', $vendor);
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
-        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
+        $location = ($activeLocationId ? $vendor->locations->firstWhere('id', (int) $activeLocationId) : null) ?? $vendor->locations->first();
 
         return view('admin.qr.studio', compact('vendor', 'location'));
     }

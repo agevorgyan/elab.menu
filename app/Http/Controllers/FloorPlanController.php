@@ -22,7 +22,7 @@ class FloorPlanController extends Controller
         $user = Auth::user();
         $vendor = $user->vendor;
         $activeLocationId = $user->location_id ?: session('active_location_id', $vendor->locations->first()?->id);
-        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
+        $location = ($activeLocationId ? $vendor->locations->firstWhere('id', (int) $activeLocationId) : null) ?? $vendor->locations->first();
 
         $floorPlanData = $vendor->getFloorPlanData();
         $halls = $floorPlanData['halls'] ?? [];
@@ -32,7 +32,7 @@ class FloorPlanController extends Controller
         $activeOrders = Order::where('vendor_id', $vendor->id)
             ->when($location, fn ($q) => $q->where('location_id', $location->id))
             ->whereIn('status', ['pending', 'preparing', 'ready'])
-            ->with(['items.product', 'customer'])
+            ->with('items:id,order_id,quantity')
             ->latest()
             ->get();
 

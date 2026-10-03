@@ -41,7 +41,7 @@ class VendorSettingsController extends Controller
             ->get();
 
         $locationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
-        $location = $vendor->locations()->find($locationId) ?? $vendor->locations->first();
+        $location = ($locationId ? $vendor->locations->firstWhere('id', (int) $locationId) : null) ?? $vendor->locations->first();
 
         return view('admin.settings.index', compact('vendor', 'location', 'products'));
     }
@@ -395,7 +395,7 @@ class VendorSettingsController extends Controller
 
         // Update Location (Branch)
         $locationId = $validated['location_id'] ?? $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
-        $location = $vendor->locations()->find($locationId) ?? $vendor->locations->first();
+        $location = ($locationId ? $vendor->locations->firstWhere('id', (int) $locationId) : null) ?? $vendor->locations->first();
 
         if ($location) {
             $locationUpdate = [];

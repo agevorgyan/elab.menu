@@ -42,7 +42,7 @@ class OrderController extends Controller
 
         $status = $request->get('status', 'all');
 
-        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations()->first();
+        $location = ($activeLocationId ? $vendor->locations->firstWhere('id', (int) $activeLocationId) : null) ?? $vendor->locations->first();
         $orders = $this->orderService->getOrders($location?->id, $status);
         $waiterCalls = $this->orderService->getPendingWaiterCalls($location?->id);
 
@@ -65,7 +65,7 @@ class OrderController extends Controller
             $activeLocationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
         }
 
-        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations()->first();
+        $location = ($activeLocationId ? $vendor->locations->firstWhere('id', (int) $activeLocationId) : null) ?? $vendor->locations->first();
         $status = $request->get('status', 'all');
         $lastOrderId = (int) $request->get('last_order_id', 0);
 

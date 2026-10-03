@@ -18,12 +18,13 @@ class OrderPricingService
      */
     public function resolveItemPricing(Product $product, OrderItemDTO $item, int $locationId): array
     {
-        $variationsCount = $product->variations()->count();
+        $variations = $product->relationLoaded('variations') ? $product->variations : $product->variations()->get();
+        $variationsCount = $variations->count();
         $variation = null;
 
         // 1. Resolve variation if variationId is supplied
         if (! empty($item->variationId)) {
-            $variation = $product->variations()->find($item->variationId);
+            $variation = $variations->firstWhere('id', (int) $item->variationId);
             if (! $variation) {
                 throw ValidationException::withMessages([
                     'items' => "Invalid variation selected for dish {$product->name}.",
@@ -32,12 +33,22 @@ class OrderPricingService
         }
         // 2. Resolve variation if variationName is supplied
         elseif (! empty($item->variationName)) {
-            $variation = $product->variations()->where(function ($query) use ($item) {
-                $query->where('name', $item->variationName)
-                    ->orWhere('name_translations->hy', $item->variationName)
-                    ->orWhere('name_translations->ru', $item->variationName)
-                    ->orWhere('name_translations->en', $item->variationName);
-            })->first();
+            $target = mb_strtolower(trim((string) $item->variationName));
+            $variation = $variations->first(function ($v) use ($target) {
+                if (mb_strtolower(trim((string) $v->name)) === $target) {
+                    return true;
+                }
+                $translations = is_array($v->name_translations)
+                    ? $v->name_translations
+                    : (json_decode($v->name_translations ?? '[]', true) ?: []);
+                foreach (['hy', 'ru', 'en'] as $lang) {
+                    if (! empty($translations[$lang]) && mb_strtolower(trim((string) $translations[$lang])) === $target) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
             if (! $variation && $variationsCount > 0) {
                 throw ValidationException::withMessages([
                     'items' => "Invalid variation '{$item->variationName}' selected for dish {$product->name}.",
@@ -54,7 +65,7 @@ class OrderPricingService
 
         // 4. If product has exactly 1 variation and none was passed, auto-select it
         if ($variationsCount === 1 && ! $variation) {
-            $variation = $product->variations()->first();
+            $variation = $variations->first();
         }
 
         // 5. Determine unit price strictly from variation, location override, or scheduled discount

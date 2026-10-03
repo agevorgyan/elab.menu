@@ -40,7 +40,7 @@ class VendorAdminController extends Controller
             }
         }
 
-        $location = ($activeLocationId ? $vendor->locations()->find($activeLocationId) : null) ?? $vendor->locations->first();
+        $location = ($activeLocationId ? $vendor->locations->firstWhere('id', (int) $activeLocationId) : null) ?? $vendor->locations->first();
 
         // Stats
         $ordersQuery = Order::where('vendor_id', $vendor->id);
@@ -48,8 +48,11 @@ class VendorAdminController extends Controller
             $ordersQuery->where('location_id', $location->id);
         }
 
-        $todayOrders = (clone $ordersQuery)->whereDate('created_at', Carbon::today())->count();
-        $todayRevenue = (clone $ordersQuery)->whereDate('created_at', Carbon::today())->where('status', 'completed')->sum('total_amount');
+        $todayStart = Carbon::today()->startOfDay();
+        $todayEnd = Carbon::today()->endOfDay();
+
+        $todayOrders = (clone $ordersQuery)->whereBetween('created_at', [$todayStart, $todayEnd])->count();
+        $todayRevenue = (clone $ordersQuery)->whereBetween('created_at', [$todayStart, $todayEnd])->where('status', 'completed')->sum('total_amount');
         $pendingOrdersCount = (clone $ordersQuery)->where('status', 'pending')->count();
 
         // Analytics visits (past 7 days)
@@ -140,7 +143,7 @@ class VendorAdminController extends Controller
         ]);
 
         if (! empty($validated['location_id'])) {
-            $loc = $vendor->locations()->find($validated['location_id']);
+            $loc = $vendor->locations->firstWhere('id', (int) $validated['location_id']) ?? $vendor->locations()->find($validated['location_id']);
             if (! $loc) {
                 abort(403, 'Unauthorized location assignment.');
             }

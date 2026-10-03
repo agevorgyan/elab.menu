@@ -23,25 +23,49 @@ class MenuManagementService
         $this->storageService = $storageService ?? app(StorageService::class);
     }
 
-    public function createCategory(Vendor $vendor, array $data): Category
+    /**
+     * Build standardized multilingual translations map from input data.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, string>  $existing
+     * @return array<string, string>
+     */
+    public function extractTranslations(array $data, string $field = 'name', array $existing = []): array
     {
-        $name = $data['name'];
-        $translations = [
-            'en' => $name,
-        ];
-        if (! empty($data['hy_name'])) {
-            $translations['hy'] = $data['hy_name'];
+        $translations = $existing;
+        $primary = $data[$field] ?? null;
+        if (! empty($primary)) {
+            $translations['en'] = trim((string) $primary);
         }
-        if (! empty($data['name_translations']) && is_array($data['name_translations'])) {
-            foreach ($data['name_translations'] as $code => $val) {
+
+        $transKey = "{$field}_translations";
+        if (! empty($data[$transKey]) && is_array($data[$transKey])) {
+            foreach ($data[$transKey] as $code => $val) {
                 if (! empty($val)) {
-                    $translations[$code] = trim($val);
+                    $translations[$code] = trim((string) $val);
                 }
             }
         }
-        if (! empty($data['ru_name'])) {
-            $translations['ru'] = $data['ru_name'];
+
+        if (! empty($data["hy_{$field}"])) {
+            $translations['hy'] = trim((string) $data["hy_{$field}"]);
+        } elseif (! empty($data[$transKey]['hy'])) {
+            $translations['hy'] = trim((string) $data[$transKey]['hy']);
         }
+
+        if (! empty($data["ru_{$field}"])) {
+            $translations['ru'] = trim((string) $data["ru_{$field}"]);
+        } elseif (! empty($data[$transKey]['ru'])) {
+            $translations['ru'] = trim((string) $data[$transKey]['ru']);
+        }
+
+        return $translations;
+    }
+
+    public function createCategory(Vendor $vendor, array $data): Category
+    {
+        $name = $data['name'];
+        $translations = $this->extractTranslations($data, 'name');
 
         $category = Category::create([
             'vendor_id' => $vendor->id,
@@ -63,22 +87,11 @@ class MenuManagementService
     public function updateCategory(Category $category, array $data): Category
     {
         $name = $data['name'];
-        $translations = is_array($category->name_translations) ? $category->name_translations : [];
-        $translations['en'] = $name;
-        if (! empty($data['hy_name'])) {
-            $translations['hy'] = $data['hy_name'];
-        }
-
-        if (! empty($data['name_translations']) && is_array($data['name_translations'])) {
-            foreach ($data['name_translations'] as $code => $val) {
-                if (! empty($val)) {
-                    $translations[$code] = trim($val);
-                }
-            }
-        }
-        if (! empty($data['ru_name'])) {
-            $translations['ru'] = $data['ru_name'];
-        }
+        $translations = $this->extractTranslations(
+            $data,
+            'name',
+            is_array($category->name_translations) ? $category->name_translations : []
+        );
 
         $category->update([
             'name' => $name,
@@ -116,39 +129,8 @@ class MenuManagementService
         $name = $data['name'];
         $desc = $data['description'] ?? null;
 
-        $nameTranslations = [
-            'en' => $name,
-        ];
-        if (! empty($data['hy_name'])) {
-            $nameTranslations['hy'] = $data['hy_name'];
-        }
-        if (! empty($data['name_translations']) && is_array($data['name_translations'])) {
-            foreach ($data['name_translations'] as $code => $val) {
-                if (! empty($val)) {
-                    $nameTranslations[$code] = trim($val);
-                }
-            }
-        }
-        if (! empty($data['ru_name'])) {
-            $nameTranslations['ru'] = $data['ru_name'];
-        }
-
-        $descTranslations = [
-            'en' => $desc,
-        ];
-        if (! empty($data['hy_description'])) {
-            $descTranslations['hy'] = $data['hy_description'];
-        }
-        if (! empty($data['description_translations']) && is_array($data['description_translations'])) {
-            foreach ($data['description_translations'] as $code => $val) {
-                if (! empty($val)) {
-                    $descTranslations[$code] = trim($val);
-                }
-            }
-        }
-        if (! empty($data['ru_description'])) {
-            $descTranslations['ru'] = $data['ru_description'];
-        }
+        $nameTranslations = $this->extractTranslations($data, 'name');
+        $descTranslations = $this->extractTranslations($data, 'description');
 
         $product = Product::create([
             'vendor_id' => $vendor->id,
@@ -207,24 +189,7 @@ class MenuManagementService
                     $hasDefault = true;
                 }
                 $varName = trim($vData['name']);
-                $transData = [
-                    'en' => $varName,
-                ];
-                if (! empty($vData['hy_name'])) {
-                    $transData['hy'] = trim($vData['hy_name']);
-                } elseif (! empty($vData['name_translations']['hy'])) {
-                    $transData['hy'] = trim($vData['name_translations']['hy']);
-                }
-                if (! empty($vData['name_translations']) && is_array($vData['name_translations'])) {
-                    foreach ($vData['name_translations'] as $code => $val) {
-                        if (! empty($val)) {
-                            $transData[$code] = trim($val);
-                        }
-                    }
-                }
-                if (! empty($vData['ru_name'])) {
-                    $transData['ru'] = trim($vData['ru_name']);
-                }
+                $transData = $this->extractTranslations($vData, 'name');
 
                 ProductVariation::create([
                     'product_id' => $product->id,
@@ -285,37 +250,16 @@ class MenuManagementService
         $name = $data['name'];
         $desc = $data['description'] ?? null;
 
-        $nameTranslations = is_array($product->name_translations) ? $product->name_translations : [];
-        $nameTranslations['en'] = $name;
-        if (! empty($data['hy_name'])) {
-            $nameTranslations['hy'] = $data['hy_name'];
-        }
-        if (! empty($data['name_translations']) && is_array($data['name_translations'])) {
-            foreach ($data['name_translations'] as $code => $val) {
-                if (! empty($val)) {
-                    $nameTranslations[$code] = trim($val);
-                }
-            }
-        }
-        if (! empty($data['ru_name'])) {
-            $nameTranslations['ru'] = $data['ru_name'];
-        }
-
-        $descTranslations = is_array($product->description_translations) ? $product->description_translations : [];
-        $descTranslations['en'] = $desc;
-        if (! empty($data['hy_description'])) {
-            $descTranslations['hy'] = $data['hy_description'];
-        }
-        if (! empty($data['description_translations']) && is_array($data['description_translations'])) {
-            foreach ($data['description_translations'] as $code => $val) {
-                if (! empty($val)) {
-                    $descTranslations[$code] = trim($val);
-                }
-            }
-        }
-        if (! empty($data['ru_description'])) {
-            $descTranslations['ru'] = $data['ru_description'];
-        }
+        $nameTranslations = $this->extractTranslations(
+            $data,
+            'name',
+            is_array($product->name_translations) ? $product->name_translations : []
+        );
+        $descTranslations = $this->extractTranslations(
+            $data,
+            'description',
+            is_array($product->description_translations) ? $product->description_translations : []
+        );
 
         $updatePayload = [
             'category_id' => $data['category_id'],
@@ -416,24 +360,7 @@ class MenuManagementService
                 }
 
                 $varName = trim($varData['name']);
-                $transData = [
-                    'en' => $varName,
-                ];
-                if (! empty($varData['hy_name'])) {
-                    $transData['hy'] = trim($varData['hy_name']);
-                } elseif (! empty($varData['name_translations']['hy'])) {
-                    $transData['hy'] = trim($varData['name_translations']['hy']);
-                }
-                if (! empty($varData['name_translations']) && is_array($varData['name_translations'])) {
-                    foreach ($varData['name_translations'] as $code => $val) {
-                        if (! empty($val)) {
-                            $transData[$code] = trim($val);
-                        }
-                    }
-                }
-                if (! empty($varData['ru_name'])) {
-                    $transData['ru'] = trim($varData['ru_name']);
-                }
+                $transData = $this->extractTranslations($varData, 'name');
 
                 $varId = ! empty($varData['id']) ? (int) $varData['id'] : null;
                 $existing = $varId ? ProductVariation::where('product_id', $product->id)->find($varId) : null;

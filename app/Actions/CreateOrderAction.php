@@ -59,10 +59,10 @@ class CreateOrderAction
         }
 
         if ($existingOrder) {
-            return $this->appendItemsToOrder($vendor, $existingOrder, $dto);
+            return $this->appendItemsToOrder($vendor, $existingOrder, $dto, $location);
         }
 
-        return $this->createNewOrder($vendor, $dto);
+        return $this->createNewOrder($vendor, $dto, $location);
     }
 
     /**
@@ -70,9 +70,9 @@ class CreateOrderAction
      *
      * @return array{order: Order, whatsapp_url: ?string, is_appended: bool}
      */
-    protected function appendItemsToOrder(Vendor $vendor, Order $order, CreateOrderDTO $dto): array
+    protected function appendItemsToOrder(Vendor $vendor, Order $order, CreateOrderDTO $dto, ?Location $location = null): array
     {
-        $this->validateChannelOperatingHours($vendor, (int) $dto->locationId, (string) $order->type);
+        $this->validateChannelOperatingHours($vendor, $location ?? (int) $dto->locationId, (string) $order->type);
 
         DB::transaction(function () use ($vendor, $order, $dto) {
             // Update customer link if provided
@@ -92,8 +92,17 @@ class CreateOrderAction
                 }
             }
 
+            $productIds = collect($dto->items)->pluck('productId')->unique()->all();
+            $products = Product::where('vendor_id', $vendor->id)
+                ->whereIn('id', $productIds)
+                ->with(['variations', 'overrides'])
+                ->get()
+                ->keyBy('id');
+
+            $existingOrderItems = OrderItem::where('order_id', $order->id)->get();
+
             foreach ($dto->items as $item) {
-                $product = Product::where('vendor_id', $vendor->id)->find($item->productId);
+                $product = $products->get($item->productId);
                 if (! $product) {
                     throw ValidationException::withMessages([
                         'items' => "Product #{$item->productId} does not belong to this vendor.",
@@ -105,24 +114,18 @@ class CreateOrderAction
                 $pricing = $this->resolveItemPricing($product, $item, $dto->locationId);
                 $subtotal = $pricing['unit_price'] * $item->quantity;
 
-                // Check if exact same item and variation already exists in the order
-                $existingItem = OrderItem::where('order_id', $order->id)
-                    ->where('product_id', $product->id)
-                    ->where(function ($query) use ($pricing) {
-                        if ($pricing['variation_name'] === null) {
-                            $query->whereNull('variation_name');
-                        } else {
-                            $query->where('variation_name', $pricing['variation_name']);
-                        }
-                    })
-                    ->first();
+                // Check in-memory if exact same item and variation already exists in the order
+                $existingItem = $existingOrderItems->first(function ($oi) use ($product, $pricing) {
+                    return (int) $oi->product_id === (int) $product->id
+                        && $oi->variation_name === $pricing['variation_name'];
+                });
 
                 if ($existingItem) {
                     $existingItem->quantity += $item->quantity;
                     $existingItem->subtotal = $existingItem->quantity * $existingItem->unit_price;
                     $existingItem->save();
                 } else {
-                    OrderItem::create([
+                    $orderItem = new OrderItem([
                         'order_id' => $order->id,
                         'product_id' => $product->id,
                         'product_name' => $product->name,
@@ -131,6 +134,10 @@ class CreateOrderAction
                         'quantity' => $item->quantity,
                         'subtotal' => $subtotal,
                     ]);
+                    $orderItem->setRelation('order', $order);
+                    $orderItem->setRelation('product', $product);
+                    $orderItem->save();
+                    $existingOrderItems->push($orderItem);
                 }
             }
 
@@ -141,7 +148,7 @@ class CreateOrderAction
             }
 
             // Recalculate totals
-            $itemsSubtotal = (float) OrderItem::where('order_id', $order->id)->sum('subtotal');
+            $itemsSubtotal = (float) $existingOrderItems->sum('subtotal');
             $birthdate = $order->customer_birthdate ?? ($order->customer?->birthdate ? ($order->customer->birthdate instanceof \DateTimeInterface ? $order->customer->birthdate->format('Y-m-d') : (string) $order->customer->birthdate) : null);
             $birthdayDiscount = $this->crmService->calculateBirthdayDiscount($itemsSubtotal, $birthdate, $vendor);
             $fees = $this->calculateFees($vendor, $itemsSubtotal, $order->type);
@@ -179,9 +186,9 @@ class CreateOrderAction
      *
      * @return array{order: Order, whatsapp_url: ?string, is_appended: bool}
      */
-    protected function createNewOrder(Vendor $vendor, CreateOrderDTO $dto): array
+    protected function createNewOrder(Vendor $vendor, CreateOrderDTO $dto, ?Location $location = null): array
     {
-        $this->validateChannelOperatingHours($vendor, (int) $dto->locationId, (string) $dto->type);
+        $this->validateChannelOperatingHours($vendor, $location ?? (int) $dto->locationId, (string) $dto->type);
 
         $order = null;
 
@@ -232,8 +239,15 @@ class CreateOrderAction
 
             $totalAmount = 0;
 
+            $productIds = collect($dto->items)->pluck('productId')->unique()->all();
+            $products = Product::where('vendor_id', $vendor->id)
+                ->whereIn('id', $productIds)
+                ->with(['variations', 'overrides'])
+                ->get()
+                ->keyBy('id');
+
             foreach ($dto->items as $item) {
-                $product = Product::where('vendor_id', $vendor->id)->find($item->productId);
+                $product = $products->get($item->productId);
                 if (! $product) {
                     throw ValidationException::withMessages([
                         'items' => "Product #{$item->productId} does not belong to this vendor.",
@@ -246,7 +260,7 @@ class CreateOrderAction
                 $subtotal = $pricing['unit_price'] * $item->quantity;
                 $totalAmount += $subtotal;
 
-                OrderItem::create([
+                $orderItem = new OrderItem([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
                     'product_name' => $product->name,
@@ -255,6 +269,9 @@ class CreateOrderAction
                     'quantity' => $item->quantity,
                     'subtotal' => $subtotal,
                 ]);
+                $orderItem->setRelation('order', $order);
+                $orderItem->setRelation('product', $product);
+                $orderItem->save();
             }
 
             $itemsSubtotal = $totalAmount;
@@ -398,10 +415,12 @@ class CreateOrderAction
      *
      * @throws ValidationException
      */
-    protected function validateChannelOperatingHours(Vendor $vendor, int $locationId, string $orderType): void
+    protected function validateChannelOperatingHours(Vendor $vendor, Location|int $location, string $orderType): void
     {
-        $location = $vendor->locations()->find($locationId);
-        $schedule = $vendor->resolveOperatingSchedule($orderType, $location);
+        $loc = $location instanceof Location
+            ? $location
+            : (($vendor->relationLoaded('locations') ? $vendor->locations->firstWhere('id', (int) $location) : null) ?? $vendor->locations()->find($location));
+        $schedule = $vendor->resolveOperatingSchedule($orderType, $loc);
 
         if ($schedule['schedule_enabled'] && ! $schedule['is_open']) {
             $msg = $schedule['notice_message'] ?? 'Տվյալ ծառայությունն այս պահին փակ է և պատվերներ չի ընդունում:';

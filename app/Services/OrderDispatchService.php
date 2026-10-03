@@ -48,7 +48,9 @@ class OrderDispatchService
      */
     public function buildWhatsAppUrl(Order $order, Vendor $vendor, int $locationId, bool $isAppended = false): ?string
     {
-        $location = Location::find($locationId);
+        $location = ($order->relationLoaded('location') && $order->location && (int) $order->location->id === (int) $locationId)
+            ? $order->location
+            : (($vendor->relationLoaded('locations') ? $vendor->locations->firstWhere('id', (int) $locationId) : null) ?? Location::find($locationId));
         if (! $location || empty($location->whatsapp_number)) {
             return null;
         }

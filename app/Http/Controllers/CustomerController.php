@@ -151,7 +151,7 @@ class CustomerController extends Controller
         $activeLocationId = session('active_location_id', $vendor->locations->first()?->id);
         $payload = $validated;
         if (! isset($payload['location_id'])) {
-            $fallbackLoc = $vendor->locations()->find($activeLocationId);
+            $fallbackLoc = ($activeLocationId ? $vendor->locations->firstWhere('id', (int) $activeLocationId) : null) ?? $vendor->locations->first();
             $payload['location_id'] = $fallbackLoc?->id;
         }
 

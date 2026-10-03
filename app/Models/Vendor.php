@@ -23,6 +23,10 @@ class Vendor extends Model
         'takeaway_enabled' => true,
         'delivery_enabled' => true,
         'allow_whatsapp_orders' => true,
+        'timezone' => 'Asia/Yerevan',
+        'currency' => 'AMD',
+        'weight_unit' => 'g',
+        'volume_unit' => 'ml',
     ];
 
     protected $fillable = [
@@ -45,7 +49,10 @@ class Vendor extends Model
         'cover_image',
         'phone',
         'email',
+        'timezone',
         'currency',
+        'weight_unit',
+        'volume_unit',
         'custom_domain',
         'allow_whatsapp_orders',
         'supported_languages',

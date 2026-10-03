@@ -43,7 +43,64 @@ class VendorSettingsController extends Controller
         $locationId = $request->get('location_id', session('active_location_id', $vendor->locations->first()?->id));
         $location = ($locationId ? $vendor->locations->firstWhere('id', (int) $locationId) : null) ?? $vendor->locations->first();
 
-        return view('admin.settings.index', compact('vendor', 'location', 'products'));
+        $popularTimezones = [
+            'Asia/Yerevan' => 'Asia/Yerevan (Երևան, UTC+04:00)',
+            'Asia/Tbilisi' => 'Asia/Tbilisi (Թբիլիսի, UTC+04:00)',
+            'Europe/Moscow' => 'Europe/Moscow (Մոսկվա, UTC+03:00)',
+            'Asia/Dubai' => 'Asia/Dubai (Դուբայ, UTC+04:00)',
+            'Europe/Paris' => 'Europe/Paris (Փարիզ, UTC+01:00 / +02:00)',
+            'Europe/Berlin' => 'Europe/Berlin (Բեռլին, UTC+01:00 / +02:00)',
+            'Europe/London' => 'Europe/London (Լոնդոն, UTC+00:00 / +01:00)',
+            'Europe/Athens' => 'Europe/Athens (Աթենք, UTC+02:00 / +03:00)',
+            'Europe/Kyiv' => 'Europe/Kyiv (Կիև, UTC+02:00 / +03:00)',
+            'America/New_York' => 'America/New_York (Նյու Յորք, UTC-05:00 / -04:00)',
+            'America/Los_Angeles' => 'America/Los_Angeles (Լոս Անջելես, UTC-08:00 / -07:00)',
+            'UTC' => 'UTC (Universal Coordinated Time)',
+        ];
+
+        $groupedTimezones = [];
+        foreach (\DateTimeZone::listIdentifiers() as $tz) {
+            $parts = explode('/', $tz, 2);
+            $region = count($parts) > 1 ? $parts[0] : 'General';
+            $groupedTimezones[$region][] = $tz;
+        }
+
+        $currencies = [
+            'AMD' => 'AMD (֏ - ՀՀ Դրամ)',
+            'USD' => 'USD ($ - US Dollar)',
+            'EUR' => 'EUR (€ - Euro)',
+            'RUB' => 'RUB (₽ - Российский рубль)',
+            'GEL' => 'GEL (₾ - Georgian Lari)',
+            'GBP' => 'GBP (£ - British Pound)',
+            'AED' => 'AED (د.إ - UAE Dirham)',
+            'CNY' => 'CNY (¥ - Chinese Yuan)',
+            'KZT' => 'KZT (₸ - Kazakhstani Tenge)',
+            'TRY' => 'TRY (₺ - Turkish Lira)',
+        ];
+
+        $weightUnits = [
+            'g' => 'Գրամ (գ / g)',
+            'kg' => 'Կիլոգրամ (կգ / kg)',
+            'oz' => 'Ունցիա (oz)',
+            'lb' => 'Ֆունտ (lb)',
+        ];
+
+        $volumeUnits = [
+            'ml' => 'Միլիլիտր (մլ / ml)',
+            'l' => 'Լիտր (լ / l)',
+            'fl_oz' => 'Հեղուկ ունցիա (fl oz)',
+        ];
+
+        return view('admin.settings.index', compact(
+            'vendor',
+            'location',
+            'products',
+            'popularTimezones',
+            'groupedTimezones',
+            'currencies',
+            'weightUnits',
+            'volumeUnits'
+        ));
     }
 
     /**
@@ -55,6 +112,12 @@ class VendorSettingsController extends Controller
         $this->authorize('manageSettings', $vendor);
 
         $validated = $request->validate([
+            // Regional & Localization Settings
+            'timezone' => ['nullable', 'string', 'max:50', Rule::in(\DateTimeZone::listIdentifiers())],
+            'currency' => ['nullable', 'string', 'max:10', Rule::in(['AMD', 'USD', 'EUR', 'RUB', 'GEL', 'GBP', 'AED', 'CNY', 'KZT', 'TRY', 'IRR'])],
+            'weight_unit' => ['nullable', 'string', Rule::in(['g', 'kg', 'oz', 'lb'])],
+            'volume_unit' => ['nullable', 'string', Rule::in(['ml', 'l', 'fl_oz', 'fl oz'])],
+
             // Branch / Storefront Details
             'location_id' => 'nullable|integer',
             'name' => 'nullable|string|max:255',
@@ -235,6 +298,20 @@ class VendorSettingsController extends Controller
         }
         if (array_key_exists('contact_person_phone', $validated)) {
             $vendorUpdate['contact_person_phone'] = $validated['contact_person_phone'];
+        }
+
+        // Regional & Localization Settings
+        if (array_key_exists('timezone', $validated)) {
+            $vendorUpdate['timezone'] = ! empty($validated['timezone']) ? $validated['timezone'] : 'Asia/Yerevan';
+        }
+        if (array_key_exists('currency', $validated)) {
+            $vendorUpdate['currency'] = ! empty($validated['currency']) ? strtoupper(trim($validated['currency'])) : ($vendor->currency ?: 'AMD');
+        }
+        if (array_key_exists('weight_unit', $validated)) {
+            $vendorUpdate['weight_unit'] = ! empty($validated['weight_unit']) ? $validated['weight_unit'] : 'g';
+        }
+        if (array_key_exists('volume_unit', $validated)) {
+            $vendorUpdate['volume_unit'] = ! empty($validated['volume_unit']) ? $validated['volume_unit'] : 'ml';
         }
 
         // Custom Domain Validation & Normalization

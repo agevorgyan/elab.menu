@@ -251,7 +251,143 @@
                 </div>
             </div>
 
-            <!-- 2. OPERATING HOURS, KITCHEN & ORDER SCHEDULE CARD -->
+            <!-- 2. REGIONAL & LOCALIZATION SETTINGS CARD -->
+            @php
+                $currentTz = old('timezone', $vendor->timezone ?? 'Asia/Yerevan');
+                $currentCurrency = old('currency', $vendor->currency ?? 'AMD');
+                $currentWeightUnit = old('weight_unit', $vendor->weight_unit ?? 'g');
+                $currentVolumeUnit = old('volume_unit', $vendor->volume_unit ?? 'ml');
+            @endphp
+
+            <div class="card settings-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: clamp(1.2rem, 3vw, 1.85rem); box-shadow: var(--shadow-card);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.9rem;">
+                        <span style="width: 42px; height: 42px; border-radius: 12px; background: rgba(14, 165, 233, 0.15); color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                            <i class="fa-solid fa-earth-americas"></i>
+                        </span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-main); font-family: 'Outfit', sans-serif;">
+                                {{ __('Տարածաշրջանային և տեղայնացման կարգավորումներ') }}
+                            </h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--text-muted); word-break: break-word;">
+                                {{ __('Սահմանեք ռեստորանի ժամային գոտին, հիմնական արժույթը և ճաշատեսակների/խմիչքների չափման միավորները') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <span style="font-size: 0.78rem; font-weight: 700; background: rgba(14, 165, 233, 0.15); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 8px; padding: 0.3rem 0.65rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i class="fa-solid fa-globe"></i> {{ __('Տեղայնացում') }}
+                    </span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 1.25rem;">
+                    <!-- A. Timezone -->
+                    <div class="form-group">
+                        <label for="vendor_timezone" class="form-label" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-clock" style="color: #0284c7;"></i>
+                            <span>{{ __('Ժամային գոտի (Timezone)') }}</span>
+                            <span style="color: #ef4444;">*</span>
+                        </label>
+                        <select name="timezone" id="vendor_timezone" class="form-input" style="width: 100%; border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.88rem; background: var(--bg-body); border: 1.5px solid var(--border-color); color: var(--text-main); cursor: pointer;">
+                            <optgroup label="⭐ {{ __('Հիմնական ժամային գոտիներ') }}">
+                                @foreach($popularTimezones ?? [] as $tzKey => $tzLabel)
+                                    <option value="{{ $tzKey }}" {{ $currentTz === $tzKey ? 'selected' : '' }}>
+                                        {{ $tzLabel }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                            @if(!empty($groupedTimezones))
+                                @foreach($groupedTimezones as $region => $tzList)
+                                    <optgroup label="🌐 {{ $region }}">
+                                        @foreach($tzList as $tz)
+                                            <option value="{{ $tz }}" {{ $currentTz === $tz ? 'selected' : '' }}>
+                                                {{ $tz }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            @endif
+                        </select>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Օգտագործվում է պատվերների ժամերի, խոհանոցի գրաֆիկի և վիճակագրության համար:') }}
+                        </span>
+                    </div>
+
+                    <!-- B. Primary Currency -->
+                    <div class="form-group">
+                        <label for="vendor_currency" class="form-label" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-coins" style="color: #f59e0b;"></i>
+                            <span>{{ __('Հիմնական արժույթ') }}</span>
+                            <span style="color: #ef4444;">*</span>
+                        </label>
+                        <select name="currency" id="vendor_currency" class="form-input" onchange="onCurrencyChanged(this.value)" style="width: 100%; border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.88rem; background: var(--bg-body); border: 1.5px solid var(--border-color); color: var(--text-main); cursor: pointer;">
+                            @foreach($currencies ?? [
+                                'AMD' => 'AMD (֏ - ՀՀ Դրամ)',
+                                'USD' => 'USD ($ - US Dollar)',
+                                'EUR' => 'EUR (€ - Euro)',
+                                'RUB' => 'RUB (₽ - Российский рубль)',
+                                'GEL' => 'GEL (₾ - Georgian Lari)',
+                                'GBP' => 'GBP (£ - British Pound)',
+                                'AED' => 'AED (د.إ - UAE Dirham)',
+                            ] as $currCode => $currLabel)
+                                <option value="{{ $currCode }}" {{ strtoupper($currentCurrency) === $currCode ? 'selected' : '' }}>
+                                    {{ $currLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Արտացոլվում է ճաշացանկի գներում, հաշիվներում և վճարումներում:') }}
+                        </span>
+                    </div>
+
+                    <!-- C. Weight Unit -->
+                    <div class="form-group">
+                        <label for="vendor_weight_unit" class="form-label" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-weight-scale" style="color: #10b981;"></i>
+                            <span>{{ __('Քաշի չափման միավոր') }}</span>
+                        </label>
+                        <select name="weight_unit" id="vendor_weight_unit" class="form-input" style="width: 100%; border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.88rem; background: var(--bg-body); border: 1.5px solid var(--border-color); color: var(--text-main); cursor: pointer;">
+                            @foreach($weightUnits ?? [
+                                'g' => 'Գրամ (գ / g)',
+                                'kg' => 'Կիլոգրամ (կգ / kg)',
+                                'oz' => 'Ունցիա (oz)',
+                                'lb' => 'Ֆունտ (lb)',
+                            ] as $wKey => $wLabel)
+                                <option value="{{ $wKey }}" {{ $currentWeightUnit === $wKey ? 'selected' : '' }}>
+                                    {{ $wLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Կերակրատեսակների չափաբաժնի և քաշի հիմնական միավոր:') }}
+                        </span>
+                    </div>
+
+                    <!-- D. Volume Unit -->
+                    <div class="form-group">
+                        <label for="vendor_volume_unit" class="form-label" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.5rem;">
+                            <i class="fa-solid fa-glass-water" style="color: #6366f1;"></i>
+                            <span>{{ __('Ծավալի չափման միավոր') }}</span>
+                        </label>
+                        <select name="volume_unit" id="vendor_volume_unit" class="form-input" style="width: 100%; border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.88rem; background: var(--bg-body); border: 1.5px solid var(--border-color); color: var(--text-main); cursor: pointer;">
+                            @foreach($volumeUnits ?? [
+                                'ml' => 'Միլիլիտր (մլ / ml)',
+                                'l' => 'Լիտր (լ / l)',
+                                'fl_oz' => 'Հեղուկ ունցիա (fl oz)',
+                            ] as $vKey => $vLabel)
+                                <option value="{{ $vKey }}" {{ $currentVolumeUnit === $vKey ? 'selected' : '' }}>
+                                    {{ $vLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                            {{ __('Խմիչքների, կոկտեյլների և հեղուկների չափման հիմնական միավոր:') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. OPERATING HOURS, KITCHEN & ORDER SCHEDULE CARD -->
             @php
                 $hasMultipleLocations = $vendor->locations->count() > 1;
                 $locDineInEnabled = old('dine_in_schedule_enabled', $location ? (bool)$location->dine_in_schedule_enabled : (bool)$vendor->dine_in_schedule_enabled);
@@ -1021,7 +1157,7 @@
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="service_fee_min_order" id="serviceFeeMinOrder" value="{{ old('service_fee_min_order', $vendor->service_fee_min_order) }}" placeholder="0" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
-                                <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
+                                <span class="currency-label-display" style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
                             </div>
@@ -1036,7 +1172,7 @@
                         <div style="display: flex; align-items: center; gap: 0.65rem;">
                             <span style="color: var(--primary); font-size: 1.1rem;"><i class="fa-solid fa-calculator"></i></span>
                             <span style="font-size: 0.88rem; color: var(--text-muted);">
-                                {{ __('Calculation example for 15,000') }} {{ $vendor->currency }} {{ __('order:') }}
+                                {{ __('Calculation example for 15,000') }} <span class="currency-label-display">{{ $vendor->currency }}</span> {{ __('order:') }}
                             </span>
                         </div>
                         <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);" id="serviceFeePreviewBox">
@@ -1081,7 +1217,7 @@
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="delivery_fee" id="deliveryFeeInput" value="{{ old('delivery_fee', $vendor->delivery_fee ?? 0) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
-                                <span style="position: absolute; right: 1rem; font-weight: 800; color: #3b82f6; font-size: 0.85rem;">
+                                <span class="currency-label-display" style="position: absolute; right: 1rem; font-weight: 800; color: #3b82f6; font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
                             </div>
@@ -1097,7 +1233,7 @@
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="delivery_min_amount" id="deliveryMinAmount" value="{{ old('delivery_min_amount', $vendor->delivery_min_amount ?? 0) }}" required class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
-                                <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
+                                <span class="currency-label-display" style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
                             </div>
@@ -1113,7 +1249,7 @@
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="delivery_free_from" id="deliveryFreeFrom" value="{{ old('delivery_free_from', $vendor->delivery_free_from) }}" placeholder="No free threshold" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
-                                <span style="position: absolute; right: 1rem; font-weight: 800; color: #10b981; font-size: 0.85rem;">
+                                <span class="currency-label-display" style="position: absolute; right: 1rem; font-weight: 800; color: #10b981; font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
                             </div>
@@ -1180,7 +1316,7 @@
                             </label>
                             <div style="position: relative; display: flex; align-items: center;">
                                 <input type="number" step="any" min="0" name="takeaway_min_amount" id="takeawayMinAmount" value="{{ old('takeaway_min_amount', $vendor->takeaway_min_amount ?? 0) }}" class="form-control" style="width: 100%; box-sizing: border-box; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 12px; padding: 0.75rem 1rem; font-size: 1rem; font-weight: 700;" oninput="updateCalculationsPreview()">
-                                <span style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
+                                <span class="currency-label-display" style="position: absolute; right: 1rem; font-weight: 800; color: var(--text-muted); font-size: 0.85rem;">
                                     {{ $vendor->currency }}
                                 </span>
                             </div>
@@ -1844,7 +1980,18 @@
 </style>
 
 <script>
-const CURRENCY = "{{ $vendor->currency }}";
+let CURRENCY = "{{ $vendor->currency }}";
+
+function onCurrencyChanged(newCurrency) {
+    CURRENCY = newCurrency;
+    document.querySelectorAll('.currency-label-display').forEach(el => el.textContent = newCurrency);
+    const suffix = document.getElementById('serviceFeeSuffix');
+    const serviceFeeType = document.querySelector('input[name="service_fee_type"]:checked')?.value || 'percent';
+    if (suffix && serviceFeeType === 'fixed') {
+        suffix.textContent = CURRENCY;
+    }
+    updateCalculationsPreview();
+}
 
 function toggleServiceFeeFields() {
     const isChecked = document.getElementById('serviceFeeToggle').checked;

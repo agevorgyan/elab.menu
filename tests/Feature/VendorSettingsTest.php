@@ -280,4 +280,135 @@ class VendorSettingsTest extends TestCase
         $storefront->assertSee('PrimePass2026');
         $storefront->assertSee('09:00 - 01:00 (Ամեն օր)');
     }
+
+    public function test_vendor_can_update_regional_settings_timezone_currency_and_measurement_units(): void
+    {
+        $plan = SubscriptionPlan::where('slug', 'pro')->first();
+
+        $vendor = Vendor::create([
+            'name' => 'Bistro Regional Test',
+            'slug' => 'bistro-regional',
+            'email' => 'regional@bistro.com',
+            'password' => bcrypt('password'),
+            'subscription_plan' => 'pro',
+            'subscription_plan_id' => $plan->id,
+            'subscription_expires_at' => now()->addDays(30),
+            'is_active' => true,
+            'timezone' => 'Asia/Yerevan',
+            'currency' => 'AMD',
+            'weight_unit' => 'g',
+            'volume_unit' => 'ml',
+        ]);
+
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'regional@bistro.com',
+            'password' => bcrypt('password'),
+            'vendor_id' => $vendor->id,
+            'role' => 'vendor_owner',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.settings.update'), [
+            'service_fee_type' => 'percent',
+            'service_fee_value' => 10,
+            'delivery_fee' => 500,
+            'delivery_min_amount' => 2000,
+            'timezone' => 'Europe/Paris',
+            'currency' => 'EUR',
+            'weight_unit' => 'kg',
+            'volume_unit' => 'l',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $vendor->refresh();
+        $this->assertEquals('Europe/Paris', $vendor->timezone);
+        $this->assertEquals('EUR', $vendor->currency);
+        $this->assertEquals('kg', $vendor->weight_unit);
+        $this->assertEquals('l', $vendor->volume_unit);
+    }
+
+    public function test_vendor_regional_settings_validation_rejects_invalid_values(): void
+    {
+        $plan = SubscriptionPlan::where('slug', 'pro')->first();
+
+        $vendor = Vendor::create([
+            'name' => 'Bistro Invalid Regional Test',
+            'slug' => 'bistro-invalid-regional',
+            'email' => 'invalid-reg@bistro.com',
+            'password' => bcrypt('password'),
+            'subscription_plan' => 'pro',
+            'subscription_plan_id' => $plan->id,
+            'subscription_expires_at' => now()->addDays(30),
+            'is_active' => true,
+        ]);
+
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'invalid-reg@bistro.com',
+            'password' => bcrypt('password'),
+            'vendor_id' => $vendor->id,
+            'role' => 'vendor_owner',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.settings.update'), [
+            'service_fee_type' => 'percent',
+            'service_fee_value' => 10,
+            'delivery_fee' => 500,
+            'delivery_min_amount' => 2000,
+            'timezone' => 'Mars/Olympus_Mons',
+            'currency' => 'BITCOIN',
+            'weight_unit' => 'metric_ton',
+            'volume_unit' => 'barrel',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'timezone',
+            'currency',
+            'weight_unit',
+            'volume_unit',
+        ]);
+    }
+
+    public function test_vendor_settings_page_displays_regional_settings_and_selected_options(): void
+    {
+        $plan = SubscriptionPlan::where('slug', 'pro')->first();
+
+        $vendor = Vendor::create([
+            'name' => 'Bistro Display Regional Test',
+            'slug' => 'bistro-display-regional',
+            'email' => 'display-reg@bistro.com',
+            'password' => bcrypt('password'),
+            'subscription_plan' => 'pro',
+            'subscription_plan_id' => $plan->id,
+            'subscription_expires_at' => now()->addDays(30),
+            'is_active' => true,
+            'timezone' => 'America/New_York',
+            'currency' => 'USD',
+            'weight_unit' => 'oz',
+            'volume_unit' => 'fl_oz',
+        ]);
+
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'display-reg@bistro.com',
+            'password' => bcrypt('password'),
+            'vendor_id' => $vendor->id,
+            'role' => 'vendor_owner',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.settings.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Տարածաշրջանային և տեղայնացման կարգավորումներ');
+        $response->assertSee('Ժամային գոտի (Timezone)');
+        $response->assertSee('Հիմնական արժույթ');
+        $response->assertSee('Քաշի չափման միավոր');
+        $response->assertSee('Ծավալի չափման միավոր');
+        $response->assertSee('value="America/New_York" selected', false);
+        $response->assertSee('value="USD" selected', false);
+        $response->assertSee('value="oz" selected', false);
+        $response->assertSee('value="fl_oz" selected', false);
+    }
 }

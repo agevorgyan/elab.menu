@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SuperAdminController extends Controller
 {
@@ -408,9 +409,10 @@ class SuperAdminController extends Controller
             'type' => 'required|string|in:restaurant,cafe,hotel',
             'custom_domain' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:100',
-            'currency' => 'required|string|in:AMD,USD,EUR,RUB',
-            'legal_name' => 'nullable|string|max:255',
+            'currency' => ['required', 'string', Rule::in(['AMD', 'USD', 'EUR', 'RUB', 'GEL', 'GBP', 'AED', 'CNY', 'KZT', 'TRY'])],
+            'timezone' => ['nullable', 'string', 'max:50', Rule::in(\DateTimeZone::listIdentifiers())],
+            'weight_unit' => ['nullable', 'string', Rule::in(['g', 'kg', 'oz', 'lb'])],
+            'volume_unit' => ['nullable', 'string', Rule::in(['ml', 'l', 'fl_oz', 'fl oz'])],
             'tax_id' => 'nullable|string|max:50',
             'legal_address' => 'nullable|string|max:500',
             'operating_address' => 'nullable|string|max:500',

@@ -289,6 +289,8 @@ class LocaleManager
             'EUR' => "€{$formattedNumber}",
             'RUB' => "{$formattedNumber} ₽",
             'GEL' => "{$formattedNumber} ₾",
+            'GBP' => "£{$formattedNumber}",
+            'AED' => "{$formattedNumber} د.إ",
             default => "{$formattedNumber} {$currency}",
         };
     }

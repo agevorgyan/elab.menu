@@ -269,6 +269,9 @@
                             <option value="USD" {{ old('currency', $vendor->currency) === 'USD' ? 'selected' : '' }}>USD ($ - US Dollar)</option>
                             <option value="EUR" {{ old('currency', $vendor->currency) === 'EUR' ? 'selected' : '' }}>EUR (€ - Euro)</option>
                             <option value="RUB" {{ old('currency', $vendor->currency) === 'RUB' ? 'selected' : '' }}>RUB (₽ - Российский рубль)</option>
+                            <option value="GEL" {{ old('currency', $vendor->currency) === 'GEL' ? 'selected' : '' }}>GEL (₾ - Georgian Lari)</option>
+                            <option value="GBP" {{ old('currency', $vendor->currency) === 'GBP' ? 'selected' : '' }}>GBP (£ - British Pound)</option>
+                            <option value="AED" {{ old('currency', $vendor->currency) === 'AED' ? 'selected' : '' }}>AED (د.إ - UAE Dirham)</option>
                         </select>
                     </div>
                 </div>

@@ -12,6 +12,7 @@ use App\Services\CaptchaService;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -56,56 +57,60 @@ class RegisterController extends Controller
         $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first()
             ?? SubscriptionPlan::where('slug', 'pro')->first();
 
-        // 1. Create Vendor Record with 14-day Free Trial
-        $vendor = Vendor::create([
-            'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']).'-'.Str::random(4),
-            'type' => $validated['type'],
-            'legal_name' => $validated['legal_name'],
-            'legal_address' => $validated['legal_address'],
-            'tax_id' => $validated['tax_id'],
-            'director_name' => $validated['director_name'],
-            'contact_person_name' => $validated['contact_person_name'],
-            'operating_address' => $validated['operating_address'],
-            'expected_locations_count' => $validated['expected_locations_count'],
-            'phone' => $validated['phone'],
-            'email' => $validated['email'],
-            'subscription_plan' => $plan?->slug ?? 'pro',
-            'subscription_plan_id' => $plan?->id,
-            'subscription_status' => 'trialing',
-            'trial_ends_at' => now()->addDays(14),
-            'subscription_expires_at' => now()->addDays(14),
-            'menu_template_id' => $template?->id,
-            'primary_color' => '#e11d48',
-            'secondary_color' => '#4f46e5',
-            'is_active' => true,
-        ]);
+        $user = DB::transaction(function () use ($validated, $plan, $template) {
+            $trialDays = $plan?->trial_days ?? 14;
 
-        if ($plan) {
-            app(SubscriptionService::class)->startTrial($vendor, $plan, 14);
-        }
+            // 1. Create Vendor Record with Free Trial
+            $vendor = Vendor::create([
+                'name' => $validated['name'],
+                'slug' => Str::slug($validated['name']).'-'.Str::random(4),
+                'type' => $validated['type'],
+                'legal_name' => $validated['legal_name'],
+                'legal_address' => $validated['legal_address'],
+                'tax_id' => $validated['tax_id'],
+                'director_name' => $validated['director_name'],
+                'contact_person_name' => $validated['contact_person_name'],
+                'operating_address' => $validated['operating_address'],
+                'expected_locations_count' => $validated['expected_locations_count'],
+                'phone' => $validated['phone'],
+                'email' => $validated['email'],
+                'subscription_plan' => $plan?->slug ?? 'pro',
+                'subscription_plan_id' => $plan?->id,
+                'subscription_status' => 'trialing',
+                'trial_ends_at' => now()->addDays($trialDays),
+                'subscription_expires_at' => now()->addDays($trialDays),
+                'menu_template_id' => $template?->id,
+                'primary_color' => '#e11d48',
+                'secondary_color' => '#4f46e5',
+                'is_active' => true,
+            ]);
 
-        // 2. Create Initial Main Location
-        $location = Location::create([
-            'vendor_id' => $vendor->id,
-            'name' => $validated['name'].' (Main)',
-            'slug' => 'main',
-            'address' => $validated['operating_address'],
-            'phone' => $validated['phone'],
-            'table_count' => 20,
-            'is_active' => true,
-        ]);
+            if ($plan) {
+                app(SubscriptionService::class)->startTrial($vendor, $plan, $trialDays);
+            }
 
-        // 3. Create Vendor Owner User
-        $user = User::create([
-            'vendor_id' => $vendor->id,
-            'location_id' => $location->id,
-            'name' => $validated['contact_person_name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'vendor_owner',
-            'phone' => $validated['phone'],
-        ]);
+            // 2. Create Initial Main Location
+            $location = Location::create([
+                'vendor_id' => $vendor->id,
+                'name' => $validated['name'].' (Main)',
+                'slug' => 'main',
+                'address' => $validated['operating_address'],
+                'phone' => $validated['phone'],
+                'table_count' => 20,
+                'is_active' => true,
+            ]);
+
+            // 3. Create Vendor Owner User
+            return User::create([
+                'vendor_id' => $vendor->id,
+                'location_id' => $location->id,
+                'name' => $validated['contact_person_name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'vendor_owner',
+                'phone' => $validated['phone'],
+            ]);
+        });
 
         $verificationUrl = route('verification.verify', [
             'id' => $user->id,

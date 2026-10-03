@@ -41,8 +41,8 @@ class OrderPricingService
                 $translations = is_array($v->name_translations)
                     ? $v->name_translations
                     : (json_decode($v->name_translations ?? '[]', true) ?: []);
-                foreach (['hy', 'ru', 'en'] as $lang) {
-                    if (! empty($translations[$lang]) && mb_strtolower(trim((string) $translations[$lang])) === $target) {
+                foreach ($translations as $val) {
+                    if (! empty($val) && is_scalar($val) && mb_strtolower(trim((string) $val)) === $target) {
                         return true;
                     }
                 }
@@ -70,7 +70,14 @@ class OrderPricingService
 
         // 5. Determine unit price strictly from variation, location override, or scheduled discount
         if ($variation) {
-            $override = $product->overrides->firstWhere('location_id', $locationId);
+            if (! $variation->relationLoaded('product')) {
+                $variation->setRelation('product', $product);
+            }
+
+            $override = $product->relationLoaded('overrides')
+                ? $product->overrides->firstWhere('location_id', $locationId)
+                : $product->overrides()->where('location_id', $locationId)->first();
+
             if ($variationsCount === 1 && $override && $override->override_price !== null) {
                 if ($product->isDiscountActive() && (float) $product->price > 0) {
                     $ratio = (float) $product->discount_price / (float) $product->price;

@@ -48,8 +48,9 @@ class VendorAdminController extends Controller
             $ordersQuery->where('location_id', $location->id);
         }
 
-        $todayStart = Carbon::today()->startOfDay();
-        $todayEnd = Carbon::today()->endOfDay();
+        $tz = ! empty($vendor->timezone) ? $vendor->timezone : 'Asia/Yerevan';
+        $todayStart = Carbon::now($tz)->startOfDay()->setTimezone('UTC');
+        $todayEnd = Carbon::now($tz)->endOfDay()->setTimezone('UTC');
 
         $todayOrders = (clone $ordersQuery)->whereBetween('created_at', [$todayStart, $todayEnd])->count();
         $todayRevenue = (clone $ordersQuery)->whereBetween('created_at', [$todayStart, $todayEnd])->where('status', 'completed')->sum('total_amount');

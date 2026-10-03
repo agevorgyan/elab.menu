@@ -57,18 +57,51 @@ class SubscriptionService
      */
     public function startTrial(Vendor $vendor, SubscriptionPlan $plan, ?int $trialDays = null): Subscription
     {
-        $days = $trialDays ?? $plan->trial_days ?? 14;
-        $now = now();
-        $trialEnd = (clone $now)->addDays($days);
+        return DB::transaction(function () use ($vendor, $plan, $trialDays) {
+            $existing = Subscription::withoutTenantQuery()
+                ->where('vendor_id', $vendor->id)
+                ->lockForUpdate()
+                ->first();
 
-        return DB::transaction(function () use ($vendor, $plan, $now, $trialEnd) {
-            $subscription = Subscription::updateOrCreate(
+            // Invariant 1: If vendor's current status cannot transition to Trialing, reject downgrade/re-trial
+            if ($existing && ! $existing->status->canTransitionTo(SubscriptionStatus::Trialing)) {
+                Log::warning("Vendor {$vendor->id} has subscription status {$existing->status->value} which cannot transition to trialing. Ignoring startTrial downgrade request.");
+
+                return $existing;
+            }
+
+            $days = $trialDays ?? $plan->trial_days ?? 14;
+            $now = now();
+
+            // Invariant 2: If vendor is currently trialing, do not extend or reset the trial clock
+            if ($existing && $existing->status === SubscriptionStatus::Trialing) {
+                if ($existing->trial_ends_at?->isFuture()) {
+                    if ($existing->subscription_plan_id !== $plan->id) {
+                        $existing->update(['subscription_plan_id' => $plan->id]);
+                        $this->syncVendor($existing);
+                    }
+
+                    Log::info("Vendor {$vendor->id} trial already active until {$existing->trial_ends_at->toDateTimeString()}. Preserving existing trial.");
+
+                    return $existing;
+                }
+
+                $this->expire($existing);
+                Log::warning("Vendor {$vendor->id} trial has already elapsed. Re-trialing not permitted.");
+
+                return $existing;
+            }
+
+            $trialStartsAt = $existing?->trial_starts_at ?? $now;
+            $trialEnd = (clone $now)->addDays($days);
+
+            $subscription = Subscription::withoutTenantQuery()->updateOrCreate(
                 ['vendor_id' => $vendor->id],
                 [
                     'subscription_plan_id' => $plan->id,
                     'status' => SubscriptionStatus::Trialing,
                     'billing_interval' => 'monthly',
-                    'trial_starts_at' => $now,
+                    'trial_starts_at' => $trialStartsAt,
                     'trial_ends_at' => $trialEnd,
                     'current_period_start' => $now,
                     'current_period_end' => $trialEnd,

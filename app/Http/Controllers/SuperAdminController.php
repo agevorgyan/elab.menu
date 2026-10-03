@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\SubscriptionStatus;
+use App\Http\Requests\UpdateSystemSettingsRequest;
 use App\Models\Location;
 use App\Models\MenuTemplate;
 use App\Models\Order;
@@ -20,6 +21,7 @@ use Carbon\Carbon;
 use Illuminate\Http\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -74,42 +76,51 @@ class SuperAdminController extends Controller
         $plan = SubscriptionPlan::where('slug', $validated['subscription_plan'])->first()
             ?? SubscriptionPlan::first();
 
-        $vendor = Vendor::create([
-            'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']).'-'.Str::random(4),
-            'type' => $validated['type'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'subscription_plan' => $plan?->slug ?? 'pro',
-            'subscription_plan_id' => $plan?->id,
-            'subscription_status' => 'trialing',
-            'trial_ends_at' => now()->addDays(14),
-            'subscription_expires_at' => now()->addDays(14),
-            'menu_template_id' => $validated['menu_template_id'],
-            'primary_color' => '#e11d48',
-            'secondary_color' => '#4f46e5',
-            'is_active' => true,
-        ]);
+        DB::transaction(function () use ($validated, $plan) {
+            $trialDays = $plan?->trial_days ?? 14;
 
-        // Default Location
-        Location::create([
-            'vendor_id' => $vendor->id,
-            'name' => 'Main Location',
-            'slug' => 'main',
-            'phone' => $validated['phone'] ?? null,
-            'table_count' => 20,
-            'is_active' => true,
-        ]);
+            $vendor = Vendor::create([
+                'name' => $validated['name'],
+                'slug' => Str::slug($validated['name']).'-'.Str::random(4),
+                'type' => $validated['type'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'subscription_plan' => $plan?->slug ?? 'pro',
+                'subscription_plan_id' => $plan?->id,
+                'subscription_status' => 'trialing',
+                'trial_ends_at' => now()->addDays($trialDays),
+                'subscription_expires_at' => now()->addDays($trialDays),
+                'menu_template_id' => $validated['menu_template_id'],
+                'primary_color' => '#e11d48',
+                'secondary_color' => '#4f46e5',
+                'is_active' => true,
+            ]);
 
-        // Create Owner User
-        User::create([
-            'vendor_id' => $vendor->id,
-            'name' => $validated['owner_name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 'vendor_owner',
-            'phone' => $validated['phone'] ?? null,
-        ]);
+            if ($plan) {
+                app(SubscriptionService::class)->startTrial($vendor, $plan, $trialDays);
+            }
+
+            // Default Location
+            $location = Location::create([
+                'vendor_id' => $vendor->id,
+                'name' => 'Main Location',
+                'slug' => 'main',
+                'phone' => $validated['phone'] ?? null,
+                'table_count' => 20,
+                'is_active' => true,
+            ]);
+
+            // Create Owner User
+            User::create([
+                'vendor_id' => $vendor->id,
+                'location_id' => $location->id,
+                'name' => $validated['owner_name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'vendor_owner',
+                'phone' => $validated['phone'] ?? null,
+            ]);
+        });
 
         return back()->with('success', 'Vendor & Owner Account successfully created!');
     }
@@ -304,143 +315,9 @@ class SuperAdminController extends Controller
         return view('superadmin.settings.index', compact('settings', 'user', 'setupSecret', 'otpAuthUri', 'qrCodeUrl'));
     }
 
-    public function updateSettings(Request $request)
+    public function updateSettings(UpdateSystemSettingsRequest $request)
     {
-        $validated = $request->validate([
-            // Contacts
-            'contact_phone' => 'required|string|max:50',
-            'contact_whatsapp' => 'nullable|string|max:50',
-            'contact_telegram' => 'nullable|string|max:100',
-            'contact_email' => 'required|email|max:100',
-
-            // Social Media
-            'social_facebook' => 'nullable|string|max:255',
-            'social_instagram' => 'nullable|string|max:255',
-
-            // Landing & System Defaults (CMS)
-            'demo_vendor_slug' => 'nullable|string|max:100',
-            'trial_days' => 'required|integer|min:1|max:90',
-
-            // Hero CMS
-            'hero_badge_hy' => 'nullable|string|max:255',
-            'hero_badge_en' => 'nullable|string|max:255',
-            'hero_title_hy' => 'nullable|string|max:255',
-            'hero_title_en' => 'nullable|string|max:255',
-            'hero_subtitle_hy' => 'nullable|string|max:1000',
-            'hero_subtitle_en' => 'nullable|string|max:1000',
-            'hero_cta_primary_hy' => 'nullable|string|max:255',
-            'hero_cta_primary_en' => 'nullable|string|max:255',
-            'hero_cta_secondary_hy' => 'nullable|string|max:255',
-            'hero_cta_secondary_en' => 'nullable|string|max:255',
-            'hero_trust_badge1_hy' => 'nullable|string|max:255',
-            'hero_trust_badge1_en' => 'nullable|string|max:255',
-            'hero_trust_badge2_hy' => 'nullable|string|max:255',
-            'hero_trust_badge2_en' => 'nullable|string|max:255',
-            'hero_trust_badge3_hy' => 'nullable|string|max:255',
-            'hero_trust_badge3_en' => 'nullable|string|max:255',
-
-            // Comparison CMS
-            'vs_badge_hy' => 'nullable|string|max:255',
-            'vs_badge_en' => 'nullable|string|max:255',
-            'vs_title_hy' => 'nullable|string|max:255',
-            'vs_title_en' => 'nullable|string|max:255',
-            'vs_subtitle_hy' => 'nullable|string|max:1000',
-            'vs_subtitle_en' => 'nullable|string|max:1000',
-            'vs_paper_title_hy' => 'nullable|string|max:255',
-            'vs_paper_title_en' => 'nullable|string|max:255',
-            'vs_paper_badge_hy' => 'nullable|string|max:255',
-            'vs_paper_badge_en' => 'nullable|string|max:255',
-            'vs_qr_title_hy' => 'nullable|string|max:255',
-            'vs_qr_title_en' => 'nullable|string|max:255',
-            'vs_qr_badge_hy' => 'nullable|string|max:255',
-            'vs_qr_badge_en' => 'nullable|string|max:255',
-
-            // AI Waiter CMS
-            'ai_section_badge_hy' => 'nullable|string|max:255',
-            'ai_section_badge_en' => 'nullable|string|max:255',
-            'ai_section_title_hy' => 'nullable|string|max:255',
-            'ai_section_title_en' => 'nullable|string|max:255',
-            'ai_section_subtitle_hy' => 'nullable|string|max:1000',
-            'ai_section_subtitle_en' => 'nullable|string|max:1000',
-            'ai_feature1_title_hy' => 'nullable|string|max:255',
-            'ai_feature1_title_en' => 'nullable|string|max:255',
-            'ai_feature1_desc_hy' => 'nullable|string|max:1000',
-            'ai_feature1_desc_en' => 'nullable|string|max:1000',
-            'ai_feature2_title_hy' => 'nullable|string|max:255',
-            'ai_feature2_title_en' => 'nullable|string|max:255',
-            'ai_feature2_desc_hy' => 'nullable|string|max:1000',
-            'ai_feature2_desc_en' => 'nullable|string|max:1000',
-            'ai_feature3_title_hy' => 'nullable|string|max:255',
-            'ai_feature3_title_en' => 'nullable|string|max:255',
-            'ai_feature3_desc_hy' => 'nullable|string|max:1000',
-            'ai_feature3_desc_en' => 'nullable|string|max:1000',
-
-            // ROI Calculator CMS
-            'calc_badge_hy' => 'nullable|string|max:255',
-            'calc_badge_en' => 'nullable|string|max:255',
-            'calc_title_hy' => 'nullable|string|max:255',
-            'calc_title_en' => 'nullable|string|max:255',
-            'calc_subtitle_hy' => 'nullable|string|max:1000',
-            'calc_subtitle_en' => 'nullable|string|max:1000',
-            'calc_cta_hy' => 'nullable|string|max:255',
-            'calc_cta_en' => 'nullable|string|max:255',
-
-            // Features Grid CMS
-            'features_badge_hy' => 'nullable|string|max:255',
-            'features_badge_en' => 'nullable|string|max:255',
-            'features_title_hy' => 'nullable|string|max:255',
-            'features_title_en' => 'nullable|string|max:255',
-            'features_subtitle_hy' => 'nullable|string|max:1000',
-            'features_subtitle_en' => 'nullable|string|max:1000',
-
-            // Pricing CMS
-            'pricing_badge_hy' => 'nullable|string|max:255',
-            'pricing_badge_en' => 'nullable|string|max:255',
-            'pricing_title_hy' => 'nullable|string|max:255',
-            'pricing_title_en' => 'nullable|string|max:255',
-            'pricing_subtitle_hy' => 'nullable|string|max:1000',
-            'pricing_subtitle_en' => 'nullable|string|max:1000',
-
-            // FAQ CMS
-            'faq_badge_hy' => 'nullable|string|max:255',
-            'faq_badge_en' => 'nullable|string|max:255',
-            'faq_title_hy' => 'nullable|string|max:255',
-            'faq_title_en' => 'nullable|string|max:255',
-            'faq_subtitle_hy' => 'nullable|string|max:1000',
-            'faq_subtitle_en' => 'nullable|string|max:1000',
-
-            // Final CTA Banner CMS
-            'cta_banner_title_hy' => 'nullable|string|max:255',
-            'cta_banner_title_en' => 'nullable|string|max:255',
-            'cta_banner_subtitle_hy' => 'nullable|string|max:1000',
-            'cta_banner_subtitle_en' => 'nullable|string|max:1000',
-            'cta_banner_btn_text_hy' => 'nullable|string|max:255',
-            'cta_banner_btn_text_en' => 'nullable|string|max:255',
-
-            // Telegram Notifications
-            'telegram_bot_token' => 'nullable|string|max:255',
-            'telegram_admin_chat_id' => 'nullable|string|max:255',
-
-            // Branding & Identity
-            'site_name' => 'nullable|string|max:100',
-            'site_tagline' => 'nullable|string|max:255',
-            'site_logo_light' => 'nullable|string|max:500',
-            'site_logo_dark' => 'nullable|string|max:500',
-            'site_favicon' => 'nullable|string|max:500',
-            'logo_light_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
-            'logo_dark_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
-            'favicon_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,ico|max:2048',
-
-            // SEO & OpenGraph Social Sharing
-            'seo_title' => 'nullable|string|max:255',
-            'seo_title_en' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string|max:1000',
-            'seo_description_en' => 'nullable|string|max:1000',
-            'seo_keywords' => 'nullable|string|max:500',
-            'seo_og_image' => 'nullable|string|max:500',
-            'og_image_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
-            'footer_copyright' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         // File uploads for branding assets
         $fileMap = [
@@ -776,118 +653,128 @@ class SuperAdminController extends Controller
         $user = auth()->user();
         $type = $request->input('action_type', 'password');
 
-        if ($type === 'email') {
-            $validated = $request->validate([
-                'current_password' => 'required|string',
-                'email' => 'required|email|unique:users,email,'.$user->id,
-                'two_factor_code' => $user->hasTwoFactorEnabled() ? 'required|string' : 'nullable|string',
-            ], [
-                'email.unique' => 'Այս էլ․ փոստի հասցեն արդեն գրանցված է համակարգում։',
-                'two_factor_code.required' => '2FA անվտանգության կոդը պարտադիր է էլ․ փոստը փոխելու համար։',
-            ]);
+        return match ($type) {
+            'email' => $this->updateSecurityEmail($request, $user),
+            'password' => $this->updateSecurityPassword($request, $user),
+            '2fa_enable' => $this->enableTwoFactorSecurity($request, $user),
+            '2fa_disable' => $this->disableTwoFactorSecurity($request, $user),
+            default => back(),
+        };
+    }
 
-            if (! Hash::check($validated['current_password'], $user->password)) {
-                return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', 'email');
-            }
+    protected function updateSecurityEmail(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'two_factor_code' => $user->hasTwoFactorEnabled() ? 'required|string' : 'nullable|string',
+        ], [
+            'email.unique' => 'Այս էլ․ փոստի հասցեն արդեն գրանցված է համակարգում։',
+            'two_factor_code.required' => '2FA անվտանգության կոդը պարտադիր է էլ․ փոստը փոխելու համար։',
+        ]);
 
-            if ($user->hasTwoFactorEnabled() || $request->filled('two_factor_code')) {
-                if (! TwoFactorAuthService::verifyCode($user, $request->input('two_factor_code'))) {
-                    return back()->withErrors(['two_factor_code' => '2FA անվտանգության կոդը սխալ է կամ ժամկետանց։'])->with('error_type', 'email')->withInput();
-                }
-            }
-
-            $user->update(['email' => $validated['email']]);
-
-            return back()->with('success', 'Ձեր էլ․ փոստի հասցեն հաջողությամբ թարմացվեց։');
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', 'email');
         }
 
-        if ($type === 'password') {
-            $validated = $request->validate([
-                'current_password' => 'required|string',
-                'password' => 'required|string|min:6|confirmed',
-                'two_factor_code' => $user->hasTwoFactorEnabled() ? 'required|string' : 'nullable|string',
-            ], [
-                'password.confirmed' => 'Նոր գաղտնաբառի հաստատումը չի համընկնում։',
-                'password.min' => 'Գաղտնաբառը պետք է լինի առնվազն 6 նիշ։',
-                'two_factor_code.required' => '2FA անվտանգության կոդը պարտադիր է գաղտնաբառը փոխելու համար։',
-            ]);
-
-            if (! Hash::check($validated['current_password'], $user->password)) {
-                return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', 'password');
+        if ($user->hasTwoFactorEnabled() || $request->filled('two_factor_code')) {
+            if (! TwoFactorAuthService::verifyCode($user, $request->input('two_factor_code'))) {
+                return back()->withErrors(['two_factor_code' => '2FA անվտանգության կոդը սխալ է կամ ժամկետանց։'])->with('error_type', 'email')->withInput();
             }
-
-            if ($user->hasTwoFactorEnabled() || $request->filled('two_factor_code')) {
-                if (! TwoFactorAuthService::verifyCode($user, $request->input('two_factor_code'))) {
-                    return back()->withErrors(['two_factor_code' => '2FA անվտանգության կոդը սխալ է կամ ժամկետանց։'])->with('error_type', 'password')->withInput();
-                }
-            }
-
-            $user->update(['password' => Hash::make($validated['password'])]);
-
-            return back()->with('success', 'Ձեր գաղտնաբառը հաջողությամբ փոխվեց։');
         }
 
-        if ($type === '2fa_enable') {
-            $validated = $request->validate([
-                'type' => 'required|string|in:email,authenticator',
-                'code' => 'required|string|min:6|max:8',
-                'secret' => 'nullable|string',
-            ]);
+        $user->update(['email' => $validated['email']]);
 
-            $code = trim($validated['code']);
+        return back()->with('success', 'Ձեր էլ․ փոստի հասցեն հաջողությամբ թարմացվեց։');
+    }
 
-            if ($validated['type'] === 'authenticator') {
-                $secret = $validated['secret'] ?? $user->two_factor_secret;
+    protected function updateSecurityPassword(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+            'two_factor_code' => $user->hasTwoFactorEnabled() ? 'required|string' : 'nullable|string',
+        ], [
+            'password.confirmed' => 'Նոր գաղտնաբառի հաստատումը չի համընկնում։',
+            'password.min' => 'Գաղտնաբառը պետք է լինի առնվազն 6 նիշ։',
+            'two_factor_code.required' => '2FA անվտանգության կոդը պարտադիր է գաղտնաբառը փոխելու համար։',
+        ]);
 
-                if (empty($secret) || ! TwoFactorAuthService::verifyGoogleAuthenticator($secret, $code)) {
-                    if (! (app()->environment('local', 'testing') && $code === '123456')) {
-                        return back()->withErrors(['two_factor_code' => 'Google Authenticator կոդը սխալ է։'])->with('error_type', '2fa');
-                    }
-                }
-
-                $user->update([
-                    'two_factor_enabled' => true,
-                    'two_factor_type' => 'authenticator',
-                    'two_factor_secret' => $secret,
-                    'two_factor_confirmed_at' => now(),
-                ]);
-            } else {
-                if (! TwoFactorAuthService::verifyEmailCode($user, $code)) {
-                    if (! (app()->environment('local', 'testing') && $code === '123456')) {
-                        return back()->withErrors(['two_factor_code' => 'Էլ․ փոստի կոդը սխալ է կամ ժամկետանց։'])->with('error_type', '2fa');
-                    }
-                }
-
-                $user->update([
-                    'two_factor_enabled' => true,
-                    'two_factor_type' => 'email',
-                    'two_factor_confirmed_at' => now(),
-                ]);
-            }
-
-            return back()->with('success', 'Երկփուլային նույնականացումը (2FA) հաջողությամբ ակտիվացվեց։');
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', 'password');
         }
 
-        if ($type === '2fa_disable') {
-            $validated = $request->validate([
-                'current_password' => 'required|string',
-            ]);
+        if ($user->hasTwoFactorEnabled() || $request->filled('two_factor_code')) {
+            if (! TwoFactorAuthService::verifyCode($user, $request->input('two_factor_code'))) {
+                return back()->withErrors(['two_factor_code' => '2FA անվտանգության կոդը սխալ է կամ ժամկետանց։'])->with('error_type', 'password')->withInput();
+            }
+        }
 
-            if (! Hash::check($validated['current_password'], $user->password)) {
-                return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', '2fa_disable');
+        $user->update(['password' => Hash::make($validated['password'])]);
+
+        return back()->with('success', 'Ձեր գաղտնաբառը հաջողությամբ փոխվեց։');
+    }
+
+    protected function enableTwoFactorSecurity(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'type' => 'required|string|in:email,authenticator',
+            'code' => 'required|string|min:6|max:8',
+            'secret' => 'nullable|string',
+        ]);
+
+        $code = trim($validated['code']);
+
+        if ($validated['type'] === 'authenticator') {
+            $secret = $validated['secret'] ?? $user->two_factor_secret;
+
+            if (empty($secret) || ! TwoFactorAuthService::verifyGoogleAuthenticator($secret, $code)) {
+                if (! (app()->environment('local', 'testing') && $code === '123456')) {
+                    return back()->withErrors(['two_factor_code' => 'Google Authenticator կոդը սխալ է։'])->with('error_type', '2fa');
+                }
             }
 
             $user->update([
-                'two_factor_enabled' => false,
-                'two_factor_secret' => null,
-                'two_factor_email_code' => null,
-                'two_factor_confirmed_at' => null,
+                'two_factor_enabled' => true,
+                'two_factor_type' => 'authenticator',
+                'two_factor_secret' => $secret,
+                'two_factor_confirmed_at' => now(),
             ]);
+        } else {
+            if (! TwoFactorAuthService::verifyEmailCode($user, $code)) {
+                if (! (app()->environment('local', 'testing') && $code === '123456')) {
+                    return back()->withErrors(['two_factor_code' => 'Էլ․ փոստի կոդը սխալ է կամ ժամկետանց։'])->with('error_type', '2fa');
+                }
+            }
 
-            return back()->with('success', 'Երկփուլային նույնականացումը (2FA) անջատվեց։');
+            $user->update([
+                'two_factor_enabled' => true,
+                'two_factor_type' => 'email',
+                'two_factor_confirmed_at' => now(),
+            ]);
         }
 
-        return back();
+        return back()->with('success', 'Երկփուլային նույնականացումը (2FA) հաջողությամբ ակտիվացվեց։');
+    }
+
+    protected function disableTwoFactorSecurity(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+        ]);
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Ընթացիկ գաղտնաբառը սխալ է։'])->with('error_type', '2fa_disable');
+        }
+
+        $user->update([
+            'two_factor_enabled' => false,
+            'two_factor_secret' => null,
+            'two_factor_email_code' => null,
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        return back()->with('success', 'Երկփուլային նույնականացումը (2FA) անջատվեց։');
     }
 
     /**
